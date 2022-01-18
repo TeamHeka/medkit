@@ -1,0 +1,20 @@
+name: Documentation Issue
+description: Create a report to help us improve the documentation.
+title: '[Doc-issue]'
+labels: "documentation"
+body:
+  - type: markdown
+    attributes:
+      value: 
+        Thanks for submitting a Medkit documentation issue!
+  - type: textarea
+    attributes:
+      label: Describe the issue linked to the documentation
+      description: A clear description about what needs changing
+      placeholder: Tell us what is the issue that you found!
+    validations:
+      required: true
+  - type: textarea
+    attributes: 
+      label: Suggest a potential alternative/fix
+      description: Tell us how we could improve the documentation
