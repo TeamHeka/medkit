@@ -1,43 +1,19 @@
 ---
 name: Documentation Issue
-about: Use this template for documentation related issues
-labels: 'type:docs'
+about: Create a report to help us improve the documentation.
+labels: ['documentation']
 
 ---
 
 Thank you for submitting a Medkit documentation issue ! 
-The medkit docs are under contruction ! To get involved, read the documentation
-contibutor guide:  *https://medkit/contribute/docs*
-
-## **URL(s) with the issue:**
-
-Please provide a link to the documentation entry
 
 ## Description of issue (what needs changing):
 
-### **Clear description**
+### **A clear description about what needs changing**
 
-<em>Why should someone use this method? How is it useful?</em>
+<em>Tell us what is the issue that you found!</em>
 
-### **Which items are related to the issue?:**
+### **Suggest a potential alternative/fix**
 
-- [ ] Correct links: 
+<em>Tell us how we could improve the documentation</em>
 
-Is the link to the source code correct?
-
-- [ ] Parameters: 
-
-Are all parameters defined and formatted correctly?
-
-- [ ] Returns defined: 
-
-Are return values defined?
-
-- [ ] Raised listed and defined
-
-Are the errors defined? 
-
-### Submit a pull request?
-
-Are you planning to also submit a pull request to fix the issue? See the docs contributor guide:
-*https://medkit/contribute/docs* and doc style guide: *https://medkit/documentation-style-guide*
