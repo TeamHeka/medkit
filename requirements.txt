@@ -1,0 +1,4 @@
+# dev dependencies
+black
+flake8
+pytest
