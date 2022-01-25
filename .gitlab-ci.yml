@@ -1,0 +1,19 @@
+# Trigger the pipeline on develop branch and all MRs (except develop merge to main)
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_COMMIT_BRANCH != "develop"'
+
+unit_tests:
+  stage: test
+  image: continuumio/anaconda3
+  before_script:
+    - conda env create -f environment.yml
+    - conda init bash
+    - source ~/.bashrc
+    - conda activate medkit
+  script:
+    - echo "Executing unit tests..."
+    # - pytest
+  interruptible: true
+
