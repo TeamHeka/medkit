@@ -8,7 +8,7 @@
 <!--
 
 ### **Is there an existing issue for this?**
-Please search to see if an issue already exist for the bug you encountered: [medkit Issues](https://github.com/TeamHeka/medkit/issues)
+Please search to see if an issue already exist for the bug you encountered: [medkit Issues](https://gitlab.inria.fr/heka/medkit/-/issues)
 
 -->
 ---
