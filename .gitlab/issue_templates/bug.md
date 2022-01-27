@@ -1,6 +1,6 @@
 
 # Bug report
-**Create a report about someting that is not working**
+**Create a report about something that is not working**
 
 /label ~bug
 
