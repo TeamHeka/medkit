@@ -3,3 +3,4 @@ testpaths = ["tests"]
 
 [tool.black]
 line-length = 88
+experimental-string-processing = true
