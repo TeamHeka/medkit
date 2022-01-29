@@ -1,6 +1,7 @@
-import re
+import logging
+
 from dataclasses import dataclass
-from typing import Dict, List, Sequence, Text, Tuple
+from typing import Dict, List, Tuple
 
 from smart_open import open
 
@@ -8,43 +9,9 @@ GROUPING_ENTITIES = frozenset(["And-Group", "Or-Group"])
 GROUPING_RELATIONS = frozenset(["And", "Or"])
 
 
-def remove_empty(iterable: Sequence[Text]) -> Sequence[Text]:
-    """
-    Returns only non-empty strings from an iterable.
-
-    Parameters
-    ==========
-
-    - iterable : Iterable
-      An iterable of strings that possibly contains empty strings.
-
-    Returns
-    =======
-    - The same iterable with the empty strings removed.
-    """
-    return list(filter(lambda x: len(x.strip()) > 0, iterable))
-
-
-def sanitize_tabs(line: str, max_tabs: int = 2) -> str:
-    sanitized_line: List[str] = []
-    tab_count = 0
-
-    for char in line:
-        if char == "\t" and tab_count < max_tabs:
-            sanitized_line.append(char)
-            tab_count += 1
-        elif char == "\t" and tab_count == max_tabs:
-            sanitized_line.append(" ")
-        else:
-            sanitized_line.append(char)
-
-    line = "".join(sanitized_line)
-    return line
-
-
 @dataclass
 class Entity(object):
-    """A simple annotation data structure."""
+    """A simple entity annotation data structure."""
 
     id: str
     type: str
@@ -77,7 +44,7 @@ class Attribute(object):
     id: str
     type: str
     target: str
-    values: Tuple[str, ...] = tuple()
+    value: str = None  # Only one value is possible
 
 
 @dataclass
@@ -119,30 +86,186 @@ class Document(object):
     attributes: List[Attribute]
 
 
-def parse(ann_path: str) -> Document:
-    entities, relations, attributes = read_file_annotations(ann_path)
-    return Document(list(entities), list(relations), list(attributes))
+def parse_file(ann_path: str) -> Document:
+    """
+    Read an annotation file to get the Entities, Relations and Attributes in it
+    All other lines are ignored
+
+    Parameters
+    ----------
+    ann_path: str
+        The path to the annotation file to be processed.
+
+    Returns
+    -------
+    Document
+        The dataclass object containing entities, relations and attributes
+
+    """
+    with open(ann_path, encoding="utf-8") as ann_file:
+        ann_content = ann_file.read()
+    document = parse_string(ann_content)
+    return document
 
 
-def parse_string(annotation_string: str) -> Document:
-    annotations_s = "\n" + annotation_string
-    annotations_s = re.sub(r"^#.+", "", annotations_s, flags=re.MULTILINE)
-    annotations = remove_empty(re.split(r"\n([TRAE]\d+\t)", annotations_s))
+def parse_string(ann_string: str) -> Document:
+    """
+    Read a string containing all annotations and extract Entities, Relations and
+    Attributes
+    All other lines are ignored.
+
+    Parameters
+    ----------
+    ann_string: str
+        The string containing all brat annotations
+
+    Returns
+    -------
+    Document
+        The dataclass object containing entities, relations and attributes
+    """
     entities = list()
     relations = list()
     attributes = list()
 
-    for i in range(0, len(annotations), 2):
-        if annotations[i].startswith("T"):
-            entity = parse_entity(annotations[i], annotations[i + 1])
-            entities.append(entity)
-        elif annotations[i].startswith("R"):
-            relation = parse_relation(annotations[i], annotations[i + 1])
-            relations.append(relation)
-        elif annotations[i].startswith("A"):
-            attribute = parse_attribute(annotations[i], annotations[i + 1])
-            attributes.append(attribute)
+    annotations = ann_string.split("\n")
+    for i, ann in enumerate(annotations):
+        line_number = i + 1
+        if len(ann) == 0 or ann[0] not in ("T", "R", "A"):
+            logging.info(
+                "Ignoring empty line or unsupported annotation %s on line %d",
+                ann,
+                line_number,
+            )
+            continue
+        ann_id, ann_content = ann.split("\t", maxsplit=1)
+        try:
+            if ann.startswith("T"):
+                entity = _parse_entity(ann_id, ann_content)
+                entities.append(entity)
+            elif ann.startswith("R"):
+                relation = _parse_relation(ann_id, ann_content)
+                relations.append(relation)
+            elif ann.startswith("A"):
+                attribute = _parse_attribute(ann_id, ann_content)
+                attributes.append(attribute)
+        except ValueError as err:
+            logging.info(err)
+            logging.info(f"Ignore annotation {ann_id} at line {line_number}")
+
     return Document(entities, relations, attributes)
+
+
+def _parse_entity(entity_id: str, entity_content: str) -> Entity:
+    """
+    Parse the brat entity string into an Entity structure.
+
+    Parameters
+    ----------
+    entity_id: str
+        The ID defined in the brat annotation (e.g.,`T12`)
+    entity_content: str
+        The string content for this ID to parse
+         (e.g., `Temporal-Modifier 116 126\thistory of`)
+
+    Returns
+    -------
+    Entity
+        The dataclass object representing the entity
+
+    Raises
+    ------
+    ValueError
+        Raises when the entity can't be parsed
+    """
+    try:
+        tag_and_spans, text = entity_content.strip().split("\t", maxsplit=1)
+        text = text.replace("\t", " ")  # Remove tabs in text
+
+        tag, spans_text = tag_and_spans.split(" ", maxsplit=1)
+        span_list = spans_text.split(";")
+        spans: List[Tuple[int, int]] = []
+        for span in span_list:
+            start_s, end_s = span.split()
+            start, end = int(start_s), int(end_s)
+            spans.append((start, end))
+        return Entity(entity_id.strip(), tag.strip(), tuple(spans), text.strip())
+    except Exception as err:
+        raise ValueError("Impossible to parse entity. Reason : %s" % err)
+
+
+def _parse_relation(relation_id: str, relation_content: str) -> Relation:
+    """
+    Parse the annotation string into a Relation structure.
+
+    Parameters
+    ----------
+    relation_id: str
+        The ID defined in the brat annotation (e.g., R12)
+    relation_content: str
+        The relation text content. (e.g., `Modified-By Arg1:T8 Arg2:T6\t`)
+
+    Returns
+    -------
+    Relation
+        The dataclass object representing the relation
+
+    Raises
+    ------
+    ValueError
+        Raises when the relation can't be parsed
+    """
+
+    try:
+        relation, subj, obj = relation_content.strip().split()
+        subj = subj.replace("Arg1:", "")
+        obj = obj.replace("Arg2:", "")
+        return Relation(
+            relation_id.strip(), relation.strip(), subj.strip(), obj.strip()
+        )
+    except Exception as err:
+        raise ValueError("Impossible to parse the relation. Reason : %s" % err)
+
+
+def _parse_attribute(attribute_id: str, attribute_content: str) -> Attribute:
+    """
+    Parse the annotation string into an Attribute structure.
+
+    Parameters
+    ----------
+    attribute_id : str
+        The attribute ID defined in the annotation. (e.g., `A1`)
+    attribute_content: str
+         The attribute text content. (e.g., `Tense T19 Past-Ended`)
+
+    Returns
+    -------
+    Attribute:
+        The dataclass object representing the attribute
+
+    Raises
+    ------
+    ValueError
+        Raises when the attribute can't be parsed
+    """
+
+    attribute_arguments = attribute_content.strip().split(" ", maxsplit=2)
+    if len(attribute_arguments) < 2:
+        raise ValueError("Impossible to parse the input attribute")
+
+    attribute_name = attribute_arguments[0]
+    attribute_target = attribute_arguments[1]
+    attribute_value = None
+
+    if len(attribute_arguments) > 2:
+        attribute_value = attribute_arguments[2].strip()
+
+    return Attribute(
+        attribute_id.strip(),
+        attribute_name.strip(),
+        attribute_target.strip(),
+        attribute_value,
+    )
 
 
 def parse_string_to_augmented_entities(
@@ -211,12 +334,15 @@ def list_to_dict(s: List) -> Dict:
 def get_entities_relations_attributes_groups(
     ann_path: str,
 ) -> Tuple[
-    Dict[str, Entity], Dict[str, Relation], Dict[str, Attribute], Dict[str, Grouping],
+    Dict[str, Entity],
+    Dict[str, Relation],
+    Dict[str, Attribute],
+    Dict[str, Grouping],
 ]:
-    entities_s, relations_s, attributes_s = read_file_annotations(ann_path)
-    entities: Dict[str, Entity] = list_to_dict(entities_s)
-    relations: Dict[str, Relation] = list_to_dict(relations_s)
-    attributes: Dict[str, Attribute] = list_to_dict(attributes_s)
+    doc = parse_file(ann_path)
+    entities: Dict[str, Entity] = list_to_dict(doc.entities)
+    relations: Dict[str, Relation] = list_to_dict(doc.relations)
+    attributes: Dict[str, Attribute] = list_to_dict(doc.attributes)
 
     # Process Groups
 
@@ -235,116 +361,3 @@ def get_entities_relations_attributes_groups(
             groups[entity_id] = Grouping(entity_id, entity.type, items)
 
     return entities, relations, attributes, groups
-
-
-def parse_entity(tag_id: str, tag_content: str) -> Entity:
-    """
-    Parse the entity string into an Entity structure.
-
-    Parameters
-    ==========
-    - tag_id : str
-      The Tag ID in the annotation. (`T12\t` for example)
-    - tag_content : str
-      The tag text content. (`Temporal-Modifier 116 126\thistory of` for example)
-
-    Returns
-    =======
-    - Entity
-      An Entity object
-    """
-    tag_content = sanitize_tabs(tag_content, max_tabs=1)
-    try:
-        tag_spans, text = tag_content.strip().split("\t")
-    except Exception as e:  # pragma: no cover
-        print(tag_id)
-        raise e
-    tag = tag_spans.split(" ")[0].strip()
-    spans_ = tag_spans[len(tag) :].split(";")
-    spans: List[Tuple[int, int]] = []
-    for span in spans_:
-        start_s, end_s = span.split()
-        start, end = int(start_s), int(end_s)
-        spans.append((start, end))
-    return Entity(tag_id.strip(), tag, tuple(spans), text)
-
-
-def parse_relation(relation_id: str, relation_content: str) -> Relation:
-    """
-    Parse the annotation string into a Relation structure.
-
-    Parameters
-    ==========
-    - relation_id : str
-      The Relation ID in the annotation. (`R12\t` for example)
-    - relation_content : str
-      The relation text content. (`Modified-By Arg1:T8 Arg2:T6\t` for example)
-
-    Returns
-    =======
-    - Relation
-      A Relation object
-    """
-    try:
-        relation, subj, obj = relation_content.strip().split()
-    except Exception as e:
-        print(relation_id)
-        raise e
-    subj = subj.replace("Arg1:", "")
-    obj = obj.replace("Arg2:", "")
-    return Relation(relation_id.strip(), relation, subj, obj)
-
-
-def parse_attribute(attribute_id: str, attribute_content: str) -> Attribute:
-    """
-    Parse the annotation string into an Attribute structure.
-
-    Parameters
-    ==========
-    - Attribute_id : str
-      The attribute ID in the annotation. (`A1\t` for example)
-    - Attribute_content : str
-      The attribute text content. (`Tense T19 Past-Ended` for example)
-
-    Returns
-    =======
-    - Attribute
-      An Attribute object
-    """
-    attribute_arguments = attribute_content.strip().split(" ")
-    if len(attribute_arguments) < 2:
-        raise ValueError("The input attribute couldn't be parsed.")
-    attribute_name = attribute_arguments[0]
-    attribute_target = attribute_arguments[1]
-    if len(attribute_arguments) == 2:
-        return Attribute(attribute_id.strip(), attribute_name, attribute_target)
-    # elif len(attribute_arguments) > 2:
-    return Attribute(
-        attribute_id.strip(),
-        attribute_name,
-        attribute_target,
-        tuple(attribute_arguments[2:]),
-    )
-
-
-def read_file_annotations(
-    ann: str,
-) -> Tuple[List[Entity], List[Relation], List[Attribute]]:
-    """
-    Read an annotation file and get the Entities and Relations in it.
-
-    Parameters
-    ==========
-    - ann : str
-      The path to the annotation file to be processed.
-
-    Returns
-    =======
-    - Tuple[Set[Entity], Set[Relation], Set[Attribute]]
-      A tuple of sets of Entities, Relations, and Attributes.
-    """
-    ann_content = ""
-    with open(ann, encoding="utf-8") as f:
-        ann_content += f.read()
-    document = parse_string(ann_content)
-    return document.entities, document.relations, document.attributes
