@@ -2,7 +2,7 @@ import pathlib
 
 import pytest
 
-from medkit.io.brat import Entity, Attribute, Relation
+from medkit.io.brat import Entity, Attribute, Relation, Grouping
 from medkit.io.brat import _parse_entity, _parse_relation, _parse_attribute, parse_file
 
 
@@ -74,8 +74,43 @@ def test_parse_file():
     test_file = pathlib.Path("tests/data/brat/1_example.ann")
     doc = parse_file(str(test_file))
     entity = Entity(id="T1", type="medication", span=((36, 46),), text="Lisinopril")
-    assert entity in doc.entities
+    assert entity in doc.entities.values()
     relation = Relation(id="R1", type="treats", subj="T1", obj="T3")
-    assert relation in doc.relations
+    assert relation in doc.relations.values()
     attribute = Attribute(id="A1", type="negation", target="R1")
-    assert attribute in doc.attributes
+    assert attribute in doc.attributes.values()
+
+
+def test_document_get_augmented_entities():
+    test_file = pathlib.Path("tests/data/brat/2_augmented_entities.ann")
+    doc = parse_file(test_file)
+    augmented_entities = doc.get_augmented_entities()
+    assert "T4" in augmented_entities.keys()
+    entity = augmented_entities["T4"]
+    assert entity.text == "entity1 entity2"
+    assert entity.type == "And-Group"
+    assert entity.span == ((30, 37), (120, 127))
+    relation1 = Relation(id="R1", type="And", subj="T4", obj="T1")
+    relation2 = Relation(id="R3", type="Or", subj="T5", obj="T4")
+    assert relation1 in entity.relations_from_me
+    assert relation2 in entity.relations_to_me
+    attribute = Attribute(id="A1", type="attribute", target="T4")
+    assert attribute in entity.attributes
+
+
+def test_document_grouping():
+    test_file = pathlib.Path("tests/data/brat/2_augmented_entities.ann")
+    doc = parse_file(test_file, detect_groups=True)
+    assert "T1" not in doc.groups.keys()
+    # Test And-Group
+    assert "T4" in doc.groups.keys()
+    and_group = doc.groups["T4"]
+    assert and_group.type == "And-Group"
+    entity1 = Entity(id="T1", type="label1", span=((30, 37),), text="entity1")
+    assert entity1 in and_group.items
+    # Test Or-Group
+    assert "T5" in doc.groups.keys()
+    or_group = doc.groups["T5"]
+    assert or_group.type == "Or-Group"
+    entity3 = Entity(id="T3", type="label3", span=((140, 147),), text="entity3")
+    assert entity3 in or_group.items

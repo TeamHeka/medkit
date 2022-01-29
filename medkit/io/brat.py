@@ -49,6 +49,8 @@ class Attribute(object):
 
 @dataclass
 class Grouping(object):
+    """A grouping data structure for entities  of type 'And-Group", "Or-Group'"""
+
     id: str
     type: str
     items: List[Entity]
@@ -81,20 +83,50 @@ class AugmentedEntity(object):
 
 @dataclass
 class Document(object):
-    entities: List[Entity]
-    relations: List[Relation]
-    attributes: List[Attribute]
+    entities: Dict[str, Entity]
+    relations: Dict[str, Relation]
+    attributes: Dict[str, Attribute]
+    groups: Dict[str, Grouping] = None
+
+    def get_augmented_entities(self) -> Dict[str, AugmentedEntity]:
+        augmented_entities = {}
+        for entity in self.entities.values():
+            entity_relations_from_me = []
+            entity_relations_to_me = []
+            entity_attributes = []
+            for relation in self.relations.values():
+                if relation.subj == entity.id:
+                    entity_relations_from_me.append(relation)
+                if relation.obj == entity.id:
+                    entity_relations_to_me.append(relation)
+            for attribute in self.attributes.values():
+                if attribute.target == entity.id:
+                    entity_attributes.append(attribute)
+            augmented_entities[entity.id] = AugmentedEntity(
+                id=entity.id,
+                type=entity.type,
+                span=entity.span,
+                text=entity.text,
+                relations_from_me=tuple(entity_relations_from_me),
+                relations_to_me=tuple(entity_relations_to_me),
+                attributes=tuple(entity_attributes),
+            )
+        return augmented_entities
 
 
-def parse_file(ann_path: str) -> Document:
+def parse_file(ann_path: str, detect_groups: bool = False) -> Document:
     """
-    Read an annotation file to get the Entities, Relations and Attributes in it
-    All other lines are ignored
+    Read an annotation file to get the Entities, Relations and Attributes in it.
+    All other lines are ignored.
 
     Parameters
     ----------
     ann_path: str
         The path to the annotation file to be processed.
+    detect_groups: bool, optional
+        If set to `True`, the function will also parse the group of entities according
+        to some specific keywords.
+        By default, it is set to False.
 
     Returns
     -------
@@ -104,29 +136,33 @@ def parse_file(ann_path: str) -> Document:
     """
     with open(ann_path, encoding="utf-8") as ann_file:
         ann_content = ann_file.read()
-    document = parse_string(ann_content)
+    document = parse_string(ann_content, detect_groups)
     return document
 
 
-def parse_string(ann_string: str) -> Document:
+def parse_string(ann_string: str, detect_groups: bool = False) -> Document:
     """
     Read a string containing all annotations and extract Entities, Relations and
-    Attributes
+    Attributes.
     All other lines are ignored.
 
     Parameters
     ----------
     ann_string: str
         The string containing all brat annotations
+    detect_groups: bool, optional
+        If set to `True`, the function will also parse the group of entities according
+        to some specific keywords.
+        By default, it is set to False.
 
     Returns
     -------
     Document
         The dataclass object containing entities, relations and attributes
     """
-    entities = list()
-    relations = list()
-    attributes = list()
+    entities = dict()
+    relations = dict()
+    attributes = dict()
 
     annotations = ann_string.split("\n")
     for i, ann in enumerate(annotations):
@@ -142,18 +178,34 @@ def parse_string(ann_string: str) -> Document:
         try:
             if ann.startswith("T"):
                 entity = _parse_entity(ann_id, ann_content)
-                entities.append(entity)
+                entities[entity.id] = entity
             elif ann.startswith("R"):
                 relation = _parse_relation(ann_id, ann_content)
-                relations.append(relation)
+                relations[relation.id] = relation
             elif ann.startswith("A"):
                 attribute = _parse_attribute(ann_id, ann_content)
-                attributes.append(attribute)
+                attributes[attribute.id] = attribute
         except ValueError as err:
             logging.info(err)
             logging.info(f"Ignore annotation {ann_id} at line {line_number}")
 
-    return Document(entities, relations, attributes)
+    # Process groups
+    groups = None
+    if detect_groups:
+        groups: Dict[str, Grouping] = dict()
+        grouping_relations = {
+            r.id: r for r in relations.values() if r.type in GROUPING_RELATIONS
+        }
+
+        for entity in entities.values():
+            if entity.type in GROUPING_ENTITIES:
+                items: List[Entity] = list()
+                for relation in grouping_relations.values():
+                    if relation.subj == entity.id:
+                        items.append(entities[relation.obj])
+                groups[entity.id] = Grouping(entity.id, entity.type, items)
+
+    return Document(entities, relations, attributes, groups)
 
 
 def _parse_entity(entity_id: str, entity_content: str) -> Entity:
@@ -266,98 +318,3 @@ def _parse_attribute(attribute_id: str, attribute_content: str) -> Attribute:
         attribute_target.strip(),
         attribute_value,
     )
-
-
-def parse_string_to_augmented_entities(
-    annotation_string: str,
-) -> Dict[str, AugmentedEntity]:
-    document = parse_string(annotation_string)
-    augmented_entities: Dict[str, AugmentedEntity] = {}
-    for entity in document.entities:
-        entity_id = entity.id
-        entity_relations_from_me = []
-        entity_relations_to_me = []
-        entity_attributes = []
-        for relation in document.relations:
-            if relation.subj == entity_id:
-                entity_relations_from_me.append(relation)
-            if relation.obj == entity_id:
-                entity_relations_to_me.append(relation)
-        for attribute in document.attributes:
-            if attribute.target == entity_id:
-                entity_attributes.append(attribute)
-        augmented_entities[entity.id] = AugmentedEntity(
-            id=entity.id,
-            type=entity.type,
-            span=entity.span,
-            text=entity.text,
-            relations_from_me=tuple(entity_relations_from_me),
-            relations_to_me=tuple(entity_relations_to_me),
-            attributes=tuple(entity_attributes),
-        )
-    return augmented_entities
-
-
-def get_augmented_entities(ann_path: str) -> Dict[str, AugmentedEntity]:
-    entities, relations, attributes, _ = get_entities_relations_attributes_groups(
-        ann_path
-    )
-    augmented_entities = {}
-    for entity_id, entity in entities.items():
-        entity_relations_from_me = []
-        entity_relations_to_me = []
-        entity_attributes = []
-        for _, relation in relations.items():
-            if relation.subj == entity_id:
-                entity_relations_from_me.append(relation)
-            if relation.obj == entity_id:
-                entity_relations_to_me.append(relation)
-        for _, attribute in attributes.items():
-            if attribute.target == entity_id:
-                entity_attributes.append(attribute)
-        augmented_entities[entity.id] = AugmentedEntity(
-            id=entity.id,
-            type=entity.type,
-            span=entity.span,
-            text=entity.text,
-            relations_from_me=tuple(entity_relations_from_me),
-            relations_to_me=tuple(entity_relations_to_me),
-            attributes=tuple(entity_attributes),
-        )
-    return augmented_entities
-
-
-def list_to_dict(s: List) -> Dict:
-    return {i.id: i for i in s}
-
-
-def get_entities_relations_attributes_groups(
-    ann_path: str,
-) -> Tuple[
-    Dict[str, Entity],
-    Dict[str, Relation],
-    Dict[str, Attribute],
-    Dict[str, Grouping],
-]:
-    doc = parse_file(ann_path)
-    entities: Dict[str, Entity] = list_to_dict(doc.entities)
-    relations: Dict[str, Relation] = list_to_dict(doc.relations)
-    attributes: Dict[str, Attribute] = list_to_dict(doc.attributes)
-
-    # Process Groups
-
-    grouping_relations = {
-        r.id: r for r in relations.values() if r.type in GROUPING_RELATIONS
-    }
-
-    groups: Dict[str, Grouping] = {}
-
-    for entity_id, entity in entities.items():
-        if entity.type in GROUPING_ENTITIES:
-            items: List[Entity] = list()
-            for relation in grouping_relations.values():
-                if relation.subj == entity_id:
-                    items.append(entities[relation.obj])
-            groups[entity_id] = Grouping(entity_id, entity.type, items)
-
-    return entities, relations, attributes, groups
