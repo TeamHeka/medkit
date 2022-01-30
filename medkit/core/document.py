@@ -1,7 +1,9 @@
-__all__ = ["Document"]
+__all__ = ["Collection", "Document"]
 
 import abc
 import uuid
+
+from typing import List
 
 from medkit.core.annotation import Annotation
 
@@ -42,3 +44,10 @@ class Document(abc.ABC):
 
     def get_annotations(self):
         return list(self.annotations.values())
+
+
+class Collection(object):
+    """Collection of documents"""
+
+    def __init__(self, documents: List[Document]):
+        self.documents = documents

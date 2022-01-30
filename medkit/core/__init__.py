@@ -1,4 +1,4 @@
-__all__ = ["Annotation", "Document"]
+__all__ = ["Collection", "Converter"]
 
-from .annotation import Annotation
-from .document import Document
+from .document import Collection
+from .processing import Converter

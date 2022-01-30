@@ -2,7 +2,7 @@ import pathlib
 
 import pytest
 
-from medkit.io._brat_utils import Entity, Attribute, Relation, Grouping
+from medkit.io._brat_utils import Entity, Attribute, Relation
 from medkit.io._brat_utils import _parse_entity, _parse_relation, _parse_attribute, parse_file
 
 

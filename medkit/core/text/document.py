@@ -1,6 +1,7 @@
 __all__ = ["TextDocument"]
 
-from medkit.core import Document, Annotation
+from medkit.core.annotation import Annotation
+from medkit.core.document import Document
 from medkit.core.text import Entity, Relation, Attribute
 
 
