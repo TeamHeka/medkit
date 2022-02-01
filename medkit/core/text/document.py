@@ -1,8 +1,14 @@
+from __future__ import annotations
+
 __all__ = ["TextDocument"]
 
-from medkit.core.annotation import Annotation
+import typing
+
 from medkit.core.document import Document
 from medkit.core.text import Entity, Relation, Attribute
+
+if typing.TYPE_CHECKING:
+    from medkit.core.annotation import Annotation
 
 
 class TextDocument(Document):

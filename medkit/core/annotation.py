@@ -8,13 +8,28 @@ from typing import Dict
 
 class Annotation(abc.ABC):
     def __init__(
-        self, origin: str, label: str, ann_id: str = None, metadata: Dict = None
+        self, origin_id: str, label: str, ann_id: str = None, metadata: Dict = None
     ):
+        """
+        Provide common initialization for annotation instances
+
+        Parameters
+        ----------
+        origin_id: str
+            The id of the operation which creates annotation
+            (i.e., ProcessingDescription.id)
+        label: str
+            The annotation label
+        ann_id: str, Optional
+            The annotation id
+        metadata: dict
+            The dictionary containing the annotation metadata
+        """
         if ann_id:
             self.id = ann_id
         else:
             self.id = str(uuid.uuid1())
-        self.origin = origin
+        self.origin_id = origin_id
         self.label = label
         self.metadata = metadata
 

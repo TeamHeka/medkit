@@ -10,7 +10,7 @@ GROUPING_RELATIONS = frozenset(["And", "Or"])
 
 
 @dataclass
-class Entity(object):
+class Entity:
     """A simple entity annotation data structure."""
 
     id: str
@@ -28,7 +28,7 @@ class Entity(object):
 
 
 @dataclass
-class Relation(object):
+class Relation:
     """A simple relation data structure."""
 
     id: str
@@ -38,7 +38,7 @@ class Relation(object):
 
 
 @dataclass
-class Attribute(object):
+class Attribute:
     """A simple attribute data structure."""
 
     id: str
@@ -48,7 +48,7 @@ class Attribute(object):
 
 
 @dataclass
-class Grouping(object):
+class Grouping:
     """A grouping data structure for entities  of type 'And-Group", "Or-Group'"""
 
     id: str
@@ -61,7 +61,7 @@ class Grouping(object):
 
 
 @dataclass
-class AugmentedEntity(object):
+class AugmentedEntity:
     """An augmented entity data structure with its relations and attributes."""
 
     id: str
@@ -82,7 +82,7 @@ class AugmentedEntity(object):
 
 
 @dataclass
-class Document(object):
+class Document:
     entities: Dict[str, Entity]
     relations: Dict[str, Relation]
     attributes: Dict[str, Attribute]

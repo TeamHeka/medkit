@@ -1,11 +1,15 @@
+from __future__ import annotations
+
 __all__ = ["Collection", "Document"]
 
 import abc
 import uuid
 
-from typing import List
+from typing import Dict, List, TYPE_CHECKING
 
-from medkit.core.annotation import Annotation
+if TYPE_CHECKING:
+    from medkit.core.annotation import Annotation
+    from medkit.core.processing import ProcessingDescription
 
 
 class Document(abc.ABC):
@@ -14,8 +18,8 @@ class Document(abc.ABC):
             self.id = doc_id
         else:
             self.id = str(uuid.uuid1())
-        self.annotations = dict()
-        self.operations = dict()
+        self.annotations: Dict[str, Annotation] = {}
+        self.operations: Dict[str, ProcessingDescription] = {}
         self.metadata = metadata  # TODO: what is metadata format ?
 
     @abc.abstractmethod
@@ -48,11 +52,11 @@ class Document(abc.ABC):
     def get_annotations(self):
         return list(self.annotations.values())
 
-    def add_operation(self, processing_desc):
+    def add_operation(self, processing_desc: ProcessingDescription):
         self.operations[processing_desc.id] = processing_desc
 
 
-class Collection(object):
+class Collection:
     """Collection of documents"""
 
     def __init__(self, documents: List[Document]):

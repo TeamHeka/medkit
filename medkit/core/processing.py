@@ -1,26 +1,28 @@
+from __future__ import annotations
+
 __all__ = ["InputConverter", "OutputConverter", "ProcessingDescription"]
 
 import abc
 import dataclasses
 import uuid
 
-from typing import Dict
+from typing import Any, Dict, TYPE_CHECKING
 
-from medkit.core.document import Collection
+if TYPE_CHECKING:
+    from medkit.core.document import Collection
 
 
 @dataclasses.dataclass
 class ProcessingDescription:
     name: str
-    id: str = str(uuid.uuid1())
-    config: Dict[str, str] = None
+    id: str = dataclasses.field(default_factory=lambda: str(uuid.uuid1()))
+    config: Dict[str, Any] = None
 
 
 class InputConverter(abc.ABC):
-
     @property
     @abc.abstractmethod
-    def description(self):
+    def description(self) -> ProcessingDescription:
         pass
 
     @abc.abstractmethod
@@ -33,7 +35,6 @@ class InputConverter(abc.ABC):
 
 
 class OutputConverter(abc.ABC):
-
     @property
     @abc.abstractmethod
     def description(self):
