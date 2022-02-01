@@ -4,8 +4,8 @@ from medkit.core.annotation import Annotation
 
 
 class Entity(Annotation):
-    def __init__(self, origin, label, spans, text):
-        super().__init__(origin=origin, label=label)
+    def __init__(self, origin, label, spans, text, metadata=None):
+        super().__init__(origin=origin, label=label, metadata=metadata)
         self.spans = spans
         self.text = text
 
@@ -15,8 +15,8 @@ class Entity(Annotation):
 
 
 class Attribute(Annotation):
-    def __init__(self, origin, label, target_id, value=None):
-        super().__init__(origin=origin, label=label)
+    def __init__(self, origin, label, target_id, value=None, metadata=None):
+        super().__init__(origin=origin, label=label, metadata=metadata)
         self.target_id = target_id
         self.value = value
 
@@ -26,8 +26,8 @@ class Attribute(Annotation):
 
 
 class Relation(Annotation):
-    def __init__(self, origin, label, source_id, target_id):
-        super().__init__(origin=origin, label=label)
+    def __init__(self, origin, label, source_id, target_id, metadata=None):
+        super().__init__(origin=origin, label=label, metadata=metadata)
         self.source_id = source_id
         self.target_id = target_id
 

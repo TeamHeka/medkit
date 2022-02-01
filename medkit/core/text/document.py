@@ -6,7 +6,7 @@ from medkit.core.text import Entity, Relation, Attribute
 
 
 class TextDocument(Document):
-    def __init__(self, text, metadata=None):
+    def __init__(self, doc_id: str = None, text: str = None, metadata=None):
         """
         Initializes the text document
 
@@ -16,12 +16,15 @@ class TextDocument(Document):
 
         Parameters
         ----------
-        text: str
+        doc_id: str, Optional
+            Document identifier. If None, an uuid is generated.
+        text: str, Optional
             Document text
-        metadata: TODO
+        metadata: dict  # TODO
+            Document metadata
 
         """
-        super().__init__(metadata)
+        super().__init__(doc_id, metadata)
         self.text = text
         self.entities = dict()  # Key: label
         self.relations = dict()  # Key: TODO : determine the key

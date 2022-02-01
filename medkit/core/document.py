@@ -9,10 +9,11 @@ from medkit.core.annotation import Annotation
 
 
 class Document(abc.ABC):
-
-    @abc.abstractmethod
-    def __init__(self, metadata=None):
-        self.id = uuid.uuid1()
+    def __init__(self, doc_id: str = None, metadata=None):
+        if doc_id:
+            self.id = doc_id
+        else:
+            self.id = str(uuid.uuid1())
         self.annotations = dict()
         self.operations = dict()
         self.metadata = metadata  # TODO: what is metadata format ?

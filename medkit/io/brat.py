@@ -104,6 +104,7 @@ class BratInputConverter(InputConverter):
             label=brat_entity.type,
             spans=brat_entity.span,
             text=brat_entity.text,
+            metadata={"brat_id": brat_entity.id},
         )
 
     def _convert_brat_relation(
@@ -114,6 +115,7 @@ class BratInputConverter(InputConverter):
             label=brat_relation.type,
             source_id=brat_ann[brat_relation.subj],
             target_id=brat_ann[brat_relation.obj],
+            metadata={"brat_id": brat_relation.id},
         )
 
     def _convert_brat_attribute(
@@ -124,4 +126,5 @@ class BratInputConverter(InputConverter):
             label=brat_attribute.type,
             target_id=brat_ann[brat_attribute.target],
             value=brat_attribute.value,
+            metadata={"brat_id": brat_attribute.id},
         )
