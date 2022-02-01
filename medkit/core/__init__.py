@@ -1,4 +1,4 @@
-__all__ = ["Collection", "Converter"]
+__all__ = ["Collection", "InputConverter"]
 
 from .document import Collection
-from .processing import Converter
+from .processing import InputConverter

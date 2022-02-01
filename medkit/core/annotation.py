@@ -6,9 +6,9 @@ import uuid
 
 class Annotation(abc.ABC):
     @abc.abstractmethod
-    def __init__(self, ann_source, label: str):
+    def __init__(self, origin, label: str):
         self.id = uuid.uuid1()
-        self.ann_source = ann_source
+        self.origin = origin
         self.label = label
 
     @abc.abstractmethod

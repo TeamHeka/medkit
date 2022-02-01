@@ -9,10 +9,12 @@ from medkit.core.annotation import Annotation
 
 
 class Document(abc.ABC):
+
     @abc.abstractmethod
     def __init__(self, metadata=None):
         self.id = uuid.uuid1()
         self.annotations = dict()
+        self.operations = dict()
         self.metadata = metadata  # TODO: what is metadata format ?
 
     @abc.abstractmethod
@@ -44,6 +46,9 @@ class Document(abc.ABC):
 
     def get_annotations(self):
         return list(self.annotations.values())
+
+    def add_operation(self, processing_desc):
+        self.operations[processing_desc.id] = processing_desc
 
 
 class Collection(object):

@@ -6,10 +6,10 @@ from medkit.core.text.annotation import Entity, Relation, Attribute
 
 def test_add_annotation():
     doc = TextDocument(text="hello")
-    ent1 = Entity(ann_source="", label="ent1", spans="", text="")
-    ent2 = Entity(ann_source="", label="ent2", spans="", text="")
-    relation = Relation(ann_source="", label="toto", source_id=ent1.id, target_id=ent2.id)
-    attribute = Attribute(ann_source="", label="Negation", target_id=ent1.id)
+    ent1 = Entity(origin="", label="ent1", spans="", text="")
+    ent2 = Entity(origin="", label="ent2", spans="", text="")
+    relation = Relation(origin="", label="toto", source_id=ent1.id, target_id=ent2.id)
+    attribute = Attribute(origin="", label="Negation", target_id=ent1.id)
     # Test entity addition in entity list
     doc.add_annotation(ent1)
     assert ent1.id in doc.entities.get(ent1.label)

@@ -1,20 +1,26 @@
 import json
 import pathlib
+
 from smart_open import open
 
 from medkit.core import Collection
 from medkit.core.text import TextDocument, Entity, Relation, Attribute
-from medkit.core.processing import Converter
+from medkit.core.processing import InputConverter, ProcessingDescription
 
 import medkit.io._brat_utils as brat_utils
 
 
-class BratConverter(Converter):
-    """Brat class in charge of converting annotations"""
+class BratInputConverter(InputConverter):
+    """Class in charge of converting brat annotations"""
+
+    @property
+    def description(self):
+        return self._description
 
     def __init__(self, config=None):
-        super().__init__(config)
-        self.format = "brat"
+        self._description = ProcessingDescription(
+            name=self.__class__.__name__, config=config
+        )
 
     def to_json(self):
         return json.dumps(self.__dict__)
@@ -43,17 +49,13 @@ class BratConverter(Converter):
         """
         documents = list()
         dir_path = pathlib.Path(dir_path)
-        print(dir_path)
+
         for text_path in dir_path.glob("*%s" % text_extension):
             ann_filename = text_path.stem + ".ann"
             ann_path = pathlib.Path(dir_path / ann_filename)
             if ann_path.exists():
                 documents.append(self._load_file(str(text_path), str(ann_path)))
         return Collection(documents)
-
-    def save(self, collection):
-        # TODO: implement the method (cf. Brattransform from pymedext)
-        pass
 
     def _load_file(self, text_path: str, ann_path: str) -> TextDocument:
         """
@@ -77,6 +79,7 @@ class BratConverter(Converter):
         filename = pathlib.Path(text_path).name
         metadata = {"name": filename}
         internal_doc = TextDocument(text=text, metadata=metadata)
+        internal_doc.add_operation(self.description)
         brat_doc = brat_utils.parse_file(ann_path)
         # First convert entities, then relations, finally attributes
         # because new annotation id is needed
@@ -97,7 +100,7 @@ class BratConverter(Converter):
 
     def _convert_brat_entity(self, brat_entity: brat_utils.Entity) -> Entity:
         return Entity(
-            ann_source=self.id,
+            origin=self.description.id,
             label=brat_entity.type,
             spans=brat_entity.span,
             text=brat_entity.text,
@@ -107,7 +110,7 @@ class BratConverter(Converter):
         self, brat_relation: brat_utils.Relation, brat_ann: dict
     ) -> Relation:
         return Relation(
-            ann_source=self.id,
+            origin=self.description.id,
             label=brat_relation.type,
             source_id=brat_ann[brat_relation.subj],
             target_id=brat_ann[brat_relation.obj],
@@ -117,7 +120,7 @@ class BratConverter(Converter):
         self, brat_attribute: brat_utils.Attribute, brat_ann: dict
     ) -> Attribute:
         return Attribute(
-            ann_source=self.id,
+            origin=self.description.id,
             label=brat_attribute.type,
             target_id=brat_ann[brat_attribute.target],
             value=brat_attribute.value,
