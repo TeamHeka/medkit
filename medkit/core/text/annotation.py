@@ -78,10 +78,6 @@ class Relation(Annotation):
 
         Parameters
         ----------
-        source_id
-        target_id
-        rel_id
-        metadata
          origin_id: str
             The id of the operation which creates this relation
             (i.e., ProcessingDescription.id)
