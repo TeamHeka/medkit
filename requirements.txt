@@ -1,4 +1,6 @@
 # dev dependencies
+smart_open
 black
 flake8
 pytest
+pytest-cov
