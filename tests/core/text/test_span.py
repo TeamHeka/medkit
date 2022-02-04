@@ -1,8 +1,10 @@
 from medkit.core.text.span import (
     Span,
+    AdditionalSpan,
     remove,
     extract,
     move,
+    _replace_in_spans,
     _remove_in_spans,
     _extract_in_spans,
     _move_in_spans,
@@ -39,6 +41,113 @@ def test_move_after():
     text, spans = move(text, spans, (17, 22), 26)
     assert text == "Hello, my name is Doe John."
     assert spans == [Span(0, 17), Span(22, 26), Span(17, 22), Span(26, 27)]
+
+
+def test_replace_in_spans():
+    # only one span, starting at 0
+    spans = [Span(0, 10)]
+    # replace begining
+    assert _replace_in_spans(spans, [(0, 6)], [6]) == [
+        AdditionalSpan(6, [Span(0, 6)]),
+        Span(6, 10),
+    ]
+    # replace end
+    assert _replace_in_spans(spans, [(4, 10)], [6]) == [
+        Span(0, 4),
+        AdditionalSpan(6, [Span(4, 10)]),
+    ]
+    # replace inside
+    assert _replace_in_spans(spans, [(4, 7)], [3]) == [
+        Span(0, 4),
+        AdditionalSpan(3, [Span(4, 7)]),
+        Span(7, 10),
+    ]
+    # replace whole span
+    assert _replace_in_spans(spans, [(0, 10)], [10]) == [
+        AdditionalSpan(10, [Span(0, 10)])
+    ]
+    # replace several ranges
+    assert _replace_in_spans(spans, [(3, 5), (7, 8)], [10, 5]) == [
+        Span(0, 3),
+        AdditionalSpan(10, [Span(3, 5)]),
+        Span(5, 7),
+        AdditionalSpan(5, [Span(7, 8)]),
+        Span(8, 10),
+    ]
+
+    # only one span with non-zero start
+    spans = [Span(10, 20)]
+    # replace begining (same length)
+    assert _replace_in_spans(spans, [(0, 6)], [6]) == [
+        AdditionalSpan(6, [Span(10, 16)]),
+        Span(16, 20),
+    ]
+    # replace end
+    assert _replace_in_spans(spans, [(4, 10)], [6]) == [
+        Span(10, 14),
+        AdditionalSpan(6, [Span(14, 20)]),
+    ]
+    # replace inside
+    assert _replace_in_spans(spans, [(4, 7)], [3]) == [
+        Span(10, 14),
+        AdditionalSpan(3, [Span(14, 17)]),
+        Span(17, 20),
+    ]
+    # replace whole span
+    assert _replace_in_spans(spans, [(0, 10)], [10]) == [
+        AdditionalSpan(10, [Span(10, 20)])
+    ]
+    # replace inside (longer replacement)
+    assert _replace_in_spans(spans, [(4, 7)], [10]) == [
+        Span(10, 14),
+        AdditionalSpan(10, [Span(14, 17)]),
+        Span(17, 20),
+    ]
+    # replace inside (shorter replacement)
+    assert _replace_in_spans(spans, [(4, 7)], [1]) == [
+        Span(10, 14),
+        AdditionalSpan(1, [Span(14, 17)]),
+        Span(17, 20),
+    ]
+    # replace several ranges
+    assert _replace_in_spans(spans, [(3, 5), (7, 8)], [10, 5]) == [
+        Span(10, 13),
+        AdditionalSpan(10, [Span(13, 15)]),
+        Span(15, 17),
+        AdditionalSpan(5, [Span(17, 18)]),
+        Span(18, 20),
+    ]
+
+    # several spans
+    spans = [Span(10, 20), Span(30, 40), Span(50, 60)]
+    # replace end of 1st span
+    assert _replace_in_spans(spans, [(4, 10)], [10]) == [
+        Span(10, 14),
+        AdditionalSpan(10, [Span(14, 20)]),
+        Span(30, 40),
+        Span(50, 60),
+    ]
+    # replace across several spans (end of 1st span and begining of 2d span)
+    assert _replace_in_spans(spans, [(4, 14)], [10]) == [
+        Span(10, 14),
+        AdditionalSpan(10, [Span(14, 20), Span(30, 34)]),
+        Span(34, 40),
+        Span(50, 60),
+    ]
+    # replace across several spans (end of 1st span, entire 2d span, begining of 3d span)
+    assert _replace_in_spans(spans, [(4, 24)], [10]) == [
+        Span(10, 14),
+        AdditionalSpan(10, [Span(14, 20), Span(30, 40), Span(50, 54)]),
+        Span(54, 60),
+    ]
+    # replace several ranges
+    assert _replace_in_spans(spans, [(4, 14), (16, 24)], [10, 5]) == [
+        Span(10, 14),
+        AdditionalSpan(10, [Span(14, 20), Span(30, 34)]),
+        Span(34, 36),
+        AdditionalSpan(5, [Span(36, 40), Span(50, 54)]),
+        Span(54, 60),
+    ]
 
 
 def test_remove_in_spans():

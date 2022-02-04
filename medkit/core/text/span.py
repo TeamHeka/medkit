@@ -41,6 +41,95 @@ class AdditionalSpan:
     replaced_spans: List[Span]
 
 
+def _replace_in_spans(spans, ranges, replacement_lengths):
+    output_spans = []
+
+    # current span and associated values
+    span_index = 0
+    span = spans[0]
+    # start and end in "relative" coords (can be compared to range start/end)
+    span_start = 0
+    span_end = span.length
+
+    # current range to replace and associated values
+    range_index = 0
+    range_start, range_end = ranges[0]
+    replacement_length = replacement_lengths[0]
+    replaced_spans = [] if replacement_length > 0 else None
+
+    while span_index < len(spans) or range_index < len(ranges):
+        # iterate to next range if current range has been fully handled
+        if range_index < len(ranges) and range_end <= span_start:
+            # we have encountered all spans overlaping with the range to replace,
+            # and we have stored the overlaping parts in replaced_spans.
+            # create new AdditionalSpan referrencing all the replaced_spans
+            # and add it to output
+            # (expect if replacement_length is 0, in which case the spans were
+            # just removed)
+            if replacement_length > 0:
+                new_span = AdditionalSpan(replacement_length, replaced_spans)
+                output_spans.append(new_span)
+
+            # move on to next span if we haven't reached end of ranges
+            # and updated associated values
+            range_index += 1
+            if range_index < len(ranges):
+                range_start, range_end = ranges[range_index]
+                replacement_length = replacement_lengths[range_index]
+                replaced_spans = [] if replacement_length > 0 else None
+
+        # iterate to next span if current span has been fully handled
+        if (
+            span_end == span_start
+            or range_index == len(ranges)
+            or span_end <= range_start
+        ):
+            # add current span to output
+            if span_end != span_start:
+                output_spans.append(span)
+            # move on to next span if we haven't reached end of spans
+            # and updated associated values
+            span_index += 1
+            span_start = span_end  # end of previous span is start of new span
+            if span_index < len(spans):
+                span = spans[span_index]
+                span_end = span_start + span.length
+            continue
+
+        # compute parts of span that do not overlap with current range
+        length_before_range = max(range_start - span_start, 0)
+        length_after_range = max(span_end - range_end, 0)
+
+        # store part of span that will be replaced
+        if (
+            replacement_length > 0
+            and length_before_range + length_after_range < span.length
+        ):
+            assert isinstance(span, Span)
+            replaced_span = Span(
+                start=span.start + length_before_range,
+                end=span.end - length_after_range,
+            )
+            replaced_spans.append(replaced_span)
+
+        # create span for the part before the range
+        # and add it to output
+        if length_before_range > 0:
+            assert isinstance(span, Span)
+            before_span = Span(start=span.start, end=span.start + length_before_range)
+            output_spans.append(before_span)
+
+        # create span for the remaining part after the range
+        # and use it as current span
+        if length_after_range > 0:
+            assert isinstance(span, Span)
+            span = Span(start=span.end - length_after_range, end=span.end)
+        # update span_start to point to the begining of the remainder
+        span_start = span_end - length_after_range
+
+    return output_spans
+
+
 def remove(
     text: str,
     spans: List[Span],
@@ -73,7 +162,6 @@ def remove(
         range_start += offset
         range_end += offset
         text = text[:range_start] + text[range_end:]
-
         offset -= range_end - range_start
 
     spans = _remove_in_spans(spans, ranges)
@@ -81,64 +169,8 @@ def remove(
 
 
 def _remove_in_spans(spans, ranges):
-    output_spans = []
-
-    # current span and associated values
-    span_index = 0
-    span = spans[0]
-    # start and end in "relative" coords (can be compared to range start/end)
-    span_start = 0
-    span_end = span.length
-
-    # current range to remove and associated values
-    range_index = 0
-    range_start, range_end = ranges[0]
-
-    while span_index < len(spans) or range_index < len(ranges):
-        # iterate to next range if current range has been fully handled
-        if range_index < len(ranges) and range_end <= span_start:
-            # move on to next span if we haven't reached end of ranges
-            # and updated associated values
-            range_index += 1
-            if range_index < len(ranges):
-                range_start, range_end = ranges[range_index]
-
-        # iterate to next span if current span has been fully handled
-        if (
-            span_end == span_start
-            or range_index == len(ranges)
-            or span_end <= range_start
-        ):
-            # add current span to output
-            if span_end != span_start:
-                output_spans.append(span)
-            # move on to next span if we haven't reached end of spans
-            # and updated associated values
-            span_index += 1
-            span_start = span_end  # end of previous span is start of new span
-            if span_index < len(spans):
-                span = spans[span_index]
-                span_end = span_start + span.length
-            continue
-
-        # compute parts of span that do not overlap with current range
-        length_before_range = max(range_start - span_start, 0)
-        length_after_range = max(span_end - range_end, 0)
-
-        # create span for the part before the range
-        # and add it to output
-        if length_before_range > 0:
-            before_span = Span(start=span.start, end=span.start + length_before_range)
-            output_spans.append(before_span)
-
-        # create span for the remaining part after the range
-        # and use it as current span
-        if length_after_range > 0:
-            span = Span(start=span.end - length_after_range, end=span.end)
-        # update span_start to point to the begining of the remainder
-        span_start = span_end - length_after_range
-
-    return output_spans
+    replacement_lengths = [0] * len(ranges)
+    return _replace_in_spans(spans, ranges, replacement_lengths)
 
 
 def extract(
