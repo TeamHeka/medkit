@@ -11,7 +11,7 @@ from medkit.core.text.span import (
     _extract_in_spans,
     _insert_in_spans,
     _move_in_spans,
-    convert_additional_spans,
+    normalize_spans,
 )
 
 
@@ -428,10 +428,10 @@ def test_move_in_spans():
     ]
 
 
-def test_convert_additional_spans():
+def test_normalize_spans():
     spans = [AdditionalSpan(length=10, replaced_spans=[Span(10, 20)]), Span(30, 40)]
-    assert convert_additional_spans(spans) == [Span(10, 20), Span(30, 40)]
+    assert normalize_spans(spans) == [Span(10, 20), Span(30, 40)]
 
     # merge contiguous
     spans = [AdditionalSpan(length=10, replaced_spans=[Span(10, 30)]), Span(30, 40)]
-    assert convert_additional_spans(spans) == [Span(10, 40)]
+    assert normalize_spans(spans) == [Span(10, 40)]

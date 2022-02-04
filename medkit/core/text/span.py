@@ -6,7 +6,7 @@ __all__ = [
     "extract",
     "insert",
     "move",
-    "convert_additional_spans",
+    "normalize_spans",
 ]
 
 import dataclasses
@@ -446,11 +446,10 @@ def _move_in_spans(spans, range, destination):
     return spans
 
 
-def convert_additional_spans(spans: List[Union[Span, AdditionalSpan]]) -> List[Span]:
+def normalize_spans(spans: List[Union[Span, AdditionalSpan]]) -> List[Span]:
     """
-    Return a version of `spans` with only spans directly referring
-    to the original text (instances of Span), without any additional
-    spans (instances of AdditionalSpan)
+    Return a transformed of `spans` in which all instances of AdditionalSpan are
+    replaced by the spans they refer to, and in which contiguous spans are merged.
 
     Parameters
     ----------
@@ -460,15 +459,15 @@ def convert_additional_spans(spans: List[Union[Span, AdditionalSpan]]) -> List[S
 
     Returns
     -------
-    output_spans:
-        All spans in `spans` without any additional span
+    normalized_spans:
+        Spans in `spans` normalized as described
 
     Example
     ------
-    >>> spans = [Span(0, 10), AdditionalSpan(8, replaced_spans=[Span(30, 36)])]
-    >>> spans = convert_additional_spans(spans)
+    >>> spans = [Span(0, 10), Span(20, 30), AdditionalSpan(8, replaced_spans=[Span(30, 36)])]
+    >>> spans = normalize_spans(spans)
     >>> print(spans)
-    [Span(0, 10), Span(30, 36)]
+    [Span(0, 10), Span(20, 36)]
     """
     all_spans = []
     for span in spans:
