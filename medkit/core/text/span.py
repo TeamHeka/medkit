@@ -371,6 +371,10 @@ def insert(
 
 
 def _insert_in_spans(spans, positions, insertion_lengths):
+    # build zero-length ranges for each insertion position
+    # (end is not included)
+    # we "replace" a zero-length range with the inserted text,
+    # so no text actually ends up being replaced
     ranges = [(p, p) for p in positions]
     return _replace_in_spans(spans, ranges, insertion_lengths)
 
