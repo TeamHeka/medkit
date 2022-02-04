@@ -1,6 +1,7 @@
 from medkit.core.text.span import (
     Span,
     AdditionalSpan,
+    replace,
     remove,
     extract,
     move,
@@ -9,6 +10,20 @@ from medkit.core.text.span import (
     _extract_in_spans,
     _move_in_spans,
 )
+
+
+def test_replace():
+    text = "Hello, my name is John Doe."
+    spans = [Span(0, 27)]
+    text, spans = replace(text, spans, [(18, 22), (23, 26)], ["Jane", "Dean"])
+    assert text == "Hello, my name is Jane Dean."
+    assert spans == [
+        Span(0, 18),
+        AdditionalSpan(4, [Span(18, 22)]),
+        Span(22, 23),
+        AdditionalSpan(4, [Span(23, 26)]),
+        Span(26, 27),
+    ]
 
 
 def test_remove():

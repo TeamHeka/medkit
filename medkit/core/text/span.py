@@ -1,7 +1,7 @@
-__all__ = ["Span", "AdditionalSpan", "remove", "extract", "move"]
+__all__ = ["Span", "AdditionalSpan", "replace", "remove", "extract", "move"]
 
 import dataclasses
-from typing import List, NamedTuple, Tuple
+from typing import List, NamedTuple, Tuple, Union
 
 
 class Span(NamedTuple):
@@ -39,6 +39,63 @@ class AdditionalSpan:
 
     length: int
     replaced_spans: List[Span]
+
+
+def replace(
+    text: str,
+    spans: List[Span],
+    ranges: List[Tuple[int, int]],
+    replacement_texts: List[str],
+) -> Tuple[str, List[Union[Span, AdditionalSpan]]]:
+    """Replace parts of a text, and update accordingly its associated spans
+
+    Parameters
+    ----------
+    text:
+        The text in which some parts will be replaced
+    spans:
+        The spans associated with `text`
+    ranges:
+        The ranges of the parts that will be replaced (end excluded),
+        sorted by ascending order
+    replacements_texts:
+        The strings to use as replacements
+        (must be the same length as `ranges`)
+
+    Returns
+    -------
+    text:
+        The updated text
+    spans:
+        The spans associated with the updated text
+
+    Example
+    -------
+    >>> text = "Hello, my name is John Doe."
+    >>> spans = [Span(0, len(text))]
+    >>> ranges = [(0, 5), (18, 22)]
+    >>> replacements = ["Hi", "Jane"]
+    >>> text, spans = replace(text, spans, ranges, replacements)
+    >>> print(text)
+    Hi, my name is Jane Doe.
+    """
+    assert len(ranges) == len(replacement_texts)
+    if len(ranges) == 0:
+        return text, spans
+
+    offset = 0
+    replacement_lengths = []
+    for (range_start, range_end), rep_text in zip(ranges, replacement_texts):
+        range_start += offset
+        range_end += offset
+        text = text[:range_start] + rep_text + text[range_end:]
+
+        rep_length = len(rep_text)
+        offset += rep_length - (range_end - range_start)
+        replacement_lengths.append(rep_length)
+
+    spans = _replace_in_spans(spans, ranges, replacement_lengths)
+    return text, spans
 
 
 def _replace_in_spans(spans, ranges, replacement_lengths):
