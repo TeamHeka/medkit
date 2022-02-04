@@ -1,4 +1,4 @@
-__all__ = ["Span", "remove"]
+__all__ = ["Span", "remove", "extract"]
 
 from typing import List, NamedTuple, Tuple
 
@@ -110,3 +110,52 @@ def _remove_in_spans(spans, ranges):
         span_start = span_end - length_after_range
 
     return output_spans
+
+
+def extract(
+    text: str,
+    spans: List[Span],
+    ranges: List[Tuple[int, int]],
+) -> Tuple[str, List[Span]]:
+    """Extract parts of a text as well as its associated spans
+
+    Parameters
+    ----------
+    text:
+        The text to extract parts from
+    spans:
+        The spans associated with `text`
+    ranges:
+        The ranges of the parts to extract (end excluded),
+        sorted by ascending order
+
+    Returns
+    -------
+    text:
+        The extracted text
+    spans:
+        The spans associated with the extracted text
+    """
+    if len(ranges) == 0:
+        return "", []
+
+    text = "".join(text[s:e] for s, e in ranges)
+    spans = _extract_in_spans(spans, ranges)
+    return text, spans
+
+
+def _extract_in_spans(spans, ranges):
+    ranges_to_remove = []
+
+    first_range_start = ranges[0][0]
+    ranges_to_remove.append((0, first_range_start))
+
+    ranges_to_remove += [
+        (end_1, start_2) for (_, end_1), (start_2, _) in zip(ranges, ranges[1:])
+    ]
+
+    last_range_end = ranges[-1][1]
+    total_length = sum(s.length for s in spans)
+    ranges_to_remove.append((last_range_end, total_length))
+
+    return _remove_in_spans(spans, ranges_to_remove)
