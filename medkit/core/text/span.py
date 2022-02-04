@@ -412,12 +412,15 @@ def move(
     spans = _move_in_spans(spans, range, destination)
 
     start, end = range
-    text_to_move = text[start:end]
-    text = text[:start] + text[end:]
+    text_in_moved_range = text[start:end]
+    text_without_moved_range = text[:start] + text[end:]
+    # shift destination if it was after the moved range
     if destination > end:
         length = end - start
         destination -= length
-    text = text[:destination] + text_to_move + text[destination:]
+    text_before_dest = text_without_moved_range[:destination]
+    text_after_dest = text_without_moved_range[destination:]
+    text = text_before_dest + text_in_moved_range + text_after_dest
 
     return text, spans
 
