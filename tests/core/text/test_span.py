@@ -4,10 +4,12 @@ from medkit.core.text.span import (
     replace,
     remove,
     extract,
+    insert,
     move,
     _replace_in_spans,
     _remove_in_spans,
     _extract_in_spans,
+    _insert_in_spans,
     _move_in_spans,
 )
 
@@ -40,6 +42,14 @@ def test_extract():
     text, spans = extract(text, spans, [(0, 7), (18, 22)])
     assert text == "Hello, John"
     assert spans == [Span(0, 7), Span(18, 22)]
+
+
+def test_insert():
+    text = "Hello, my name is John Doe."
+    spans = [Span(0, 27)]
+    text, spans = insert(text, spans, [5], [" everybody"])
+    assert text == "Hello everybody, my name is John Doe."
+    assert spans == [Span(0, 5), AdditionalSpan(10, []), Span(5, 27)]
 
 
 def test_move_before():
@@ -332,6 +342,48 @@ def test_extract_in_spans():
     assert _extract_in_spans(spans, [(4, 14)]) == [
         AdditionalSpan(6, [Span(10, 30)]),
         Span(30, 34),
+    ]
+
+
+def test_insert_in_spans():
+    # only one span
+    spans = [Span(10, 20)]
+    # insert at begining
+    assert _insert_in_spans(spans, [0], [5]) == [AdditionalSpan(5, []), Span(10, 20)]
+    # insert at end
+    assert _insert_in_spans(spans, [10], [5]) == [Span(10, 20), AdditionalSpan(5, [])]
+    # insert inside
+    assert _insert_in_spans(spans, [4], [5]) == [
+        Span(10, 14),
+        AdditionalSpan(5, []),
+        Span(14, 20),
+    ]
+    # insert several
+    assert _insert_in_spans(spans, [4, 7], [5, 10]) == [
+        Span(10, 14),
+        AdditionalSpan(5, []),
+        Span(14, 17),
+        AdditionalSpan(10, []),
+        Span(17, 20),
+    ]
+
+    # additional span
+    spans = [AdditionalSpan(length=10, replaced_spans=[Span(20, 40)])]
+    # insert at begining
+    assert _insert_in_spans(spans, [0], [5]) == [
+        AdditionalSpan(5, []),
+        AdditionalSpan(10, [Span(20, 40)]),
+    ]
+    # insert at end
+    assert _insert_in_spans(spans, [10], [5]) == [
+        AdditionalSpan(10, [Span(20, 40)]),
+        AdditionalSpan(5, []),
+    ]
+    # insert inside
+    assert _insert_in_spans(spans, [4], [5]) == [
+        AdditionalSpan(4, [Span(20, 40)]),
+        AdditionalSpan(5, []),
+        AdditionalSpan(6, [Span(20, 40)]),
     ]
 
 

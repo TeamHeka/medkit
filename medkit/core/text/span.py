@@ -1,4 +1,4 @@
-__all__ = ["Span", "AdditionalSpan", "replace", "remove", "extract", "move"]
+__all__ = ["Span", "AdditionalSpan", "replace", "remove", "extract", "insert", "move"]
 
 import dataclasses
 from typing import List, NamedTuple, Tuple, Union
@@ -303,6 +303,67 @@ def _extract_in_spans(spans, ranges):
     ranges_to_remove.append((last_range_end, total_length))
 
     return _remove_in_spans(spans, ranges_to_remove)
+
+
+def insert(
+    text: str,
+    spans: List[Union[Span, AdditionalSpan]],
+    positions: List[int],
+    insertion_texts: List[str],
+) -> Tuple[str, List[Union[Span, AdditionalSpan]]]:
+    """Insert strings in text, and update accordingly its associated spans
+
+    Parameters
+    ----------
+    text:
+        The text in which some strings will be inserted
+    spans:
+        The spans associated with `text`
+    positions:
+        The positions where the strings will be inserted,
+        sorted by ascending order
+    insertion_texts:
+        The strings to insert (must be the same length as `positions`)
+
+    Returns
+    -------
+    text:
+        The updated text
+    spans:
+        The spans associated with the updated text
+
+    Example
+    -------
+    >>> text = "Hello, my name is John Doe."
+    >>> spans = [Span(0, len(text))]
+    >>> positions = [5]
+    >>> inserts = [" everybody"]
+    >>> text, spans = insert(text, spans, positions, inserts)
+    >>> print(text)
+    Hello everybody, my name is John Doe."
+    """
+
+    assert len(positions) == len(insertion_texts)
+    if len(positions) == 0:
+        return text, spans
+
+    offset = 0
+    insertion_lengths = []
+    for position, insertion_text in zip(positions, insertion_texts):
+        position += offset
+        text = text[:position] + insertion_text + text[position:]
+
+        insertion_length = len(insertion_text)
+        offset += insertion_length
+        insertion_lengths.append(insertion_length)
+
+    spans = _insert_in_spans(spans, positions, insertion_lengths)
+    return text, spans
+
+
+def _insert_in_spans(spans, positions, insertion_lengths):
+    ranges = [(p, p) for p in positions]
+    return _replace_in_spans(spans, ranges, insertion_lengths)
 
 
 def move(
