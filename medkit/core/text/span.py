@@ -1,4 +1,4 @@
-__all__ = ["Span", "remove", "extract"]
+__all__ = ["Span", "remove", "extract", "move"]
 
 from typing import List, NamedTuple, Tuple
 
@@ -159,3 +159,74 @@ def _extract_in_spans(spans, ranges):
     ranges_to_remove.append((last_range_end, total_length))
 
     return _remove_in_spans(spans, ranges_to_remove)
+
+
+def move(
+    text: str,
+    spans: List[Span],
+    range: Tuple[int, int],
+    destination: int,
+) -> Tuple[str, List[Span]]:
+    """Move part of a text to another position, also moving its associated spans
+
+    Parameters
+    ----------
+    text:
+        The text in which a part should be moved
+    range:
+        The range of the part to move (end excluded)
+    destination:
+        The position where to insert the displaced range
+
+    Returns
+    -------
+    text:
+        The updated text
+    spans:
+        The spans associated with the updated text
+
+    Example
+    -------
+    >>> text = "Hello, my name is John Doe."
+    >>> spans = [Span(0, len(text))]
+    >>> range = (17, 22)
+    >>> dest = len(text) - 1
+    >>> text, spans = move(text, spans, range, dest)
+    >>> print(text)
+    Hi, my name is Doe John.
+    """
+    spans = _move_in_spans(spans, range, destination)
+
+    start, end = range
+    text_to_move = text[start:end]
+    text = text[:start] + text[end:]
+    if destination > end:
+        length = end - start
+        destination -= length
+    text = text[:destination] + text_to_move + text[destination:]
+
+    return text, spans
+
+
+def _move_in_spans(spans, range, destination):
+    start, end = range
+    length = end - start
+    assert not (start < destination <= end)
+    spans_to_move = _extract_in_spans(spans, [(start, end)])
+
+    spans = _remove_in_spans(spans, [(start, end)])
+    if destination > end:
+        destination -= length
+
+    if destination > 0:
+        spans_before = _extract_in_spans(spans, [(0, destination)])
+    else:
+        spans_before = []
+    total_length = sum(s.length for s in spans)
+    if destination < total_length:
+        spans_after = _extract_in_spans(spans, [(destination, total_length)])
+    else:
+        spans_after = []
+
+    spans = spans_before + spans_to_move + spans_after
+    return spans
