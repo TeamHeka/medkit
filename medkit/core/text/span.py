@@ -1,4 +1,13 @@
-__all__ = ["Span", "AdditionalSpan", "replace", "remove", "extract", "insert", "move"]
+__all__ = [
+    "Span",
+    "AdditionalSpan",
+    "replace",
+    "remove",
+    "extract",
+    "insert",
+    "move",
+    "convert_additional_spans",
+]
 
 import dataclasses
 from typing import List, NamedTuple, Tuple, Union
@@ -435,3 +444,47 @@ def _move_in_spans(spans, range, destination):
 
     spans = spans_before + spans_to_move + spans_after
     return spans
+
+
+def convert_additional_spans(spans: List[Union[Span, AdditionalSpan]]) -> List[Span]:
+    """
+    Return a version of `spans` with only spans directly referring
+    to the original text (instances of Span), without any additional
+    spans (instances of AdditionalSpan)
+
+    Parameters
+    ----------
+    spans:
+        The spans associated with a text, including additional spans if
+        insertions or replacement were performed
+
+    Returns
+    -------
+    output_spans:
+        All spans in `spans` without any additional span
+
+    Example
+    ------
+    >>> spans = [Span(0, 10), AdditionalSpan(8, replaced_spans=[Span(30, 36)])]
+    >>> spans = convert_additional_spans(spans)
+    >>> print(spans)
+    [Span(0, 10), Span(30, 36)]
+    """
+    all_spans = []
+    for span in spans:
+        if isinstance(span, AdditionalSpan):
+            all_spans += span.replaced_spans
+        else:
+            all_spans.append(span)
+
+    # merge contiguous spans
+    all_spans_merged = [all_spans[0]]
+    for span in all_spans[1:]:
+        prev_span = all_spans_merged[-1]
+        if span.start == prev_span.end:
+            merged_span = Span(prev_span.start, span.end)
+            all_spans_merged[-1] = merged_span
+        else:
+            all_spans_merged.append(span)
+
+    return all_spans_merged
