@@ -43,7 +43,7 @@ class AdditionalSpan:
 
 def replace(
     text: str,
-    spans: List[Span],
+    spans: List[Union[Span, AdditionalSpan]],
     ranges: List[Tuple[int, int]],
     replacement_texts: List[str],
 ) -> Tuple[str, List[Union[Span, AdditionalSpan]]]:
@@ -162,25 +162,51 @@ def _replace_in_spans(spans, ranges, replacement_lengths):
             replacement_length > 0
             and length_before_range + length_after_range < span.length
         ):
-            assert isinstance(span, Span)
-            replaced_span = Span(
-                start=span.start + length_before_range,
-                end=span.end - length_after_range,
-            )
-            replaced_spans.append(replaced_span)
+            if isinstance(span, Span):
+                replaced_span = Span(
+                    start=span.start + length_before_range,
+                    end=span.end - length_after_range,
+                )
+                replaced_spans.append(replaced_span)
+            else:
+                # keep reference to all the replaced_spans in original AdditionalSpan
+                # (not possible to know which subpart of the replaced_spans corresponds
+                # to the overlap between the AdditionalSpan and the range)
+                assert isinstance(span, AdditionalSpan)
+                replaced_spans += span.replaced_spans
 
         # create span for the part before the range
         # and add it to output
         if length_before_range > 0:
-            assert isinstance(span, Span)
-            before_span = Span(start=span.start, end=span.start + length_before_range)
+            if isinstance(span, Span):
+                before_span = Span(
+                    start=span.start, end=span.start + length_before_range
+                )
+            else:
+                # create new AdditionalSpan covering only the length before the range,
+                # but referencing the same replaced_spans
+                # (not possible to know which subpart of the replaced_spans corresponds
+                # to the part of the AdditionalSpan before the range)
+                assert isinstance(span, AdditionalSpan)
+                before_span = AdditionalSpan(
+                    length=length_before_range, replaced_spans=span.replaced_spans
+                )
             output_spans.append(before_span)
 
         # create span for the remaining part after the range
         # and use it as current span
         if length_after_range > 0:
-            assert isinstance(span, Span)
-            span = Span(start=span.end - length_after_range, end=span.end)
+            if isinstance(span, Span):
+                span = Span(start=span.end - length_after_range, end=span.end)
+            else:
+                # create new AdditionalSpan covering only the length after the range,
+                # but referencing the same replaced_spans
+                # (not possible to know which subpart of the replaced_spans corresponds
+                # to the part of the AdditionalSpan after the range)
+                assert isinstance(span, AdditionalSpan)
+                span = AdditionalSpan(
+                    length=length_after_range, replaced_spans=span.replaced_spans
+                )
         # update span_start to point to the begining of the remainder
         span_start = span_end - length_after_range
 
@@ -189,9 +215,9 @@ def _replace_in_spans(spans, ranges, replacement_lengths):
 
 def remove(
     text: str,
-    spans: List[Span],
+    spans: List[Union[Span, AdditionalSpan]],
     ranges: List[Tuple[int, int]],
-) -> Tuple[str, List[Span]]:
+) -> Tuple[str, List[Union[Span, AdditionalSpan]]]:
     """Remove parts of a text, while also removing accordingly its associated spans
 
     Parameters
@@ -232,9 +258,9 @@ def _remove_in_spans(spans, ranges):
 
 def extract(
     text: str,
-    spans: List[Span],
+    spans: List[Union[Span, AdditionalSpan]],
     ranges: List[Tuple[int, int]],
-) -> Tuple[str, List[Span]]:
+) -> Tuple[str, List[Union[Span, AdditionalSpan]]]:
     """Extract parts of a text as well as its associated spans
 
     Parameters
@@ -281,10 +307,10 @@ def _extract_in_spans(spans, ranges):
 
 def move(
     text: str,
-    spans: List[Span],
+    spans: List[Union[Span, AdditionalSpan]],
     range: Tuple[int, int],
     destination: int,
-) -> Tuple[str, List[Span]]:
+) -> Tuple[str, List[Union[Span, AdditionalSpan]]]:
     """Move part of a text to another position, also moving its associated spans
 
     Parameters

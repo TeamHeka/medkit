@@ -164,6 +164,35 @@ def test_replace_in_spans():
         Span(54, 60),
     ]
 
+    # mix of additional spans and normal spans
+    spans = [
+        AdditionalSpan(length=5, replaced_spans=[Span(10, 30)]),
+        Span(30, 40),
+        Span(50, 60),
+    ]
+    # replace across several spans (end of 1st span and begining of 2d span)
+    assert _replace_in_spans(spans, [(4, 14)], [5]) == [
+        AdditionalSpan(4, [Span(10, 30)]),
+        AdditionalSpan(5, [Span(10, 30), Span(30, 39)]),
+        Span(39, 40),
+        Span(50, 60),
+    ]
+    # replace accross several spans (remove end of 1st span, remove 2d span fully, remove begining of last span)
+    assert _replace_in_spans(spans, [(4, 24)], [5]) == [
+        AdditionalSpan(4, [Span(10, 30)]),
+        AdditionalSpan(5, [Span(10, 30), Span(30, 40), Span(50, 59)]),
+        Span(59, 60),
+    ]
+    # replace several ranges
+    assert _replace_in_spans(spans, [(4, 14), (16, 24)], [5, 10]) == [
+        AdditionalSpan(4, [Span(10, 30)]),
+        AdditionalSpan(5, [Span(10, 30), Span(30, 39)]),
+        Span(39, 40),
+        Span(50, 51),
+        AdditionalSpan(10, [Span(51, 59)]),
+        Span(59, 60),
+    ]
+
 
 def test_remove_in_spans():
     # only one span
@@ -209,6 +238,44 @@ def test_remove_in_spans():
         Span(54, 60),
     ]
 
+    # additional span
+    spans = [AdditionalSpan(length=10, replaced_spans=[Span(10, 30)])]
+    # remove at begining
+    assert _remove_in_spans(spans, [(0, 6)]) == [AdditionalSpan(4, [Span(10, 30)])]
+    # remove at end
+    assert _remove_in_spans(spans, [(4, 10)]) == [AdditionalSpan(4, [Span(10, 30)])]
+    # remove inside
+    assert _remove_in_spans(spans, [(4, 7)]) == [
+        # TODO should be this?
+        # AdditionalSpan(7, [Span(10, 30)])
+        AdditionalSpan(4, [Span(10, 30)]),
+        AdditionalSpan(3, [Span(10, 30)]),
+    ]
+    # remove fully
+    assert _remove_in_spans(spans, [(0, 10)]) == []
+    # remove several ranges
+    assert _remove_in_spans(spans, [(4, 6), (7, 9)]) == [
+        # TODO should be this?
+        # AdditionalSpan(6, [Span(10, 30)])
+        AdditionalSpan(4, [Span(10, 30)]),
+        AdditionalSpan(1, [Span(10, 30)]),
+        AdditionalSpan(1, [Span(10, 30)]),
+    ]
+
+    # mix of additional spans and normal spans
+    spans = [AdditionalSpan(length=10, replaced_spans=[Span(10, 30)]), Span(30, 40)]
+    # remove accross both (end of 1st pan and begining of 2d span)
+    assert _remove_in_spans(spans, [(4, 14)]) == [
+        AdditionalSpan(4, [Span(10, 30)]),
+        Span(34, 40),
+    ]
+    # remove several ranges
+    assert _remove_in_spans(spans, [(4, 7), (9, 14)]) == [
+        AdditionalSpan(4, [Span(10, 30)]),
+        AdditionalSpan(2, [Span(10, 30)]),
+        Span(34, 40),
+    ]
+
 
 def test_extract_in_spans():
     # only one span
@@ -246,6 +313,25 @@ def test_extract_in_spans():
         Span(30, 34),
         Span(36, 40),
         Span(50, 54),
+    ]
+
+    # additional span
+    spans = [AdditionalSpan(length=10, replaced_spans=[Span(10, 30)])]
+    # extract begining
+    assert _extract_in_spans(spans, [(0, 6)]) == [AdditionalSpan(6, [Span(10, 30)])]
+    # extract end
+    assert _extract_in_spans(spans, [(4, 10)]) == [AdditionalSpan(6, [Span(10, 30)])]
+    # extract inside
+    assert _extract_in_spans(spans, [(4, 7)]) == [AdditionalSpan(3, [Span(10, 30)])]
+    # extract fully
+    assert _extract_in_spans(spans, [(0, 10)]) == [AdditionalSpan(10, [Span(10, 30)])]
+
+    # mix of additional spans and normal spans
+    spans = [AdditionalSpan(length=10, replaced_spans=[Span(10, 30)]), Span(30, 40)]
+    # extract in both (end of 1st pan and begining of 2d span)
+    assert _extract_in_spans(spans, [(4, 14)]) == [
+        AdditionalSpan(6, [Span(10, 30)]),
+        Span(30, 34),
     ]
 
 
