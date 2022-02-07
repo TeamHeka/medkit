@@ -34,7 +34,7 @@
     },
     {
         "id": "id_regexp_igs2",
-        "index_extract": "2",
+        "index_extract": 2,
         "label": "igs2",
         "regexp": "igs2[^0-9]{0,10}(24h)?[^0-9]{0,10}([0-9]+)",
         "version": "v3"
@@ -60,7 +60,7 @@
     {
         "filtre_document": "Anomalies *pulmonaires *en *faveur *d.une *infection *par *le *COVID|Anomalies *pulmonaires *en *faveur *d.une *autre *infection",
         "id": "id_regexp_scannerconclusion",
-        "index_extract": "2",
+        "index_extract": 2,
         "label": "Scanner pulmonaire conclusion covid ",
         "regexp": "(Aspect *TDM|Scanner) *(typique|compatible|(non|tr[eéè]s)? *[eéè]vocateur)",
         "version": "v2"
@@ -68,7 +68,7 @@
     {
         "filtre_document": "Anomalies *pulmonaires *en *faveur *d.une *infection *par *le *COVID|Anomalies *pulmonaires *en *faveur *d.une *autre *infection",
         "id": "id_regexp_scannerseverite",
-        "index_extract": "2",
+        "index_extract": 2,
         "label": "Scanner pulmonaire severite",
         "regexp": "avec *(.tendue|une *at+einte) *(minime|mod.r.e|.tendue?|s.v.re|critique) *des *anomali",
         "version": "v2"
@@ -121,7 +121,7 @@
     },
     {
         "id": "id_regexp_imc",
-        "index_extract": "4",
+        "index_extract": 4,
         "label": "IMC,BMI",
         "list_cui": "C1305855",
         "regexp": "(^|[^a-z])(IMC|BMI) *(est *de|de|=|:)? *([0-9]+[,.]?[0-9]*)[^\\/]?",
@@ -258,7 +258,7 @@
     },
     {
         "id": "id_regexp_debito2",
-        "index_extract": "1",
+        "index_extract": 1,
         "label": "Debit O2 L/Min",
         "regexp": "[^0-9,]([0-9]+,?[0-9]*) *L *\\/ *mi?n?",
         "regexp_exclude": "cardiaque|[^a-z]dc[^a-z]|[^a-z]dq[^a-z]|[^a-z]dc[^a-z]|[^a-z]DEP[^a-z]|[^A-Z]DEP[^A-Z]|PeakFlow",
@@ -266,7 +266,7 @@
     },
     {
         "id": "id_regexp_sofa",
-        "index_extract": "2",
+        "index_extract": 2,
         "label": "Score SOFA",
         "regexp": "SOFA[^a-z0-9]*(.{0,5}24h)?[^a-z0-9]*([0-9]+)",
         "version": "v1"
@@ -426,14 +426,14 @@
     },
     {
         "id": "id_regexp_taille",
-        "index_extract": "2",
+        "index_extract": 2,
         "label": "Taille",
         "regexp": "taille[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z,<>]*([0-9]+[.,]?[0-9]* *(cm|m)[0-9]*)(?!DS)",
         "version": "v2"
     },
     {
         "id": "id_regexp_poids",
-        "index_extract": "3",
+        "index_extract": 3,
         "label": "Poids",
         "regexp": "(Poids|p[éeè]se)[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z<>,]*([0-9]+[.,]?[0-9]* *(kg|g)[0-9]*)",
         "regexp_exclude": "prise de poids",
@@ -479,14 +479,14 @@
     },
     {
         "id": "id_regexp_paquetannee",
-        "index_extract": "1",
+        "index_extract": 1,
         "label": "Paquet-année (PA)",
         "regexp": "(\\d{1,4})\\s*(paquet|cigarette|cig)s?\\s*(par|/|-)\\s*(an(n[ée]e)?)( *(pendant|jusqu.[àa]) *\\d+.{7})?",
         "version": "v1"
     },
     {
         "id": "id_regexp_paquetjour",
-        "index_extract": "1",
+        "index_extract": 1,
         "label": "Paquet-jour)",
         "regexp": "(\\d{1,4})\\s*(paquet|cigarette|cig)s?\\s*(par|/|-)\\s*(j|jour)( *(pendant|jusqu.[àa]) *\\d+.{7})?",
         "version": "v1"
@@ -504,7 +504,7 @@
         "version": "v1"
     },
     {
-        "case_sensitive": "yes",
+        "case_sensitive": true,
         "id": "id_regexp_embolie",
         "label": "Embolie pulmonaire",
         "regexp": "[Ee]mbolie *[pP]ulmonaire|[^a-zA-Z]EP[^a-zA-Z]",

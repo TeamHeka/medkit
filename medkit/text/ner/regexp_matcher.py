@@ -18,9 +18,9 @@ class RegexpMatcherRule:
     regexp: str
     version: str
     regexp_exclude: Optional[str] = None
-    index_extract: str = "0"
+    index_extract: int = 0
     filtre_document: Optional[str] = None
-    case_sensitive: str = "no"
+    case_sensitive: bool = False
     comment: Optional[str] = None
     list_cui: Optional[str] = None
     icd10: Optional[str] = None
@@ -65,7 +65,7 @@ class RegexpMatcher:
         syntagme: TextBoundAnnotation,
         snippet_size=60,
     ):
-        if rex.case_sensitive == "yes":
+        if rex.case_sensitive:
             reflags = 0
         else:
             reflags = re.IGNORECASE
@@ -79,9 +79,8 @@ class RegexpMatcher:
                     if exclude_match is not None:
                         continue
 
-                i = int(rex.index_extract)
                 text, spans = span_utils.extract(
-                    syntagme.text, syntagme.spans, [m.span(i)]
+                    syntagme.text, syntagme.spans, [m.span(rex.index_extract)]
                 )
 
                 if doc.text is not None:
