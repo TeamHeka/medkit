@@ -1,6 +1,6 @@
 from medkit.core.text.span import (
     Span,
-    AdditionalSpan,
+    ModifiedSpan,
     replace,
     remove,
     extract,
@@ -22,9 +22,9 @@ def test_replace():
     assert text == "Hello, my name is Jane Dean."
     assert spans == [
         Span(0, 18),
-        AdditionalSpan(4, [Span(18, 22)]),
+        ModifiedSpan(4, [Span(18, 22)]),
         Span(22, 23),
-        AdditionalSpan(4, [Span(23, 26)]),
+        ModifiedSpan(4, [Span(23, 26)]),
         Span(26, 27),
     ]
 
@@ -50,7 +50,7 @@ def test_insert():
     spans = [Span(0, 27)]
     text, spans = insert(text, spans, [5], [" everybody"])
     assert text == "Hello everybody, my name is John Doe."
-    assert spans == [Span(0, 5), AdditionalSpan(10, []), Span(5, 27)]
+    assert spans == [Span(0, 5), ModifiedSpan(10, []), Span(5, 27)]
 
 
 def test_move_before():
@@ -74,30 +74,30 @@ def test_replace_in_spans():
     spans = [Span(0, 10)]
     # replace begining
     assert _replace_in_spans(spans, [(0, 6)], [6]) == [
-        AdditionalSpan(6, [Span(0, 6)]),
+        ModifiedSpan(6, [Span(0, 6)]),
         Span(6, 10),
     ]
     # replace end
     assert _replace_in_spans(spans, [(4, 10)], [6]) == [
         Span(0, 4),
-        AdditionalSpan(6, [Span(4, 10)]),
+        ModifiedSpan(6, [Span(4, 10)]),
     ]
     # replace inside
     assert _replace_in_spans(spans, [(4, 7)], [3]) == [
         Span(0, 4),
-        AdditionalSpan(3, [Span(4, 7)]),
+        ModifiedSpan(3, [Span(4, 7)]),
         Span(7, 10),
     ]
     # replace whole span
     assert _replace_in_spans(spans, [(0, 10)], [10]) == [
-        AdditionalSpan(10, [Span(0, 10)])
+        ModifiedSpan(10, [Span(0, 10)])
     ]
     # replace several ranges
     assert _replace_in_spans(spans, [(3, 5), (7, 8)], [10, 5]) == [
         Span(0, 3),
-        AdditionalSpan(10, [Span(3, 5)]),
+        ModifiedSpan(10, [Span(3, 5)]),
         Span(5, 7),
-        AdditionalSpan(5, [Span(7, 8)]),
+        ModifiedSpan(5, [Span(7, 8)]),
         Span(8, 10),
     ]
 
@@ -105,42 +105,42 @@ def test_replace_in_spans():
     spans = [Span(10, 20)]
     # replace begining (same length)
     assert _replace_in_spans(spans, [(0, 6)], [6]) == [
-        AdditionalSpan(6, [Span(10, 16)]),
+        ModifiedSpan(6, [Span(10, 16)]),
         Span(16, 20),
     ]
     # replace end
     assert _replace_in_spans(spans, [(4, 10)], [6]) == [
         Span(10, 14),
-        AdditionalSpan(6, [Span(14, 20)]),
+        ModifiedSpan(6, [Span(14, 20)]),
     ]
     # replace inside
     assert _replace_in_spans(spans, [(4, 7)], [3]) == [
         Span(10, 14),
-        AdditionalSpan(3, [Span(14, 17)]),
+        ModifiedSpan(3, [Span(14, 17)]),
         Span(17, 20),
     ]
     # replace whole span
     assert _replace_in_spans(spans, [(0, 10)], [10]) == [
-        AdditionalSpan(10, [Span(10, 20)])
+        ModifiedSpan(10, [Span(10, 20)])
     ]
     # replace inside (longer replacement)
     assert _replace_in_spans(spans, [(4, 7)], [10]) == [
         Span(10, 14),
-        AdditionalSpan(10, [Span(14, 17)]),
+        ModifiedSpan(10, [Span(14, 17)]),
         Span(17, 20),
     ]
     # replace inside (shorter replacement)
     assert _replace_in_spans(spans, [(4, 7)], [1]) == [
         Span(10, 14),
-        AdditionalSpan(1, [Span(14, 17)]),
+        ModifiedSpan(1, [Span(14, 17)]),
         Span(17, 20),
     ]
     # replace several ranges
     assert _replace_in_spans(spans, [(3, 5), (7, 8)], [10, 5]) == [
         Span(10, 13),
-        AdditionalSpan(10, [Span(13, 15)]),
+        ModifiedSpan(10, [Span(13, 15)]),
         Span(15, 17),
-        AdditionalSpan(5, [Span(17, 18)]),
+        ModifiedSpan(5, [Span(17, 18)]),
         Span(18, 20),
     ]
 
@@ -149,58 +149,58 @@ def test_replace_in_spans():
     # replace end of 1st span
     assert _replace_in_spans(spans, [(4, 10)], [10]) == [
         Span(10, 14),
-        AdditionalSpan(10, [Span(14, 20)]),
+        ModifiedSpan(10, [Span(14, 20)]),
         Span(30, 40),
         Span(50, 60),
     ]
     # replace across several spans (end of 1st span and begining of 2d span)
     assert _replace_in_spans(spans, [(4, 14)], [10]) == [
         Span(10, 14),
-        AdditionalSpan(10, [Span(14, 20), Span(30, 34)]),
+        ModifiedSpan(10, [Span(14, 20), Span(30, 34)]),
         Span(34, 40),
         Span(50, 60),
     ]
     # replace across several spans (end of 1st span, entire 2d span, begining of 3d span)
     assert _replace_in_spans(spans, [(4, 24)], [10]) == [
         Span(10, 14),
-        AdditionalSpan(10, [Span(14, 20), Span(30, 40), Span(50, 54)]),
+        ModifiedSpan(10, [Span(14, 20), Span(30, 40), Span(50, 54)]),
         Span(54, 60),
     ]
     # replace several ranges
     assert _replace_in_spans(spans, [(4, 14), (16, 24)], [10, 5]) == [
         Span(10, 14),
-        AdditionalSpan(10, [Span(14, 20), Span(30, 34)]),
+        ModifiedSpan(10, [Span(14, 20), Span(30, 34)]),
         Span(34, 36),
-        AdditionalSpan(5, [Span(36, 40), Span(50, 54)]),
+        ModifiedSpan(5, [Span(36, 40), Span(50, 54)]),
         Span(54, 60),
     ]
 
     # mix of additional spans and normal spans
     spans = [
-        AdditionalSpan(length=5, replaced_spans=[Span(10, 30)]),
+        ModifiedSpan(length=5, replaced_spans=[Span(10, 30)]),
         Span(30, 40),
         Span(50, 60),
     ]
     # replace across several spans (end of 1st span and begining of 2d span)
     assert _replace_in_spans(spans, [(4, 14)], [5]) == [
-        AdditionalSpan(4, [Span(10, 30)]),
-        AdditionalSpan(5, [Span(10, 30), Span(30, 39)]),
+        ModifiedSpan(4, [Span(10, 30)]),
+        ModifiedSpan(5, [Span(10, 30), Span(30, 39)]),
         Span(39, 40),
         Span(50, 60),
     ]
     # replace accross several spans (remove end of 1st span, remove 2d span fully, remove begining of last span)
     assert _replace_in_spans(spans, [(4, 24)], [5]) == [
-        AdditionalSpan(4, [Span(10, 30)]),
-        AdditionalSpan(5, [Span(10, 30), Span(30, 40), Span(50, 59)]),
+        ModifiedSpan(4, [Span(10, 30)]),
+        ModifiedSpan(5, [Span(10, 30), Span(30, 40), Span(50, 59)]),
         Span(59, 60),
     ]
     # replace several ranges
     assert _replace_in_spans(spans, [(4, 14), (16, 24)], [5, 10]) == [
-        AdditionalSpan(4, [Span(10, 30)]),
-        AdditionalSpan(5, [Span(10, 30), Span(30, 39)]),
+        ModifiedSpan(4, [Span(10, 30)]),
+        ModifiedSpan(5, [Span(10, 30), Span(30, 39)]),
         Span(39, 40),
         Span(50, 51),
-        AdditionalSpan(10, [Span(51, 59)]),
+        ModifiedSpan(10, [Span(51, 59)]),
         Span(59, 60),
     ]
 
@@ -250,40 +250,40 @@ def test_remove_in_spans():
     ]
 
     # additional span
-    spans = [AdditionalSpan(length=10, replaced_spans=[Span(10, 30)])]
+    spans = [ModifiedSpan(length=10, replaced_spans=[Span(10, 30)])]
     # remove at begining
-    assert _remove_in_spans(spans, [(0, 6)]) == [AdditionalSpan(4, [Span(10, 30)])]
+    assert _remove_in_spans(spans, [(0, 6)]) == [ModifiedSpan(4, [Span(10, 30)])]
     # remove at end
-    assert _remove_in_spans(spans, [(4, 10)]) == [AdditionalSpan(4, [Span(10, 30)])]
+    assert _remove_in_spans(spans, [(4, 10)]) == [ModifiedSpan(4, [Span(10, 30)])]
     # remove inside
     assert _remove_in_spans(spans, [(4, 7)]) == [
         # TODO should be this?
-        # AdditionalSpan(7, [Span(10, 30)])
-        AdditionalSpan(4, [Span(10, 30)]),
-        AdditionalSpan(3, [Span(10, 30)]),
+        # ModifiedSpan(7, [Span(10, 30)])
+        ModifiedSpan(4, [Span(10, 30)]),
+        ModifiedSpan(3, [Span(10, 30)]),
     ]
     # remove fully
     assert _remove_in_spans(spans, [(0, 10)]) == []
     # remove several ranges
     assert _remove_in_spans(spans, [(4, 6), (7, 9)]) == [
         # TODO should be this?
-        # AdditionalSpan(6, [Span(10, 30)])
-        AdditionalSpan(4, [Span(10, 30)]),
-        AdditionalSpan(1, [Span(10, 30)]),
-        AdditionalSpan(1, [Span(10, 30)]),
+        # ModifiedSpan(6, [Span(10, 30)])
+        ModifiedSpan(4, [Span(10, 30)]),
+        ModifiedSpan(1, [Span(10, 30)]),
+        ModifiedSpan(1, [Span(10, 30)]),
     ]
 
     # mix of additional spans and normal spans
-    spans = [AdditionalSpan(length=10, replaced_spans=[Span(10, 30)]), Span(30, 40)]
+    spans = [ModifiedSpan(length=10, replaced_spans=[Span(10, 30)]), Span(30, 40)]
     # remove accross both (end of 1st pan and begining of 2d span)
     assert _remove_in_spans(spans, [(4, 14)]) == [
-        AdditionalSpan(4, [Span(10, 30)]),
+        ModifiedSpan(4, [Span(10, 30)]),
         Span(34, 40),
     ]
     # remove several ranges
     assert _remove_in_spans(spans, [(4, 7), (9, 14)]) == [
-        AdditionalSpan(4, [Span(10, 30)]),
-        AdditionalSpan(2, [Span(10, 30)]),
+        ModifiedSpan(4, [Span(10, 30)]),
+        ModifiedSpan(2, [Span(10, 30)]),
         Span(34, 40),
     ]
 
@@ -327,21 +327,21 @@ def test_extract_in_spans():
     ]
 
     # additional span
-    spans = [AdditionalSpan(length=10, replaced_spans=[Span(10, 30)])]
+    spans = [ModifiedSpan(length=10, replaced_spans=[Span(10, 30)])]
     # extract begining
-    assert _extract_in_spans(spans, [(0, 6)]) == [AdditionalSpan(6, [Span(10, 30)])]
+    assert _extract_in_spans(spans, [(0, 6)]) == [ModifiedSpan(6, [Span(10, 30)])]
     # extract end
-    assert _extract_in_spans(spans, [(4, 10)]) == [AdditionalSpan(6, [Span(10, 30)])]
+    assert _extract_in_spans(spans, [(4, 10)]) == [ModifiedSpan(6, [Span(10, 30)])]
     # extract inside
-    assert _extract_in_spans(spans, [(4, 7)]) == [AdditionalSpan(3, [Span(10, 30)])]
+    assert _extract_in_spans(spans, [(4, 7)]) == [ModifiedSpan(3, [Span(10, 30)])]
     # extract fully
-    assert _extract_in_spans(spans, [(0, 10)]) == [AdditionalSpan(10, [Span(10, 30)])]
+    assert _extract_in_spans(spans, [(0, 10)]) == [ModifiedSpan(10, [Span(10, 30)])]
 
     # mix of additional spans and normal spans
-    spans = [AdditionalSpan(length=10, replaced_spans=[Span(10, 30)]), Span(30, 40)]
+    spans = [ModifiedSpan(length=10, replaced_spans=[Span(10, 30)]), Span(30, 40)]
     # extract in both (end of 1st pan and begining of 2d span)
     assert _extract_in_spans(spans, [(4, 14)]) == [
-        AdditionalSpan(6, [Span(10, 30)]),
+        ModifiedSpan(6, [Span(10, 30)]),
         Span(30, 34),
     ]
 
@@ -350,41 +350,41 @@ def test_insert_in_spans():
     # only one span
     spans = [Span(10, 20)]
     # insert at begining
-    assert _insert_in_spans(spans, [0], [5]) == [AdditionalSpan(5, []), Span(10, 20)]
+    assert _insert_in_spans(spans, [0], [5]) == [ModifiedSpan(5, []), Span(10, 20)]
     # insert at end
-    assert _insert_in_spans(spans, [10], [5]) == [Span(10, 20), AdditionalSpan(5, [])]
+    assert _insert_in_spans(spans, [10], [5]) == [Span(10, 20), ModifiedSpan(5, [])]
     # insert inside
     assert _insert_in_spans(spans, [4], [5]) == [
         Span(10, 14),
-        AdditionalSpan(5, []),
+        ModifiedSpan(5, []),
         Span(14, 20),
     ]
     # insert several
     assert _insert_in_spans(spans, [4, 7], [5, 10]) == [
         Span(10, 14),
-        AdditionalSpan(5, []),
+        ModifiedSpan(5, []),
         Span(14, 17),
-        AdditionalSpan(10, []),
+        ModifiedSpan(10, []),
         Span(17, 20),
     ]
 
     # additional span
-    spans = [AdditionalSpan(length=10, replaced_spans=[Span(20, 40)])]
+    spans = [ModifiedSpan(length=10, replaced_spans=[Span(20, 40)])]
     # insert at begining
     assert _insert_in_spans(spans, [0], [5]) == [
-        AdditionalSpan(5, []),
-        AdditionalSpan(10, [Span(20, 40)]),
+        ModifiedSpan(5, []),
+        ModifiedSpan(10, [Span(20, 40)]),
     ]
     # insert at end
     assert _insert_in_spans(spans, [10], [5]) == [
-        AdditionalSpan(10, [Span(20, 40)]),
-        AdditionalSpan(5, []),
+        ModifiedSpan(10, [Span(20, 40)]),
+        ModifiedSpan(5, []),
     ]
     # insert inside
     assert _insert_in_spans(spans, [4], [5]) == [
-        AdditionalSpan(4, [Span(20, 40)]),
-        AdditionalSpan(5, []),
-        AdditionalSpan(6, [Span(20, 40)]),
+        ModifiedSpan(4, [Span(20, 40)]),
+        ModifiedSpan(5, []),
+        ModifiedSpan(6, [Span(20, 40)]),
     ]
 
 
@@ -429,9 +429,9 @@ def test_move_in_spans():
 
 
 def test_normalize_spans():
-    spans = [AdditionalSpan(length=10, replaced_spans=[Span(10, 20)]), Span(30, 40)]
+    spans = [ModifiedSpan(length=10, replaced_spans=[Span(10, 20)]), Span(30, 40)]
     assert normalize_spans(spans) == [Span(10, 20), Span(30, 40)]
 
     # merge contiguous
-    spans = [AdditionalSpan(length=10, replaced_spans=[Span(10, 30)]), Span(30, 40)]
+    spans = [ModifiedSpan(length=10, replaced_spans=[Span(10, 30)]), Span(30, 40)]
     assert normalize_spans(spans) == [Span(10, 40)]

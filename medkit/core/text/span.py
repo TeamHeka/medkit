@@ -1,6 +1,6 @@
 __all__ = [
     "Span",
-    "AdditionalSpan",
+    "ModifiedSpan",
     "replace",
     "remove",
     "extract",
@@ -34,7 +34,7 @@ class Span(NamedTuple):
 
 
 @dataclasses.dataclass
-class AdditionalSpan:
+class ModifiedSpan:
     """
     Slice of text not present in the original text
 
@@ -52,10 +52,10 @@ class AdditionalSpan:
 
 def replace(
     text: str,
-    spans: List[Union[Span, AdditionalSpan]],
+    spans: List[Union[Span, ModifiedSpan]],
     ranges: List[Tuple[int, int]],
     replacement_texts: List[str],
-) -> Tuple[str, List[Union[Span, AdditionalSpan]]]:
+) -> Tuple[str, List[Union[Span, ModifiedSpan]]]:
     """Replace parts of a text, and update accordingly its associated spans
 
     Parameters
@@ -128,12 +128,12 @@ def _replace_in_spans(spans, ranges, replacement_lengths):
         if range_index < len(ranges) and range_end <= span_start:
             # we have encountered all spans overlaping with the range to replace,
             # and we have stored the overlaping parts in replaced_spans.
-            # create new AdditionalSpan referrencing all the replaced_spans
+            # create new ModifiedSpan referrencing all the replaced_spans
             # and add it to output
             # (expect if replacement_length is 0, in which case the spans were
             # just removed)
             if replacement_length > 0:
-                new_span = AdditionalSpan(replacement_length, replaced_spans)
+                new_span = ModifiedSpan(replacement_length, replaced_spans)
                 output_spans.append(new_span)
 
             # move on to next span if we haven't reached end of ranges
@@ -178,10 +178,10 @@ def _replace_in_spans(spans, ranges, replacement_lengths):
                 )
                 replaced_spans.append(replaced_span)
             else:
-                # keep reference to all the replaced_spans in original AdditionalSpan
+                # keep reference to all the replaced_spans in original ModifiedSpan
                 # (not possible to know which subpart of the replaced_spans corresponds
-                # to the overlap between the AdditionalSpan and the range)
-                assert isinstance(span, AdditionalSpan)
+                # to the overlap between the ModifiedSpan and the range)
+                assert isinstance(span, ModifiedSpan)
                 replaced_spans += span.replaced_spans
 
         # create span for the part before the range
@@ -192,12 +192,12 @@ def _replace_in_spans(spans, ranges, replacement_lengths):
                     start=span.start, end=span.start + length_before_range
                 )
             else:
-                # create new AdditionalSpan covering only the length before the range,
+                # create new ModifiedSpan covering only the length before the range,
                 # but referencing the same replaced_spans
                 # (not possible to know which subpart of the replaced_spans corresponds
-                # to the part of the AdditionalSpan before the range)
-                assert isinstance(span, AdditionalSpan)
-                before_span = AdditionalSpan(
+                # to the part of the ModifiedSpan before the range)
+                assert isinstance(span, ModifiedSpan)
+                before_span = ModifiedSpan(
                     length=length_before_range, replaced_spans=span.replaced_spans
                 )
             output_spans.append(before_span)
@@ -208,12 +208,12 @@ def _replace_in_spans(spans, ranges, replacement_lengths):
             if isinstance(span, Span):
                 span = Span(start=span.end - length_after_range, end=span.end)
             else:
-                # create new AdditionalSpan covering only the length after the range,
+                # create new ModifiedSpan covering only the length after the range,
                 # but referencing the same replaced_spans
                 # (not possible to know which subpart of the replaced_spans corresponds
-                # to the part of the AdditionalSpan after the range)
-                assert isinstance(span, AdditionalSpan)
-                span = AdditionalSpan(
+                # to the part of the ModifiedSpan after the range)
+                assert isinstance(span, ModifiedSpan)
+                span = ModifiedSpan(
                     length=length_after_range, replaced_spans=span.replaced_spans
                 )
         # update span_start to point to the begining of the remainder
@@ -224,9 +224,9 @@ def _replace_in_spans(spans, ranges, replacement_lengths):
 
 def remove(
     text: str,
-    spans: List[Union[Span, AdditionalSpan]],
+    spans: List[Union[Span, ModifiedSpan]],
     ranges: List[Tuple[int, int]],
-) -> Tuple[str, List[Union[Span, AdditionalSpan]]]:
+) -> Tuple[str, List[Union[Span, ModifiedSpan]]]:
     """Remove parts of a text, while also removing accordingly its associated spans
 
     Parameters
@@ -267,9 +267,9 @@ def _remove_in_spans(spans, ranges):
 
 def extract(
     text: str,
-    spans: List[Union[Span, AdditionalSpan]],
+    spans: List[Union[Span, ModifiedSpan]],
     ranges: List[Tuple[int, int]],
-) -> Tuple[str, List[Union[Span, AdditionalSpan]]]:
+) -> Tuple[str, List[Union[Span, ModifiedSpan]]]:
     """Extract parts of a text as well as its associated spans
 
     Parameters
@@ -316,10 +316,10 @@ def _extract_in_spans(spans, ranges):
 
 def insert(
     text: str,
-    spans: List[Union[Span, AdditionalSpan]],
+    spans: List[Union[Span, ModifiedSpan]],
     positions: List[int],
     insertion_texts: List[str],
-) -> Tuple[str, List[Union[Span, AdditionalSpan]]]:
+) -> Tuple[str, List[Union[Span, ModifiedSpan]]]:
     """Insert strings in text, and update accordingly its associated spans
 
     Parameters
@@ -381,10 +381,10 @@ def _insert_in_spans(spans, positions, insertion_lengths):
 
 def move(
     text: str,
-    spans: List[Union[Span, AdditionalSpan]],
+    spans: List[Union[Span, ModifiedSpan]],
     range: Tuple[int, int],
     destination: int,
-) -> Tuple[str, List[Union[Span, AdditionalSpan]]]:
+) -> Tuple[str, List[Union[Span, ModifiedSpan]]]:
     """Move part of a text to another position, also moving its associated spans
 
     Parameters
@@ -453,9 +453,9 @@ def _move_in_spans(spans, range, destination):
     return spans
 
 
-def normalize_spans(spans: List[Union[Span, AdditionalSpan]]) -> List[Span]:
+def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
     """
-    Return a transformed of `spans` in which all instances of AdditionalSpan are
+    Return a transformed of `spans` in which all instances of ModifiedSpan are
     replaced by the spans they refer to, and in which contiguous spans are merged.
 
     Parameters
@@ -471,14 +471,14 @@ def normalize_spans(spans: List[Union[Span, AdditionalSpan]]) -> List[Span]:
 
     Example
     ------
-    >>> spans = [Span(0, 10), Span(20, 30), AdditionalSpan(8, replaced_spans=[Span(30, 36)])]
+    >>> spans = [Span(0, 10), Span(20, 30), ModifiedSpan(8, replaced_spans=[Span(30, 36)])]
     >>> spans = normalize_spans(spans)
     >>> print(spans)
     [Span(0, 10), Span(20, 36)]
     """
     all_spans = []
     for span in spans:
-        if isinstance(span, AdditionalSpan):
+        if isinstance(span, ModifiedSpan):
             all_spans += span.replaced_spans
         else:
             all_spans.append(span)
