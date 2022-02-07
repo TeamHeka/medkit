@@ -7,6 +7,7 @@ setup(
     url="https://gitlab.inria.fr/heka/medkit/",
     license="MIT",
     packages=find_packages(include=["medkit", "medkit.*"]),
+    package_data={"": ["*.json"]},
     python_requires=">=3.8",
     install_requires=["smart_open"],
     extras_require={

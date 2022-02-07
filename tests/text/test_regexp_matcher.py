@@ -1,0 +1,51 @@
+import uuid
+
+import pytest
+
+from medkit.core import Collection
+from medkit.core.text import TextDocument, TextBoundAnnotation, Span
+from medkit.text.ner.regexp_matcher import RegexpMatcher
+
+TEXT = "The patient has asthma and type 1 diabetes."
+
+
+@pytest.fixture
+def collection():
+    doc = TextDocument(text=TEXT)
+    raw_text = TextBoundAnnotation(
+        origin_id=uuid.uuid1(), label="RAW_TEXT", spans=[Span(0, len(TEXT))], text=TEXT
+    )
+    doc.add_annotation(raw_text)
+    return Collection([doc])
+
+
+def test_simple_match(collection):
+    rule = dict(
+        id_regexp="id_regexp_diabetes",
+        libelle="Diabetes",
+        regexp="diabetes",
+        regexp_exclude="",
+        version="v1",
+    )
+    matcher = RegexpMatcher(input_label="RAW_TEXT", regexp_file=[rule])
+
+    doc = collection.documents[0]
+    nb_anns_before = len(doc.get_annotations())
+    matcher.annotate_document(doc)
+
+    anns = doc.get_annotations()
+    assert len(anns) == nb_anns_before + 1
+
+    entity = next(a for a in anns if a.label == "Diabetes")
+    assert entity.text == "diabetes"
+    assert entity.spans == [Span(34, 42)]
+    assert entity.metadata["id_regexp"] == "id_regexp_diabetes"
+    assert entity.metadata["version"] == "v1"
+    assert "and type 1 diabetes." in entity.metadata["snippet"]
+
+
+def test_regex_list(collection):
+    doc = collection.documents[0]
+    # make sure default rules can be loaded and executed
+    matcher = RegexpMatcher(input_label="RAW_TEXT")
+    matcher.annotate_document(doc)
