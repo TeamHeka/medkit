@@ -9,87 +9,52 @@
         "version": "v2"
     },
     {
-        "comment": "",
-        "filtre_document": "",
         "id": "id_regexp_kawasaki",
-        "index_extract": "",
         "label": "Kawasaki",
-        "list_cui": "",
         "regexp": "Kawasaki",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
-        "comment": "",
-        "filtre_document": "",
         "id": "id_regexp_allongementqt",
-        "index_extract": "",
         "label": "allongement QT",
-        "list_cui": "",
         "regexp": "allongement.{0,10}QT",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
-        "comment": "",
-        "filtre_document": "",
         "id": "id_regexp_allergiehydroxchloroquine",
-        "index_extract": "",
         "label": "allergie hydroxchloroquine",
-        "list_cui": "",
         "regexp": "allergi.{0,10}hydroxchloroquine|hydroxchloroquine.{0,10}allergi",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
-        "comment": "",
-        "filtre_document": "",
         "id": "id_regexp_retinopathie",
-        "index_extract": "",
         "label": "retinopathie",
-        "list_cui": "",
         "regexp": "r[ée]tinopathie",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
-        "filtre_document": "",
         "id": "id_regexp_igs2",
         "index_extract": "2",
         "label": "igs2",
-        "list_cui": "",
         "regexp": "igs2[^0-9]{0,10}(24h)?[^0-9]{0,10}([0-9]+)",
-        "regexp_exclude": "",
         "version": "v3"
     },
     {
-        "filtre_document": "",
         "id": "id_regexp_encephalopathie",
-        "index_extract": "",
         "label": "encephalopathie",
-        "list_cui": "",
         "regexp": "enc[ée]phalopathie",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
-        "filtre_document": "",
         "id": "id_regexp_insrenchronique",
-        "index_extract": "",
         "label": "Insuffisance rénale chronique",
-        "list_cui": "",
         "regexp": "Insuffisance *r[ée]nale *chronique",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
-        "filtre_document": "",
         "id": "id_regexp_insrenaigue",
-        "index_extract": "",
         "label": "Insuffisance rénale aiguë",
-        "list_cui": "",
         "regexp": "Insuffisance *r[ée]nale *aigu[ëe]",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -97,9 +62,7 @@
         "id": "id_regexp_scannerconclusion",
         "index_extract": "2",
         "label": "Scanner pulmonaire conclusion covid ",
-        "list_cui": "",
         "regexp": "(Aspect *TDM|Scanner) *(typique|compatible|(non|tr[eéè]s)? *[eéè]vocateur)",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -107,9 +70,7 @@
         "id": "id_regexp_scannerseverite",
         "index_extract": "2",
         "label": "Scanner pulmonaire severite",
-        "list_cui": "",
         "regexp": "avec *(.tendue|une *at+einte) *(minime|mod.r.e|.tendue?|s.v.re|critique) *des *anomali",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -123,7 +84,6 @@
     },
     {
         "id": "id_regexp_hta",
-        "index_extract": "",
         "label": "HTA",
         "list_cui": "C1305855",
         "regexp": "[^A-Z]HTA[^A-Z]|hyperten[st]ion.{0,5}art[eé]rielle|hyperten[st]ion.{0,5}[eé]s{1,2}entiel{1,2}.",
@@ -135,7 +95,6 @@
         "label": "Dyslipidémies",
         "list_cui": "C0242339",
         "regexp": "dyslipid.mi.?|hyperlipid.mi.?|hyper.{0,5}cholest.rol.mi.?|cholest.rol.{0,5}[ée]l[ée]v[ée]|hypertriglyc.rid.mi.?|triglyc[ée]rides? +[ée]lev[ée]s?",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -144,7 +103,6 @@
         "label": "Hyperlipidémies",
         "list_cui": "C0020473",
         "regexp": "hyperlipid.mi.?",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
@@ -152,7 +110,6 @@
         "label": "Hypercholestérolémie",
         "list_cui": "C0020443",
         "regexp": "hyper.{0,5}cholest.rol.mi.?|cholest.rol.{0,5}[ée]l[ée]v[ée]",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
@@ -160,7 +117,6 @@
         "label": "Hypertriglycéridémies",
         "list_cui": "C0020557",
         "regexp": "hypertriglyc.rid.mi.?|triglyc[ée]rides? +[ée]lev[ée]s?",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -169,7 +125,6 @@
         "label": "IMC,BMI",
         "list_cui": "C1305855",
         "regexp": "(^|[^a-z])(IMC|BMI) *(est *de|de|=|:)? *([0-9]+[,.]?[0-9]*)[^\\/]?",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -177,7 +132,6 @@
         "label": "Surpoids",
         "list_cui": "C0497406",
         "regexp": "surpoi.{0,2}|surcharge *pond[ée]rale?",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -186,7 +140,6 @@
         "label": "Obésité",
         "list_cui": "C0028754",
         "regexp": "ob[éeè]sit[éeè]|ob[èeé]se",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -195,7 +148,6 @@
         "label": "pose/présence stent, endoprothèse, angioplastie",
         "list_cui": "C0162577,C0190211",
         "regexp": "[^a-z]stents?[^a-z].{0,5}|[ae]ndoproth?.se|[ae]ngioplasti.",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -204,7 +156,6 @@
         "label": "trouble du rythme, AC/FA, arythmie, fibrillation, flutter",
         "list_cui": "C0004238,C0004239,C0003811",
         "regexp": "[^a-z]ACFA[^a-z]|[^a-z]AC\\/FA[^a-z]|ar.thmi.|fibril{1,}ation|flut{1,}er|trouble.?.{0,5}du.{0,5}r.thme|d.sr.thmie",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -212,7 +163,6 @@
         "label": "trouble du rythme, AC/FA, arythmie, fibrillation, flutter",
         "list_cui": "C0004238,C0004239,C0003811",
         "regexp": "[^a-z]ACFA[^a-z]|[^a-z]AC\\/FA[^a-z]|ar.thmi.|fibril{1,}ation|flut{1,}er|trouble.?.{0,5}du.{0,5}r.thme|d.sr.thmie",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -222,7 +172,6 @@
         "label": "Arrêt respiratoire, arrêt cardiaque",
         "list_cui": "C0018790,C0162297",
         "regexp": "[^a-z]arr?[éêe]t *respiratoire|[^a-z]arr?[éêe]t *cardiaque|arr[êeèé]t *cardio[^a-z]*respiratoire|[^a-z]ACR[^a-z]",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -232,7 +181,6 @@
         "label": "Arrêt respiratoire, arrêt cardiaque",
         "list_cui": "C0018790,C0162297",
         "regexp": "[^a-z]arr?[éêe]t *respiratoire|[^a-z]arr?[éêe]t *cardiaque|arr[êeèé]t *cardio[^a-z]*respiratoire|[^a-z]ACR[^a-z]",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -241,7 +189,6 @@
         "label": "Insuffisance cardiaque, défaillance cardiaque",
         "list_cui": "C0018801",
         "regexp": "insuf{1,}isance.{0,5}cardiaque|d[ée]faill[ea]nce.{0,5}cardiaque",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
@@ -259,7 +206,6 @@
         "label": "hémorragie sous-arachnoïdienne",
         "list_cui": "C0038525",
         "regexp": "h[ée]morr?agi.{0,5}m[ée]ning[ée]e|h[ée]morr?agi.{0,5}sous-?arachno[ïi]dienne",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -268,7 +214,6 @@
         "label": "BPCO, maladie pulmonaire, pneumopathie, HTAP",
         "list_cui": "C0024117,C0024115,C0032285,C0020542,C0004096,C0006266,C0264492,C0034067",
         "regexp": "[^a-z]BPCO[^a-z]|[^a-z]HTAP[^a-z]|bronchopneumopathie|maladie.{0,5}pulmonaire|pneumopathie|a[sth][sth][sth]me|bronch?ospasme|a[sth][sth][sth]matique|insuf.{1,2}isance.{0,5}respiratoire.{0,5}chronique|emph.s[èe]me|emf.s[èe]me",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -277,7 +222,6 @@
         "label": "Asthme, bronchospasmes",
         "list_cui": "C0004096,C0006266",
         "regexp": "a[sth][sth][sth]me|bronch?ospasme|a[sth][sth][sth]matique",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -286,7 +230,6 @@
         "label": "Insuffisance repiratoire chronique",
         "list_cui": "C0264492",
         "regexp": "insuf.{1,2}isance.{0,5}respiratoire.{0,5}chronique",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -295,7 +238,6 @@
         "label": "Emphysème",
         "list_cui": "C0034067",
         "regexp": "emph.s[èe]me|emf.s[èe]me",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
@@ -304,15 +246,12 @@
         "label": "Insuffisance rénale chronique, maladie rénale, néphropathie,IRC,Insuffisance rénale aiguë",
         "list_cui": "C0035078,C0022661,C0022658,C0022660",
         "regexp": "maladie.{0,5}r[eé]nale|n[eé]phropathie|Insuffisance.{0,5}r[eé]nale.{0,5}chronique|[^a-z]IRC[^a-z]|[^a-z]dialyse|h[ée]modialyse",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
         "icd10": "R40",
         "id": "id_regexp_somnolence",
-        "index_extract": "",
         "label": "Somnolence",
-        "list_cui": "",
         "regexp": "somnole(nce|nt|nte)?",
         "regexp_exclude": "non *somnolente?|somnolen(t|ce|te) *non|risque *de *somnolence",
         "version": "v2"
@@ -321,7 +260,6 @@
         "id": "id_regexp_debito2",
         "index_extract": "1",
         "label": "Debit O2 L/Min",
-        "list_cui": "",
         "regexp": "[^0-9,]([0-9]+,?[0-9]*) *L *\\/ *mi?n?",
         "regexp_exclude": "cardiaque|[^a-z]dc[^a-z]|[^a-z]dq[^a-z]|[^a-z]dc[^a-z]|[^a-z]DEP[^a-z]|[^A-Z]DEP[^A-Z]|PeakFlow",
         "version": "v2"
@@ -330,25 +268,19 @@
         "id": "id_regexp_sofa",
         "index_extract": "2",
         "label": "Score SOFA",
-        "list_cui": "",
         "regexp": "SOFA[^a-z0-9]*(.{0,5}24h)?[^a-z0-9]*([0-9]+)",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "id": "id_regexp_plaquenil",
         "label": "Hydroxychloroquine, Plaquenil",
-        "list_cui": "",
         "regexp": "hydroxychloroquine|plaqu[ée]nil",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "id": "id_regexp_nivaquin",
         "label": "Chloroquine",
-        "list_cui": "",
         "regexp": "[^a-z]chloroquine?|[^a-z]nivaquin",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
@@ -357,7 +289,6 @@
         "label": "Sclérose en Plaques",
         "list_cui": "C0026769",
         "regexp": "scl[ée]rose.{0,5}en.{0,5}plaque.?|[^a-z]SEP[^a-z]",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -365,15 +296,12 @@
         "label": "Cancer",
         "list_cui": "C0027651,C1882062,C0006826",
         "regexp": "(?<!pre)(?<!pre )cancer[^a-z]|tumeur(?!.{0,7}b[eéè]nigne)|carcinome|m[eé]lanome|n[eé]oplasie|sarcome",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
         "comment": "on supprime \\bVI\\b, trop de faux positifs",
         "id": "id_regexp_ventilation",
-        "index_extract": "",
         "label": "Ventilation, Intubation",
-        "list_cui": "",
         "regexp": "intub[eé]|intubation|extubation|[^a-z]ventil[ée]|mise?\\s*sous\\s*respirateur|\\bIOT\\b|\\bVM\\b|\\bVNI\\b",
         "regexp_exclude": "d[ée]cision\\s*de\\s*non\\s*intubation|fonction\\s+ventilatoire\\s*précaire|ventilation\\s*manuelle|non-?intubation|VNI.{0,5}\\s*ne\\s*pas\\s*d[ée]]buter",
         "version": "v2"
@@ -384,7 +312,6 @@
         "label": "Cirrhose, hypertension portale",
         "list_cui": "C0023890",
         "regexp": "cirrhose|h[yi]perten[ts]ion.{0,5}portale|cirrhotique",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -393,7 +320,6 @@
         "label": "Lymphome",
         "list_cui": "C0024299",
         "regexp": "Lymphome",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
@@ -402,7 +328,6 @@
         "label": "Leucémie",
         "list_cui": "C0686584,C0023418",
         "regexp": "Leuc[ée]mie",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
@@ -411,7 +336,6 @@
         "label": "Hémopathie",
         "list_cui": "C0686584,C0023418,C0024299",
         "regexp": "leuc[ée]mie|lymphome|my[ée]lome",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -445,7 +369,6 @@
         "label": "AOMI, artériopathie oblitérante des membres inférieurs",
         "list_cui": "C1306889",
         "regexp": "[^a-z]AOMI[^a-z]|art[eé]riopathi..{0,5}oblit.r[ea]nte|art.rite.{0,5}des.{0,5}membres.{0,5}inf.rieurs",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
@@ -453,7 +376,6 @@
         "label": "SDRA, détresse respiratoire",
         "list_cui": "C0035222",
         "regexp": "[^a-z]SDRA[^a-z]|d[ée]tresse.{0,5}respiratoire",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
@@ -461,7 +383,6 @@
         "label": "Sepsis, choc septique",
         "list_cui": "C0243026",
         "regexp": "sepsis|choc.{0,5}septique",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
@@ -470,7 +391,6 @@
         "label": "Chirurgie récente",
         "list_cui": "C0543467",
         "regexp": "chirurgie.{0,5}?r.cente|chirurgie",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -487,7 +407,6 @@
         "label": "taux de BetaHCG, hCG",
         "list_cui": "C0803992",
         "regexp": "betaHCG|[^a-z]HCG[^a-z]",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -496,7 +415,6 @@
         "label": "voyage *récent",
         "list_cui": "C2919443,C3532581",
         "regexp": "voyage|retour.d[eu]?|avion|[aà] *l.[ée]tranger",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -504,32 +422,26 @@
         "label": "SLA",
         "list_cui": "C0002736",
         "regexp": "[^A-Z]SLA[^A-Z]|Scl[ée]rose *lat[ée]rale *amyotrophiq|maladie *de *charcot|un *charcot",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
         "id": "id_regexp_taille",
         "index_extract": "2",
         "label": "Taille",
-        "list_cui": "",
         "regexp": "taille[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z,<>]*([0-9]+[.,]?[0-9]* *(cm|m)[0-9]*)(?!DS)",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
         "id": "id_regexp_poids",
         "index_extract": "3",
         "label": "Poids",
-        "list_cui": "",
         "regexp": "(Poids|p[éeè]se)[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z<>,]*([0-9]+[.,]?[0-9]* *(kg|g)[0-9]*)",
         "regexp_exclude": "prise de poids",
         "version": "v2"
     },
     {
         "id": "id_regexp_greffe",
-        "index_extract": "",
         "label": "Greffe",
-        "list_cui": "",
         "regexp": "greff[ée]|transplantation|patient *transplant",
         "regexp_exclude": "en *attente *de *greffe|en *attente *de *transplantation|bilan[^a-z]*pre[^a-z]*greffe",
         "version": "v2"
@@ -540,7 +452,6 @@
         "label": "Surinfection *bactérienne",
         "list_cui": "C1868758,C0004623,C0729518",
         "regexp": "Surinfection *bact[ée]rienne",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -548,7 +459,6 @@
         "label": "Surinfection",
         "list_cui": "C1868758,C0004623,C0729518",
         "regexp": "Surinfection",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
@@ -571,107 +481,81 @@
         "id": "id_regexp_paquetannee",
         "index_extract": "1",
         "label": "Paquet-année (PA)",
-        "list_cui": "",
         "regexp": "(\\d{1,4})\\s*(paquet|cigarette|cig)s?\\s*(par|/|-)\\s*(an(n[ée]e)?)( *(pendant|jusqu.[àa]) *\\d+.{7})?",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "id": "id_regexp_paquetjour",
         "index_extract": "1",
         "label": "Paquet-jour)",
-        "list_cui": "",
         "regexp": "(\\d{1,4})\\s*(paquet|cigarette|cig)s?\\s*(par|/|-)\\s*(j|jour)( *(pendant|jusqu.[àa]) *\\d+.{7})?",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "id": "id_regexp_chimio",
         "label": "Chimiotherapie",
-        "list_cui": "",
         "regexp": "chimio.* ",
-        "regexp_exclude": "",
         "version": "v2"
     },
     {
         "id": "id_regexp_radiotherapie",
         "label": "radiotherapie",
-        "list_cui": "",
         "regexp": "radioth[eéè]rapie",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "case_sensitive": "yes",
         "id": "id_regexp_embolie",
         "label": "Embolie pulmonaire",
-        "list_cui": "",
         "regexp": "[Ee]mbolie *[pP]ulmonaire|[^a-zA-Z]EP[^a-zA-Z]",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "id": "id_regexp_thrombose",
         "label": "Thrombose",
-        "list_cui": "",
         "regexp": "thrombose|thrombus",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "id": "id_regexp_ischemiedigestive",
         "label": "Ischémie digestive",
-        "list_cui": "",
         "regexp": "isch[eé]mie *digestive|isch[eé]mie *intestinale?|isch[eé]mie *m[eé]sent[eé]rique",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "id": "id_regexp_ischemierenale",
         "label": "Ischémie rénale",
-        "list_cui": "",
         "regexp": "isch[eé]mie *r[eé]nale|isch[eé]mie *n[eé]phrique|rein *isch[eé]mique",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "id": "id_regexp_bariatrique",
         "label": "Chirurgie bariatrique",
-        "list_cui": "",
         "regexp": "chirurgie *(bariatrique|.{0,10}ob[eé]sit[eé])",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "id": "id_regexp_sleeve",
         "label": "Sleeve",
-        "list_cui": "",
         "regexp": "[^a-z]sleeve[^a-z]|[^a-z]slive[^a-z]|gastroplastie *verticale *calibr[eé]e *avec *r[eé]section *gastrique",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "id": "id_regexp_bypass",
         "label": "Bypass",
-        "list_cui": "",
         "regexp": "bypass|by-pass|minibypass|court.?circuit *gastrique",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "id": "id_regexp_anneaugastrique",
         "label": "Anneau gastrique",
-        "list_cui": "",
         "regexp": "anneau *gastrique",
-        "regexp_exclude": "",
         "version": "v1"
     },
     {
         "id": "id_regexp_dermatolupique",
         "label": "Raynaud, engelures, livedo, vascularite cutanée",
-        "list_cui": "",
         "regexp": "[^a-z]de *Raynaud[^a-z]|engelures|[^a-z]livedo[^a-z]|vascularite *cutan[eé]e",
-        "regexp_exclude": "",
         "version": "v1"
     }
 ]

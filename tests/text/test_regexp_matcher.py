@@ -24,7 +24,6 @@ def test_simple_match(collection):
         id="id_regexp_diabetes",
         label="Diabetes",
         regexp="diabetes",
-        regexp_exclude="",
         version="v1",
     )
     matcher = RegexpMatcher(input_label="RAW_TEXT", regexp_file=[rule])

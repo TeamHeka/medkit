@@ -4,6 +4,7 @@ import dataclasses
 import json
 from pathlib import Path
 import re
+from typing import Optional
 import uuid
 
 from medkit.core.text import Entity, TextBoundAnnotation, TextDocument
@@ -15,14 +16,14 @@ class RegexpMatcherRule:
     id: str
     label: str
     regexp: str
-    regexp_exclude: str
     version: str
-    index_extract: str = ""
-    filtre_document: str = ""
-    case_sensitive: str = ""
-    comment: str = ""
-    list_cui: str = ""
-    icd10: str = ""
+    regexp_exclude: Optional[str] = None
+    index_extract: str = "0"
+    filtre_document: Optional[str] = None
+    case_sensitive: str = "no"
+    comment: Optional[str] = None
+    list_cui: Optional[str] = None
+    icd10: Optional[str] = None
 
 
 class RegexpMatcher:
@@ -48,7 +49,7 @@ class RegexpMatcher:
                 return
 
             # filter on document by filtre_document
-            if doc.text is not None and rex.filtre_document != "":
+            if doc.text is not None and rex.filtre_document is not None:
                 docmatch = re.search(rex.filtre_document, doc.text)
                 if docmatch is None:
                     continue
@@ -73,15 +74,12 @@ class RegexpMatcher:
             if m is not None:
 
                 # filter if match regexp_exclude
-                if rex.regexp_exclude != "":
+                if rex.regexp_exclude is not None:
                     exclude_match = re.search(rex.regexp_exclude, syntagme.text)
                     if exclude_match is not None:
                         continue
 
-                if rex.index_extract != "":
-                    i = int(rex.index_extract)
-                else:
-                    i = 0
+                i = int(rex.index_extract)
                 text, spans = span_utils.extract(
                     syntagme.text, syntagme.spans, [m.span(i)]
                 )
