@@ -68,11 +68,7 @@ class RegexpMatcher:
                 self.find_matches(doc, rex, syntagme)
 
     def find_matches(
-        self,
-        doc: TextDocument,
-        rex: RegexpMatcherRule,
-        syntagme: TextBoundAnnotation,
-        snippet_size=60,
+        self, doc: TextDocument, rex: RegexpMatcherRule, syntagme: TextBoundAnnotation
     ):
         if rex.case_sensitive:
             reflags = 0
@@ -92,16 +88,6 @@ class RegexpMatcher:
                     syntagme.text, syntagme.spans, [m.span(rex.index_extract)]
                 )
 
-                if doc.text is not None:
-                    spans_normalized = span_utils.normalize_spans(spans)
-                    snippet_start = min(s.start for s in spans_normalized)
-                    snippet_end = max(s.end for s in spans_normalized)
-                    snippet_start = max(snippet_start - snippet_size, 0)
-                    snippet_end = max(snippet_end + snippet_size, len(doc.text))
-                    snippet_value = doc.text[snippet_start:snippet_end]
-                else:
-                    snippet_value = None
-
                 entity = Entity(
                     label=rex.label,
                     text=text,
@@ -109,7 +95,6 @@ class RegexpMatcher:
                     metadata={
                         "id_regexp": rex.id,
                         "version": rex.version,
-                        "snippet": snippet_value,
                         # TODO decide how to handle that in medkit
                         # **syntagme.attributes,
                     },

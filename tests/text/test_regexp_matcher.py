@@ -40,7 +40,6 @@ def test_simple_match(collection):
     assert entity.spans == [Span(34, 42)]
     assert entity.metadata["id_regexp"] == "id_regexp_diabetes"
     assert entity.metadata["version"] == "1"
-    assert "and type 1 diabetes." in entity.metadata["snippet"]
 
 
 def test_regex_list(collection):
