@@ -7,8 +7,8 @@ import json
 from pathlib import Path
 import re
 from typing import Any, List, Optional
-import uuid
 
+from medkit.core.processing import ProcessingDescription
 from medkit.core.text import Entity, TextBoundAnnotation, TextDocument
 import medkit.core.text.span as span_utils
 
@@ -46,6 +46,15 @@ class RegexpMatcher:
         if list_regexp is None:
             list_regexp = self.load_rules(_PATH_TO_DEFAULT_RULES)
         self.list_regexp = list_regexp
+
+        config = dict(input_label=input_label, list_regexp=list_regexp)
+        self._description = ProcessingDescription(
+            name=self.__class__.__name__, config=config
+        )
+
+    @property
+    def description(self) -> ProcessingDescription:
+        return self._description
 
     def annotate_document(self, doc: TextDocument):
         syntagme_ids = doc.segments[self.input_label]
@@ -104,11 +113,15 @@ class RegexpMatcher:
                         # TODO decide how to handle that in medkit
                         # **syntagme.attributes,
                     },
-                    origin_id=uuid.uuid1(),
+                    origin_id=self.description.id,
                     # FIXME store this provenance info somewhere
                     # source_id=syntagme.id,
                 )
                 doc.add_annotation(entity)
+
+    @classmethod
+    def from_description(cls, description: ProcessingDescription):
+        return cls(proc_id=description.id, **description.config)
 
     @staticmethod
     def load_rules(path_to_rules) -> List[RegexpMatcherRule]:
