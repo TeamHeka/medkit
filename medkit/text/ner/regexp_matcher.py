@@ -6,7 +6,7 @@ import dataclasses
 import json
 from pathlib import Path
 import re
-from typing import Any, List, Optional
+from typing import Any, Iterator, List, Optional
 
 from medkit.core.processing import ProcessingDescription
 from medkit.core.text import Entity, TextBoundAnnotation, TextDocument
@@ -15,39 +15,38 @@ import medkit.core.text.span as span_utils
 
 @dataclasses.dataclass
 class RegexpMatcherRule:
-    id: str
-    label: str
     regexp: str
+    label: str
+    id: str
     version: str
-    regexp_exclude: Optional[str] = None
     index_extract: int = 0
     case_sensitive: bool = False
+    regexp_exclude: Optional[str] = None
     comment: Optional[str] = None
     normalizations: List[RegexpMatcherNormalization] = dataclasses.field(
         default_factory=lambda: []
     )
 
 
+_PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.json"
+
+
 @dataclasses.dataclass
 class RegexpMatcherNormalization:
+
     kb_name: str
     kb_version: str
     id: Any
 
 
-_PATH_TO_DEFAULT_RULES = Path(__file__).parent / "list_regexp.json"
-
-
 class RegexpMatcher:
-    def __init__(
-        self, input_label, list_regexp: Optional[List[RegexpMatcherRule]] = None
-    ):
+    def __init__(self, input_label, rules: Optional[List[RegexpMatcherRule]] = None):
         self.input_label = input_label
-        if list_regexp is None:
-            list_regexp = self.load_rules(_PATH_TO_DEFAULT_RULES)
-        self.list_regexp = list_regexp
+        if rules is None:
+            rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
+        self.rules = rules
 
-        config = dict(input_label=input_label, list_regexp=list_regexp)
+        config = dict(input_label=input_label, rules=rules)
         self._description = ProcessingDescription(
             name=self.__class__.__name__, config=config
         )
@@ -57,54 +56,50 @@ class RegexpMatcher:
         return self._description
 
     def annotate_document(self, doc: TextDocument):
-        syntagme_ids = doc.segments[self.input_label]
+        input_ann_ids = doc.segments.get(self.input_label)
+        if input_ann_ids is not None:
+            input_anns = [doc.get_annotation_by_id(id) for id in input_ann_ids]
+            output_entities = self._process_input_annotations(input_anns)
+            for output_entity in output_entities:
+                doc.add_annotation(output_entity)
 
-        for rex in self.list_regexp:
-            if len(syntagme_ids) == 0:
-                return
+    def _process_input_annotations(
+        self, input_anns: List[TextBoundAnnotation]
+    ) -> Iterator[Entity]:
+        for input_ann in input_anns:
+            for rule in self.rules:
+                yield from self._match(rule, input_ann)
 
-            for syntagme_id in syntagme_ids:
-                syntagme = doc.get_annotation_by_id(syntagme_id)
-                self.find_matches(doc, rex, syntagme)
+    def _match(
+        self, rule: RegexpMatcherRule, input_ann: TextBoundAnnotation
+    ) -> Iterator[Entity]:
+        flags = 0 if rule.case_sensitive else re.IGNORECASE
 
-    def find_matches(
-        self, doc: TextDocument, rex: RegexpMatcherRule, syntagme: TextBoundAnnotation
-    ):
-        if rex.case_sensitive:
-            reflags = 0
-        else:
-            reflags = re.IGNORECASE
+        for match in re.finditer(rule.regexp, input_ann.text, flags):
+            if rule.regexp_exclude is not None:
+                exclude_match = re.search(rule.regexp_exclude, input_ann.text, flags)
+                if exclude_match is not None:
+                    continue
 
-        for m in re.finditer(rex.regexp, syntagme.text, flags=reflags):
-            if m is not None:
-
-                # filter if match regexp_exclude
-                if rex.regexp_exclude is not None:
-                    exclude_match = re.search(
-                        rex.regexp_exclude, syntagme.text, flags=reflags
-                    )
-                    if exclude_match is not None:
-                        continue
-
-                text, spans = span_utils.extract(
-                    syntagme.text, syntagme.spans, [m.span(rex.index_extract)]
-                )
-
-                entity = Entity(
-                    label=rex.label,
-                    text=text,
-                    spans=spans,
-                    metadata={
-                        "id_regexp": rex.id,
-                        "version": rex.version,
-                        # TODO decide how to handle that in medkit
-                        # **syntagme.attributes,
-                    },
-                    origin_id=self.description.id,
-                    # FIXME store this provenance info somewhere
-                    # source_id=syntagme.id,
-                )
-                doc.add_annotation(entity)
+            text, spans = span_utils.extract(
+                input_ann.text, input_ann.spans, [match.span(rule.index_extract)]
+            )
+            metadata = dict(
+                id_regexp=rule.id,
+                version=rule.version,
+                # TODO decide how to handle that in medkit
+                # **syntagme.attributes,
+            )
+            entity = Entity(
+                label=rule.label,
+                text=text,
+                spans=spans,
+                origin_id=self.description.id,
+                metadata=metadata,
+                # FIXME store this provenance info somewhere
+                # source_id=syntagme.id,
+            )
+            yield entity
 
     @classmethod
     def from_description(cls, description: ProcessingDescription):

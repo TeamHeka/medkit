@@ -26,7 +26,7 @@ def test_simple_match(collection):
         regexp="diabetes",
         version="1",
     )
-    matcher = RegexpMatcher(input_label="RAW_TEXT", list_regexp=[rule])
+    matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
 
     doc = collection.documents[0]
     nb_anns_before = len(doc.get_annotations())
@@ -42,7 +42,7 @@ def test_simple_match(collection):
     assert entity.metadata["version"] == "1"
 
 
-def test_regex_list(collection):
+def test_default_rules(collection):
     doc = collection.documents[0]
     # make sure default rules can be loaded and executed
     matcher = RegexpMatcher(input_label="RAW_TEXT")
