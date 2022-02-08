@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-__all__ = ["InputConverter", "OutputConverter", "ProcessingDescription"]
+__all__ = [
+    "InputConverter",
+    "OutputConverter",
+    "ProcessingDescription",
+    "RuleBasedAnnotator",
+]
 
 import abc
 import dataclasses
@@ -37,7 +42,7 @@ class InputConverter(abc.ABC):
 class OutputConverter(abc.ABC):
     @property
     @abc.abstractmethod
-    def description(self):
+    def description(self) -> ProcessingDescription:
         pass
 
     @abc.abstractmethod
@@ -46,4 +51,15 @@ class OutputConverter(abc.ABC):
 
     @abc.abstractmethod
     def save(self, collection):
+        pass
+
+
+class RuleBasedAnnotator(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def description(self) -> ProcessingDescription:
+        pass
+
+    @abc.abstractmethod
+    def annotate(self, collection: Collection):
         pass
