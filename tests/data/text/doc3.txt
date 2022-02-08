@@ -1,0 +1,30 @@
+Docteur RADIO
+COMPTE-RENDU D'ENDOSCOPIE DIGESTIVE HAUTE
+DU 01/10/2005
+De Monsieur TRUC BIDULE, né le 05/10/1924, IPP : 1234567890
+Motif : Méléna
+Opérateurs : Docteur ASSISTANT
+Anesthésistes : - IADE :
+Déroulement de l'examen :
+Type de préparation du patient : A jeun
+Examen réalisé sous anesthésie locale.
+Tolérance à l'examen : Bonne
+Oesophage :
+Organe entier : Absence d'anomalie.
+Cardia :
+Organe entier : Absence d'anomalie.
+Estomac :
+Grosse tubérosité : Absence d'anomalie.
+Corps gastrique : Absence d'anomalie.
+Antre : Absence d'anomalie.
+Duodénum :
+Bulbe : Absence d'anomalie.
+D1/D2 : Absence d'anomalie.
+D3/D4 : Non vu
+Jéjunum : Non vu
+:
+Conclusion :
+Endoscopie digestive haute normale.
+Estomac visualisé en rétrovision. Le cardia à 38 cm.
+Codage :
+: Docteur RADIO
