@@ -12,14 +12,14 @@ import medkit.core.text.span as span_utils
 
 @dataclasses.dataclass
 class RegexpMatcherRule:
-    id_regexp: str
-    libelle: str
+    id: str
+    label: str
     regexp: str
     regexp_exclude: str
     version: str
     index_extract: str = ""
     filtre_document: str = ""
-    casesensitive: str = ""
+    case_sensitive: str = ""
     comment: str = ""
     list_cui: str = ""
     icd10: str = ""
@@ -64,7 +64,7 @@ class RegexpMatcher:
         syntagme: TextBoundAnnotation,
         snippet_size=60,
     ):
-        if rex.casesensitive == "yes":
+        if rex.case_sensitive == "yes":
             reflags = 0
         else:
             reflags = re.IGNORECASE
@@ -97,11 +97,11 @@ class RegexpMatcher:
                     snippet_value = None
 
                 entity = Entity(
-                    label=rex.libelle,
+                    label=rex.label,
                     text=text,
                     spans=spans,
                     metadata={
-                        "id_regexp": rex.id_regexp,
+                        "id_regexp": rex.id,
                         "version": rex.version,
                         "snippet": snippet_value,
                         # TODO decide how to handle that in medkit

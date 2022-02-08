@@ -21,8 +21,8 @@ def collection():
 
 def test_simple_match(collection):
     rule = RegexpMatcherRule(
-        id_regexp="id_regexp_diabetes",
-        libelle="Diabetes",
+        id="id_regexp_diabetes",
+        label="Diabetes",
         regexp="diabetes",
         regexp_exclude="",
         version="v1",
