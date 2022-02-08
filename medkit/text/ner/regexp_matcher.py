@@ -21,7 +21,6 @@ class RegexpMatcherRule:
     version: str
     regexp_exclude: Optional[str] = None
     index_extract: int = 0
-    filtre_document: Optional[str] = None
     case_sensitive: bool = False
     comment: Optional[str] = None
     normalizations: List[RegexpMatcherNormalization] = dataclasses.field(
@@ -36,25 +35,17 @@ class RegexpMatcherNormalization:
     id: Any
 
 
+_PATH_TO_DEFAULT_RULES = Path(__file__).parent / "list_regexp.json"
+
+
 class RegexpMatcher:
-    def __init__(self, input_label, regexp_file=None):
+    def __init__(
+        self, input_label, list_regexp: Optional[List[RegexpMatcherRule]] = None
+    ):
         self.input_label = input_label
-        if regexp_file is None:
-            regexp_file = str(Path(__file__).parent / "list_regexp.json")
-        if type(regexp_file) is str:
-
-            def hook(data):
-                if "kb_name" in data:
-                    return RegexpMatcherNormalization(**data)
-                else:
-                    return RegexpMatcherRule(**data)
-
-            with open(regexp_file, "r") as f:
-                self.list_regexp = json.load(f, object_hook=hook)
-        elif type(regexp_file) is list:
-            self.list_regexp = regexp_file
-        else:
-            raise Exception("wrong type for regexp_file")
+        if list_regexp is None:
+            list_regexp = self.load_rules(_PATH_TO_DEFAULT_RULES)
+        self.list_regexp = list_regexp
 
     def annotate_document(self, doc: TextDocument):
         syntagme_ids = doc.segments[self.input_label]
@@ -62,12 +53,6 @@ class RegexpMatcher:
         for rex in self.list_regexp:
             if len(syntagme_ids) == 0:
                 return
-
-            # filter on document by filtre_document
-            if doc.text is not None and rex.filtre_document is not None:
-                docmatch = re.search(rex.filtre_document, doc.text)
-                if docmatch is None:
-                    continue
 
             for syntagme_id in syntagme_ids:
                 syntagme = doc.get_annotation_by_id(syntagme_id)
@@ -124,3 +109,15 @@ class RegexpMatcher:
                     # source_id=syntagme.id,
                 )
                 doc.add_annotation(entity)
+
+    @staticmethod
+    def load_rules(path_to_rules) -> List[RegexpMatcherRule]:
+        def hook(data):
+            if "kb_name" in data:
+                return RegexpMatcherNormalization(**data)
+            else:
+                return RegexpMatcherRule(**data)
+
+        with open(path_to_rules, mode="r") as f:
+            rules = json.load(f, object_hook=hook)
+        return rules

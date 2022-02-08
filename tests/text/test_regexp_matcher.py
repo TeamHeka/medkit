@@ -26,7 +26,7 @@ def test_simple_match(collection):
         regexp="diabetes",
         version="v1",
     )
-    matcher = RegexpMatcher(input_label="RAW_TEXT", regexp_file=[rule])
+    matcher = RegexpMatcher(input_label="RAW_TEXT", list_regexp=[rule])
 
     doc = collection.documents[0]
     nb_anns_before = len(doc.get_annotations())

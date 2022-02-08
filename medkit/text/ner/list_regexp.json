@@ -78,22 +78,6 @@
         "version": "v2"
     },
     {
-        "filtre_document": "Anomalies *pulmonaires *en *faveur *d.une *infection *par *le *COVID|Anomalies *pulmonaires *en *faveur *d.une *autre *infection",
-        "id": "id_regexp_scannerconclusion",
-        "index_extract": 2,
-        "label": "Scanner pulmonaire conclusion covid ",
-        "regexp": "(Aspect *TDM|Scanner) *(typique|compatible|(non|tr[eéè]s)? *[eéè]vocateur)",
-        "version": "v2"
-    },
-    {
-        "filtre_document": "Anomalies *pulmonaires *en *faveur *d.une *infection *par *le *COVID|Anomalies *pulmonaires *en *faveur *d.une *autre *infection",
-        "id": "id_regexp_scannerseverite",
-        "index_extract": 2,
-        "label": "Scanner pulmonaire severite",
-        "regexp": "avec *(.tendue|une *at+einte) *(minime|mod.r.e|.tendue?|s.v.re|critique) *des *anomali",
-        "version": "v2"
-    },
-    {
         "id": "id_regexp_diabete",
         "label": "Diabète",
         "regexp": "(?<!pre)(?<!pre.)diab[ée]te|[^a-z]DID[^a-z]|[^a-z]DNID[^a-z]|diab[ée]tique",
