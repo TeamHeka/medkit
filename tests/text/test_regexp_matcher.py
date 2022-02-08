@@ -4,7 +4,7 @@ import pytest
 
 from medkit.core import Collection
 from medkit.core.text import TextDocument, TextBoundAnnotation, Span
-from medkit.text.ner.regexp_matcher import RegexpMatcher
+from medkit.text.ner.regexp_matcher import RegexpMatcher, RegexpMatcherRule
 
 TEXT = "The patient has asthma and type 1 diabetes."
 
@@ -20,7 +20,7 @@ def collection():
 
 
 def test_simple_match(collection):
-    rule = dict(
+    rule = RegexpMatcherRule(
         id_regexp="id_regexp_diabetes",
         libelle="Diabetes",
         regexp="diabetes",

@@ -1,5 +1,6 @@
-__all__ = ["RegexpMatcher"]
+__all__ = ["RegexpMatcher", "RegexpMatcherRule"]
 
+import dataclasses
 import json
 from pathlib import Path
 import re
@@ -9,6 +10,30 @@ from medkit.core.text import Entity, TextBoundAnnotation, TextDocument
 import medkit.core.text.span as span_utils
 
 
+@dataclasses.dataclass
+class RegexpMatcherRule:
+    id_regexp: str
+    libelle: str
+    regexp: str
+    regexp_exclude: str
+    version: str
+    index_extract: str = ""
+    filtre_document: str = ""
+    casesensitive: str = ""
+    comment: str = ""
+    date_modification: str = ""
+    list_cui: str = ""
+    icd10: str = ""
+    regexp_v1: str = ""
+    regexp_v2: str = ""
+    regexp_v3: str = ""
+    regexp_exclude_v1: str = ""
+    regexp_exclude_v2: str = ""
+    regexp_exclude_v3: str = ""
+    deprecated: str = ""
+    refresh: str = ""
+
+
 class RegexpMatcher:
     def __init__(self, input_label, regexp_file=None):
         self.input_label = input_label
@@ -16,7 +41,9 @@ class RegexpMatcher:
             regexp_file = str(Path(__file__).parent / "list_regexp.json")
         if type(regexp_file) is str:
             with open(regexp_file, "r") as f:
-                self.list_regexp = json.load(f)
+                self.list_regexp = json.load(
+                    f, object_hook=lambda d: RegexpMatcherRule(**d)
+                )
         elif type(regexp_file) is list:
             self.list_regexp = regexp_file
         else:
@@ -30,12 +57,8 @@ class RegexpMatcher:
                 return
 
             # filter on document by filtre_document
-            if (
-                doc.text is not None
-                and "filtre_document" in rex.keys()
-                and rex["filtre_document"] != ""
-            ):
-                docmatch = re.search(rex["filtre_document"], doc.text)
+            if doc.text is not None and rex.filtre_document != "":
+                docmatch = re.search(rex.filtre_document, doc.text)
                 if docmatch is None:
                     continue
 
@@ -44,24 +67,28 @@ class RegexpMatcher:
                 self.find_matches(doc, rex, syntagme)
 
     def find_matches(
-        self, doc: TextDocument, rex, syntagme: TextBoundAnnotation, snippet_size=60
+        self,
+        doc: TextDocument,
+        rex: RegexpMatcherRule,
+        syntagme: TextBoundAnnotation,
+        snippet_size=60,
     ):
-        if "casesensitive" in rex.keys() and rex["casesensitive"] == "yes":
+        if rex.casesensitive == "yes":
             reflags = 0
         else:
             reflags = re.IGNORECASE
 
-        for m in re.finditer(rex["regexp"], syntagme.text, flags=reflags):
+        for m in re.finditer(rex.regexp, syntagme.text, flags=reflags):
             if m is not None:
 
                 # filter if match regexp_exclude
-                if rex["regexp_exclude"] != "":
-                    exclude_match = re.search(rex["regexp_exclude"], syntagme.text)
+                if rex.regexp_exclude != "":
+                    exclude_match = re.search(rex.regexp_exclude, syntagme.text)
                     if exclude_match is not None:
                         continue
 
-                if "index_extract" in rex.keys() and rex["index_extract"] != "":
-                    i = int(rex["index_extract"])
+                if rex.index_extract != "":
+                    i = int(rex.index_extract)
                 else:
                     i = 0
                 text, spans = span_utils.extract(
@@ -79,12 +106,12 @@ class RegexpMatcher:
                     snippet_value = None
 
                 entity = Entity(
-                    label=rex["libelle"],
+                    label=rex.libelle,
                     text=text,
                     spans=spans,
                     metadata={
-                        "id_regexp": rex["id_regexp"],
-                        "version": rex["version"],
+                        "id_regexp": rex.id_regexp,
+                        "version": rex.version,
                         "snippet": snippet_value,
                         # TODO decide how to handle that in medkit
                         # **syntagme.attributes,
