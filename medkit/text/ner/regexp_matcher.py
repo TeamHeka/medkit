@@ -24,7 +24,6 @@ class RegexpMatcherRule:
     index_extract: int = 0
     case_sensitive: bool = False
     regexp_exclude: Optional[str] = None
-    comment: Optional[str] = None
     normalizations: List[RegexpMatcherNormalization] = dataclasses.field(
         default_factory=lambda: []
     )

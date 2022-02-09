@@ -91,8 +91,8 @@
       kb_version: "202AB"
       id: "C0242339"
 
-- comment: "on supprime, synonyme de id_regexp_dyslipidemie"
-  id: "id_regexp_hyperlipidemie"
+# on supprime, synonyme de id_regexp_dyslipidemie
+- id: "id_regexp_hyperlipidemie"
   label: "Hyperlipidémies"
   regexp: "hyperlipid.mi.?"
   version: "1"
@@ -198,8 +198,8 @@
       kb_version: "202AB"
       id: "C0003811"
 
-- comment: "attention mm regexp que id_regexp_arretcardiaq"
-  id: "id_regexp_arretresp"
+# attention mm regexp que id_regexp_arretcardiaq
+- id: "id_regexp_arretresp"
   label: "Arrêt respiratoire, arrêt cardiaque"
   regexp: "[^a-z]arr?[éêe]t *respiratoire|[^a-z]arr?[éêe]t *cardiaque|arr[êeèé]t *cardio[^a-z]*respiratoire|[^a-z]ACR[^a-z]"
   version: "2"
@@ -214,8 +214,8 @@
       kb_version: "202AB"
       id: "C0162297"
 
-- comment: "attention mm regexp que id_regexp_arretresp"
-  id: "id_regexp_arretcardiaq"
+# attention mm regexp que id_regexp_arretresp
+- id: "id_regexp_arretcardiaq"
   label: "Arrêt respiratoire, arrêt cardiaque"
   regexp: "[^a-z]arr?[éêe]t *respiratoire|[^a-z]arr?[éêe]t *cardiaque|arr[êeèé]t *cardio[^a-z]*respiratoire|[^a-z]ACR[^a-z]"
   version: "2"
@@ -426,8 +426,8 @@
       kb_version: "202AB"
       id: "C0006826"
 
-- comment: "on supprime \\bVI\\b, trop de faux positifs"
-  id: "id_regexp_ventilation"
+# on supprime \\bVI\\b, trop de faux positifs
+- id: "id_regexp_ventilation"
   label: "Ventilation, Intubation"
   regexp: "intub[eé]|intubation|extubation|[^a-z]ventil[ée]|mise?\\s*sous\\s*respirateur|\\bIOT\\b|\\bVM\\b|\\bVNI\\b"
   regexp_exclude: "d[ée]cision\\s*de\\s*non\\s*intubation|fonction\\s+ventilatoire\\s*précaire|ventilation\\s*manuelle|non-?intubation|VNI.{0,5}\\s*ne\\s*pas\\s*d[ée]]buter"
@@ -503,8 +503,8 @@
       kb_version: "202AB"
       id: "C0021051"
 
-- comment: "Trop de faux positifs... developper une méthode spécifique"
-  id: "id_regexp_vih"
+# Trop de faux positifs... developper une méthode spécifique
+- id: "id_regexp_vih"
   label: "VIH - SIDA - Séropositif"
   regexp: "[^A-Z]HIV+[^A-Z]|[^A-Z]VIH[^A-Z]|[^A-Z]SIDA[^A-Z]|S[ée]ropositi.."
   regexp_exclude: "[^A-Z]VIH[^.]{0,20}n..?gative|[^A-Z]VIH[ :]*-[^0-9]"
@@ -554,8 +554,8 @@
       kb_version: "202AB"
       id: "C0243026"
 
-- comment: "on supprime, utiliser les mouvements des patients"
-  id: "id_regexp_chir"
+# on supprime, utiliser les mouvements des patients
+- id: "id_regexp_chir"
   label: "Chirurgie récente"
   regexp: "chirurgie.{0,5}?r.cente|chirurgie"
   version: "2"
@@ -574,8 +574,8 @@
       kb_version: "202AB"
       id: "C0032961"
 
-- comment: "on supprime: la valeur existe en bio structuree"
-  id: "id_regexp_betahcg"
+# on supprime: la valeur existe en bio structuree
+- id: "id_regexp_betahcg"
   label: "taux de BetaHCG, hCG"
   regexp: "betaHCG|[^a-z]HCG[^a-z]"
   version: "2"
@@ -584,8 +584,8 @@
       kb_version: "202AB"
       id: "C0803992"
 
-- comment: "on supprime, trop de bruit, temporalité difficile "
-  id: "id_regexp_voyage"
+# on supprime, trop de bruit, temporalité difficile
+- id: "id_regexp_voyage"
   label: "voyage *récent"
   regexp: "voyage|retour.d[eu]?|avion|[aà] *l.[ée]tranger"
   version: "2"
@@ -625,8 +625,8 @@
   regexp_exclude: "en *attente *de *greffe|en *attente *de *transplantation|bilan[^a-z]*pre[^a-z]*greffe"
   version: "2"
 
-- comment: "on supprime, inclu dans surinfection"
-  id: "id_regexp_surinfbact"
+# on supprime, inclu dans surinfection
+- id: "id_regexp_surinfbact"
   label: "Surinfection *bactérienne"
   regexp: "Surinfection *bact[ée]rienne"
   version: "2"
