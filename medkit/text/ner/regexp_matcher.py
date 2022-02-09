@@ -3,10 +3,11 @@ from __future__ import annotations
 __all__ = ["RegexpMatcher", "RegexpMatcherRule", "RegexpMatcherNormalization"]
 
 import dataclasses
-import json
 from pathlib import Path
 import re
 from typing import Any, Iterator, List, Optional, Union
+
+import yaml
 
 from medkit.core import Collection
 from medkit.core.processing import ProcessingDescription, RuleBasedAnnotator
@@ -37,7 +38,7 @@ class RegexpMatcherNormalization:
     id: Any
 
 
-_PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.json"
+_PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.yml"
 
 
 class RegexpMatcher(RuleBasedAnnotator):
@@ -125,12 +126,20 @@ class RegexpMatcher(RuleBasedAnnotator):
 
     @staticmethod
     def load_rules(path_to_rules) -> List[RegexpMatcherRule]:
-        def hook(data):
+        class Loader(yaml.Loader):
+            pass
+
+        def construct_mapping(loader, node):
+            data = loader.construct_mapping(node)
             if "kb_name" in data:
                 return RegexpMatcherNormalization(**data)
             else:
                 return RegexpMatcherRule(**data)
 
+        Loader.add_constructor(
+            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping
+        )
+
         with open(path_to_rules, mode="r") as f:
-            rules = json.load(f, object_hook=hook)
+            rules = yaml.load(f, Loader=Loader)
         return rules
