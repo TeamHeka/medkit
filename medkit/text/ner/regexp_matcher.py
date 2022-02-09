@@ -6,10 +6,11 @@ import dataclasses
 import json
 from pathlib import Path
 import re
-from typing import Any, Iterator, List, Optional
+from typing import Any, Iterator, List, Optional, Union
 
-from medkit.core.processing import ProcessingDescription
-from medkit.core.text import Entity, TextBoundAnnotation, TextDocument
+from medkit.core import Collection
+from medkit.core.processing import ProcessingDescription, RuleBasedAnnotator
+from medkit.core.text import Attribute, Entity, TextBoundAnnotation, TextDocument
 import medkit.core.text.span as span_utils
 
 
@@ -28,9 +29,6 @@ class RegexpMatcherRule:
     )
 
 
-_PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.json"
-
-
 @dataclasses.dataclass
 class RegexpMatcherNormalization:
 
@@ -39,7 +37,10 @@ class RegexpMatcherNormalization:
     id: Any
 
 
-class RegexpMatcher:
+_PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.json"
+
+
+class RegexpMatcher(RuleBasedAnnotator):
     def __init__(self, input_label, rules: Optional[List[RegexpMatcherRule]] = None):
         self.input_label = input_label
         if rules is None:
@@ -55,24 +56,29 @@ class RegexpMatcher:
     def description(self) -> ProcessingDescription:
         return self._description
 
+    def annotate(self, collection: Collection):
+        for doc in collection.documents:
+            if isinstance(doc, TextDocument):
+                self.annotate_document(doc)
+
     def annotate_document(self, doc: TextDocument):
         input_ann_ids = doc.segments.get(self.input_label)
         if input_ann_ids is not None:
             input_anns = [doc.get_annotation_by_id(id) for id in input_ann_ids]
-            output_entities = self._process_input_annotations(input_anns)
-            for output_entity in output_entities:
-                doc.add_annotation(output_entity)
+            output_anns = self._process_input_annotations(input_anns)
+            for output_ann in output_anns:
+                doc.add_annotation(output_ann)
 
     def _process_input_annotations(
         self, input_anns: List[TextBoundAnnotation]
-    ) -> Iterator[Entity]:
+    ) -> Iterator[Union[Entity, Attribute]]:
         for input_ann in input_anns:
             for rule in self.rules:
                 yield from self._match(rule, input_ann)
 
     def _match(
         self, rule: RegexpMatcherRule, input_ann: TextBoundAnnotation
-    ) -> Iterator[Entity]:
+    ) -> Iterator[Union[Entity, Attribute]]:
         flags = 0 if rule.case_sensitive else re.IGNORECASE
 
         for match in re.finditer(rule.regexp, input_ann.text, flags):
@@ -100,6 +106,18 @@ class RegexpMatcher:
                 # source_id=syntagme.id,
             )
             yield entity
+
+            for normalization in rule.normalizations:
+                # TODO should we have a NormalizationAttribute class
+                # with specific fields (name, id, version) ?
+                attribute = Attribute(
+                    origin_id=self.description.id,
+                    label=normalization.kb_name,
+                    target_id=entity.id,
+                    value=normalization.id,
+                    metadata=dict(version=normalization.kb_version),
+                )
+                yield attribute
 
     @classmethod
     def from_description(cls, description: ProcessingDescription):
