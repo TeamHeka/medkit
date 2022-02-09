@@ -1,10 +1,12 @@
-__all__ = ["RegexpMatcher", "RegexpMatcherRule"]
+from __future__ import annotations
+
+__all__ = ["RegexpMatcher", "RegexpMatcherRule", "RegexpMatcherNormalization"]
 
 import dataclasses
 import json
 from pathlib import Path
 import re
-from typing import Optional
+from typing import Any, List, Optional
 import uuid
 
 from medkit.core.text import Entity, TextBoundAnnotation, TextDocument
@@ -22,8 +24,16 @@ class RegexpMatcherRule:
     filtre_document: Optional[str] = None
     case_sensitive: bool = False
     comment: Optional[str] = None
-    list_cui: Optional[str] = None
-    icd10: Optional[str] = None
+    normalizations: List[RegexpMatcherNormalization] = dataclasses.field(
+        default_factory=lambda: []
+    )
+
+
+@dataclasses.dataclass
+class RegexpMatcherNormalization:
+    kb_name: str
+    kb_version: str
+    id: Any
 
 
 class RegexpMatcher:
@@ -32,10 +42,15 @@ class RegexpMatcher:
         if regexp_file is None:
             regexp_file = str(Path(__file__).parent / "list_regexp.json")
         if type(regexp_file) is str:
+
+            def hook(data):
+                if "kb_name" in data:
+                    return RegexpMatcherNormalization(**data)
+                else:
+                    return RegexpMatcherRule(**data)
+
             with open(regexp_file, "r") as f:
-                self.list_regexp = json.load(
-                    f, object_hook=lambda d: RegexpMatcherRule(**d)
-                )
+                self.list_regexp = json.load(f, object_hook=hook)
         elif type(regexp_file) is list:
             self.list_regexp = regexp_file
         else:
