@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import dataclasses
 import re
 from typing import Iterator, List, Union, TYPE_CHECKING
@@ -33,7 +35,7 @@ class SentenceTokenizer(RuleBasedAnnotator):
         self._description = ProcessingDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )
-        config = SentenceTokenizerConfig(config)
+        config = SentenceTokenizerConfig(**config)
         self.input_label = config.input_label
         self.output_label = config.output_label
         self.punct_chars = config.punct_chars
@@ -54,8 +56,11 @@ class SentenceTokenizer(RuleBasedAnnotator):
             if isinstance(doc, TextDocument):
                 # Retrieve annotations on which we want to apply sentence segmentation
                 # e.g., section
-                input_anns = doc.entities.get(self.input_label, None)
-                if input_anns:
+                input_ann_ids = doc.entities.get(self.input_label, None)
+                if input_ann_ids:
+                    input_anns = [
+                        doc.get_annotation_by_id(ann_id) for ann_id in input_ann_ids
+                    ]
                     output_anns = self._process_doc_annotations(input_anns)
                     for ann in output_anns:
                         # Add each sentence as annotation in doc
@@ -110,6 +115,8 @@ class SentenceTokenizer(RuleBasedAnnotator):
 
             # Extract raw span list from regex match ranges
             text, spans = span_utils.extract(
-                text_annotation.text, text_annotation.spans, [(start, end)]
+                text=text_annotation.text,
+                spans=text_annotation.spans,
+                ranges=[(start, end)],
             )
             yield text, spans
