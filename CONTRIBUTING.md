@@ -41,6 +41,8 @@ To set up a local dev environment:
 
 To make sure everything is set up properly, you may run the tests by launching the `pytest` command in the repository root dir.
 
+If you want to run the examples stored in the `examples/` directory, you may install the medkit package in editable mode by running `pip install -e .` in the repository root dir.
+
 ## Coding standards
 ### Code conventions
 
