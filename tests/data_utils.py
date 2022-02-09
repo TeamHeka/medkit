@@ -11,7 +11,7 @@ def get_text_collection():
     for path in _PATH_TO_TEXT_DOCS.glob("*.txt"):
         with open(path) as f:
             text = f.read()
-        doc = TextDocument(text)
+        doc = TextDocument(text=text)
         docs.append(doc)
     return Collection(docs)
 
@@ -20,4 +20,4 @@ def get_text_document(name):
     path = _PATH_TO_TEXT_DOCS / (name + ".txt")
     with open(path) as f:
         text = f.read()
-    return TextDocument(text)
+    return TextDocument(text=text)
