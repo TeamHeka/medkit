@@ -4,19 +4,12 @@
         "id_regexp": "id_regexp_infarct",
         "libelle": "Infarctus, IDM, myocarde, cardiopathie ischémique, angor, angine de poitrine",
         "list_cui": "C0027051,C0349782,C0340288",
-        "refresh": "false",
         "regexp": "infarctus|[^a-z]IDM[^a-z]|infarctus.{0,5}du.{0,5}myocarde|cardiopathie.{0,5}isch[eéè]mique|[^a-z]angor[^a-z]|angine.{0,5}de.{0,5}poitrine|crise.{0,5}cardiaque|syndrome *coronarien *aigu",
         "regexp_exclude": "infarctus +pulmonaire|infarctus +c[ée]r[ée]bral|AVC *avec *infarctus|infarctus *spl[ée]nique|petit *infarctus",
-        "regexp_exclude_v1": "infractus +pulmonaire|infarctus +c[ée]r[ée]bral|AVC *avec *infarctus|infarctus *spl[ée]nique|petit *infarctus",
-        "regexp_exclude_v2": "",
-        "regexp_v1": "infarctu.|[^a-z]IDM[^a-z]|infarctu.{0,5}du.{0,5}myocarde|cardiopathie.{0,5}isch.mique|[^a-z]angor[^a-z]|angine.{0,5}de.{0,5}poitrine|crise.{0,5}cardiaque",
-        "regexp_v2": "(?<!(AVC avec ))(?<!petit )infarctus(?!( *pulmonaire))(?!( *c[ée]r[ée]bral))(?!( *spl[ée]nique))|[^a-z]IDM[^a-z]|infarctu.{0,5}du.{0,5}myocarde|cardiopathie.{0,5}isch.mique|[^a-z]angor[^a-z]|angine.{0,5}de.{0,5}poitrine|crise.{0,5}cardiaque",
         "version": "v2"
     },
     {
         "comment": "",
-        "date_modification": "12/05/2020",
-        "deprecated": "false",
         "filtre_document": "",
         "id_regexp": "id_regexp_kawasaki",
         "index_extract": "",
@@ -28,8 +21,6 @@
     },
     {
         "comment": "",
-        "date_modification": "08/05/2020",
-        "deprecated": "false",
         "filtre_document": "",
         "id_regexp": "id_regexp_allongementqt",
         "index_extract": "",
@@ -41,8 +32,6 @@
     },
     {
         "comment": "",
-        "date_modification": "08/05/2020",
-        "deprecated": "false",
         "filtre_document": "",
         "id_regexp": "id_regexp_allergiehydroxchloroquine",
         "index_extract": "",
@@ -54,8 +43,6 @@
     },
     {
         "comment": "",
-        "date_modification": "08/05/2020",
-        "deprecated": "false",
         "filtre_document": "",
         "id_regexp": "id_regexp_retinopathie",
         "index_extract": "",
@@ -66,7 +53,6 @@
         "version": "v1"
     },
     {
-        "date_modification": "15/04/2020",
         "filtre_document": "",
         "id_regexp": "id_regexp_igs2",
         "index_extract": "2",
@@ -77,7 +63,6 @@
         "version": "v3"
     },
     {
-        "date_modification": "15/04/2020",
         "filtre_document": "",
         "id_regexp": "id_regexp_encephalopathie",
         "index_extract": "",
@@ -88,7 +73,6 @@
         "version": "v2"
     },
     {
-        "date_modification": "15/04/2020",
         "filtre_document": "",
         "id_regexp": "id_regexp_insrenchronique",
         "index_extract": "",
@@ -99,7 +83,6 @@
         "version": "v2"
     },
     {
-        "date_modification": "15/04/2020",
         "filtre_document": "",
         "id_regexp": "id_regexp_insrenaigue",
         "index_extract": "",
@@ -110,7 +93,6 @@
         "version": "v2"
     },
     {
-        "date_modification": "15/04/2020",
         "filtre_document": "Anomalies *pulmonaires *en *faveur *d.une *infection *par *le *COVID|Anomalies *pulmonaires *en *faveur *d.une *autre *infection",
         "id_regexp": "id_regexp_scannerconclusion",
         "index_extract": "2",
@@ -121,7 +103,6 @@
         "version": "v2"
     },
     {
-        "date_modification": "15/04/2020",
         "filtre_document": "Anomalies *pulmonaires *en *faveur *d.une *infection *par *le *COVID|Anomalies *pulmonaires *en *faveur *d.une *autre *infection",
         "id_regexp": "id_regexp_scannerseverite",
         "index_extract": "2",
@@ -159,7 +140,6 @@
     },
     {
         "comment": "on supprime, synonyme de id_regexp_dyslipidemie",
-        "deprecated": "true",
         "id_regexp": "id_regexp_hyperlipidemie",
         "libelle": "Hyperlipidémies",
         "list_cui": "C0020473",
@@ -228,7 +208,6 @@
         "version": "v2"
     },
     {
-        "deprecated": "true",
         "id_regexp": "id_regexp_arythmie",
         "libelle": "trouble du rythme, AC/FA, arythmie, fibrillation, flutter",
         "list_cui": "C0004238,C0004239,C0003811",
@@ -270,15 +249,8 @@
         "id_regexp": "id_regexp_avc",
         "libelle": "AVC, accident vasculaire cérébral, accident ischémique cérébral",
         "list_cui": "C0038454,C0948008",
-        "refresh": "false",
         "regexp": "[^a-z]AVC[^a-z]|acc*ident.{0,5}vasculaire.{0,5}c[ée]r[ée]bral|acc*ident.{0,5}isch?[ée]mique.{0,5}c[ée]r[ée]bral|acc*ident.{0,3}h[ée]morragique.{0,3}c[ée]r[ée]bral",
         "regexp_exclude": "APHP AVC|UHCD AVC|AVC UNITE",
-        "regexp_exclude_v1": "APHP AVC|UHCD AVC|AVC UNITE",
-        "regexp_exclude_v2": "",
-        "regexp_exclude_v3": "",
-        "regexp_v1": "[^a-z]AVC[^a-z]|acc*ident.{0,5}vasculaire.{0,5}c[ée]r[ée]bral|acc*ident.{0,5}isch?[ée]mique.{0,5}c[ée]r[ée]bral",
-        "regexp_v2": "(?<!APHP)(?<!UHCD)[^a-z]AVC[^a-z](?!UNITE)|acc*ident.{0,5}vasculaire.{0,5}c[ée]r[ée]bral|acc*ident.{0,5}isch?[ée]mique.{0,5}c[ée]r[ée]bral",
-        "regexp_v3": "(?<!APHP)(?<!UHCD)[^a-z]AVC[^a-z](?!UNITE)|acc*ident.{0,5}vasculaire.{0,5}c[ée]r[ée]bral|acc*ident.{0,5}isch?[ée]mique.{0,5}c[ée]r[ée]bral|acc*ident.{0,3}h[ée]morragique.{0,3}c[ée]r[ée]bral",
         "version": "v4"
     },
     {
@@ -392,7 +364,6 @@
         "id_regexp": "id_regexp_cancer",
         "libelle": "Cancer",
         "list_cui": "C0027651,C1882062,C0006826",
-        "refresh": "false",
         "regexp": "(?<!pre)(?<!pre )cancer[^a-z]|tumeur(?!.{0,7}b[eéè]nigne)|carcinome|m[eé]lanome|n[eé]oplasie|sarcome",
         "regexp_exclude": "",
         "version": "v2"
@@ -454,7 +425,6 @@
     },
     {
         "comment": "Trop de faux positifs... developper une méthode spécifique",
-        "deprecated": "true",
         "id_regexp": "id_regexp_vih",
         "libelle": "VIH - SIDA - Séropositif",
         "list_cui": "C0019693,C0001175",
@@ -496,7 +466,6 @@
     },
     {
         "comment": "on supprime, utiliser les mouvements des patients",
-        "deprecated": "true",
         "id_regexp": "id_regexp_chir",
         "libelle": "Chirurgie récente",
         "list_cui": "C0543467",
@@ -514,7 +483,6 @@
     },
     {
         "comment": "on supprime: la valeur existe en bio structuree",
-        "deprecated": "true",
         "id_regexp": "id_regexp_betahcg",
         "libelle": "taux de BetaHCG, hCG",
         "list_cui": "C0803992",
@@ -524,7 +492,6 @@
     },
     {
         "comment": "on supprime, trop de bruit, temporalité difficile ",
-        "deprecated": "true",
         "id_regexp": "id_regexp_voyage",
         "libelle": "voyage *récent",
         "list_cui": "C2919443,C3532581",
@@ -545,7 +512,6 @@
         "index_extract": "2",
         "libelle": "Taille",
         "list_cui": "",
-        "refresh": "false",
         "regexp": "taille[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z,<>]*([0-9]+[.,]?[0-9]* *(cm|m)[0-9]*)(?!DS)",
         "regexp_exclude": "",
         "version": "v2"
@@ -555,7 +521,6 @@
         "index_extract": "3",
         "libelle": "Poids",
         "list_cui": "",
-        "refresh": "false",
         "regexp": "(Poids|p[éeè]se)[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z<>,]*([0-9]+[.,]?[0-9]* *(kg|g)[0-9]*)",
         "regexp_exclude": "prise de poids",
         "version": "v2"
@@ -571,7 +536,6 @@
     },
     {
         "comment": "on supprime, inclu dans surinfection",
-        "deprecated": "true",
         "id_regexp": "id_regexp_surinfbact",
         "libelle": "Surinfection *bactérienne",
         "list_cui": "C1868758,C0004623,C0729518",
@@ -599,11 +563,8 @@
         "id_regexp": "id_regexp_fumeur",
         "libelle": "Fumeur, tabagisme, paquet-année (PA)",
         "list_cui": "C0453996",
-        "refresh": "false",
         "regexp": "fumeur|fumeuse|[^-]tabagi|[^a-z]tabac[^a-z]|paquet.{0,5}?ann[ée].?",
         "regexp_exclude": "non\\s+fumeur|tabac\\s+non|tabagisme\\s+non|Tabac\\s*[=:]?\\s*0|tabagi(sm|qu)e\\s+sevr|(pas|ni|ou)\\s+de\\s+(consommation\\s+de\\s+)?taba|pas\\s+d\\'intoxication\\s+tabagi|0 tabac",
-        "regexp_exclude_v1": "non fumeur|tabac non|tabagisme non|Tabac 0|Tabac *= *0|tabagisme sevr|0 tabac",
-        "regexp_v1": "fumeur|fumeuse|tabagism.?|[^a-z]tabac[^a-z]|paquet.{0,5}ann[ée].?",
         "version": "v2"
     },
     {
@@ -625,17 +586,14 @@
         "version": "v1"
     },
     {
-        "date_modification": "29/04/2020",
         "id_regexp": "id_regexp_chimio",
         "libelle": "Chimiotherapie",
         "list_cui": "",
         "regexp": "chimio.* ",
         "regexp_exclude": "",
-        "regexp_v1": "chimio*",
         "version": "v2"
     },
     {
-        "date_modification": "29/04/2020",
         "id_regexp": "id_regexp_radiotherapie",
         "libelle": "radiotherapie",
         "list_cui": "",
@@ -645,17 +603,14 @@
     },
     {
         "casesensitive": "yes",
-        "date_modification": "29/04/2020",
         "id_regexp": "id_regexp_embolie",
         "libelle": "Embolie pulmonaire",
         "list_cui": "",
-        "refresh": "false",
         "regexp": "[Ee]mbolie *[pP]ulmonaire|[^a-zA-Z]EP[^a-zA-Z]",
         "regexp_exclude": "",
         "version": "v1"
     },
     {
-        "date_modification": "29/04/2020",
         "id_regexp": "id_regexp_thrombose",
         "libelle": "Thrombose",
         "list_cui": "",
@@ -664,7 +619,6 @@
         "version": "v1"
     },
     {
-        "date_modification": "29/04/2020",
         "id_regexp": "id_regexp_ischemiedigestive",
         "libelle": "Ischémie digestive",
         "list_cui": "",
@@ -673,7 +627,6 @@
         "version": "v1"
     },
     {
-        "date_modification": "29/04/2020",
         "id_regexp": "id_regexp_ischemierenale",
         "libelle": "Ischémie rénale",
         "list_cui": "",
@@ -682,7 +635,6 @@
         "version": "v1"
     },
     {
-        "date_modification": "29/04/2020",
         "id_regexp": "id_regexp_bariatrique",
         "libelle": "Chirurgie bariatrique",
         "list_cui": "",
@@ -691,7 +643,6 @@
         "version": "v1"
     },
     {
-        "date_modification": "29/04/2020",
         "id_regexp": "id_regexp_sleeve",
         "libelle": "Sleeve",
         "list_cui": "",
@@ -700,7 +651,6 @@
         "version": "v1"
     },
     {
-        "date_modification": "29/04/2020",
         "id_regexp": "id_regexp_bypass",
         "libelle": "Bypass",
         "list_cui": "",
@@ -709,7 +659,6 @@
         "version": "v1"
     },
     {
-        "date_modification": "29/04/2020",
         "id_regexp": "id_regexp_anneaugastrique",
         "libelle": "Anneau gastrique",
         "list_cui": "",
@@ -718,7 +667,6 @@
         "version": "v1"
     },
     {
-        "date_modification": "29/04/2020",
         "id_regexp": "id_regexp_dermatolupique",
         "libelle": "Raynaud, engelures, livedo, vascularite cutanée",
         "list_cui": "",

@@ -21,17 +21,8 @@ class RegexpMatcherRule:
     filtre_document: str = ""
     casesensitive: str = ""
     comment: str = ""
-    date_modification: str = ""
     list_cui: str = ""
     icd10: str = ""
-    regexp_v1: str = ""
-    regexp_v2: str = ""
-    regexp_v3: str = ""
-    regexp_exclude_v1: str = ""
-    regexp_exclude_v2: str = ""
-    regexp_exclude_v3: str = ""
-    deprecated: str = ""
-    refresh: str = ""
 
 
 class RegexpMatcher:
