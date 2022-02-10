@@ -2,7 +2,7 @@ import pytest
 
 from medkit.core.document import Collection
 from medkit.core.text import TextDocument
-from medkit.core.text.annotation import Entity
+from medkit.core.text.annotation import TextBoundAnnotation
 from medkit.core.text.span import Span
 from medkit.text.segmentation import SentenceTokenizer
 
@@ -44,7 +44,7 @@ TEST_CONFIG = [
 @pytest.fixture
 def collection():
     doc = TextDocument()
-    raw_text = Entity(
+    raw_text = TextBoundAnnotation(
         origin_id="", label="RAW_TEXT", spans=[Span(0, len(TEXT))], text=TEXT
     )
     doc.add_annotation(raw_text)
@@ -56,10 +56,11 @@ def collection():
 )
 def test_annotate(collection, sentence_tokenizer, expected_sentences):
     assert sentence_tokenizer.input_label == "RAW_TEXT"
+
     sentence_tokenizer.annotate(collection)
     doc = collection.documents[0]
     assert isinstance(doc, TextDocument)
-    sentences = [doc.get_annotation_by_id(ann) for ann in doc.entities.get("SENTENCE")]
+    sentences = [doc.get_annotation_by_id(ann) for ann in doc.segments.get("SENTENCE")]
     assert len(sentences) == 7
     for i, (text, spans) in enumerate(expected_sentences):
         assert sentences[i].text == text
