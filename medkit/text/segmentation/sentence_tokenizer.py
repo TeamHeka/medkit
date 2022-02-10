@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+__all__ = []
+
 import dataclasses
 import re
-from typing import Dict, Iterator, List, Union, TYPE_CHECKING
+from typing import Iterator, List, Tuple, Union, TYPE_CHECKING
 
 from medkit.core.processing import ProcessingDescription, RuleBasedAnnotator
 from medkit.core.text import Entity, TextDocument
@@ -13,14 +15,12 @@ if TYPE_CHECKING:
     from medkit.core.text.span import Span, ModifiedSpan
 
 
-@dataclasses.dataclass
-class SentenceTokenizerConfig:
-    input_label: str
-    output_label: str = "SENTENCE"
-    punct_chars: List[str] = dataclasses.field(
-        default_factory=lambda: ["\r", "\n", ".", ";", "?", "!"]
-    )
-    keep_punct: bool = False
+@dataclasses.dataclass(frozen=True)
+class DefaultConfig:
+    input_label = "RAW_TEXT"
+    output_label = "SENTENCE"
+    punct_chars = ("\r", "\n", ".", ";", "?", "!")
+    keep_punct = False
 
 
 class SentenceTokenizer(RuleBasedAnnotator):
@@ -30,29 +30,50 @@ class SentenceTokenizer(RuleBasedAnnotator):
     def description(self) -> ProcessingDescription:
         return self._description
 
-    def __init__(self, config: Dict, proc_id=None):
+    def __init__(
+        self,
+        input_label: str = DefaultConfig.input_label,
+        output_label: str = DefaultConfig.output_label,
+        punct_chars: Tuple[str] = DefaultConfig.punct_chars,
+        keep_punct: bool = DefaultConfig.keep_punct,
+        proc_id=None,
+    ):
         """
         Instantiate the sentence tokenizer
 
         Parameters
         ----------
-        config: Dict
-            The configuration of the tokenizer
+        input_label: str, Optional
+            The input label of the annotations to use as input.
+            Default: "RAW_TEXT" (cf. DefaultConfig)
+        output_label: str, Optional
+            The output label of the created annotations.
+            Default: "SENTENCE" (cf.DefaultConfig)
+        punct_chars: Tuple[str], Optional
+            The set of characters corresponding to end punctuations.
+            Default: ("\r", "\n", ".", ";", "?", "!") (cf. DefaultConfig)
+        keep_punct: bool, Optional
+            If True, the end punctuations are kept in the detected sentence.
+            If False, the sentence text does not include the end punctuations
+            Default: False (cf. DefaultConfig)
         proc_id: str, Optional
             Identifier of the tokenizer
-
-        See Also
-        --------
-        SentenceTokenizerConfig: Dataclass representing the schema of the config.
         """
+        self.input_label = input_label
+        self.output_label = output_label
+        self.punct_chars = punct_chars
+        self.keep_punct = keep_punct
+
+        config = dict(
+            input_label=input_label,
+            output_label=output_label,
+            punct_chars=punct_chars,
+            keep_punct=keep_punct,
+        )
+
         self._description = ProcessingDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )
-        config = SentenceTokenizerConfig(**config)
-        self.input_label = config.input_label
-        self.output_label = config.output_label
-        self.punct_chars = config.punct_chars
-        self.keep_punct = config.keep_punct
 
     def annotate(self, collection: Collection):
         """
@@ -129,7 +150,7 @@ class SentenceTokenizer(RuleBasedAnnotator):
             + "".join(self.punct_chars)
             + "]+)"
         )
-        pattern = re.compile("%s" % regex_rule)
+        pattern = re.compile(regex_rule)
 
         for match in pattern.finditer(text_annotation.text):
             sentence = match.group("sentence")
@@ -149,3 +170,7 @@ class SentenceTokenizer(RuleBasedAnnotator):
                 ranges=[(start, end)],
             )
             yield text, spans
+
+    @classmethod
+    def from_description(cls, description: ProcessingDescription):
+        return cls(proc_id=description.id, **description.config)
