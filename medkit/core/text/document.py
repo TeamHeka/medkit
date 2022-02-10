@@ -5,7 +5,7 @@ __all__ = ["TextDocument"]
 import typing
 
 from medkit.core.document import Document
-from medkit.core.text import Entity, Relation, Attribute
+from medkit.core.text.annotation import TextBoundAnnotation, Entity, Relation, Attribute
 
 if typing.TYPE_CHECKING:
     from medkit.core.annotation import Annotation
@@ -32,6 +32,7 @@ class TextDocument(Document):
         """
         super().__init__(doc_id, metadata)
         self.text = text
+        self.segments = dict()  # Key: label
         self.entities = dict()  # Key: label
         self.relations = dict()  # Key: TODO : determine the key
         self.attributes = dict()  # Key : target_id
@@ -42,8 +43,12 @@ class TextDocument(Document):
 
         The method uses the abstract class method to add the annotation
         in the Document.
-        It also adds the annotation id to the corresponding dictionary view
-        according to the annotation category (Entity, Relation, Attribute)
+        It also adds the annotation id to the corresponding dictionary view (segments,
+        entities, relations, attributes)
+        according to the annotation category (TextBoundAnnotation, Entity, Relation,
+        Attribute).
+
+        Note that entity is also considered as a segment of the text.
 
         Parameters
         ----------
@@ -59,6 +64,12 @@ class TextDocument(Document):
             super().add_annotation(annotation)
         except ValueError as err:
             raise err
+
+        if isinstance(annotation, TextBoundAnnotation):
+            if annotation.label not in self.segments.keys():
+                self.segments[annotation.label] = [annotation.id]
+            else:
+                self.segments[annotation.label].append(annotation.id)
 
         if isinstance(annotation, Entity):
             if annotation.label not in self.entities.keys():

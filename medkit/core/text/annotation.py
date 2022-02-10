@@ -1,9 +1,41 @@
-__all__ = ["Entity", "Attribute", "Relation"]
+__all__ = ["TextBoundAnnotation", "Entity", "Attribute", "Relation"]
 
 from medkit.core.annotation import Annotation
 
 
-class Entity(Annotation):
+class TextBoundAnnotation(Annotation):
+    def __init__(self, origin_id, label, spans, text, ann_id=None, metadata=None):
+        """
+        Initialize a medkit text-bound annotation
+
+        Parameters
+        ----------
+        origin_id: str
+            The id of the operation which creates this annotation
+            (i.e., ProcessingDescription.id)
+        label: str
+            The label for this annotation (e.g., SENTENCE)
+        spans: List[Span]
+            The annotation span
+        text: str
+            The annotation text
+        ann_id: str, Optional
+            The id of the annotation (if existing)
+        metadata: dict[str, Any], Optional
+            The metadata of the annotation
+        """
+        super().__init__(
+            ann_id=ann_id, origin_id=origin_id, label=label, metadata=metadata
+        )
+        self.spans = spans
+        self.text = text
+
+    def __repr__(self):
+        annotation = super().__repr__()
+        return f"{annotation}, spans={self.spans!r}, text={self.text!r}"
+
+
+class Entity(TextBoundAnnotation):
     def __init__(self, origin_id, label, spans, text, entity_id=None, metadata=None):
         """
         Initialize a medkit text entity
@@ -24,15 +56,7 @@ class Entity(Annotation):
         metadata: dict[str, Any], Optional
             The metadata of the entity
         """
-        super().__init__(
-            ann_id=entity_id, origin_id=origin_id, label=label, metadata=metadata
-        )
-        self.spans = spans
-        self.text = text
-
-    def __repr__(self):
-        annotation = super().__repr__()
-        return f"{annotation}, spans={self.spans!r}, text={self.text!r}"
+        super().__init__(origin_id, label, spans, text, entity_id, metadata)
 
 
 class Attribute(Annotation):
