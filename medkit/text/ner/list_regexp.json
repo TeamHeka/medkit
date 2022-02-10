@@ -4,7 +4,7 @@
         "label": "Infarctus, IDM, myocarde, cardiopathie ischémique, angor, angine de poitrine",
         "regexp": "infarctus|[^a-z]IDM[^a-z]|infarctus.{0,5}du.{0,5}myocarde|cardiopathie.{0,5}isch[eéè]mique|[^a-z]angor[^a-z]|angine.{0,5}de.{0,5}poitrine|crise.{0,5}cardiaque|syndrome *coronarien *aigu",
         "regexp_exclude": "infarctus +pulmonaire|infarctus +c[ée]r[ée]bral|AVC *avec *infarctus|infarctus *spl[ée]nique|petit *infarctus",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -32,57 +32,57 @@
         "id": "id_regexp_kawasaki",
         "label": "Kawasaki",
         "regexp": "Kawasaki",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_allongementqt",
         "label": "allongement QT",
         "regexp": "allongement.{0,10}QT",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_allergiehydroxchloroquine",
         "label": "allergie hydroxchloroquine",
         "regexp": "allergi.{0,10}hydroxchloroquine|hydroxchloroquine.{0,10}allergi",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_retinopathie",
         "label": "retinopathie",
         "regexp": "r[ée]tinopathie",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_igs2",
         "index_extract": 2,
         "label": "igs2",
         "regexp": "igs2[^0-9]{0,10}(24h)?[^0-9]{0,10}([0-9]+)",
-        "version": "v3"
+        "version": "3"
     },
     {
         "id": "id_regexp_encephalopathie",
         "label": "encephalopathie",
         "regexp": "enc[ée]phalopathie",
-        "version": "v2"
+        "version": "2"
     },
     {
         "id": "id_regexp_insrenchronique",
         "label": "Insuffisance rénale chronique",
         "regexp": "Insuffisance *r[ée]nale *chronique",
-        "version": "v2"
+        "version": "2"
     },
     {
         "id": "id_regexp_insrenaigue",
         "label": "Insuffisance rénale aiguë",
         "regexp": "Insuffisance *r[ée]nale *aigu[ëe]",
-        "version": "v2"
+        "version": "2"
     },
     {
         "id": "id_regexp_diabete",
         "label": "Diabète",
         "regexp": "(?<!pre)(?<!pre.)diab[ée]te|[^a-z]DID[^a-z]|[^a-z]DNID[^a-z]|diab[ée]tique",
         "regexp_exclude": "diab[ée]te *insipide|diab[ée]te *gestationnel|diab[ée]te:[.]",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -101,7 +101,7 @@
         "label": "HTA",
         "regexp": "[^A-Z]HTA[^A-Z]|hyperten[st]ion.{0,5}art[eé]rielle|hyperten[st]ion.{0,5}[eé]s{1,2}entiel{1,2}.",
         "regexp_exclude": "HTA:[.]",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -114,7 +114,7 @@
         "id": "id_regexp_dyslpidemie",
         "label": "Dyslipidémies",
         "regexp": "dyslipid.mi.?|hyperlipid.mi.?|hyper.{0,5}cholest.rol.mi.?|cholest.rol.{0,5}[ée]l[ée]v[ée]|hypertriglyc.rid.mi.?|triglyc[ée]rides? +[ée]lev[ée]s?",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -128,7 +128,7 @@
         "id": "id_regexp_hyperlipidemie",
         "label": "Hyperlipidémies",
         "regexp": "hyperlipid.mi.?",
-        "version": "v1",
+        "version": "1",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -141,7 +141,7 @@
         "id": "id_regexp_hypercholesterolemie",
         "label": "Hypercholestérolémie",
         "regexp": "hyper.{0,5}cholest.rol.mi.?|cholest.rol.{0,5}[ée]l[ée]v[ée]",
-        "version": "v1",
+        "version": "1",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -154,7 +154,7 @@
         "id": "id_regexp_hypertriglyceridemie",
         "label": "Hypertriglycéridémies",
         "regexp": "hypertriglyc.rid.mi.?|triglyc[ée]rides? +[ée]lev[ée]s?",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -168,7 +168,7 @@
         "index_extract": 4,
         "label": "IMC,BMI",
         "regexp": "(^|[^a-z])(IMC|BMI) *(est *de|de|=|:)? *([0-9]+[,.]?[0-9]*)[^\\/]?",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -181,7 +181,7 @@
         "id": "id_regexp_surpoids",
         "label": "Surpoids",
         "regexp": "surpoi.{0,2}|surcharge *pond[ée]rale?",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -194,7 +194,7 @@
         "id": "id_regexp_obesite",
         "label": "Obésité",
         "regexp": "ob[éeè]sit[éeè]|ob[èeé]se",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -212,7 +212,7 @@
         "id": "id_regexp_stent",
         "label": "pose/présence stent, endoprothèse, angioplastie",
         "regexp": "[^a-z]stents?[^a-z].{0,5}|[ae]ndoproth?.se|[ae]ngioplasti.",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -235,7 +235,7 @@
         "id": "id_regexp_troublerythme",
         "label": "trouble du rythme, AC/FA, arythmie, fibrillation, flutter",
         "regexp": "[^a-z]ACFA[^a-z]|[^a-z]AC\\/FA[^a-z]|ar.thmi.|fibril{1,}ation|flut{1,}er|trouble.?.{0,5}du.{0,5}r.thme|d.sr.thmie",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -263,7 +263,7 @@
         "id": "id_regexp_arythmie",
         "label": "trouble du rythme, AC/FA, arythmie, fibrillation, flutter",
         "regexp": "[^a-z]ACFA[^a-z]|[^a-z]AC\\/FA[^a-z]|ar.thmi.|fibril{1,}ation|flut{1,}er|trouble.?.{0,5}du.{0,5}r.thme|d.sr.thmie",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -287,7 +287,7 @@
         "id": "id_regexp_arretresp",
         "label": "Arrêt respiratoire, arrêt cardiaque",
         "regexp": "[^a-z]arr?[éêe]t *respiratoire|[^a-z]arr?[éêe]t *cardiaque|arr[êeèé]t *cardio[^a-z]*respiratoire|[^a-z]ACR[^a-z]",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -311,7 +311,7 @@
         "id": "id_regexp_arretcardiaq",
         "label": "Arrêt respiratoire, arrêt cardiaque",
         "regexp": "[^a-z]arr?[éêe]t *respiratoire|[^a-z]arr?[éêe]t *cardiaque|arr[êeèé]t *cardio[^a-z]*respiratoire|[^a-z]ACR[^a-z]",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -334,7 +334,7 @@
         "id": "id_regexp_insfugcardiaque",
         "label": "Insuffisance cardiaque, défaillance cardiaque",
         "regexp": "insuf{1,}isance.{0,5}cardiaque|d[ée]faill[ea]nce.{0,5}cardiaque",
-        "version": "v1",
+        "version": "1",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -353,7 +353,7 @@
         "label": "AVC, accident vasculaire cérébral, accident ischémique cérébral",
         "regexp": "[^a-z]AVC[^a-z]|acc*ident.{0,5}vasculaire.{0,5}c[ée]r[ée]bral|acc*ident.{0,5}isch?[ée]mique.{0,5}c[ée]r[ée]bral|acc*ident.{0,3}h[ée]morragique.{0,3}c[ée]r[ée]bral",
         "regexp_exclude": "APHP AVC|UHCD AVC|AVC UNITE",
-        "version": "v4",
+        "version": "4",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -376,7 +376,7 @@
         "id": "id_regexp_hemormening",
         "label": "hémorragie sous-arachnoïdienne",
         "regexp": "h[ée]morr?agi.{0,5}m[ée]ning[ée]e|h[ée]morr?agi.{0,5}sous-?arachno[ïi]dienne",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -394,7 +394,7 @@
         "id": "id_regexp_bpco",
         "label": "BPCO, maladie pulmonaire, pneumopathie, HTAP",
         "regexp": "[^a-z]BPCO[^a-z]|[^a-z]HTAP[^a-z]|bronchopneumopathie|maladie.{0,5}pulmonaire|pneumopathie|a[sth][sth][sth]me|bronch?ospasme|a[sth][sth][sth]matique|insuf.{1,2}isance.{0,5}respiratoire.{0,5}chronique|emph.s[èe]me|emf.s[èe]me",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -452,7 +452,7 @@
         "id": "id_regexp_asthme",
         "label": "Asthme, bronchospasmes",
         "regexp": "a[sth][sth][sth]me|bronch?ospasme|a[sth][sth][sth]matique",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -475,7 +475,7 @@
         "id": "id_regexp_insrespchronique",
         "label": "Insuffisance repiratoire chronique",
         "regexp": "insuf.{1,2}isance.{0,5}respiratoire.{0,5}chronique",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -493,7 +493,7 @@
         "id": "id_regexp_emphyseme",
         "label": "Emphysème",
         "regexp": "emph.s[èe]me|emf.s[èe]me",
-        "version": "v1",
+        "version": "1",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -511,7 +511,7 @@
         "id": "id_regexp_malrenale",
         "label": "Insuffisance rénale chronique, maladie rénale, néphropathie,IRC,Insuffisance rénale aiguë",
         "regexp": "maladie.{0,5}r[eé]nale|n[eé]phropathie|Insuffisance.{0,5}r[eé]nale.{0,5}chronique|[^a-z]IRC[^a-z]|[^a-z]dialyse|h[ée]modialyse",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -545,7 +545,7 @@
         "label": "Somnolence",
         "regexp": "somnole(nce|nt|nte)?",
         "regexp_exclude": "non *somnolente?|somnolen(t|ce|te) *non|risque *de *somnolence",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -560,32 +560,32 @@
         "label": "Debit O2 L/Min",
         "regexp": "[^0-9,]([0-9]+,?[0-9]*) *L *\\/ *mi?n?",
         "regexp_exclude": "cardiaque|[^a-z]dc[^a-z]|[^a-z]dq[^a-z]|[^a-z]dc[^a-z]|[^a-z]DEP[^a-z]|[^A-Z]DEP[^A-Z]|PeakFlow",
-        "version": "v2"
+        "version": "2"
     },
     {
         "id": "id_regexp_sofa",
         "index_extract": 2,
         "label": "Score SOFA",
         "regexp": "SOFA[^a-z0-9]*(.{0,5}24h)?[^a-z0-9]*([0-9]+)",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_plaquenil",
         "label": "Hydroxychloroquine, Plaquenil",
         "regexp": "hydroxychloroquine|plaqu[ée]nil",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_nivaquin",
         "label": "Chloroquine",
         "regexp": "[^a-z]chloroquine?|[^a-z]nivaquin",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_sep",
         "label": "Sclérose en Plaques",
         "regexp": "scl[ée]rose.{0,5}en.{0,5}plaque.?|[^a-z]SEP[^a-z]",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -603,7 +603,7 @@
         "id": "id_regexp_cancer",
         "label": "Cancer",
         "regexp": "(?<!pre)(?<!pre )cancer[^a-z]|tumeur(?!.{0,7}b[eéè]nigne)|carcinome|m[eé]lanome|n[eé]oplasie|sarcome",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -628,13 +628,13 @@
         "label": "Ventilation, Intubation",
         "regexp": "intub[eé]|intubation|extubation|[^a-z]ventil[ée]|mise?\\s*sous\\s*respirateur|\\bIOT\\b|\\bVM\\b|\\bVNI\\b",
         "regexp_exclude": "d[ée]cision\\s*de\\s*non\\s*intubation|fonction\\s+ventilatoire\\s*précaire|ventilation\\s*manuelle|non-?intubation|VNI.{0,5}\\s*ne\\s*pas\\s*d[ée]]buter",
-        "version": "v2"
+        "version": "2"
     },
     {
         "id": "id_regexp_cirrhose",
         "label": "Cirrhose, hypertension portale",
         "regexp": "cirrhose|h[yi]perten[ts]ion.{0,5}portale|cirrhotique",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -652,7 +652,7 @@
         "id": "id_regexp_lymphome",
         "label": "Lymphome",
         "regexp": "Lymphome",
-        "version": "v1",
+        "version": "1",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -670,7 +670,7 @@
         "id": "id_regexp_leucemie",
         "label": "Leucémie",
         "regexp": "Leuc[ée]mie",
-        "version": "v1",
+        "version": "1",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -693,7 +693,7 @@
         "id": "id_regexp_hemopathie",
         "label": "Hémopathie",
         "regexp": "leuc[ée]mie|lymphome|my[ée]lome",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -722,7 +722,7 @@
         "label": "Déficit immunitaire",
         "regexp": "D[ée]ficit *immunitaire|Syndromes *d.immunod[eé]ficience|Hypogammaglobulin[ée]mie",
         "regexp_exclude": "Syndrome *d.immunodeficience *acquise",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "icd",
@@ -742,7 +742,7 @@
         "label": "VIH - SIDA - Séropositif",
         "regexp": "[^A-Z]HIV+[^A-Z]|[^A-Z]VIH[^A-Z]|[^A-Z]SIDA[^A-Z]|S[ée]ropositi..",
         "regexp_exclude": "[^A-Z]VIH[^.]{0,20}n..?gative|[^A-Z]VIH[ :]*-[^0-9]",
-        "version": "v1",
+        "version": "1",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -761,7 +761,7 @@
         "label": "Hépatite B, VHB",
         "regexp": "(h[eé]patite *B|VHB) *(chronique|compliqu[eé]|suivi|contr[ôo]l[ée]|trait[eé])|cirrhose *VHB|pour (h[ée]patite B|VHB)|(dans *le *cadre.|suivi|trait[eéè]|en charge){0,20}(h[ée]patite b|VHB)",
         "regexp_exclude": "vaccination hepatite B|vaccin vhb|vhb-",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -774,7 +774,7 @@
         "id": "id_regexp_aomi",
         "label": "AOMI, artériopathie oblitérante des membres inférieurs",
         "regexp": "[^a-z]AOMI[^a-z]|art[eé]riopathi..{0,5}oblit.r[ea]nte|art.rite.{0,5}des.{0,5}membres.{0,5}inf.rieurs",
-        "version": "v1",
+        "version": "1",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -787,7 +787,7 @@
         "id": "id_regexp_sdra",
         "label": "SDRA, détresse respiratoire",
         "regexp": "[^a-z]SDRA[^a-z]|d[ée]tresse.{0,5}respiratoire",
-        "version": "v1",
+        "version": "1",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -800,7 +800,7 @@
         "id": "id_regexp_sepsis",
         "label": "Sepsis, choc septique",
         "regexp": "sepsis|choc.{0,5}septique",
-        "version": "v1",
+        "version": "1",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -814,7 +814,7 @@
         "id": "id_regexp_chir",
         "label": "Chirurgie récente",
         "regexp": "chirurgie.{0,5}?r.cente|chirurgie",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -828,7 +828,7 @@
         "label": "Grossesse en cours, enceinte, semaines d'aménorrhée, SA",
         "regexp": "grossesse.{0,5}en.{0,5}cours|[enceinte.{0,5}|semaine *d.?am[ée]norr?h[ée]|gravid.?",
         "regexp_exclude": "femmes enceintes|femme non enceinte|femme *enceinte *: *[0-9]",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -842,7 +842,7 @@
         "id": "id_regexp_betahcg",
         "label": "taux de BetaHCG, hCG",
         "regexp": "betaHCG|[^a-z]HCG[^a-z]",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -856,7 +856,7 @@
         "id": "id_regexp_voyage",
         "label": "voyage *récent",
         "regexp": "voyage|retour.d[eu]?|avion|[aà] *l.[ée]tranger",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -874,7 +874,7 @@
         "id": "id_regexp_sla",
         "label": "SLA",
         "regexp": "[^A-Z]SLA[^A-Z]|Scl[ée]rose *lat[ée]rale *amyotrophiq|maladie *de *charcot|un *charcot",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -888,7 +888,7 @@
         "index_extract": 2,
         "label": "Taille",
         "regexp": "taille[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z,<>]*([0-9]+[.,]?[0-9]* *(cm|m)[0-9]*)(?!DS)",
-        "version": "v2"
+        "version": "2"
     },
     {
         "id": "id_regexp_poids",
@@ -896,21 +896,21 @@
         "label": "Poids",
         "regexp": "(Poids|p[éeè]se)[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z<>,]*([0-9]+[.,]?[0-9]* *(kg|g)[0-9]*)",
         "regexp_exclude": "prise de poids",
-        "version": "v2"
+        "version": "2"
     },
     {
         "id": "id_regexp_greffe",
         "label": "Greffe",
         "regexp": "greff[ée]|transplantation|patient *transplant",
         "regexp_exclude": "en *attente *de *greffe|en *attente *de *transplantation|bilan[^a-z]*pre[^a-z]*greffe",
-        "version": "v2"
+        "version": "2"
     },
     {
         "comment": "on supprime, inclu dans surinfection",
         "id": "id_regexp_surinfbact",
         "label": "Surinfection *bactérienne",
         "regexp": "Surinfection *bact[ée]rienne",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -933,7 +933,7 @@
         "id": "id_regexp_surinfion",
         "label": "Surinfection",
         "regexp": "Surinfection",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -957,7 +957,7 @@
         "label": "Candida",
         "regexp": "[^a-z]candida[^a-z]|candidose",
         "regexp_exclude": "en cours",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -971,7 +971,7 @@
         "label": "Fumeur, tabagisme, paquet-année (PA)",
         "regexp": "fumeur|fumeuse|[^-]tabagi|[^a-z]tabac[^a-z]|paquet.{0,5}?ann[ée].?",
         "regexp_exclude": "non\\s+fumeur|tabac\\s+non|tabagisme\\s+non|Tabac\\s*[=:]?\\s*0|tabagi(sm|qu)e\\s+sevr|(pas|ni|ou)\\s+de\\s+(consommation\\s+de\\s+)?taba|pas\\s+d\\'intoxication\\s+tabagi|0 tabac",
-        "version": "v2",
+        "version": "2",
         "normalizations": [
             {
                 "kb_name": "umls",
@@ -985,80 +985,80 @@
         "index_extract": 1,
         "label": "Paquet-année (PA)",
         "regexp": "(\\d{1,4})\\s*(paquet|cigarette|cig)s?\\s*(par|/|-)\\s*(an(n[ée]e)?)( *(pendant|jusqu.[àa]) *\\d+.{7})?",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_paquetjour",
         "index_extract": 1,
         "label": "Paquet-jour)",
         "regexp": "(\\d{1,4})\\s*(paquet|cigarette|cig)s?\\s*(par|/|-)\\s*(j|jour)( *(pendant|jusqu.[àa]) *\\d+.{7})?",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_chimio",
         "label": "Chimiotherapie",
         "regexp": "chimio.* ",
-        "version": "v2"
+        "version": "2"
     },
     {
         "id": "id_regexp_radiotherapie",
         "label": "radiotherapie",
         "regexp": "radioth[eéè]rapie",
-        "version": "v1"
+        "version": "1"
     },
     {
         "case_sensitive": true,
         "id": "id_regexp_embolie",
         "label": "Embolie pulmonaire",
         "regexp": "[Ee]mbolie *[pP]ulmonaire|[^a-zA-Z]EP[^a-zA-Z]",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_thrombose",
         "label": "Thrombose",
         "regexp": "thrombose|thrombus",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_ischemiedigestive",
         "label": "Ischémie digestive",
         "regexp": "isch[eé]mie *digestive|isch[eé]mie *intestinale?|isch[eé]mie *m[eé]sent[eé]rique",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_ischemierenale",
         "label": "Ischémie rénale",
         "regexp": "isch[eé]mie *r[eé]nale|isch[eé]mie *n[eé]phrique|rein *isch[eé]mique",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_bariatrique",
         "label": "Chirurgie bariatrique",
         "regexp": "chirurgie *(bariatrique|.{0,10}ob[eé]sit[eé])",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_sleeve",
         "label": "Sleeve",
         "regexp": "[^a-z]sleeve[^a-z]|[^a-z]slive[^a-z]|gastroplastie *verticale *calibr[eé]e *avec *r[eé]section *gastrique",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_bypass",
         "label": "Bypass",
         "regexp": "bypass|by-pass|minibypass|court.?circuit *gastrique",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_anneaugastrique",
         "label": "Anneau gastrique",
         "regexp": "anneau *gastrique",
-        "version": "v1"
+        "version": "1"
     },
     {
         "id": "id_regexp_dermatolupique",
         "label": "Raynaud, engelures, livedo, vascularite cutanée",
         "regexp": "[^a-z]de *Raynaud[^a-z]|engelures|[^a-z]livedo[^a-z]|vascularite *cutan[eé]e",
-        "version": "v1"
+        "version": "1"
     }
 ]

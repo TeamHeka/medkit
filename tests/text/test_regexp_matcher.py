@@ -24,7 +24,7 @@ def test_simple_match(collection):
         id="id_regexp_diabetes",
         label="Diabetes",
         regexp="diabetes",
-        version="v1",
+        version="1",
     )
     matcher = RegexpMatcher(input_label="RAW_TEXT", list_regexp=[rule])
 
@@ -39,7 +39,7 @@ def test_simple_match(collection):
     assert entity.text == "diabetes"
     assert entity.spans == [Span(34, 42)]
     assert entity.metadata["id_regexp"] == "id_regexp_diabetes"
-    assert entity.metadata["version"] == "v1"
+    assert entity.metadata["version"] == "1"
     assert "and type 1 diabetes." in entity.metadata["snippet"]
 
 
