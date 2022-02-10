@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import re
-from typing import Iterator, List, Union, TYPE_CHECKING
+from typing import Dict, Iterator, List, Union, TYPE_CHECKING
 
 from medkit.core.processing import ProcessingDescription, RuleBasedAnnotator
 from medkit.core.text import Entity, TextDocument
@@ -30,8 +30,21 @@ class SentenceTokenizer(RuleBasedAnnotator):
     def description(self) -> ProcessingDescription:
         return self._description
 
-    def __init__(self, proc_id=None, config=None):
+    def __init__(self, config: Dict, proc_id=None):
+        """
+        Instantiate the sentence tokenizer
 
+        Parameters
+        ----------
+        config: Dict
+            The configuration of the tokenizer
+        proc_id: str, Optional
+            Identifier of the tokenizer
+
+        See Also
+        --------
+        SentenceTokenizerConfig: Dataclass representing the schema of the config.
+        """
         self._description = ProcessingDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )
@@ -54,17 +67,33 @@ class SentenceTokenizer(RuleBasedAnnotator):
         """
         for doc in collection.documents:
             if isinstance(doc, TextDocument):
-                # Retrieve annotations on which we want to apply sentence segmentation
-                # e.g., section
-                input_ann_ids = doc.entities.get(self.input_label, None)
-                if input_ann_ids:
-                    input_anns = [
-                        doc.get_annotation_by_id(ann_id) for ann_id in input_ann_ids
-                    ]
-                    output_anns = self._process_doc_annotations(input_anns)
-                    for ann in output_anns:
-                        # Add each sentence as annotation in doc
-                        doc.add_annotation(ann)
+                self.annotate_document(doc)
+
+    def annotate_document(self, document: TextDocument):
+        """
+        Process a document for extracting sentences.
+        Sentences are represented by annotations in the text document
+
+        Parameters
+        ----------
+        document: TextDocument
+            The text document to process
+
+        Returns
+        -------
+
+        """
+        # Retrieve annotations on which we want to apply sentence segmentation
+        # e.g., section
+        input_ann_ids = document.entities.get(self.input_label, None)
+        if input_ann_ids:
+            input_anns = [
+                document.get_annotation_by_id(ann_id) for ann_id in input_ann_ids
+            ]
+            output_anns = self._process_doc_annotations(input_anns)
+            for ann in output_anns:
+                # Add each sentence as annotation in doc
+                document.add_annotation(ann)
 
     def _process_doc_annotations(self, annotations: List[Entity]) -> Iterator[Entity]:
         """
@@ -74,10 +103,10 @@ class SentenceTokenizer(RuleBasedAnnotator):
         ----------
         annotations: List[Entity]
             List of input annotations to process
-        Returns
+        Yields
         -------
-        Iterator[Entity]:
-            An iterator on each created entity representing a sentence
+        Entity:
+            Created entity representing a sentence
         """
         for ann in annotations:
             sentences = self._extract_sentences_and_spans(ann)
