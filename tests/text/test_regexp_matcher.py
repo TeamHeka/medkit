@@ -28,11 +28,11 @@ def collection(doc):
     return Collection([doc])
 
 
-def _find_annotation_with_label(doc, label):
-    try:
-        return next(a for a in doc.get_annotations() if a.label == label)
-    except StopIteration:
+def _find_entity_with_label(doc, label):
+    entity_ids = doc.entities.get(label, [])
+    if len(entity_ids) == 0:
         return None
+    return doc.get_annotation_by_id(entity_ids[0])
 
 
 def test_single_match(doc):
@@ -45,7 +45,7 @@ def test_single_match(doc):
     matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
     matcher.annotate_document(doc)
 
-    entity = _find_annotation_with_label(doc, "Diabetes")
+    entity = _find_entity_with_label(doc, "Diabetes")
     assert entity is not None
     assert entity.text == "diabetes"
     assert entity.spans == [Span(34, 42)]
@@ -69,14 +69,14 @@ def test_multiple_matches(doc):
     matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule_1, rule_2])
     matcher.annotate_document(doc)
 
-    entity_1 = _find_annotation_with_label(doc, "Diabetes")
+    entity_1 = _find_entity_with_label(doc, "Diabetes")
     assert entity_1 is not None
     assert entity_1.text == "diabetes"
     assert entity_1.spans == [Span(34, 42)]
     assert entity_1.metadata["id_regexp"] == "id_regexp_diabetes"
     assert entity_1.metadata["version"] == "1"
 
-    entity_2 = _find_annotation_with_label(doc, "Asthma")
+    entity_2 = _find_entity_with_label(doc, "Asthma")
     assert entity_2 is not None
     assert entity_2.text == "asthma"
     assert entity_2.spans == [Span(16, 22)]
@@ -95,7 +95,7 @@ def test_normalization(doc):
     matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
     matcher.annotate_document(doc)
 
-    entity = _find_annotation_with_label(doc, "Diabetes")
+    entity = _find_entity_with_label(doc, "Diabetes")
     assert entity is not None
 
     assert entity.id in doc.attributes
@@ -118,7 +118,7 @@ def test_exclusion_regex(doc):
     matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
     matcher.annotate_document(doc)
 
-    assert _find_annotation_with_label(doc, "Diabetes") is None
+    assert _find_entity_with_label(doc, "Diabetes") is None
 
 
 def test_case_sensitivity_off(doc):
@@ -131,7 +131,7 @@ def test_case_sensitivity_off(doc):
     matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
     matcher.annotate_document(doc)
 
-    assert _find_annotation_with_label(doc, "Diabetes") is not None
+    assert _find_entity_with_label(doc, "Diabetes") is not None
 
 
 def test_case_sensitivity_on(doc):
@@ -145,7 +145,7 @@ def test_case_sensitivity_on(doc):
     matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
     matcher.annotate_document(doc)
 
-    assert _find_annotation_with_label(doc, "Diabetes") is None
+    assert _find_entity_with_label(doc, "Diabetes") is None
 
 
 def test_case_sensitivity_exclusion_on(doc):
@@ -160,7 +160,7 @@ def test_case_sensitivity_exclusion_on(doc):
     matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
     matcher.annotate_document(doc)
 
-    assert _find_annotation_with_label(doc, "Diabetes") is not None
+    assert _find_entity_with_label(doc, "Diabetes") is not None
 
 
 def test_annotate_collection(collection):
@@ -173,7 +173,7 @@ def test_annotate_collection(collection):
     matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
     matcher.annotate(collection)
     doc = collection.documents[0]
-    assert _find_annotation_with_label(doc, "Diabetes") is not None
+    assert _find_entity_with_label(doc, "Diabetes") is not None
 
 
 def test_default_rules(collection):
