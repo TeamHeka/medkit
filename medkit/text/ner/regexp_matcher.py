@@ -5,7 +5,7 @@ __all__ = ["RegexpMatcher", "RegexpMatcherRule", "RegexpMatcherNormalization"]
 import dataclasses
 from pathlib import Path
 import re
-from typing import Any, Iterator, List, Optional, Union
+from typing import Any, Iterator, List, Optional, Tuple
 
 import yaml
 
@@ -138,15 +138,18 @@ class RegexpMatcher(RuleBasedAnnotator):
             The text document to process
         """
         input_ann_ids = doc.segments.get(self.input_label)
-        if input_ann_ids is not None:
-            input_anns = [doc.get_annotation_by_id(id) for id in input_ann_ids]
-            output_anns = self._process_input_annotations(input_anns)
-            for output_ann in output_anns:
-                doc.add_annotation(output_ann)
+        if input_ann_ids is None:
+            return
+        input_anns = [doc.get_annotation_by_id(id) for id in input_ann_ids]
+        output_anns_and_attrs = self._process_input_annotations(input_anns)
+        for output_ann, output_attrs in output_anns_and_attrs:
+            doc.add_annotation(output_ann)
+            for attribute in output_attrs:
+                doc.add_annotation(attribute)
 
     def _process_input_annotations(
         self, input_anns: List[TextBoundAnnotation]
-    ) -> Iterator[Union[Entity, Attribute]]:
+    ) -> Iterator[Tuple[Entity, List[Attribute]]]:
         """
         Create a entity annotation and optional attribute annotations
         for each entity detected in `input_anns`
@@ -158,9 +161,11 @@ class RegexpMatcher(RuleBasedAnnotator):
 
         Yields
         ------
-        Union[Entity, Attribute]:
-            Created annotation representing either an entity
-            or an entity attribute
+        Entity:
+            Created entity annotations
+        List[Attribute]:
+            Created attribute annotations attached to each entity
+            (might be empty)
         """
         for input_ann in input_anns:
             for rule in self.rules:
@@ -168,7 +173,7 @@ class RegexpMatcher(RuleBasedAnnotator):
 
     def _match(
         self, rule: RegexpMatcherRule, input_ann: TextBoundAnnotation
-    ) -> Iterator[Union[Entity, Attribute]]:
+    ) -> Iterator[Tuple[Entity, List[Attribute]]]:
         flags = 0 if rule.case_sensitive else re.IGNORECASE
 
         for match in re.finditer(rule.regexp, input_ann.text, flags):
@@ -200,21 +205,23 @@ class RegexpMatcher(RuleBasedAnnotator):
                 # FIXME store this provenance info somewhere
                 # source_id=syntagme.id,
             )
-            yield entity
 
             # add normalization attribute for each normalization descriptor
             # of the rule
-            for normalization in rule.normalizations:
-                # TODO should we have a NormalizationAttribute class
-                # with specific fields (name, id, version) ?
-                attribute = Attribute(
+            # TODO should we have a NormalizationAttribute class
+            # with specific fields (name, id, version) ?
+            attributes = [
+                Attribute(
                     origin_id=self.description.id,
-                    label=normalization.kb_name,
+                    label=norm.kb_name,
                     target_id=entity.id,
-                    value=normalization.id,
-                    metadata=dict(version=normalization.kb_version),
+                    value=norm.id,
+                    metadata=dict(version=norm.kb_version),
                 )
-                yield attribute
+                for norm in rule.normalizations
+            ]
+
+            yield entity, attributes
 
     @classmethod
     def from_description(cls, description: ProcessingDescription):
