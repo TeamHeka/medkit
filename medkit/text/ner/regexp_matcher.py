@@ -80,7 +80,9 @@ class RegexpMatcher:
 
                 # filter if match regexp_exclude
                 if rex.regexp_exclude is not None:
-                    exclude_match = re.search(rex.regexp_exclude, syntagme.text)
+                    exclude_match = re.search(
+                        rex.regexp_exclude, syntagme.text, flags=reflags
+                    )
                     if exclude_match is not None:
                         continue
 
