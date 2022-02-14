@@ -1,6 +1,14 @@
+from __future__ import annotations
+
 __all__ = ["TextBoundAnnotation", "Entity", "Attribute", "Relation"]
 
+import typing
+
 from medkit.core.annotation import Annotation
+from medkit.core.text import span as span_utils
+
+if typing.TYPE_CHECKING:
+    from medkit.core.text.document import TextDocument
 
 
 class TextBoundAnnotation(Annotation):
@@ -29,6 +37,30 @@ class TextBoundAnnotation(Annotation):
         )
         self.spans = spans
         self.text = text
+
+    def get_snippet(self, doc: TextDocument, max_extend_length: int) -> str:
+        """Return a portion of the original text contaning the annotation
+
+        Parameters
+        ----------
+        doc:
+            The document to which the annotation is attached
+
+        max_extend_length:
+            Maximum number of characters to use around the annotation
+
+        Returns
+        -------
+        str:
+            A portion of the text around the annotation
+        """
+        spans_normalized = span_utils.normalize_spans(self.spans)
+        start = min(s.start for s in spans_normalized)
+        end = max(s.end for s in spans_normalized)
+        start_extended = max(start - max_extend_length // 2, 0)
+        remaining_max_extend_length = max_extend_length - (start - start_extended)
+        end_extended = min(end + remaining_max_extend_length, len(doc.text))
+        return doc.text[start_extended:end_extended]
 
     def __repr__(self):
         annotation = super().__repr__()

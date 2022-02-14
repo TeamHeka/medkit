@@ -1,5 +1,6 @@
-# dev dependencies
+pyaml
 smart_open
+# dev dependencies
 black
 flake8
 pytest
