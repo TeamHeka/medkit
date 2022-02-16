@@ -11,6 +11,10 @@ setup(
     python_requires=">=3.8",
     install_requires=["flashtext", "pyaml", "PyRuSH", "smart_open"],
     extras_require={
+        "optional": [
+            "quickumls",
+            "six",  # needed for quickumls, workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/pull/80
+        ],
         "dev": ["black", "flake8", "pytest", "pytest-cov"],
     },
 )
