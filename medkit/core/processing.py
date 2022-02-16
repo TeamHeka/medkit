@@ -19,6 +19,20 @@ if TYPE_CHECKING:
 
 @dataclasses.dataclass
 class ProcessingDescription:
+    """Description of a specific instance of a processing module.
+
+    Parameters
+    ----------
+    name:
+        The name of the processing module (typically the class name)
+    id:
+        A unique identifier for the instance
+    config:
+        The specific configuration of the instance. Ideally, it
+        should be possible to use that dict to reinstantiate the same
+        processing module.
+    """
+
     name: str
     id: str = dataclasses.field(default_factory=lambda: str(uuid.uuid1()))
     config: Dict[str, Any] = None
