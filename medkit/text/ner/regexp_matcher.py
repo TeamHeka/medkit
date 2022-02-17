@@ -84,7 +84,12 @@ _PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.y
 class RegexpMatcher(RuleBasedAnnotator):
     """Entity annotator relying on regexp-based rules"""
 
-    def __init__(self, input_label, rules: Optional[List[RegexpMatcherRule]] = None):
+    def __init__(
+        self,
+        input_label,
+        rules: Optional[List[RegexpMatcherRule]] = None,
+        proc_id: Optional[str] = None,
+    ):
         """
         Instantiate the regexp matcher
 
@@ -96,6 +101,8 @@ class RegexpMatcher(RuleBasedAnnotator):
         rules:
             The set of rules to use when matching entities. If none provided,
             the rules in "regexp_matcher_default_rules.yml" will be used
+        proc_id:
+            Identifier of the tokenizer
         """
         self.input_label = input_label
         if rules is None:
@@ -104,7 +111,7 @@ class RegexpMatcher(RuleBasedAnnotator):
 
         config = dict(input_label=input_label, rules=rules)
         self._description = ProcessingDescription(
-            name=self.__class__.__name__, config=config
+            id=proc_id, name=self.__class__.__name__, config=config
         )
 
     @property
