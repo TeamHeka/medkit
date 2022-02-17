@@ -42,12 +42,13 @@ TEST_CONFIG = [
 )
 def test_annotate_document(filepath, expected_sections):
     doc = data_utils.get_text_document(filepath)
-    section_tokenizer = SectionTokenizer(input_label="RAW_TEXT")
+    section_tokenizer = SectionTokenizer.get_example()
+    #section_tokenizer = SectionTokenizer(input_label="RAW_TEXT")
     raw_text = TextBoundAnnotation(ann_id='ann_id',
-        origin_id="", label="RAW_TEXT", spans=[Span(0, len(doc.text))], text=doc.text
+        origin_id="", label="CLEAN_TEXT", spans=[Span(0, len(doc.text))], text=doc.text
     )
     doc.add_annotation(raw_text)
-    assert doc.segments.get("RAW_TEXT") == ['ann_id']
+    assert doc.segments.get("CLEAN_TEXT") == ['ann_id']
     section_tokenizer.annotate_document(doc)
     section_ids = doc.segments.get("SECTION")
     assert len(section_ids) != 0
