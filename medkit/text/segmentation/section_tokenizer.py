@@ -149,14 +149,14 @@ class SectionTokenizer:
 
             if rule.order == "BEFORE":
                 # Change section name if section is before one of the listed sections
-                index_other_sections = min(index_other_sections, default=0)
+                index_other_sections = max(index_other_sections, default=0)
                 match.loc[
                     lambda x: (x.match_type == name) & (x.index < index_other_sections),
                     "match_type",
                 ] = new_name
             elif rule.order == "AFTER":
                 # Change section name if the section is after one of the listed sections
-                index_other_sections = max(
+                index_other_sections = min(
                     index_other_sections, default=max(match.index)
                 )
                 match.loc[
