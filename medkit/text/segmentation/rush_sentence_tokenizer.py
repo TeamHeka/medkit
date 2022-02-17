@@ -163,7 +163,7 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
             )
 
             if not self.keep_newlines:
-                ranges = [m.span() for m in re.finditer(r"\n", text, re.M)]
+                ranges = [m.span() for m in re.finditer(r"\n", text)]
                 replacements = " " * len(ranges)
                 text, spans = span_utils.replace(text, spans, ranges, replacements)
 
