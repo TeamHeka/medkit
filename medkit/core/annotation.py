@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = ["Annotation", "Origin"]
 
 import abc
@@ -9,16 +11,15 @@ from typing import Dict, List, Optional
 
 class Annotation(abc.ABC):
     def __init__(
-        self, origin_id: str, label: str, ann_id: str = None, metadata: Dict = None
+        self, origin: Origin, label: str, ann_id: str = None, metadata: Dict = None
     ):
         """
         Provide common initialization for annotation instances
 
         Parameters
         ----------
-        origin_id: str
-            The id of the operation which creates annotation
-            (i.e., ProcessingDescription.id)
+        origin: Origin
+            Description of how this annotation was generated
         label: str
             The annotation label
         ann_id: str, Optional
@@ -30,7 +31,7 @@ class Annotation(abc.ABC):
             self.id = ann_id
         else:
             self.id = str(uuid.uuid1())
-        self.origin_id = origin_id
+        self.origin = origin
         self.label = label
         self.metadata = metadata
 

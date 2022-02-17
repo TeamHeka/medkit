@@ -6,6 +6,7 @@ import dataclasses
 import re
 from typing import Iterator, List, Tuple, Union, TYPE_CHECKING
 
+from medkit.core import Origin
 from medkit.core.processing import ProcessingDescription, RuleBasedAnnotator
 from medkit.core.text import TextBoundAnnotation, TextDocument
 import medkit.core.text.span as span_utils
@@ -135,7 +136,7 @@ class SentenceTokenizer(RuleBasedAnnotator):
             sentences = self._extract_sentences_and_spans(ann)
             for text, spans in sentences:
                 new_annotation = TextBoundAnnotation(
-                    origin_id=self.description.id,
+                    origin=Origin(processing_id=self.description.id, ann_ids=[ann.id]),
                     label=self.output_label,
                     spans=spans,
                     text=text,

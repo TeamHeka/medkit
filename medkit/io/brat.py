@@ -2,7 +2,7 @@ import pathlib
 
 from smart_open import open
 
-from medkit.core import Collection
+from medkit.core import Collection, Origin
 from medkit.core.text import TextDocument, Entity, Relation, Attribute
 from medkit.core.processing import InputConverter, ProcessingDescription
 
@@ -93,7 +93,7 @@ class BratInputConverter(InputConverter):
 
     def _convert_brat_entity(self, brat_entity: brat_utils.Entity) -> Entity:
         return Entity(
-            origin_id=self.description.id,
+            origin=Origin(processing_id=self.description.id),
             label=brat_entity.type,
             spans=brat_entity.span,
             text=brat_entity.text,
@@ -104,7 +104,7 @@ class BratInputConverter(InputConverter):
         self, brat_relation: brat_utils.Relation, brat_ann: dict
     ) -> Relation:
         return Relation(
-            origin_id=self.description.id,
+            origin=Origin(processing_id=self.description.id),
             label=brat_relation.type,
             source_id=brat_ann[brat_relation.subj],
             target_id=brat_ann[brat_relation.obj],
@@ -115,7 +115,7 @@ class BratInputConverter(InputConverter):
         self, brat_attribute: brat_utils.Attribute, brat_ann: dict
     ) -> Attribute:
         return Attribute(
-            origin_id=self.description.id,
+            origin=Origin(processing_id=self.description.id),
             label=brat_attribute.type,
             target_id=brat_ann[brat_attribute.target],
             value=brat_attribute.value,

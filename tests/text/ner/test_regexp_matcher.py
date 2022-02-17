@@ -1,8 +1,6 @@
-import uuid
-
 import pytest
 
-from medkit.core import Collection
+from medkit.core import Collection, Origin
 from medkit.core.text import TextDocument, TextBoundAnnotation, Span
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
@@ -17,7 +15,10 @@ TEXT = "The patient has asthma and type 1 diabetes."
 def doc():
     doc = TextDocument(text=TEXT)
     raw_text = TextBoundAnnotation(
-        origin_id=uuid.uuid1(), label="RAW_TEXT", spans=[Span(0, len(TEXT))], text=TEXT
+        origin=Origin(),
+        label="RAW_TEXT",
+        spans=[Span(0, len(TEXT))],
+        text=TEXT,
     )
     doc.add_annotation(raw_text)
     return doc

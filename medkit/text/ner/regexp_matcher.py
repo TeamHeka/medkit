@@ -9,7 +9,7 @@ from typing import Any, Iterator, List, Optional, Tuple
 
 import yaml
 
-from medkit.core import Collection
+from medkit.core import Collection, Origin
 from medkit.core.processing import ProcessingDescription, RuleBasedAnnotator
 from medkit.core.text import Attribute, Entity, TextBoundAnnotation, TextDocument
 import medkit.core.text.span as span_utils
@@ -207,10 +207,10 @@ class RegexpMatcher(RuleBasedAnnotator):
                 label=rule.label,
                 text=text,
                 spans=spans,
-                origin_id=self.description.id,
+                origin=Origin(
+                    processing_id=self.description.id, ann_ids=[input_ann.id]
+                ),
                 metadata=metadata,
-                # FIXME store this provenance info somewhere
-                # source_id=syntagme.id,
             )
 
             # add normalization attribute for each normalization descriptor
@@ -219,7 +219,9 @@ class RegexpMatcher(RuleBasedAnnotator):
             # with specific fields (name, id, version) ?
             attributes = [
                 Attribute(
-                    origin_id=self.description.id,
+                    origin=Origin(
+                        processing_id=self.description.id, ann_ids=[input_ann.id]
+                    ),
                     label=norm.kb_name,
                     target_id=entity.id,
                     value=norm.id,

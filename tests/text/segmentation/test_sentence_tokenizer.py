@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core.document import Collection
+from medkit.core import Collection, Origin
 from medkit.core.text import TextDocument
 from medkit.core.text.annotation import TextBoundAnnotation
 from medkit.core.text.span import Span
@@ -45,7 +45,10 @@ TEST_CONFIG = [
 def collection():
     doc = TextDocument()
     raw_text = TextBoundAnnotation(
-        origin_id="", label="RAW_TEXT", spans=[Span(0, len(TEXT))], text=TEXT
+        origin=Origin(),
+        label="RAW_TEXT",
+        spans=[Span(0, len(TEXT))],
+        text=TEXT,
     )
     doc.add_annotation(raw_text)
     return Collection([doc])

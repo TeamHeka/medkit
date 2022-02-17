@@ -1,17 +1,18 @@
 import pytest
 
+from medkit.core import Origin
 from medkit.core.text.document import TextDocument
 from medkit.core.text.annotation import Entity, Relation, Attribute
 
 
 def test_add_annotation():
     doc = TextDocument(text="hello")
-    ent1 = Entity(origin_id="", label="ent1", spans="", text="")
-    ent2 = Entity(origin_id="", label="ent2", spans="", text="")
+    ent1 = Entity(origin=Origin(), label="ent1", spans="", text="")
+    ent2 = Entity(origin=Origin(), label="ent2", spans="", text="")
     relation = Relation(
-        origin_id="", label="toto", source_id=ent1.id, target_id=ent2.id
+        origin=Origin(), label="toto", source_id=ent1.id, target_id=ent2.id
     )
-    attribute = Attribute(origin_id="", label="Negation", target_id=ent1.id)
+    attribute = Attribute(Origin(), label="Negation", target_id=ent1.id)
     # Test entity addition in entity list
     doc.add_annotation(ent1)
     assert ent1.id in doc.entities.get(ent1.label)
