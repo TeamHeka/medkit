@@ -1,9 +1,10 @@
-__all__ = ["Annotation"]
+__all__ = ["Annotation", "Origin"]
 
 import abc
+import dataclasses
 import uuid
 
-from typing import Dict
+from typing import Dict, List, Optional
 
 
 class Annotation(abc.ABC):
@@ -43,3 +44,25 @@ class Annotation(abc.ABC):
     @abc.abstractmethod
     def __repr__(self):
         return f"{self.__class__.__qualname__} : id={self.id!r}, label={self.label!r}"
+
+
+@dataclasses.dataclass(frozen=True)
+class Origin:
+    """Description of how an annotation was generated
+
+    Parameters
+    ----------
+    processing_id:
+        Identifier of the `ProcessingDescription` describing
+        the processing module that generated the annotation.
+        Should never be None except for RAW_TEXT annotation.
+
+    ann_ids:
+        Identifier of the source annotations that were used
+        to generate the annotation. Typically there will
+        only be one source annotation but there might be none
+        or several.
+    """
+
+    processing_id: Optional[str] = None
+    ann_ids: List[str] = dataclasses.field(default_factory=lambda: [])
