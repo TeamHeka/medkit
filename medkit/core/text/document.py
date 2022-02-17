@@ -83,3 +83,10 @@ class TextDocument(Document):
                 self.attributes[annotation.target_id] = [annotation.id]
             else:
                 self.attributes[annotation.target_id].append(annotation.id)
+
+    def get_attributes_by_annotation(self, ann_id):
+        res = dict()
+        for attr_id in self.attributes.get(ann_id):
+            attribute = self.get_annotation_by_id(attr_id)
+            res[attribute.label] = attribute
+        return res
