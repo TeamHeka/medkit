@@ -1,0 +1,126 @@
+# pas * d
+- id: "id_neg_pas_d"
+  regexp: '(^|[^a-z])pas\s([a-z'']*\s*){0,2}d'
+  exclusion_regexps:
+    - '(^|[^a-z])pas\s*([a-z]*\s){0,2}doute'
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}elimin[eé]'
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}exclure'
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}probl[eèé]me'
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}soucis'
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}objection'
+    - '\sne reviens\s+pas'
+
+# pas * pour
+- id: "id_neg_pas_pour"
+  regexp: '(^|[^a-z])pas\s([a-z'']*\s*){0,2}pour'
+  exclusion_regexps:
+    - '(^|[^a-z])pas\s*([a-z]*\s){0,2}doute'
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}pour\s+[eé]limine'
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}pour\s+exclure'
+
+# (ne|n') (l'|la|le)? * pas
+- id: "id_neg_n_l_pas"
+  regexp: '(^|[^a-z])n(e\s+|''\s*)(l[ae]\s+|l''\s*)?([a-z'']*\s*){0,2}pas[^a-z]'
+  exclusion_regexps:
+    - '(^|[^a-z])pas\s*([a-z]*\s){0,2}doute'
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}elimin[eèé]'
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}exclure'
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}soucis'
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}objection'
+    - '\sne reviens\s+pas'
+
+# sans
+- id: "id_neg_sans"
+  regexp: '(^|[^a-z])sans\s'
+  exclusion_regexps:
+    - '(^|[^a-z])sans\s+doute'
+    - '(^|[^a-z])sans\s+elimine'
+    - '(^|[^a-z])sans\s+probl[eéè]me'
+    - '(^|[^a-z])sans\s+soucis'
+    - '(^|[^a-z])sans\s+objection'
+    - '(^|[^a-z])sans\s+difficult'
+
+# aucun
+- id: "id_neg_aucun"
+  regexp: "aucun"
+  exclusion_regexps:
+    - 'aucun\s+doute'
+    - 'aucun\s+probleme'
+    - 'aucune\s+objection'
+
+# élimine
+- id: "id_neg_elimine"
+  regexp: "(^|[^a-z])[eé]limine"
+  exclusion_regexps:
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}elimine'
+    - '(^|[^a-z])sans\s*([a-z'']*\s*){0,2}elimine'
+
+# éliminant
+- id: "id_neg_eliminant"
+  regexp: "(^|[^a-z])[eé]liminant"
+  exclusion_regexps:
+    - '(^|[^a-z])[eé]liminant\s*pas[^a-z]'
+
+# infirme
+- id: "id_neg_infirme"
+  regexp: "(^|[^a-z])infirm[eé]"
+  exclusion_regexps:
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}infirmer'
+    - '(^|[^a-z])sans\s*([a-z'']*\s*){0,2}infirmer'
+
+# infirmant
+- id: "id_neg_infirmant"
+  regexp: "(^|[^a-z])infirmant"
+  exclusion_regexps:
+    - '(^|[^a-z])infirmant\s*pas[^a-z]'
+
+# exclu
+- id: "id_neg_exclu"
+  regexp: "(^|[^a-z])exclu[e]?[s]?[^a-z]"
+  exclusion_regexps:
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}exclure'
+    - '(^|[^a-z])sans\s*([a-z'']*\s*){0,2}exclure'
+
+# misc
+- id: "id_neg_jamais"
+  regexp: '(^|[^a-z])jamais\s[a-z]*\s*d'
+
+- id: "id_neg_oriente_pas_vers"
+  regexp: 'orient[eèé]\s+pas\s+vers'
+
+- id: "id_neg_orientant_pas_vers"
+  regexp: 'orientant\s+pas\s+vers'
+
+- id: "id_neg_ni"
+  regexp: '(^|[^a-z])ni\s'
+
+- id: "id_neg_column_non"
+  regexp: ':\s*non[^a-z]'
+
+- id: "id_neg_non"
+  regexp: '^\s*non[^a-z]+$'
+
+- id: "id_neg_column_aucun"
+  regexp: ':\s*aucun'
+
+- id: "id_neg_column_exclu"
+  regexp: ':\s*exclu'
+
+- id: "id_neg_column_absen"
+  regexp: ':\s*absen[ct]'
+
+- id: "id_neg_absence"
+  regexp: 'absence\s+d'
+
+- id: "id_neg_negati"
+  regexp: '\snegati'
+
+- id: "id_neg_normal"
+  regexp: "(^|[^a-z])normale?s?[^a-z]"
+  exclusion_regexps:
+    - 'pas\s+normale?s?\s'
+
+- id: "id_neg_normaux"
+  regexp: "(^|[^a-z])normaux"
+  exclusion_regexps:
+    - 'pas\s+normaux'
