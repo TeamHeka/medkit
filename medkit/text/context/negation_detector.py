@@ -1,10 +1,30 @@
-__all__ = ["NegationDetector"]
+__all__ = ["NegationDetector", "NegationDetectorRule"]
 
+import dataclasses
 import re
 from typing import List, Optional
 
 from medkit.core import Origin, Attribute, OperationDescription, RuleBasedAnnotator
 from medkit.core.text import Segment
+
+
+@dataclasses.dataclass
+class NegationDetectorRule:
+    """Regexp-based rule to use with `NegationDetector`
+
+    Attributes
+    ----------
+    regexp:
+        The regexp pattern used to match a negation
+    exclusion_regexps:
+        Optional exclusion patterns
+    id:
+        Unique identifier of the rule to store in the metadata of the entities
+    """
+
+    regexp: str
+    exclusion_regexps: List[str] = dataclasses.field(default_factory=lambda: [])
+    id: Optional[str] = None
 
 
 class NegationDetector(RuleBasedAnnotator):
@@ -64,157 +84,199 @@ def _detect_negation(phrase):
         return "aff"
 
     # pas * d
-    regexp = r"(^|[^a-z])pas\s([a-z']*\s*){0,2}d"
-    exclusion_regexps = [
-        r"(^|[^a-z])pas\s*([a-z]*\s){0,2}doute",
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}elimin[eé]",
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}exclure",
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}probl[eèé]me",
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}soucis",
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}objection",
-        r"\sne reviens\s+pas",
-    ]
-    if _match(phrase_low, regexp, exclusion_regexps):
+    rule = NegationDetectorRule(
+        id="id_neg_pas_d",
+        regexp=r"(^|[^a-z])pas\s([a-z']*\s*){0,2}d",
+        exclusion_regexps=[
+            r"(^|[^a-z])pas\s*([a-z]*\s){0,2}doute",
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}elimin[eé]",
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}exclure",
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}probl[eèé]me",
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}soucis",
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}objection",
+            r"\sne reviens\s+pas",
+        ],
+    )
+    if _match(phrase_low, rule):
         return "neg"
 
     # pas * pour
-    regexp = r"(^|[^a-z])pas\s([a-z']*\s*){0,2}pour"
-    exclusion_regexps = [
-        r"(^|[^a-z])pas\s*([a-z]*\s){0,2}doute",
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}pour\s+[eé]limine",
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}pour\s+exclure",
-    ]
-    if _match(phrase_low, regexp, exclusion_regexps):
+    rule = NegationDetectorRule(
+        id="id_neg_pas_pour",
+        regexp=r"(^|[^a-z])pas\s([a-z']*\s*){0,2}pour",
+        exclusion_regexps=[
+            r"(^|[^a-z])pas\s*([a-z]*\s){0,2}doute",
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}pour\s+[eé]limine",
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}pour\s+exclure",
+        ],
+    )
+    if _match(phrase_low, rule):
         return "neg"
 
     # (ne|n') (l'|la|le)? * pas
-    regexp = r"(^|[^a-z])n(e\s+|'\s*)(l[ae]\s+|l'\s*)?([a-z']*\s*){0,2}pas[^a-z]"
-    exclusion_regexps = [
-        r"(^|[^a-z])pas\s*([a-z]*\s){0,2}doute",
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}elimin[eèé]",
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}exclure",
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}soucis",
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}objection",
-        r"\sne reviens\s+pas",
-    ]
-    if _match(phrase_low, regexp, exclusion_regexps):
+    rule = NegationDetectorRule(
+        id="id_neg_n_l_pas",
+        regexp=r"(^|[^a-z])n(e\s+|'\s*)(l[ae]\s+|l'\s*)?([a-z']*\s*){0,2}pas[^a-z]",
+        exclusion_regexps=[
+            r"(^|[^a-z])pas\s*([a-z]*\s){0,2}doute",
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}elimin[eèé]",
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}exclure",
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}soucis",
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}objection",
+            r"\sne reviens\s+pas",
+        ],
+    )
+    if _match(phrase_low, rule):
         return "neg"
 
     # sans
-    regexp = r"(^|[^a-z])sans\s"
-    exclusion_regexps = [
-        r"(^|[^a-z])sans\s+doute",
-        r"(^|[^a-z])sans\s+elimine",
-        r"(^|[^a-z])sans\s+probl[eéè]me",
-        r"(^|[^a-z])sans\s+soucis",
-        r"(^|[^a-z])sans\s+objection",
-        r"(^|[^a-z])sans\s+difficult",
-    ]
-    if _match(phrase_low, regexp, exclusion_regexps):
+    rule = NegationDetectorRule(
+        id="id_neg_sans",
+        regexp=r"(^|[^a-z])sans\s",
+        exclusion_regexps=[
+            r"(^|[^a-z])sans\s+doute",
+            r"(^|[^a-z])sans\s+elimine",
+            r"(^|[^a-z])sans\s+probl[eéè]me",
+            r"(^|[^a-z])sans\s+soucis",
+            r"(^|[^a-z])sans\s+objection",
+            r"(^|[^a-z])sans\s+difficult",
+        ],
+    )
+    if _match(phrase_low, rule):
         return "neg"
 
     # aucun
-    regexp = r"aucun"
-    exclusion_regexps = [
-        r"aucun\s+doute",
-        r"aucun\s+probleme",
-        r"aucune\s+objection",
-    ]
-    if _match(phrase_low, regexp, exclusion_regexps):
+    rule = NegationDetectorRule(
+        id="id_neg_aucun",
+        regexp=r"aucun",
+        exclusion_regexps=[
+            r"aucun\s+doute",
+            r"aucun\s+probleme",
+            r"aucune\s+objection",
+        ],
+    )
+    if _match(phrase_low, rule):
         return "neg"
 
     # élimine
-    regexp = r"(^|[^a-z])[eé]limine"
-    exclusion_regexps = [
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}elimine",
-        r"(^|[^a-z])sans\s*([a-z']*\s*){0,2}elimine",
-    ]
-    if _match(phrase_low, regexp, exclusion_regexps):
+    rule = NegationDetectorRule(
+        id="id_neg_elimine",
+        regexp=r"(^|[^a-z])[eé]limine",
+        exclusion_regexps=[
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}elimine",
+            r"(^|[^a-z])sans\s*([a-z']*\s*){0,2}elimine",
+        ],
+    )
+    if _match(phrase_low, rule):
         return "neg"
 
     # éliminant
-    regexp = r"(^|[^a-z])[eé]liminant"
-    exclusion_regexps = [
-        r"(^|[^a-z])[eé]liminant\s*pas[^a-z]",
-    ]
-    if _match(phrase_low, regexp, exclusion_regexps):
+    rule = NegationDetectorRule(
+        id="id_neg_eliminant",
+        regexp=r"(^|[^a-z])[eé]liminant",
+        exclusion_regexps=[
+            r"(^|[^a-z])[eé]liminant\s*pas[^a-z]",
+        ],
+    )
+    if _match(phrase_low, rule):
         return "neg"
 
     # infirme
-    regexp = r"(^|[^a-z])infirm[eé]"
-    exclusion_regexps = [
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}infirmer",
-        r"(^|[^a-z])sans\s*([a-z']*\s*){0,2}infirmer",
-    ]
-    if _match(phrase_low, regexp, exclusion_regexps):
+    rule = NegationDetectorRule(
+        id="id_neg_infirme",
+        regexp=r"(^|[^a-z])infirm[eé]",
+        exclusion_regexps=[
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}infirmer",
+            r"(^|[^a-z])sans\s*([a-z']*\s*){0,2}infirmer",
+        ],
+    )
+    if _match(phrase_low, rule):
         return "neg"
 
     # infirmant
-    regexp = r"(^|[^a-z])infirmant"
-    exclusion_regexps = [
-        r"(^|[^a-z])infirmant\s*pas[^a-z]",
-    ]
-    if _match(phrase_low, regexp, exclusion_regexps):
+    rule = NegationDetectorRule(
+        id="id_neg_infirmant",
+        regexp=r"(^|[^a-z])infirmant",
+        exclusion_regexps=[
+            r"(^|[^a-z])infirmant\s*pas[^a-z]",
+        ],
+    )
+    if _match(phrase_low, rule):
         return "neg"
 
     # exclu
-    regexp = r"(^|[^a-z])exclu[e]?[s]?[^a-z]"
-    exclusion_regexps = [
-        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}exclure",
-        r"(^|[^a-z])sans\s*([a-z']*\s*){0,2}exclure",
-    ]
-    if _match(phrase_low, regexp, exclusion_regexps):
+    rule = NegationDetectorRule(
+        id="id_neg_exclu",
+        regexp=r"(^|[^a-z])exclu[e]?[s]?[^a-z]",
+        exclusion_regexps=[
+            r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}exclure",
+            r"(^|[^a-z])sans\s*([a-z']*\s*){0,2}exclure",
+        ],
+    )
+    if _match(phrase_low, rule):
         return "neg"
 
     # misc
-    regexp = r"(^|[^a-z])jamais\s[a-z]*\s*d"
-    if _match(phrase_low, regexp, []):
+    rule = NegationDetectorRule(
+        id="id_neg_jamais", regexp=r"(^|[^a-z])jamais\s[a-z]*\s*d"
+    )
+    if _match(phrase_low, rule):
         return "neg"
-    regexp = r"orient[eèé]\s+pas\s+vers"
-    if _match(phrase_low, regexp, []):
+    rule = NegationDetectorRule(
+        id="id_neg_oriente_pas_vers", regexp=r"orient[eèé]\s+pas\s+vers"
+    )
+    if _match(phrase_low, rule):
         return "neg"
-    regexp = r"orientant\s+pas\s+vers"
-    if _match(phrase_low, regexp, []):
+    rule = NegationDetectorRule(
+        id="id_neg_orientant_pas_vers", regexp=r"orientant\s+pas\s+vers"
+    )
+    if _match(phrase_low, rule):
         return "neg"
-    regexp = r"(^|[^a-z])ni\s"
-    if _match(phrase_low, regexp, []):
+    rule = NegationDetectorRule(id="id_neg_ni", regexp=r"(^|[^a-z])ni\s")
+    if _match(phrase_low, rule):
         return "neg"
-    regexp = r":\s*non[^a-z]"
-    if _match(phrase_low, regexp, []):
+    rule = NegationDetectorRule(id="id_neg_column_non", regexp=r":\s*non[^a-z]")
+    if _match(phrase_low, rule):
         return "neg"
-    regexp = r"^\s*non[^a-z]+$"
-    if _match(phrase_low, regexp, []):
+    rule = NegationDetectorRule(id="id_neg_non", regexp=r"^\s*non[^a-z]+$")
+    if _match(phrase_low, rule):
         return "neg"
-    regexp = r":\s*aucun"
-    if _match(phrase_low, regexp, []):
+    rule = NegationDetectorRule(id="id_neg_column_aucun", regexp=r":\s*aucun")
+    if _match(phrase_low, rule):
         return "neg"
-    regexp = r":\s*exclu"
-    if _match(phrase_low, regexp, []):
+    rule = NegationDetectorRule(id="id_neg_column_exclu", regexp=r":\s*exclu")
+    if _match(phrase_low, rule):
         return "neg"
-    regexp = r":\s*absen[ct]"
-    if _match(phrase_low, regexp, []):
+    rule = NegationDetectorRule(id="id_neg_column_absen", regexp=r":\s*absen[ct]")
+    if _match(phrase_low, rule):
         return "neg"
-    regexp = r"absence\s+d"
-    if _match(phrase_low, regexp, []):
+    rule = NegationDetectorRule(id="id_neg_absence", regexp=r"absence\s+d")
+    if _match(phrase_low, rule):
         return "neg"
-    regexp = r"\snegati"
-    if _match(phrase_low, regexp, []):
+    rule = NegationDetectorRule(id="id_neg_negati", regexp=r"\snegati")
+    if _match(phrase_low, rule):
         return "neg"
 
-    regexp = r"(^|[^a-z])normale?s?[^a-z]"
-    exclusion_regexps = [r"pas\s+normale?s?\s"]
-    if _match(phrase_low, regexp, exclusion_regexps):
+    rule = NegationDetectorRule(
+        id="id_neg_normal",
+        regexp=r"(^|[^a-z])normale?s?[^a-z]",
+        exclusion_regexps=[r"pas\s+normale?s?\s"],
+    )
+    if _match(phrase_low, rule):
         return "neg"
 
-    regexp = r"(^|[^a-z])normaux"
-    exclusion_regexps = [r"pas\s+normaux"]
-    if _match(phrase_low, regexp, exclusion_regexps):
+    rule = NegationDetectorRule(
+        id="id_neg_normaux",
+        regexp=r"(^|[^a-z])normaux",
+        exclusion_regexps=[r"pas\s+normaux"],
+    )
+    if _match(phrase_low, rule):
         return "neg"
 
     return "aff"
 
 
-def _match(phrase_low, regexp, exclusion_regexp):
-    return re.findall(regexp, phrase_low) != [] and not any(
-        re.findall(r, phrase_low) != [] for r in exclusion_regexp
+def _match(phrase_low, rule: NegationDetectorRule):
+    return re.findall(rule.regexp, phrase_low) != [] and not any(
+        re.findall(r, phrase_low) != [] for r in rule.exclusion_regexps
     )

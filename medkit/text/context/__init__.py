@@ -1,3 +1,3 @@
-__all__ = ["NegationDetector"]
+__all__ = ["NegationDetector", "NegationDetectorRule"]
 
-from .negation_detector import NegationDetector
+from .negation_detector import NegationDetector, NegationDetectorRule
