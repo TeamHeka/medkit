@@ -1,5 +1,4 @@
 flashtext
-pandas
 pyaml
 PyRuSH
 smart_open
