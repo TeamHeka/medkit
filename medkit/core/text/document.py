@@ -2,12 +2,12 @@ from __future__ import annotations
 
 __all__ = ["TextDocument"]
 
-import typing
+from typing import Dict, TYPE_CHECKING
 
 from medkit.core.document import Document
 from medkit.core.text.annotation import TextBoundAnnotation, Entity, Relation, Attribute
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from medkit.core.annotation import Annotation
 
 
@@ -84,7 +84,21 @@ class TextDocument(Document):
             else:
                 self.attributes[annotation.target_id].append(annotation.id)
 
-    def get_attributes_by_annotation(self, ann_id):
+    def get_attributes_by_annotation(self, ann_id: str) -> Dict[str, Attribute]:
+        """
+        Retrieve all attributes targeted onto an annotation.
+
+        Parameters
+        ----------
+        ann_id
+            The annotation id for which we want to get attributes.
+
+        Returns
+        -------
+        Dict[str, Attribute]
+            A dictionary where key correspond to the Attribute label and
+            where value is the Attribute instance.
+        """
         res = dict()
         for attr_id in self.attributes.get(ann_id):
             attribute = self.get_annotation_by_id(attr_id)

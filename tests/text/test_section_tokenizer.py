@@ -1,6 +1,7 @@
 import pytest
 import tests.data_utils as data_utils
 
+import medkit.text.segmentation.section_tokenizer as st
 from medkit.core.text import Span, TextBoundAnnotation
 from medkit.text.segmentation.section_tokenizer import SectionTokenizer
 
@@ -36,21 +37,18 @@ TEST_CONFIG = [
 def test_annotate_document(filepath, expected_sections):
     doc = data_utils.get_text_document(filepath)
     section_tokenizer = SectionTokenizer.get_example()
-    # section_tokenizer = SectionTokenizer(input_label="RAW_TEXT")
-    raw_text = TextBoundAnnotation(
-        ann_id="ann_id",
+    clean_text = TextBoundAnnotation(
         origin_id="",
-        label="CLEAN_TEXT",
+        label=st.DefaultConfig.input_label,
         spans=[Span(0, len(doc.text))],
         text=doc.text,
     )
-    doc.add_annotation(raw_text)
-    assert doc.segments.get("CLEAN_TEXT") == ["ann_id"]
+    doc.add_annotation(clean_text)
     section_tokenizer.annotate_document(doc)
-    section_ids = doc.segments.get("SECTION")
-    assert len(section_ids) != 0
+    section_ids = doc.segments.get(st.DefaultConfig.output_label)
+    assert len(section_ids) == len(expected_sections)
     sections = [doc.get_annotation_by_id(section_id) for section_id in section_ids]
     attributes = [doc.get_attributes_by_annotation(section.id) for section in sections]
     for i, (spans, attr_value) in enumerate(expected_sections):
         assert sections[i].spans == spans
-        assert attributes[i].get("SECTION").value == attr_value
+        assert attributes[i].get(st.DefaultConfig.output_label).value == attr_value

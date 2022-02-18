@@ -15,6 +15,12 @@ from medkit.core.text import Attribute, TextBoundAnnotation, TextDocument
 from medkit.core.text import span as span_utils
 
 
+@dataclasses.dataclass(frozen=True)
+class DefaultConfig:
+    input_label: str = "CLEAN_TEXT"
+    output_label: str = "SECTION"
+
+
 @dataclasses.dataclass
 class SectionModificationRule:
     section_name: str
@@ -33,8 +39,8 @@ class SectionTokenizer:
     def __init__(
         self,
         section_dict: Dict[str, List[str]],
-        input_label: str = "CLEAN_TEXT",
-        output_label: str = "SECTION",
+        input_label: str = DefaultConfig.input_label,
+        output_label: str = DefaultConfig.output_label,
         section_rules: List[SectionModificationRule] = None,
         proc_id: str = None,
     ):
