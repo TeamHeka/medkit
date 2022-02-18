@@ -95,6 +95,10 @@ class SectionTokenizer:
             input_ann = document.get_annotation_by_id(input_ann_ids[0])
             sections = self._extract_sections_and_spans(input_ann)
             for section, text, spans in sections:
+                # add section name in metadata
+                metadata = dict(
+                    name=section
+                )
                 output_ann = TextBoundAnnotation(
                     origin=Origin(
                         processing_id=self.description.id, ann_ids=[input_ann.id]
@@ -102,15 +106,9 @@ class SectionTokenizer:
                     label=self.output_label,
                     spans=spans,
                     text=text,
-                )
-                section_attribute = Attribute(
-                    origin=Origin(processing_id=self.description.id),
-                    label=self.output_label,
-                    target_id=output_ann.id,
-                    value=section,
+                    metadata=metadata,
                 )
                 document.add_annotation(output_ann)
-                document.add_annotation(section_attribute)
 
     def _extract_sections_and_spans(self, input_ann: TextBoundAnnotation):
         # Process mappings

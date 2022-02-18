@@ -49,7 +49,6 @@ def test_annotate_document(filepath, expected_sections):
     section_ids = doc.segments.get(st.DefaultConfig.output_label)
     assert len(section_ids) == len(expected_sections)
     sections = [doc.get_annotation_by_id(section_id) for section_id in section_ids]
-    attributes = [doc.get_attributes_by_annotation(section.id) for section in sections]
     for i, (spans, attr_value) in enumerate(expected_sections):
         assert sections[i].spans == spans
-        assert attributes[i].get(st.DefaultConfig.output_label).value == attr_value
+        assert sections[i].metadata['name'] == attr_value
