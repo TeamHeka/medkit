@@ -41,7 +41,7 @@ class SectionTokenizer:
         section_dict: Dict[str, List[str]],
         input_label: str = DefaultConfig.input_label,
         output_label: str = DefaultConfig.output_label,
-        section_rules: List[SectionModificationRule] = None,
+        section_rules: Tuple[SectionModificationRule] = (),
         proc_id: str = None,
     ):
         """
@@ -174,8 +174,8 @@ class SectionTokenizer:
 
     @classmethod
     def get_example(cls):
-        config_path = pathlib.Path(__file__).parent / "default_section_dict.yml"
-        section_dict, section_rules = cls.load_config(config_path)
+        config_path = pathlib.Path(__file__).parent / "default_section_definition.yml"
+        section_dict, section_rules = cls.load_section_definition(config_path)
         section_tokenizer = cls(
             section_dict=section_dict,
             section_rules=section_rules,
@@ -187,30 +187,31 @@ class SectionTokenizer:
         return cls(proc_id=description.id, **description.config)
 
     @staticmethod
-    def load_config(
-        path_to_config,
-    ) -> Tuple[Dict[str, List[str]], List[SectionModificationRule]]:
+    def load_section_definition(
+        filepath,
+    ) -> Tuple[Dict[str, List[str]], Tuple[SectionModificationRule]]:
         """
-        Load the config stored in a yml file
+        Load the sections definition stored in a yml file
 
         Parameters
         ----------
-        path_to_config:
+        filepath:
             Path to a yml file containing the sections(name + mappings) and rules
 
         Returns
         -------
-        Dict[str, List[str]]
-            Dictionary where key is the section name and value is the list of all
+        Tuple[Dict[str, List[str]], Tuple[SectionModificationRule]]
+            Tuple containing:
+            - the dictionary where key is the section name and value is the list of all
             equivalent strings.
+            - the list of section modification rules.
+            These rules allow to rename some sections according their order
         """
 
-        with open(path_to_config, mode="r") as f:
+        with open(filepath, mode="r") as f:
             config = yaml.safe_load(f)
 
-        section_dict = config.get("sections")
-        section_rules = [
-            SectionModificationRule(**rule) for rule in config.get("rules")
-        ]
+        section_dict = config["sections"]
+        section_rules = (SectionModificationRule(**rule) for rule in config["rules"])
 
         return section_dict, section_rules
