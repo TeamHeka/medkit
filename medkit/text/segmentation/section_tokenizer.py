@@ -4,14 +4,14 @@ __all__ = ["SectionModificationRule", "SectionTokenizer"]
 
 import dataclasses
 import pathlib
-import pandas as pd
 import yaml
+
 from flashtext import KeywordProcessor
-from typing import Dict, List, Literal, Tuple
+from typing import Dict, Generator, List, Literal, Tuple
 
 from medkit.core import Collection, Origin
 from medkit.core.processing import ProcessingDescription
-from medkit.core.text import Attribute, TextBoundAnnotation, TextDocument
+from medkit.core.text import TextBoundAnnotation, TextDocument
 from medkit.core.text import span as span_utils
 
 
@@ -96,9 +96,7 @@ class SectionTokenizer:
             sections = self._extract_sections_and_spans(input_ann)
             for section, text, spans in sections:
                 # add section name in metadata
-                metadata = dict(
-                    name=section
-                )
+                metadata = dict(name=section)
                 output_ann = TextBoundAnnotation(
                     origin=Origin(
                         processing_id=self.description.id, ann_ids=[input_ann.id]
@@ -113,64 +111,56 @@ class SectionTokenizer:
     def _extract_sections_and_spans(self, input_ann: TextBoundAnnotation):
         # Process mappings
         match = self.keyword_processor.extract_keywords(input_ann.text, span_info=True)
-        match = pd.DataFrame(match, columns=["match_type", "start", "end"]).sort_values(
-            ["start", "end"]
-        )
-        # Fill dataframe to include all input annotation text
-        match = (
-            match.append({"match_type": "head", "start": 0}, ignore_index=True)
-            .sort_values("start")
-            .assign(
-                end=lambda x: x.start.shift(-1)
-                .fillna(len(input_ann.text))
-                .astype("int")
-            )
-            .assign(sl=lambda x: x.start - x.end)
-            .loc[lambda x: x.sl != 0]
-            .drop("sl", axis=1)
-            .reset_index(drop=True)
-        )
 
-        # Rename some sections according defined rules
+        # Sort according to the match start
+        match.sort(key=lambda x: x[1])
+        if len(match) == 0 or match[0][1] != 0:
+            # Add head before any detected sections
+            match.insert(0, ("head", 0, 0))
+
+        # Get sections to rename according defined rules
         # e.g., set any 'traitement' section occurring before 'histoire' or 'evolution'
         # to 'traitement entree' (cf. example)
-        match = self._rename_sections(match)
+        new_sections = self._get_sections_to_rename(match)
 
-        # Extract medkit spans from relative spans (i.e., ranges)
-        for index, row in match.iterrows():
+        for index, section in enumerate(match):
+            name = new_sections.get(index, section[0])
+            if index != len(match) - 1:
+                ranges = [(section[1], match[index+1][1])]
+            else:
+                ranges = [(section[1], len(input_ann.text))]
+
+            # Extract medkit spans from relative spans (i.e., ranges)
             text, spans = span_utils.extract(
                 text=input_ann.text,
                 spans=input_ann.spans,
-                ranges=[(row["start"], row["end"])],
+                ranges=ranges,
             )
-            yield row["match_type"], text, spans
+            yield name, text, spans
 
-    def _rename_sections(self, match: pd.DataFrame):
+    def _get_sections_to_rename(self, match: List[Tuple]):
+        match_type = list(zip(*zip(match)))[0]
+        map_index_new_name = {}
+        list_to_process = ()
         for rule in self.section_rules:
-            name = rule.section_name
-            new_name = rule.new_section_name
-            index_other_sections = match.loc[
-                lambda x: x.match_type.isin(rule.other_sections)
-            ].index.tolist()
-
             if rule.order == "BEFORE":
                 # Change section name if section is before one of the listed sections
-                index_other_sections = max(index_other_sections, default=0)
-                match.loc[
-                    lambda x: (x.match_type == name) & (x.index < index_other_sections),
-                    "match_type",
-                ] = new_name
+                list_to_process = enumerate(match_type)
             elif rule.order == "AFTER":
                 # Change section name if the section is after one of the listed sections
-                index_other_sections = min(
-                    index_other_sections, default=max(match.index)
-                )
-                match.loc[
-                    lambda x: (x.match_type == name) & (x.index > index_other_sections),
-                    "match_type",
-                ] = new_name
+                list_to_process = reversed(list(enumerate(match_type)))
 
-        return match
+            # Navigate in list according to the order defined above
+            candidate_sections = []
+            for index, section_name in list_to_process:
+                if section_name == rule.section_name:
+                    candidate_sections.append(index)
+                if section_name in rule.other_sections:
+                    for candidate_index in candidate_sections:
+                        map_index_new_name[candidate_index] = rule.new_section_name
+                    candidate_sections.clear()
+
+        return map_index_new_name
 
     @classmethod
     def get_example(cls):
@@ -189,7 +179,7 @@ class SectionTokenizer:
     @staticmethod
     def load_section_definition(
         filepath,
-    ) -> Tuple[Dict[str, List[str]], Tuple[SectionModificationRule]]:
+    ) -> Tuple[Dict[str, List[str]], Generator[SectionModificationRule]]:
         """
         Load the sections definition stored in a yml file
 
@@ -200,7 +190,7 @@ class SectionTokenizer:
 
         Returns
         -------
-        Tuple[Dict[str, List[str]], Tuple[SectionModificationRule]]
+        Tuple[Dict[str, List[str]], Generator[SectionModificationRule]]
             Tuple containing:
             - the dictionary where key is the section name and value is the list of all
             equivalent strings.

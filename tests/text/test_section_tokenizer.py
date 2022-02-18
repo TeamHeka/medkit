@@ -10,7 +10,7 @@ TEST_CONFIG = [
     (
         "eds/clean/cas1",
         [
-            ([Span(start=0, end=418)], "head"),
+            ([Span(start=0, end=418)], "antecedent"),
             ([Span(start=418, end=1231)], "mode_de_vie"),
             ([Span(start=1231, end=1606)], "conclusion"),
             ([Span(start=1606, end=1899)], "conclusion"),
