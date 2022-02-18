@@ -44,6 +44,7 @@ class NegationDetector(RuleBasedAnnotator):
     def __init__(
         self,
         output_label: str,
+        rules: Optional[List[NegationDetectorRule]] = None,
         proc_id: Optional[str] = None,
     ):
         """Instantiate the negation detector
@@ -52,13 +53,20 @@ class NegationDetector(RuleBasedAnnotator):
         ----------
         output_label:
             The output label of the created annotations
+        rules:
+            The set of rules to use when detecting negation. If none provided,
+            the rules in "negation_detector_default_rules.yml" will be used
         proc_id:
             Identifier of the detector
         """
         self.output_label = output_label
-        self.rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
 
-        config = dict()
+        if rules is None:
+            rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
+        assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
+        self.rules = rules
+
+        config = dict(output_label=output_label, rules=rules)
         self._description = OperationDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )
@@ -100,14 +108,13 @@ class NegationDetector(RuleBasedAnnotator):
         Returns
         -------
         List[NegationDetectorRule]
-            List of all the rules in `path_to_rules`
+            List of all the rules in `path_to_rules`,
+            can be used to init a `NegationDetector`
         """
 
         with open(path_to_rules, mode="r") as f:
             rules_data = yaml.safe_load(f)
         rules = [NegationDetectorRule(**d) for d in rules_data]
-        if len(set(r.id for r in rules)) < len(rules):
-            raise Exception(f"Found duplicate rule ids in {path_to_rules}")
         return rules
 
 

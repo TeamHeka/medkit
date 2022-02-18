@@ -1,6 +1,6 @@
 from medkit.core import Origin
 from medkit.core.text import Segment, Span
-from medkit.text.context.negation_detector import NegationDetector
+from medkit.text.context.negation_detector import NegationDetector, NegationDetectorRule
 
 
 def _get_syntagma_segments(syntama_texts):
@@ -13,6 +13,71 @@ def _get_syntagma_segments(syntama_texts):
         )
         for text in syntama_texts
     ]
+
+
+def test_single_rule():
+    syntagmas = _get_syntagma_segments(["No sign of covid", "Patient has asthma"])
+
+    rule = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b")
+    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector.process(syntagmas)
+
+    # 1st syntagma has negation
+    assert len(syntagmas[0].attrs) == 1
+    attr_1 = syntagmas[0].attrs[0]
+    assert attr_1.label == "negation"
+    assert attr_1.value is True
+    assert attr_1.metadata["rule_id"] == "id_neg_no"
+
+    # 2d syntagma has no negation
+    assert len(syntagmas[1].attrs) == 1
+    attr_2 = syntagmas[1].attrs[0]
+    assert attr_2.label == "negation"
+    assert attr_2.value is False
+    assert attr_2.metadata is None
+
+
+def test_multiple_rules():
+    syntagmas = _get_syntagma_segments(["No sign of covid", "Diabetes is discarded"])
+
+    rule_1 = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b")
+    rule_2 = NegationDetectorRule(id="id_neg_discard", regexp=r"\bdiscard(s|ed)?\b")
+    detector = NegationDetector(output_label="negation", rules=[rule_1, rule_2])
+    detector.process(syntagmas)
+
+    # 1st syntagma has negation, matched by 1st rule
+    assert len(syntagmas[0].attrs) == 1
+    attr_1 = syntagmas[0].attrs[0]
+    assert attr_1.value is True
+    assert attr_1.metadata["rule_id"] == "id_neg_no"
+
+    # 2d syntagma also has negation, matched by 2d rule
+    assert len(syntagmas[1].attrs) == 1
+    attr_2 = syntagmas[1].attrs[0]
+    assert attr_2.value is True
+    assert attr_2.metadata["rule_id"] == "id_neg_discard"
+
+
+def test_exclusions():
+    syntagmas = _get_syntagma_segments(
+        ["Diabetes is discarded", "Results have not discarded covid"]
+    )
+
+    rule = NegationDetectorRule(
+        id="id_neg_discard",
+        regexp=r"\bdiscard(s|ed)?\b",
+        exclusion_regexps=[r"\bnot\s*\bdiscard"],
+    )
+    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector.process(syntagmas)
+
+    # 1st syntagma has negation
+    attr_1 = syntagmas[0].attrs[0]
+    assert attr_1.value is True
+
+    # 2d syntagma doesn't have negation because of exclusion
+    attr_2 = syntagmas[1].attrs[0]
+    assert attr_2.value is False
 
 
 # fmt: off
@@ -101,7 +166,7 @@ _TEST_DATA = [
 # fmt: on
 
 
-def test_negation_detector():
+def test_default_rules():
     syntagma_texts = [d[0] for d in _TEST_DATA]
     syntagmas = _get_syntagma_segments(syntagma_texts)
 
