@@ -126,7 +126,7 @@ class SectionTokenizer:
         for index, section in enumerate(match):
             name = new_sections.get(index, section[0])
             if index != len(match) - 1:
-                ranges = [(section[1], match[index+1][1])]
+                ranges = [(section[1], match[index + 1][1])]
             else:
                 ranges = [(section[1], len(input_ann.text))]
 

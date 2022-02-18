@@ -95,12 +95,14 @@ class TextDocument(Document):
 
         Returns
         -------
-        Dict[str, Attribute]
+        Dict[str, List[Attribute]]
             A dictionary where key correspond to the Attribute label and
-            where value is the Attribute instance.
+            where value is a list of Attribute instance having this label.
         """
         res = dict()
-        for attr_id in self.attributes.get(ann_id):
+        for attr_id in self.attributes.get(ann_id, []):
             attribute = self.get_annotation_by_id(attr_id)
-            res[attribute.label] = attribute
+            if attribute.label not in res.keys():
+                res[attribute.label] = []
+            res[attribute.label].append(attribute)
         return res

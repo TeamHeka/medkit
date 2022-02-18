@@ -41,4 +41,4 @@ def test_get_attributes_by_annotation(init_data):
     doc.add_annotation(attribute)
     ent1_attributes = doc.get_attributes_by_annotation(ent1.id)
     assert attribute.label in ent1_attributes.keys()
-    assert ent1_attributes[attribute.label] is attribute
+    assert ent1_attributes[attribute.label][0] is attribute
