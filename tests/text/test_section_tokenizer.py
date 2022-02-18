@@ -19,36 +19,33 @@ TEST_CONFIG = [
             ([Span(start=3843, end=3916)], "antecedent"),
             ([Span(start=3916, end=6668)], "antecedent"),
             ([Span(start=6668, end=9094)], "conclusion"),
-        ]
+        ],
     ),
-    (
-        "eds/clean/cas2",
-        [
-            ([Span(start=0, end=6671)], "head")
-        ]
-    ),
+    ("eds/clean/cas2", [([Span(start=0, end=6671)], "head")]),
     (
         "eds/clean/cas3",
         [
             ([Span(start=0, end=315)], "head"),
-            ([Span(start=315, end=369)], "examen_clinique")
-        ]
-    )
+            ([Span(start=315, end=369)], "examen_clinique"),
+        ],
+    ),
 ]
 
 
-@pytest.mark.parametrize(
-    "filepath,expected_sections", TEST_CONFIG
-)
+@pytest.mark.parametrize("filepath,expected_sections", TEST_CONFIG)
 def test_annotate_document(filepath, expected_sections):
     doc = data_utils.get_text_document(filepath)
     section_tokenizer = SectionTokenizer.get_example()
-    #section_tokenizer = SectionTokenizer(input_label="RAW_TEXT")
-    raw_text = TextBoundAnnotation(ann_id='ann_id',
-        origin_id="", label="CLEAN_TEXT", spans=[Span(0, len(doc.text))], text=doc.text
+    # section_tokenizer = SectionTokenizer(input_label="RAW_TEXT")
+    raw_text = TextBoundAnnotation(
+        ann_id="ann_id",
+        origin_id="",
+        label="CLEAN_TEXT",
+        spans=[Span(0, len(doc.text))],
+        text=doc.text,
     )
     doc.add_annotation(raw_text)
-    assert doc.segments.get("CLEAN_TEXT") == ['ann_id']
+    assert doc.segments.get("CLEAN_TEXT") == ["ann_id"]
     section_tokenizer.annotate_document(doc)
     section_ids = doc.segments.get("SECTION")
     assert len(section_ids) != 0

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["SectionTokenizer"]
+__all__ = ["SectionModificationRule", "SectionTokenizer"]
 
 import dataclasses
 import pathlib
