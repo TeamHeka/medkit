@@ -1,5 +1,6 @@
 import uuid
 
+from medkit.core import Origin
 from medkit.core.text.annotation import TextBoundAnnotation
 from medkit.core.text.span import Span
 from tests.data_utils import get_text_document
@@ -8,7 +9,7 @@ from tests.data_utils import get_text_document
 def test_snippet():
     doc = get_text_document("doc1")
     entity = TextBoundAnnotation(
-        origin_id=uuid.uuid1(),
+        origin=Origin(processing_id=uuid.uuid1()),
         label="disease",
         spans=[Span(739, 755)],
         text="neurofibromatose",

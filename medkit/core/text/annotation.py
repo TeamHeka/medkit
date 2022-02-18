@@ -12,15 +12,14 @@ if typing.TYPE_CHECKING:
 
 
 class TextBoundAnnotation(Annotation):
-    def __init__(self, origin_id, label, spans, text, ann_id=None, metadata=None):
+    def __init__(self, origin, label, spans, text, ann_id=None, metadata=None):
         """
         Initialize a medkit text-bound annotation
 
         Parameters
         ----------
-        origin_id: str
-            The id of the operation which creates this annotation
-            (i.e., ProcessingDescription.id)
+        origin: Origin
+            Description of how this annotation was generated
         label: str
             The label for this annotation (e.g., SENTENCE)
         spans: List[Span]
@@ -32,9 +31,7 @@ class TextBoundAnnotation(Annotation):
         metadata: dict[str, Any], Optional
             The metadata of the annotation
         """
-        super().__init__(
-            ann_id=ann_id, origin_id=origin_id, label=label, metadata=metadata
-        )
+        super().__init__(ann_id=ann_id, origin=origin, label=label, metadata=metadata)
         self.spans = spans
         self.text = text
 
@@ -68,15 +65,14 @@ class TextBoundAnnotation(Annotation):
 
 
 class Entity(TextBoundAnnotation):
-    def __init__(self, origin_id, label, spans, text, entity_id=None, metadata=None):
+    def __init__(self, origin, label, spans, text, entity_id=None, metadata=None):
         """
         Initialize a medkit text entity
 
         Parameters
         ----------
-        origin_id: str
-            The id of the operation which creates this entity
-            (i.e., ProcessingDescription.id)
+        origin: Origin
+            Description of how this entity annotation was generated
         label: str
             The entity label
         spans: List[Span]
@@ -88,21 +84,20 @@ class Entity(TextBoundAnnotation):
         metadata: dict[str, Any], Optional
             The metadata of the entity
         """
-        super().__init__(origin_id, label, spans, text, entity_id, metadata)
+        super().__init__(origin, label, spans, text, entity_id, metadata)
 
 
 class Attribute(Annotation):
     def __init__(
-        self, origin_id, label, target_id, value=None, attr_id=None, metadata=None
+        self, origin, label, target_id, value=None, attr_id=None, metadata=None
     ):
         """
         Initialize a medkit attribute
 
         Parameters
         ----------
-        origin_id: str
-            The id of the operation which creates this attribute
-            (i.e., ProcessingDescription.id)
+        origin: Origin
+            Description of how this attribute annotation was generated
         label: str
             The attribute label
         target_id: str
@@ -114,9 +109,7 @@ class Attribute(Annotation):
         metadata: Dict[str, Any], Optional
             The metadata of the attribute
         """
-        super().__init__(
-            ann_id=attr_id, origin_id=origin_id, label=label, metadata=metadata
-        )
+        super().__init__(ann_id=attr_id, origin=origin, label=label, metadata=metadata)
         self.target_id = target_id
         self.value = value
 
@@ -126,17 +119,14 @@ class Attribute(Annotation):
 
 
 class Relation(Annotation):
-    def __init__(
-        self, origin_id, label, source_id, target_id, rel_id=None, metadata=None
-    ):
+    def __init__(self, origin, label, source_id, target_id, rel_id=None, metadata=None):
         """
         Initialize the medkit relation
 
         Parameters
         ----------
-         origin_id: str
-            The id of the operation which creates this relation
-            (i.e., ProcessingDescription.id)
+        origin: Origin
+            Description of how this relation annotation was generated
         label: str
             The relation label
         source_id: str
@@ -148,9 +138,7 @@ class Relation(Annotation):
         metadata: Dict[str, Any], Optional
             The metadata of the relation
         """
-        super().__init__(
-            ann_id=rel_id, origin_id=origin_id, label=label, metadata=metadata
-        )
+        super().__init__(ann_id=rel_id, origin=origin, label=label, metadata=metadata)
         self.source_id = source_id
         self.target_id = target_id
 

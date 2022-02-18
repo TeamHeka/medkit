@@ -1,23 +1,25 @@
-__all__ = ["Annotation"]
+from __future__ import annotations
+
+__all__ = ["Annotation", "Origin"]
 
 import abc
+import dataclasses
 import uuid
 
-from typing import Dict
+from typing import Dict, List, Optional
 
 
 class Annotation(abc.ABC):
     def __init__(
-        self, origin_id: str, label: str, ann_id: str = None, metadata: Dict = None
+        self, origin: Origin, label: str, ann_id: str = None, metadata: Dict = None
     ):
         """
         Provide common initialization for annotation instances
 
         Parameters
         ----------
-        origin_id: str
-            The id of the operation which creates annotation
-            (i.e., ProcessingDescription.id)
+        origin: Origin
+            Description of how this annotation was generated
         label: str
             The annotation label
         ann_id: str, Optional
@@ -29,7 +31,7 @@ class Annotation(abc.ABC):
             self.id = ann_id
         else:
             self.id = str(uuid.uuid1())
-        self.origin_id = origin_id
+        self.origin = origin
         self.label = label
         self.metadata = metadata
 
@@ -43,3 +45,25 @@ class Annotation(abc.ABC):
     @abc.abstractmethod
     def __repr__(self):
         return f"{self.__class__.__qualname__} : id={self.id!r}, label={self.label!r}"
+
+
+@dataclasses.dataclass(frozen=True)
+class Origin:
+    """Description of how an annotation was generated
+
+    Parameters
+    ----------
+    processing_id:
+        Identifier of the `ProcessingDescription` describing
+        the processing module that generated the annotation.
+        Should never be None except for RAW_TEXT annotation.
+
+    ann_ids:
+        Identifier of the source annotations that were used
+        to generate the annotation. Typically there will
+        only be one source annotation but there might be none
+        or several.
+    """
+
+    processing_id: Optional[str] = None
+    ann_ids: List[str] = dataclasses.field(default_factory=lambda: [])
