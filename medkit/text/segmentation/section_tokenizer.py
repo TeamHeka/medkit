@@ -9,7 +9,7 @@ import yaml
 from flashtext import KeywordProcessor
 from typing import Dict, List, Literal, Tuple
 
-from medkit.core.document import Collection
+from medkit.core import Collection, Origin
 from medkit.core.processing import ProcessingDescription
 from medkit.core.text import Attribute, TextBoundAnnotation, TextDocument
 from medkit.core.text import span as span_utils
@@ -96,13 +96,15 @@ class SectionTokenizer:
             sections = self._extract_sections_and_spans(input_ann)
             for section, text, spans in sections:
                 output_ann = TextBoundAnnotation(
-                    origin_id=self.description.id,
+                    origin=Origin(
+                        processing_id=self.description.id, ann_ids=[input_ann.id]
+                    ),
                     label=self.output_label,
                     spans=spans,
                     text=text,
                 )
                 section_attribute = Attribute(
-                    origin_id=self.description.id,
+                    origin=Origin(processing_id=self.description.id),
                     label=self.output_label,
                     target_id=output_ann.id,
                     value=section,
