@@ -63,91 +63,158 @@ def _detect_negation(phrase):
     if len(re.findall(r"[a-z]", phrase_low)) == 0:
         return "aff"
 
-    # fmt: off
     # pas * d
-    if (
-        ((re.findall(r"(^|[^a-z])pas\s([a-z']*\s*){0,2}d", phrase_low) != []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z]*\s){0,2}doute", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}elimin[eé]", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}exclure", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}probl[eèé]me", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}soucis", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}objection", phrase_low) == []) & \
-            (re.findall(r"\sne reviens\s+pas", phrase_low) == [])) | \
-        # pas * pour
-        ((re.findall(r"(^|[^a-z])pas\s([a-z']*\s*){0,2}pour", phrase_low) != []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z]*\s){0,2}doute", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}pour\s+[eé]limine", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}pour\s+exclure", phrase_low) == [])) | \
-        # (ne|n') (l'|la|le)? * pas
-        ((re.findall(r"(^|[^a-z])n(e\s+|'\s*)(l[ae]\s+|l'\s*)?([a-z']*\s*){0,2}pas[^a-z]", phrase_low) != []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z]*\s){0,2}doute", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}elimin[eèé]", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}exclure", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}soucis", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}objection", phrase_low) == []) & \
-            (re.findall(r"\sne reviens\s+pas", phrase_low) == [])) | \
-        # sans
-        ((re.findall(r"(^|[^a-z])sans\s", phrase_low) != []) & \
-            (re.findall(r"(^|[^a-z])sans\s+doute", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])sans\s+elimine", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])sans\s+probl[eéè]me", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])sans\s+soucis", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])sans\s+objection", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])sans\s+difficult", phrase_low) == [])) | \
-        # aucun
-        ((re.findall(r"aucun", phrase_low) != []) & \
-            (re.findall(r"aucun\s+doute", phrase_low) == []) & \
-            (re.findall(r"aucun\s+probleme", phrase_low) == []) & \
-            (re.findall(r"aucune\s+objection", phrase_low) == [])) | \
-        # élimine
-        ((re.findall(r"(^|[^a-z])[eé]limine", phrase_low) != []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}elimine", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])sans\s*([a-z']*\s*){0,2}elimine", phrase_low) == [])) | \
-        # éliminant
-        ((re.findall(r"(^|[^a-z])[eé]liminant", phrase_low) != []) & \
-            (re.findall(r"(^|[^a-z])[eé]liminant\s*pas[^a-z]", phrase_low) == [])) | \
-        # infirme
-        ((re.findall(r"(^|[^a-z])infirm[eé]", phrase_low) != []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}infirmer", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])sans\s*([a-z']*\s*){0,2}infirmer", phrase_low) == [])) | \
-        # infirmant
-        ((re.findall(r"(^|[^a-z])infirmant", phrase_low) != []) & \
-            (re.findall(r"(^|[^a-z])infirmant\s*pas[^a-z]", phrase_low) == [])) | \
-        # exclu
-        ((re.findall(r"(^|[^a-z])exclu[e]?[s]?[^a-z]", phrase_low) != []) & \
-            (re.findall(r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}exclure", phrase_low) == []) & \
-            (re.findall(r"(^|[^a-z])sans\s*([a-z']*\s*){0,2}exclure", phrase_low) == [])) | \
-        # misc
-        (re.findall(r"(^|[^a-z])jamais\s[a-z]*\s*d", phrase_low) != []) | \
-
-        (re.findall(r"orient[eèé]\s+pas\s+vers", phrase_low) != []) | \
-
-        (re.findall(r"orientant\s+pas\s+vers", phrase_low) != []) | \
-
-        (re.findall(r"(^|[^a-z])ni\s", phrase_low) != []) | \
-
-        (re.findall(r":\s*non[^a-z]", phrase_low) != []) | \
-
-        (re.findall(r"^\s*non[^a-z]+$", phrase_low) != []) | \
-
-        (re.findall(r":\s*aucun", phrase_low) != []) | \
-
-        (re.findall(r":\s*exclu", phrase_low) != []) | \
-
-        (re.findall(r":\s*absen[ct]", phrase_low) != []) | \
-
-        (re.findall(r"absence\s+d", phrase_low) != []) | \
-
-        (re.findall(r"\snegati", phrase_low) != []) | \
-
-        ((re.findall(r"(^|[^a-z])normale?s?[^a-z]", phrase_low) != []) & \
-            (re.findall(r"pas\s+normale?s?\s", phrase_low) == [])) | \
-
-        ((re.findall(r"(^|[^a-z])normaux", phrase_low) != []) & \
-            (re.findall(r"pas\s+normaux", phrase_low) == []))
-    ):
+    regexp = r"(^|[^a-z])pas\s([a-z']*\s*){0,2}d"
+    exclusion_regexps = [
+        r"(^|[^a-z])pas\s*([a-z]*\s){0,2}doute",
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}elimin[eé]",
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}exclure",
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}probl[eèé]me",
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}soucis",
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}objection",
+        r"\sne reviens\s+pas",
+    ]
+    if _match(phrase_low, regexp, exclusion_regexps):
         return "neg"
-    else:
-        return "aff"
-    # fmt: on
+
+    # pas * pour
+    regexp = r"(^|[^a-z])pas\s([a-z']*\s*){0,2}pour"
+    exclusion_regexps = [
+        r"(^|[^a-z])pas\s*([a-z]*\s){0,2}doute",
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}pour\s+[eé]limine",
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}pour\s+exclure",
+    ]
+    if _match(phrase_low, regexp, exclusion_regexps):
+        return "neg"
+
+    # (ne|n') (l'|la|le)? * pas
+    regexp = r"(^|[^a-z])n(e\s+|'\s*)(l[ae]\s+|l'\s*)?([a-z']*\s*){0,2}pas[^a-z]"
+    exclusion_regexps = [
+        r"(^|[^a-z])pas\s*([a-z]*\s){0,2}doute",
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}elimin[eèé]",
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}exclure",
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}soucis",
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}objection",
+        r"\sne reviens\s+pas",
+    ]
+    if _match(phrase_low, regexp, exclusion_regexps):
+        return "neg"
+
+    # sans
+    regexp = r"(^|[^a-z])sans\s"
+    exclusion_regexps = [
+        r"(^|[^a-z])sans\s+doute",
+        r"(^|[^a-z])sans\s+elimine",
+        r"(^|[^a-z])sans\s+probl[eéè]me",
+        r"(^|[^a-z])sans\s+soucis",
+        r"(^|[^a-z])sans\s+objection",
+        r"(^|[^a-z])sans\s+difficult",
+    ]
+    if _match(phrase_low, regexp, exclusion_regexps):
+        return "neg"
+
+    # aucun
+    regexp = r"aucun"
+    exclusion_regexps = [
+        r"aucun\s+doute",
+        r"aucun\s+probleme",
+        r"aucune\s+objection",
+    ]
+    if _match(phrase_low, regexp, exclusion_regexps):
+        return "neg"
+
+    # élimine
+    regexp = r"(^|[^a-z])[eé]limine"
+    exclusion_regexps = [
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}elimine",
+        r"(^|[^a-z])sans\s*([a-z']*\s*){0,2}elimine",
+    ]
+    if _match(phrase_low, regexp, exclusion_regexps):
+        return "neg"
+
+    # éliminant
+    regexp = r"(^|[^a-z])[eé]liminant"
+    exclusion_regexps = [
+        r"(^|[^a-z])[eé]liminant\s*pas[^a-z]",
+    ]
+    if _match(phrase_low, regexp, exclusion_regexps):
+        return "neg"
+
+    # infirme
+    regexp = r"(^|[^a-z])infirm[eé]"
+    exclusion_regexps = [
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}infirmer",
+        r"(^|[^a-z])sans\s*([a-z']*\s*){0,2}infirmer",
+    ]
+    if _match(phrase_low, regexp, exclusion_regexps):
+        return "neg"
+
+    # infirmant
+    regexp = r"(^|[^a-z])infirmant"
+    exclusion_regexps = [
+        r"(^|[^a-z])infirmant\s*pas[^a-z]",
+    ]
+    if _match(phrase_low, regexp, exclusion_regexps):
+        return "neg"
+
+    # exclu
+    regexp = r"(^|[^a-z])exclu[e]?[s]?[^a-z]"
+    exclusion_regexps = [
+        r"(^|[^a-z])pas\s*([a-z']*\s*){0,2}exclure",
+        r"(^|[^a-z])sans\s*([a-z']*\s*){0,2}exclure",
+    ]
+    if _match(phrase_low, regexp, exclusion_regexps):
+        return "neg"
+
+    # misc
+    regexp = r"(^|[^a-z])jamais\s[a-z]*\s*d"
+    if _match(phrase_low, regexp, []):
+        return "neg"
+    regexp = r"orient[eèé]\s+pas\s+vers"
+    if _match(phrase_low, regexp, []):
+        return "neg"
+    regexp = r"orientant\s+pas\s+vers"
+    if _match(phrase_low, regexp, []):
+        return "neg"
+    regexp = r"(^|[^a-z])ni\s"
+    if _match(phrase_low, regexp, []):
+        return "neg"
+    regexp = r":\s*non[^a-z]"
+    if _match(phrase_low, regexp, []):
+        return "neg"
+    regexp = r"^\s*non[^a-z]+$"
+    if _match(phrase_low, regexp, []):
+        return "neg"
+    regexp = r":\s*aucun"
+    if _match(phrase_low, regexp, []):
+        return "neg"
+    regexp = r":\s*exclu"
+    if _match(phrase_low, regexp, []):
+        return "neg"
+    regexp = r":\s*absen[ct]"
+    if _match(phrase_low, regexp, []):
+        return "neg"
+    regexp = r"absence\s+d"
+    if _match(phrase_low, regexp, []):
+        return "neg"
+    regexp = r"\snegati"
+    if _match(phrase_low, regexp, []):
+        return "neg"
+
+    regexp = r"(^|[^a-z])normale?s?[^a-z]"
+    exclusion_regexps = [r"pas\s+normale?s?\s"]
+    if _match(phrase_low, regexp, exclusion_regexps):
+        return "neg"
+
+    regexp = r"(^|[^a-z])normaux"
+    exclusion_regexps = [r"pas\s+normaux"]
+    if _match(phrase_low, regexp, exclusion_regexps):
+        return "neg"
+
+    return "aff"
+
+
+def _match(phrase_low, regexp, exclusion_regexp):
+    return re.findall(regexp, phrase_low) != [] and not any(
+        re.findall(r, phrase_low) != [] for r in exclusion_regexp
+    )
