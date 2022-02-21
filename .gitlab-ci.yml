@@ -15,6 +15,5 @@ unit_tests:
     - conda activate medkit
   script:
     - echo "Executing unit tests..."
-    - pytest
+    - pytest -v -s
   interruptible: true
-
