@@ -84,10 +84,27 @@ class NegationDetector(RuleBasedAnnotator):
             List of segments to detect as being negated or not
         """
         for segment in segments:
-            neg, rule = _detect_negation(segment.text, self.rules)
-            is_negated = neg == "neg"
+            # skip empty annotations
+            if re.search(r"[a-z]", segment.text, flags=re.IGNORECASE) is None:
+                continue
+
+            is_negated = False
+            # try all rules until we have a match
+            for rule in self.rules:
+                is_negated = re.search(
+                    rule.regexp, segment.text, flags=re.IGNORECASE
+                ) is not None and all(
+                    re.search(p, segment.text, flags=re.IGNORECASE) is None
+                    for p in rule.exclusion_regexps
+                )
+                if is_negated:
+                    break
+
             attr = Attribute(
-                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
+                origin=Origin(
+                    operation_id=self.description.id,
+                    ann_ids=[segment.id],
+                ),
                 label=self.output_label,
                 value=is_negated,
                 metadata=dict(rule_id=rule.id) if is_negated else None,
@@ -116,21 +133,3 @@ class NegationDetector(RuleBasedAnnotator):
             rules_data = yaml.safe_load(f)
         rules = [NegationDetectorRule(**d) for d in rules_data]
         return rules
-
-
-def _detect_negation(phrase, rules):
-    phrase_low = phrase.lower()
-    if len(re.findall(r"[a-z]", phrase_low)) == 0:
-        return "aff", None
-
-    for rule in rules:
-        if _match(phrase_low, rule):
-            return "neg", rule
-
-    return "aff", None
-
-
-def _match(phrase_low, rule: NegationDetectorRule):
-    return re.findall(rule.regexp, phrase_low) != [] and not any(
-        re.findall(r, phrase_low) != [] for r in rule.exclusion_regexps
-    )
