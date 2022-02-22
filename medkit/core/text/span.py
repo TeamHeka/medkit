@@ -7,6 +7,7 @@ __all__ = [
     "insert",
     "move",
     "normalize_spans",
+    "concatenate",
 ]
 
 import dataclasses
@@ -50,6 +51,26 @@ class ModifiedSpan:
     replaced_spans: List[Span]
 
 
+def _spans_have_same_length_as_text(text, spans):
+    return len(text) == sum(sp.length for sp in spans)
+
+
+def _lists_have_same_dimension(list_1, list_2):
+    return len(list_1) == len(list_2)
+
+
+def _list_is_sorted(list_1):
+    return all(e <= next_e for e, next_e in zip(list_1, list_1[1:]))
+
+
+def _ranges_are_within_text(text, ranges):
+    return all((start <= len(text) and end <= len(text)) for start, end in ranges)
+
+
+def _positions_are_within_text(text, positions):
+    return all(position <= len(text) for position in positions)
+
+
 def replace(
     text: str,
     spans: List[Union[Span, ModifiedSpan]],
@@ -88,7 +109,16 @@ def replace(
     >>> print(text)
     Hi, my name is Jane Doe.
     """
-    assert len(ranges) == len(replacement_texts)
+    # validate params
+    assert _spans_have_same_length_as_text(
+        text, spans
+    ), "Total span length should be equal to text length"
+    assert _lists_have_same_dimension(
+        ranges, replacement_texts
+    ), "Ranges and replacement_texts should have the same dimension"
+    assert _ranges_are_within_text(text, ranges), "Ranges should be within of text"
+    assert _list_is_sorted(ranges), "Ranges should be sorted"
+
     if len(ranges) == 0:
         return text, spans
 
@@ -246,6 +276,13 @@ def remove(
     spans:
         The spans associated with the updated text
     """
+    # validate params
+    assert _spans_have_same_length_as_text(
+        text, spans
+    ), "Total span length should be equal to text length"
+    assert _ranges_are_within_text(text, ranges), "Ranges should be within of text"
+    assert _list_is_sorted(ranges), "Ranges should be sorted"
+
     if len(ranges) == 0:
         return text, spans
 
@@ -255,7 +292,6 @@ def remove(
         range_end += offset
         text = text[:range_start] + text[range_end:]
         offset -= range_end - range_start
-
     spans = _remove_in_spans(spans, ranges)
     return text, spans
 
@@ -289,6 +325,13 @@ def extract(
     spans:
         The spans associated with the extracted text
     """
+    # validate params
+    assert _spans_have_same_length_as_text(
+        text, spans
+    ), "Total span length should be equal to text length"
+    assert _ranges_are_within_text(text, ranges), "Ranges should be within of text"
+    assert _list_is_sorted(ranges), "Ranges should be sorted"
+
     if len(ranges) == 0:
         return "", []
 
@@ -310,7 +353,6 @@ def _extract_in_spans(spans, ranges):
     last_range_end = ranges[-1][1]
     total_length = sum(s.length for s in spans)
     ranges_to_remove.append((last_range_end, total_length))
-
     return _remove_in_spans(spans, ranges_to_remove)
 
 
@@ -351,8 +393,16 @@ def insert(
     >>> print(text)
     Hello everybody, my name is John Doe."
     """
+    # validate params
+    assert _spans_have_same_length_as_text(
+        text, spans
+    ), "Total span length should be equal to text length"
+    assert _lists_have_same_dimension(
+        positions, insertion_texts
+    ), "Positions and insertion_texts should have the same dimension"
+    assert _positions_are_within_text(text, positions)
+    assert _list_is_sorted(positions), "Positions should be sorted"
 
-    assert len(positions) == len(insertion_texts)
     if len(positions) == 0:
         return text, spans
 
@@ -494,3 +544,17 @@ def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
             all_spans_merged.append(span)
 
     return all_spans_merged
+
+
+def concatenate(
+    texts: List[str], all_spans: List[List[Union[Span, ModifiedSpan]]]
+) -> Tuple[str, List[Union[Span, ModifiedSpan]]]:
+    """Concatenate text and span objects"""
+
+    assert _lists_have_same_dimension(
+        texts, all_spans
+    ), "Text and all_spans should have the same dimension"
+    text = "".join(texts)
+    span = [sp for spans in all_spans for sp in spans]
+
+    return text, span
