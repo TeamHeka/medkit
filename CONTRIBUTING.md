@@ -12,7 +12,7 @@ The Medkit contributing process is as follows:
 - start working by adding commits to this branch. Try to have clear [commit messages](https://cbea.ms/git-commit/). Do not forget to also write tests in the `tests/`directory if applicable (cf [Tests](#tests)).
 - once you are done, check that your code follows our coding standards with `black`and `flake8` (cf [Linting and formatting](#linting-and-formatting)) and that all the tests pass with `pytest` (cf [Tests](#tests))
 - push your local branch on the Gitlab repository and open a [merge request](https://gitlab.inria.fr/heka/medkit/-/merge_requests) (MR). Unit tests and linting/formatting checks will automatically be run on the MR and prevent it from being merged if they fail.
-- wait for the review of the Medkit maintainers. They will make sure it aligns with the project goals and may ask for some changes.
+- once all CI checks passed, wait for the review of the Medkit maintainers. They will make sure it aligns with the project goals and may ask for some changes.
 
 Once this reviewing phase is over, the merge request will be integrated into `develop`, either with a merge, a squash & merge or a rebase, depending on the impact of the merge request and the state of its git history. The branch you worked on will then be deleted.
 
