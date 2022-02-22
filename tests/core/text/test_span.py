@@ -1,3 +1,4 @@
+import pytest
 from medkit.core.text.span import (
     Span,
     ModifiedSpan,
@@ -12,6 +13,7 @@ from medkit.core.text.span import (
     _insert_in_spans,
     _move_in_spans,
     normalize_spans,
+    concatenate,
 )
 
 
@@ -36,6 +38,10 @@ def test_remove():
     assert text == "my name is John"
     assert spans == [Span(7, 22)]
 
+    # test with a range larger than text length
+    with pytest.raises(AssertionError):
+        remove(text, spans, [(34, 35)])
+
 
 def test_extract():
     text = "Hello, my name is John Doe."
@@ -51,6 +57,10 @@ def test_insert():
     text, spans = insert(text, spans, [5], [" everybody"])
     assert text == "Hello everybody, my name is John Doe."
     assert spans == [Span(0, 5), ModifiedSpan(10, []), Span(5, 27)]
+
+    # test with a position larger than text length
+    with pytest.raises(AssertionError):
+        insert(text, spans, [120], [" everybody"])
 
 
 def test_move_before():
@@ -435,3 +445,17 @@ def test_normalize_spans():
     # merge contiguous
     spans = [ModifiedSpan(length=10, replaced_spans=[Span(10, 30)]), Span(30, 40)]
     assert normalize_spans(spans) == [Span(10, 40)]
+
+
+def test_concatenate():
+    texts = "The first"
+    spans = Span(0, 9)
+
+    with pytest.raises(AssertionError):
+        concatenate(texts, spans)
+
+    texts = ["The first", " and second."]
+    spans = [[Span(0, 3), Span(5, 10)], [Span(12, 23)]]
+    texts, spans = concatenate(texts, spans)
+    assert texts == "The first and second."
+    assert spans == [Span(0, 3), Span(5, 10), Span(12, 23)]
