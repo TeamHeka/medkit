@@ -1,6 +1,8 @@
+flashtext
 pyaml
 PyRuSH
 smart_open
+
 # dev dependencies
 black
 flake8
