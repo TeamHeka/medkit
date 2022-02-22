@@ -18,85 +18,85 @@ def _get_syntagma_segments(syntama_texts):
 # fmt: off
 _TEST_DATA = [
     # pas * d
-    ("pas de covid", True),
-    ("Pas de covid", True),  # case insensitive
+    ("pas de covid", True, "id_neg_pas_d"),
+    ("Pas de covid", True, "id_neg_pas_d"),  # case insensitive
     # pas * d, exclusions
-    ("pas du tout de covid", True),
-    ("pas de doute, le patient est atteint", False),
-    ("Covid pas éliminée", False),
-    ("Covid pas exclue", False),
-    ("pas de soucis lors du traitement", False),
-    ("pas d'objection au traitement", False),
-    ("Je ne reviens pas sur ce point", False),
+    ("pas du tout de covid", True, "id_neg_pas_d"),
+    ("pas de doute, le patient est atteint", False, None),
+    ("Covid pas éliminée", False, None),
+    ("Covid pas exclue", False, None),
+    ("pas de soucis lors du traitement", False, None),
+    ("pas d'objection au traitement", False, None),
+    ("Je ne reviens pas sur ce point", False, None),
     # pas * pour
-    ("pas suffisant pour un covid", True),
+    ("pas suffisant pour un covid", True, "id_neg_pas_pour"),
     # pas * pour, exclusions
-    ("pas suffisant pour éliminer un covid", True),  # FIXME: shouldn't be detected as negation, buggy regexp
-    ("pas suffisant pour exclure un covid", False),
+    ("pas suffisant pour éliminer un covid", True, "id_neg_elimine"),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("pas suffisant pour exclure un covid", False, None),
     # (ne|n') (l'|la|le * pas
-    ("L'examen ne montre pas cette lésion", True),
-    ("L'examen n'a pas montré cette lésion", True),
-    ("L'examen ne la montre pas", False),  # FIXME: should be detected as negation, buggy regexp
-    ("L'examen ne le montre pas", False),  # FIXME: should be detected as negation, buggy regexp
-    ("L'examen ne l'a pas montré", True),
+    ("L'examen ne montre pas cette lésion", True, "id_neg_n_l_pas"),
+    ("L'examen n'a pas montré cette lésion", True, "id_neg_n_l_pas"),
+    ("L'examen ne la montre pas", False, None),  # FIXME: should be detected as negation, buggy regexp
+    ("L'examen ne le montre pas", False, None),  # FIXME: should be detected as negation, buggy regexp
+    ("L'examen ne l'a pas montré", True, "id_neg_n_l_pas"),
     # (ne|n') (l'|la|le * pas, exclusions
-    ("L'examen ne laisse pas de doute sur la présence d'une lésion", False),
-    ("L'examen ne permet pas d'éliminer le diagnostic covid", True),  # FIXME: shouldn't be detected as negation, buggy regexp
-    ("L'examen ne permet pas d'exclure le diagnostic covid", False),
-    ("Le traitement n'entraîne pas de soucis", False),
-    ("La proposition de traitement n'entraîne pas d'objection'", False),
+    ("L'examen ne laisse pas de doute sur la présence d'une lésion", False, None),
+    ("L'examen ne permet pas d'éliminer le diagnostic covid", True, "id_neg_pas_d"),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("L'examen ne permet pas d'exclure le diagnostic covid", False, None),
+    ("Le traitement n'entraîne pas de soucis", False, None),
+    ("La proposition de traitement n'entraîne pas d'objection'", False, None),
     # sans
-    ("sans symptome", True),
+    ("sans symptome", True, "id_neg_sans"),
     # sans, exclusions
-    ("sans doute souffrant du covid", False),
-    ("sans éliminer le diagnostic covid", True),  # FIXME: shouldn't be detected as negation, buggy regexp
-    ("Traitement accepté sans problème", False),
-    ("Traitement accepté sans soucis", False),
-    ("Traitement accepté sans objection", False),
-    ("Traitement accepté sans difficulté", False),
+    ("sans doute souffrant du covid", False, None),
+    ("sans éliminer le diagnostic covid", True, "id_neg_sans"),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("Traitement accepté sans problème", False, None),
+    ("Traitement accepté sans soucis", False, None),
+    ("Traitement accepté sans objection", False, None),
+    ("Traitement accepté sans difficulté", False, None),
     # aucun
-    ("aucun symptome", True),
+    ("aucun symptome", True, "id_neg_aucun"),
     # aucun, exclusions
-    ("aucun doute sur la présence d'une lésion", False),
-    ("Le traitement n'entraine aucun problème", True),  # FIXME: shouldn't be detected as negation, buggy regexp
-    ("aucune objection au traitement", False),
+    ("aucun doute sur la présence d'une lésion", False, None),
+    ("Le traitement n'entraine aucun problème", True, "id_neg_aucun"),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("aucune objection au traitement", False, None),
     # élimine
-    ("Covid éliminé", False),  # FIXME: should be detected as negation, buggy regexp
+    ("Covid éliminé", False, None),  # FIXME: should be detected as negation, buggy regexp
     # élimine, exclusions
-    ("Covid pas éliminé", False),
-    ("Covid pas complètement éliminé", False),
-    ("sans éliminer la possibilité d'un covid", True),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("Covid pas éliminé", False, None),
+    ("Covid pas complètement éliminé", False, None),
+    ("sans éliminer la possibilité d'un covid", True, "id_neg_sans"),  # FIXME: shouldn't be detected as negation, buggy regexp
     # éliminant
-    ("éliminant le covid", True),
+    ("éliminant le covid", True, "id_neg_eliminant"),
     # éliminant, exclusions
-    ("n'éliminant pas le covid", True),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("n'éliminant pas le covid", True, "id_neg_pas_d"),  # FIXME: shouldn't be detected as negation, buggy regexp
     # infirme
-    ("Covid infirmé", True),
+    ("Covid infirmé", True, "id_neg_infirme"),
     # infirme, exclusions
-    ("Ne permet pas d'infirmer le covid", True),  # FIXME: shouldn't be detected as negation, buggy regexp
-    ("Ne permet pas d'infirmer totalement le covid", True),  # FIXME: shouldn't be detected as negation, buggy regexp
-    ("sans infirmer la possibilité d'un covid", True),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("Ne permet pas d'infirmer le covid", True, "id_neg_pas_d"),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("Ne permet pas d'infirmer totalement le covid", True, "id_neg_pas_d"),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("sans infirmer la possibilité d'un covid", True, "id_neg_sans"),  # FIXME: shouldn't be detected as negation, buggy regexp
     # infirmant
-    ("infirmant le covid", True),
+    ("infirmant le covid", True, "id_neg_infirmant"),
     # infirmant, exclusions
-    ("n'infirmant pas le covid", True),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("n'infirmant pas le covid", True, "id_neg_pas_d"),  # FIXME: shouldn't be detected as negation, buggy regexp
     # exclu
-    ("Le covid est exclu", False),  # FIXME: should be detected as negation, buggy regexp
-    ("La maladie est exclue", False),  # FIXME: should be detected as negation, buggy regexp
+    ("Le covid est exclu", False, None),  # FIXME: should be detected as negation, buggy regexp
+    ("La maladie est exclue", False, None),  # FIXME: should be detected as negation, buggy regexp
     # exclu, exclusions
-    ("Il ne faut pas exclure le covid", False),
-    ("sans exclure le covid", True),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("Il ne faut pas exclure le covid", False, None),
+    ("sans exclure le covid", True, "id_neg_sans"),  # FIXME: shouldn't be detected as negation, buggy regexp
     # misc
-    ("Jamais de covid", True),
-    ("Orientant pas vers un covid", True),
-    ("Ni covid ni trouble respiration", True),
-    ("Covid: non", False),  # FIXME: should be detected as negation, buggy regexp
-    ("Covid: aucun", True),
-    ("Covid: exclu", True),
-    ("Lésions: absentes", True),
-    ("Covid: négatif", False),  # FIXME: should be detected as negation, buggy regexp
-    ("Glycémie: normale", False),  # FIXME: should be detected as negation, buggy regexp
-    ("Glycémie: pas normale", False),
+    ("Jamais de covid", True, "id_neg_jamais"),
+    ("Orientant pas vers un covid", True, "id_neg_orientant_pas_vers"),
+    ("Ni covid ni trouble respiration", True, "id_neg_ni"),
+    ("Covid: non", False, None),  # FIXME: should be detected as negation, buggy regexp
+    ("Covid: aucun", True, "id_neg_aucun"),  # FIXME: not matched by expected rule
+    ("Covid: exclu", True, "id_neg_column_exclu"),
+    ("Lésions: absentes", True, "id_neg_column_absen"),
+    ("Covid: négatif", False, None),  # FIXME: should be detected as negation, buggy regexp
+    ("Glycémie: normale", False, None),  # FIXME: should be detected as negation, buggy regexp
+    ("Glycémie: pas normale", False, None),
 ]
 # fmt: on
 
@@ -109,9 +109,23 @@ def test_negation_detector():
     detector.process(syntagmas)
 
     for i in range(len(_TEST_DATA)):
-        _, is_negated = _TEST_DATA[i]
+        _, is_negated, rule_id = _TEST_DATA[i]
         syntagma = syntagmas[i]
         assert len(syntagma.attrs) == 1
         attr = syntagma.attrs[0]
         assert attr.label == "negation"
-        assert attr.value == is_negated
+
+        if is_negated:
+            assert attr.value is True, (
+                f"Syntagma '{syntagma.text}' should have been matched by '{rule_id}' "
+                "but wasn't"
+            )
+            assert attr.metadata["rule_id"] == rule_id, (
+                f"Syntagma '{syntagma.text}' should have been matched by '{rule_id}' "
+                f"but was matched by '{attr.metadata['rule_id']}' instead"
+            )
+        else:
+            assert attr.value is False, (
+                f"Syntagma '{syntagma.text}' was matched by "
+                f"'{attr.metadata['rule_id']}' but shouldn't have been"
+            )

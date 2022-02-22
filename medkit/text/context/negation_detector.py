@@ -69,11 +69,13 @@ class NegationDetector(RuleBasedAnnotator):
             List of segments to detect as being negated or not
         """
         for segment in segments:
-            neg = _detect_negation(segment.text)
+            neg, rule = _detect_negation(segment.text)
+            is_negated = neg == "neg"
             attr = Attribute(
                 origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
                 label=self.output_label,
-                value=neg == "neg",
+                value=is_negated,
+                metadata=dict(rule_id=rule.id) if is_negated else None,
             )
             segment.attrs.append(attr)
 
@@ -81,7 +83,7 @@ class NegationDetector(RuleBasedAnnotator):
 def _detect_negation(phrase):
     phrase_low = phrase.lower()
     if len(re.findall(r"[a-z]", phrase_low)) == 0:
-        return "aff"
+        return "aff", None
 
     # pas * d
     rule = NegationDetectorRule(
@@ -98,7 +100,7 @@ def _detect_negation(phrase):
         ],
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
     # pas * pour
     rule = NegationDetectorRule(
@@ -111,7 +113,7 @@ def _detect_negation(phrase):
         ],
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
     # (ne|n') (l'|la|le)? * pas
     rule = NegationDetectorRule(
@@ -127,7 +129,7 @@ def _detect_negation(phrase):
         ],
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
     # sans
     rule = NegationDetectorRule(
@@ -143,7 +145,7 @@ def _detect_negation(phrase):
         ],
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
     # aucun
     rule = NegationDetectorRule(
@@ -156,7 +158,7 @@ def _detect_negation(phrase):
         ],
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
     # élimine
     rule = NegationDetectorRule(
@@ -168,7 +170,7 @@ def _detect_negation(phrase):
         ],
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
     # éliminant
     rule = NegationDetectorRule(
@@ -179,7 +181,7 @@ def _detect_negation(phrase):
         ],
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
     # infirme
     rule = NegationDetectorRule(
@@ -191,7 +193,7 @@ def _detect_negation(phrase):
         ],
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
     # infirmant
     rule = NegationDetectorRule(
@@ -202,7 +204,7 @@ def _detect_negation(phrase):
         ],
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
     # exclu
     rule = NegationDetectorRule(
@@ -214,48 +216,48 @@ def _detect_negation(phrase):
         ],
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
     # misc
     rule = NegationDetectorRule(
         id="id_neg_jamais", regexp=r"(^|[^a-z])jamais\s[a-z]*\s*d"
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
     rule = NegationDetectorRule(
         id="id_neg_oriente_pas_vers", regexp=r"orient[eèé]\s+pas\s+vers"
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
     rule = NegationDetectorRule(
         id="id_neg_orientant_pas_vers", regexp=r"orientant\s+pas\s+vers"
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
     rule = NegationDetectorRule(id="id_neg_ni", regexp=r"(^|[^a-z])ni\s")
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
     rule = NegationDetectorRule(id="id_neg_column_non", regexp=r":\s*non[^a-z]")
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
     rule = NegationDetectorRule(id="id_neg_non", regexp=r"^\s*non[^a-z]+$")
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
     rule = NegationDetectorRule(id="id_neg_column_aucun", regexp=r":\s*aucun")
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
     rule = NegationDetectorRule(id="id_neg_column_exclu", regexp=r":\s*exclu")
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
     rule = NegationDetectorRule(id="id_neg_column_absen", regexp=r":\s*absen[ct]")
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
     rule = NegationDetectorRule(id="id_neg_absence", regexp=r"absence\s+d")
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
     rule = NegationDetectorRule(id="id_neg_negati", regexp=r"\snegati")
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
     rule = NegationDetectorRule(
         id="id_neg_normal",
@@ -263,7 +265,7 @@ def _detect_negation(phrase):
         exclusion_regexps=[r"pas\s+normale?s?\s"],
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
     rule = NegationDetectorRule(
         id="id_neg_normaux",
@@ -271,9 +273,9 @@ def _detect_negation(phrase):
         exclusion_regexps=[r"pas\s+normaux"],
     )
     if _match(phrase_low, rule):
-        return "neg"
+        return "neg", rule
 
-    return "aff"
+    return "aff", None
 
 
 def _match(phrase_low, rule: NegationDetectorRule):
