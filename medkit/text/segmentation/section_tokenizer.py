@@ -7,7 +7,7 @@ import pathlib
 import yaml
 
 from flashtext import KeywordProcessor
-from typing import Dict, Generator, List, Literal, Tuple
+from typing import Dict, List, Literal, Tuple
 
 from medkit.core import Collection, Origin
 from medkit.core.processing import ProcessingDescription
@@ -139,7 +139,7 @@ class SectionTokenizer:
             yield name, text, spans
 
     def _get_sections_to_rename(self, match: List[Tuple]):
-        match_type = list(zip(*zip(match)))[0]
+        match_type = [m[0] for m in match]
         map_index_new_name = {}
         list_to_process = ()
         for rule in self.section_rules:
@@ -179,7 +179,7 @@ class SectionTokenizer:
     @staticmethod
     def load_section_definition(
         filepath,
-    ) -> Tuple[Dict[str, List[str]], Generator[SectionModificationRule]]:
+    ) -> Tuple[Dict[str, List[str]], Tuple[SectionModificationRule]]:
         """
         Load the sections definition stored in a yml file
 
@@ -190,7 +190,7 @@ class SectionTokenizer:
 
         Returns
         -------
-        Tuple[Dict[str, List[str]], Generator[SectionModificationRule]]
+        Tuple[Dict[str, List[str]], Tuple[SectionModificationRule]]
             Tuple containing:
             - the dictionary where key is the section name and value is the list of all
             equivalent strings.
@@ -202,6 +202,8 @@ class SectionTokenizer:
             config = yaml.safe_load(f)
 
         section_dict = config["sections"]
-        section_rules = (SectionModificationRule(**rule) for rule in config["rules"])
+        section_rules = tuple(
+            SectionModificationRule(**rule) for rule in config["rules"]
+        )
 
         return section_dict, section_rules
