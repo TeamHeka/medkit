@@ -3,17 +3,30 @@ workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_COMMIT_BRANCH != "develop"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
 
-unit_tests:
-  stage: test
-  image: continuumio/anaconda3
-  before_script:
-    - conda env create -f environment.yml
-    - conda init bash
-    - source ~/.bashrc
-    - conda activate medkit
+image: continuumio/anaconda3
+
+before_script:
+  - conda env create -f environment.yml
+  - conda init bash
+  - source ~/.bashrc
+  - conda activate medkit
+
+stages:
+  - Static Analysis
+  - Unit Tests
+
+linting:
+  stage: Static Analysis
+  script:
+    - echo "Executing linting..."
+    - flake8 .
+    - black --check .
+
+pytest:
+  stage: Unit Tests
   script:
     - echo "Executing unit tests..."
-    - pytest
+    - pytest -v -s
   interruptible: true
-
