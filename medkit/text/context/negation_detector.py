@@ -66,6 +66,19 @@ class NegationDetector(RuleBasedAnnotator):
         assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
         self.rules = rules
 
+        # pre-compile patterns
+        self._non_empty_text_pattern = re.compile(r"[a-z]", flags=re.IGNORECASE)
+        self._patterns_by_rule_id = {
+            rule.id: re.compile(rule.regexp, flags=re.IGNORECASE) for rule in self.rules
+        }
+        # TODO: join all regexs in one pattern with "|"?
+        self._exclusion_patterns_by_rule_id = {
+            rule.id: [
+                re.compile(r, flags=re.IGNORECASE) for r in rule.exclusion_regexps
+            ]
+            for rule in self.rules
+        }
+
         config = dict(output_label=output_label, rules=rules)
         self._description = OperationDescription(
             id=proc_id, name=self.__class__.__name__, config=config
@@ -83,19 +96,20 @@ class NegationDetector(RuleBasedAnnotator):
         segments:
             List of segments to detect as being negated or not
         """
+
         for segment in segments:
             # skip empty annotations
-            if re.search(r"[a-z]", segment.text, flags=re.IGNORECASE) is None:
+            if self._non_empty_text_pattern.search(segment.text) is None:
                 continue
 
             is_negated = False
             # try all rules until we have a match
             for rule in self.rules:
-                is_negated = re.search(
-                    rule.regexp, segment.text, flags=re.IGNORECASE
-                ) is not None and all(
-                    re.search(p, segment.text, flags=re.IGNORECASE) is None
-                    for p in rule.exclusion_regexps
+                pattern = self._patterns_by_rule_id[rule.id]
+                exclusion_patterns = self._exclusion_patterns_by_rule_id[rule.id]
+
+                is_negated = pattern.search(segment.text) is not None and all(
+                    p.search(segment.text) is None for p in exclusion_patterns
                 )
                 if is_negated:
                     break
