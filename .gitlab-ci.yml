@@ -8,6 +8,8 @@ workflow:
 image: continuumio/anaconda3
 
 before_script:
+  - apt update
+  - apt install -y gcc g++
   - conda env create -f environment.yml
   - conda init bash
   - source ~/.bashrc
