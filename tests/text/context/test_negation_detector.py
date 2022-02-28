@@ -182,8 +182,8 @@ _TEST_DATA = [
     # (ne|n') (l'|la|le * pas
     ("L'examen ne montre pas cette lésion", True, "id_neg_n_l_pas"),
     ("L'examen n'a pas montré cette lésion", True, "id_neg_n_l_pas"),
-    ("L'examen ne la montre pas", False, None),  # FIXME: should be detected as negation, buggy regexp
-    ("L'examen ne le montre pas", False, None),  # FIXME: should be detected as negation, buggy regexp
+    ("L'examen ne la montre pas", True, "id_neg_n_l_pas"),
+    ("L'examen ne le montre pas", True, "id_neg_n_l_pas"),
     ("L'examen ne l'a pas montré", True, "id_neg_n_l_pas"),
     # (ne|n') (l'|la|le * pas, exclusions
     ("L'examen ne laisse pas de doute sur la présence d'une lésion", False, None),
@@ -227,8 +227,8 @@ _TEST_DATA = [
     # infirmant, exclusions
     ("n'infirmant pas le covid", True, "id_neg_pas_d"),  # FIXME: shouldn't be detected as negation, buggy regexp
     # exclu
-    ("Le covid est exclu", False, None),  # FIXME: should be detected as negation, buggy regexp
-    ("La maladie est exclue", False, None),  # FIXME: should be detected as negation, buggy regexp
+    ("Le covid est exclu", True, "id_neg_exclu"),
+    ("La maladie est exclue", True, "id_neg_exclu"),
     # exclu, exclusions
     ("Il ne faut pas exclure le covid", False, None),
     ("sans exclure le covid", True, "id_neg_sans"),  # FIXME: shouldn't be detected as negation, buggy regexp
@@ -236,12 +236,12 @@ _TEST_DATA = [
     ("Jamais de covid", True, "id_neg_jamais"),
     ("Orientant pas vers un covid", True, "id_neg_orientant_pas_vers"),
     ("Ni covid ni trouble respiration", True, "id_neg_ni"),
-    ("Covid: non", False, None),  # FIXME: should be detected as negation, buggy regexp
+    ("Covid: non", True, "id_neg_column_non"),
     ("Covid: aucun", True, "id_neg_aucun"),  # FIXME: not matched by expected rule
-    ("Covid: exclu", True, "id_neg_column_exclu"),
+    ("Covid: exclu", True, "id_neg_exclu"),  # FIXME: not matched by expected rule
     ("Lésions: absentes", True, "id_neg_column_absen"),
     ("Covid: négatif", True, "id_neg_negati"),
-    ("Glycémie: normale", False, None),  # FIXME: should be detected as negation, buggy regexp
+    ("Glycémie: normale", True, "id_neg_normal"),
     ("Glycémie: pas normale", False, None),
 ]
 # fmt: on
