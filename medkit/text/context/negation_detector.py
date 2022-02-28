@@ -26,11 +26,14 @@ class NegationDetectorRule:
         Optional exclusion patterns
     id:
         Unique identifier of the rule to store in the metadata of the entities
+    case_sensitive:
+        Wether to ignore case when running `regexp and `exclusion_regexs`
     """
 
     regexp: str
     exclusion_regexps: List[str] = dataclasses.field(default_factory=lambda: [])
     id: Optional[str] = None
+    case_sensitive: bool = False
 
 
 class NegationDetector(RuleBasedAnnotator):
@@ -69,13 +72,17 @@ class NegationDetector(RuleBasedAnnotator):
         # pre-compile patterns
         self._non_empty_text_pattern = re.compile(r"[a-z]", flags=re.IGNORECASE)
         self._patterns_by_rule_id = {
-            rule.id: re.compile(rule.regexp, flags=re.IGNORECASE) for rule in self.rules
+            rule.id: re.compile(
+                rule.regexp, flags=0 if rule.case_sensitive else re.IGNORECASE
+            )
+            for rule in self.rules
         }
         self._exclusion_patterns_by_rule_id = {
             rule.id: re.compile(
                 "|".join(
                     f"(?:{r})" for r in rule.exclusion_regexps
                 ),  # join all exclusions in one pattern
+                flags=0 if rule.case_sensitive else re.IGNORECASE,
             )
             for rule in self.rules
             if rule.exclusion_regexps

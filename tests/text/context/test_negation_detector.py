@@ -80,6 +80,55 @@ def test_exclusions():
     assert attr_2.value is False
 
 
+def test_case_sensitive_off():
+    syntagmas = _get_syntagma_segments(["No sign of covid", "no sign of covid"])
+
+    rule = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b", case_sensitive=False)
+    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector.process(syntagmas)
+
+    # both syntagmas have negation
+    attr_1 = syntagmas[0].attrs[0]
+    assert attr_1.value is True
+    attr_2 = syntagmas[1].attrs[0]
+    assert attr_2.value is True
+
+
+def test_case_sensitive_on():
+    syntagmas = _get_syntagma_segments(["No sign of covid", "no sign of covid"])
+
+    rule = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b", case_sensitive=True)
+    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector.process(syntagmas)
+
+    # only 2d syntagma has negation
+    attr_1 = syntagmas[0].attrs[0]
+    assert attr_1.value is False
+    attr_2 = syntagmas[1].attrs[0]
+    assert attr_2.value is True
+
+
+def test_case_sensitive_exclusions():
+    syntagmas = _get_syntagma_segments(["NOT DISCARDED: covid", "not discarded: covid"])
+
+    rule = NegationDetectorRule(
+        id="id_neg_discard",
+        regexp=r"\bdiscard(s|ed)?\b",
+        exclusion_regexps=[r"\bNOT DISCARDED:"],
+        case_sensitive=True,
+    )
+    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector.process(syntagmas)
+
+    # 1st syntagma doesn't have negation because of exclusion
+    attr_1 = syntagmas[0].attrs[0]
+    assert attr_1.value is False
+
+    # 2d syntagma has negation
+    attr_2 = syntagmas[1].attrs[0]
+    assert attr_2.value is True
+
+
 # fmt: off
 _TEST_DATA = [
     # pas * d
