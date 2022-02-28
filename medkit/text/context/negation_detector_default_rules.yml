@@ -42,11 +42,11 @@
 
 # aucun
 - id: "id_neg_aucun"
-  regexp: "aucun"
+  regexp: "(^|[^a-z])aucun"
   exclusion_regexps:
-    - 'aucun\s+doute'
-    - 'aucun\s+probleme'
-    - 'aucune\s+objection'
+    - '(^|[^a-z])aucun\s+doute'
+    - '(^|[^a-z])aucun\s+probleme'
+    - '(^|[^a-z])aucune\s+objection'
 
 # élimine
 - id: "id_neg_elimine"
@@ -86,10 +86,10 @@
   regexp: '(^|[^a-z])jamais\s[a-z]*\s*d'
 
 - id: "id_neg_oriente_pas_vers"
-  regexp: 'oriente\s+pas\s+vers'
+  regexp: '(^|[^a-z])oriente\s+pas\s+vers'
 
 - id: "id_neg_orientant_pas_vers"
-  regexp: 'orientant\s+pas\s+vers'
+  regexp: '(^|[^a-z])orientant\s+pas\s+vers'
 
 - id: "id_neg_ni"
   regexp: '(^|[^a-z])ni\s'
@@ -110,7 +110,7 @@
   regexp: ':\s*absen[ct]'
 
 - id: "id_neg_absence"
-  regexp: 'absence\s+d'
+  regexp: '(^|[^a-z])absence\s+d'
 
 - id: "id_neg_negati"
   regexp: '\snegati'
@@ -118,9 +118,9 @@
 - id: "id_neg_normal"
   regexp: "(^|[^a-z])normale?s?($|[^a-z])"
   exclusion_regexps:
-    - 'pas\s+normale?s?($|[^a-z])'
+    - '(^|[^a-z])pas\s+normale?s?($|[^a-z])'
 
 - id: "id_neg_normaux"
   regexp: "(^|[^a-z])normaux"
   exclusion_regexps:
-    - 'pas\s+normaux'
+    - '(^|[^a-z])pas\s+normaux'
