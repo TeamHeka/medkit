@@ -78,8 +78,8 @@
 - id: "id_neg_exclu"
   regexp: "(^|[^a-z])exclu[e]?[s]?[^a-z]"
   exclusion_regexps:
-    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}exclure'
-    - '(^|[^a-z])sans\s*([a-z'']*\s*){0,2}exclure'
+    - '(^|[^a-z])pas\s*([a-z'']*\s*){0,2}exclu[e]?[s]?'
+    - '(^|[^a-z])sans\s*([a-z'']*\s*){0,2}exclu[e]?[s]?'
 
 # misc
 - id: "id_neg_jamais"
@@ -118,7 +118,7 @@
 - id: "id_neg_normal"
   regexp: "(^|[^a-z])normale?s?[^a-z]"
   exclusion_regexps:
-    - 'pas\s+normale?s?\s'
+    - 'pas\s+normale?s?[^a-z]'
 
 - id: "id_neg_normaux"
   regexp: "(^|[^a-z])normaux"
