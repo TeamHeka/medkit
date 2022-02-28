@@ -215,23 +215,23 @@ _TEST_DATA = [
     # éliminant
     ("éliminant le covid", True, "id_neg_eliminant"),
     # éliminant, exclusions
-    ("n'éliminant pas le covid", True, "id_neg_n_l_pas"),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("n'éliminant pas le covid", False, None),
     # infirme
     ("Covid infirmé", True, "id_neg_infirme"),
     # infirme, exclusions
-    ("Ne permet pas d'infirmer le covid", True, "id_neg_pas_d"),  # FIXME: shouldn't be detected as negation, buggy regexp
-    ("Ne permet pas d'infirmer totalement le covid", True, "id_neg_pas_d"),  # FIXME: shouldn't be detected as negation, buggy regexp
-    ("sans infirmer la possibilité d'un covid", True, "id_neg_sans"),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("Ne permet pas d'infirmer le covid", False, None),
+    ("Ne permet pas d'infirmer totalement le covid", False, None),
+    ("sans infirmer la possibilité d'un covid", False, None),
     # infirmant
     ("infirmant le covid", True, "id_neg_infirmant"),
     # infirmant, exclusions
-    ("n'infirmant pas le covid", True, "id_neg_n_l_pas"),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("n'infirmant pas le covid", False, None),
     # exclu
     ("Le covid est exclu", True, "id_neg_exclu"),
     ("La maladie est exclue", True, "id_neg_exclu"),
     # exclu, exclusions
     ("Il ne faut pas exclure le covid", False, None),
-    ("sans exclure le covid", True, "id_neg_sans"),  # FIXME: shouldn't be detected as negation, buggy regexp
+    ("sans exclure le covid", False, None),
     # misc
     ("Jamais de covid", True, "id_neg_jamais"),
     ("Orientant pas vers un covid", True, "id_neg_orientant_pas_vers"),
