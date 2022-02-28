@@ -1,6 +1,7 @@
 flashtext
 pyaml
 smart_open
+Unidecode
 
 # optional dependencies
 quickumls

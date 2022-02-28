@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 from typing import List, Optional
 
+import unidecode
 import yaml
 
 from medkit.core import Origin, Attribute, OperationDescription, RuleBasedAnnotator
@@ -28,12 +29,26 @@ class NegationDetectorRule:
         Unique identifier of the rule to store in the metadata of the entities
     case_sensitive:
         Wether to ignore case when running `regexp and `exclusion_regexs`
+    unicode_sensitive:
+        Wether to replace all non-ASCII chars by the closest ASCII chars
+        on input text before runing `regexp and `exclusion_regexs`.
+        If True, then `regexp and `exclusion_regexs` shouldn't contain
+        non-ASCII chars because they would never be matched.
     """
 
     regexp: str
     exclusion_regexps: List[str] = dataclasses.field(default_factory=lambda: [])
     id: Optional[str] = None
     case_sensitive: bool = False
+    unicode_sensitive: bool = False
+
+    def __post_init__(self):
+        assert self.unicode_sensitive or (
+            self.regexp.isascii() and all(r.isascii() for r in self.exclusion_regexps)
+        ), (
+            "NegationDetectorRule regexps shouldn't contain non-ASCII chars when"
+            " unicode_sensitive is False"
+        )
 
 
 class NegationDetector(RuleBasedAnnotator):
@@ -87,6 +102,9 @@ class NegationDetector(RuleBasedAnnotator):
             for rule in self.rules
             if rule.exclusion_regexps
         }
+        self._has_non_unicode_sensitive_rule = any(
+            not r.unicode_sensitive for r in rules
+        )
 
         config = dict(output_label=output_label, rules=rules)
         self._description = OperationDescription(
@@ -111,15 +129,23 @@ class NegationDetector(RuleBasedAnnotator):
             if self._non_empty_text_pattern.search(segment.text) is None:
                 continue
 
-            is_negated = False
+            text_unicode = segment.text
+            text_ascii = (
+                unidecode.unidecode(text_unicode)
+                if self._has_non_unicode_sensitive_rule
+                else None
+            )
+
             # try all rules until we have a match
+            is_negated = False
             for rule in self.rules:
+                text = text_unicode if rule.unicode_sensitive else text_ascii
                 pattern = self._patterns_by_rule_id[rule.id]
-                if pattern.search(segment.text) is not None:
+                if pattern.search(text) is not None:
                     exclusion_pattern = self._exclusion_patterns_by_rule_id.get(rule.id)
                     if (
                         exclusion_pattern is None
-                        or exclusion_pattern.search(segment.text) is None
+                        or exclusion_pattern.search(text) is None
                     ):
                         is_negated = True
                         break
