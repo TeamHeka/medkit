@@ -57,8 +57,10 @@ def setup():
     )
 
     # download spacy models used by QuickUMLS
-    spacy.cli.download("en_core_web_sm")
-    spacy.cli.download("fr_core_news_sm")
+    if not spacy.util.is_package("en_core_web_sm"):
+        spacy.cli.download("en_core_web_sm")
+    if not spacy.util.is_package("fr_core_news_sm"):
+        spacy.cli.download("fr_core_news_sm")
 
     yield
 
