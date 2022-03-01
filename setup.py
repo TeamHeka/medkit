@@ -9,9 +9,10 @@ setup(
     packages=find_packages(include=["medkit", "medkit.*"]),
     package_data={"": ["*.yml", "*.tsv"]},
     python_requires=">=3.8",
-    install_requires=["flashtext", "pyaml", "PyRuSH", "smart_open"],
+    install_requires=["flashtext", "pyaml", "smart_open"],
     extras_require={
         "optional": [
+            "PyRuSH",
             "quickumls",
             "six",  # needed for quickumls, workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/pull/80
         ],

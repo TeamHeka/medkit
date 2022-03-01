@@ -1,11 +1,11 @@
 flashtext
 pyaml
-PyRuSH
 smart_open
 
 # optional dependencies
 quickumls
 six # needed for quickumls, workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/pull/80
+PyRuSH
 
 # dev dependencies
 black
