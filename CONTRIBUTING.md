@@ -36,6 +36,7 @@ To set up a local dev environment:
 - clone the Medkit repository locally:
   - SSH: `git clone git@gitlab.inria.fr:heka/medkit.git`
   - HTTPS: `git clone https://gitlab.inria.fr/heka/medkit`
+- install the `wheel` package with `pip install wheel` so that dependencies relying on wheels can be installed
 - enter the repository root dir (`cd medkit/`) and install the required dev dependencies: `pip install -r requirements.txt`
 - TODO: describe how to enable pre-commit hooks
 
