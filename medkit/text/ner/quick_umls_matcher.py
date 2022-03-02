@@ -10,7 +10,7 @@ from medkit.core import (
     Collection,
     Attribute,
     Origin,
-    ProcessingDescription,
+    OperationDescription,
     RuleBasedAnnotator,
 )
 from medkit.core.text import (
@@ -67,7 +67,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             lowercase=True,
         )
 
-    This mechanism makes it possible to store in the ProcessingDescription
+    This mechanism makes it possible to store in the OperationDescription
     how the used QuickUMLS was created, and to reinstantiate the same matcher
     on a different environment if a similar install is available.
     """
@@ -217,12 +217,12 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             accepted_semtypes=accepted_semtypes,
             attrs_to_copy=attrs_to_copy,
         )
-        self._description = ProcessingDescription(
+        self._description = OperationDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )
 
     @property
-    def description(self) -> ProcessingDescription:
+    def description(self) -> OperationDescription:
         return self._description
 
     def annotate(self, collection: Collection):
@@ -299,9 +299,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
                     score=match["similarity"],
                     sem_types=list(match["semtypes"]),
                 ),
-                origin=Origin(
-                    processing_id=self.description.id, ann_ids=[input_ann.id]
-                ),
+                origin=Origin(operation_id=self.description.id, ann_ids=[input_ann.id]),
             )
             attrs.append(norm_attr)
 
@@ -310,7 +308,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
                 text=text,
                 spans=spans,
                 attrs=attrs,
-                origin=Origin(processing_id=self.description.id, ann_ids=[input_ann.id])
+                origin=Origin(operation_id=self.description.id, ann_ids=[input_ann.id])
                 # TODO decide how to handle that in medkit
                 # **input_entity.attributes,
             )
@@ -318,5 +316,5 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             yield entity
 
     @classmethod
-    def from_description(cls, description: ProcessingDescription):
+    def from_description(cls, description: OperationDescription):
         return cls(proc_id=description.id, **description.config)

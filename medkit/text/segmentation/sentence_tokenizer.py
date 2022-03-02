@@ -6,7 +6,7 @@ import dataclasses
 import re
 from typing import Iterator, List, Tuple, TYPE_CHECKING
 
-from medkit.core import Origin, ProcessingDescription, RuleBasedAnnotator
+from medkit.core import Origin, OperationDescription, RuleBasedAnnotator
 from medkit.core.text import Segment, TextDocument, span_utils
 
 if TYPE_CHECKING:
@@ -26,7 +26,7 @@ class SentenceTokenizer(RuleBasedAnnotator):
     """Sentence segmentation annotator based on end punctuation rules"""
 
     @property
-    def description(self) -> ProcessingDescription:
+    def description(self) -> OperationDescription:
         return self._description
 
     def __init__(
@@ -70,7 +70,7 @@ class SentenceTokenizer(RuleBasedAnnotator):
             keep_punct=keep_punct,
         )
 
-        self._description = ProcessingDescription(
+        self._description = OperationDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )
 
@@ -132,7 +132,7 @@ class SentenceTokenizer(RuleBasedAnnotator):
             sentences = self._extract_sentences_and_spans(ann)
             for text, spans in sentences:
                 new_annotation = Segment(
-                    origin=Origin(processing_id=self.description.id, ann_ids=[ann.id]),
+                    origin=Origin(operation_id=self.description.id, ann_ids=[ann.id]),
                     label=self.output_label,
                     spans=spans,
                     text=text,
@@ -171,5 +171,5 @@ class SentenceTokenizer(RuleBasedAnnotator):
             yield text, spans
 
     @classmethod
-    def from_description(cls, description: ProcessingDescription):
+    def from_description(cls, description: OperationDescription):
         return cls(proc_id=description.id, **description.config)

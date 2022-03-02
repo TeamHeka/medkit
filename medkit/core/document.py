@@ -9,7 +9,7 @@ from medkit.core.id import generate_id
 
 if TYPE_CHECKING:
     from medkit.core.annotation import Annotation
-    from medkit.core.processing import ProcessingDescription
+    from medkit.core.processing import OperationDescription
 
 
 class Document(abc.ABC):
@@ -20,7 +20,7 @@ class Document(abc.ABC):
             self.id = generate_id()
         self.annotations: Dict[str, Annotation] = {}
         self.annotation_ids_by_label: Dict[str, List[str]] = {}
-        self.operations: Dict[str, ProcessingDescription] = {}
+        self.operations: Dict[str, OperationDescription] = {}
         self.metadata = metadata  # TODO: what is metadata format ?
 
     @abc.abstractmethod
@@ -62,8 +62,8 @@ class Document(abc.ABC):
             self.annotations[id] for id in self.annotation_ids_by_label.get(label, [])
         ]
 
-    def add_operation(self, processing_desc: ProcessingDescription):
-        self.operations[processing_desc.id] = processing_desc
+    def add_operation(self, operation_desc: OperationDescription):
+        self.operations[operation_desc.id] = operation_desc
 
 
 class Collection:

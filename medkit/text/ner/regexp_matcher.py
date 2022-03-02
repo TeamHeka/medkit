@@ -14,7 +14,7 @@ from medkit.core import (
     Collection,
     Attribute,
     Origin,
-    ProcessingDescription,
+    OperationDescription,
     RuleBasedAnnotator,
 )
 from medkit.core.text import (
@@ -128,12 +128,12 @@ class RegexpMatcher(RuleBasedAnnotator):
         self.attrs_to_copy = attrs_to_copy
 
         config = dict(input_label=input_label, rules=rules, attrs_to_copy=attrs_to_copy)
-        self._description = ProcessingDescription(
+        self._description = OperationDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )
 
     @property
-    def description(self) -> ProcessingDescription:
+    def description(self) -> OperationDescription:
         return self._description
 
     def annotate(self, collection: Collection):
@@ -225,7 +225,7 @@ class RegexpMatcher(RuleBasedAnnotator):
             for norm in rule.normalizations:
                 norm_attr = Attribute(
                     origin=Origin(
-                        processing_id=self.description.id, ann_ids=[input_ann.id]
+                        operation_id=self.description.id, ann_ids=[input_ann.id]
                     ),
                     label=norm.kb_name,
                     value=norm.id,
@@ -238,16 +238,14 @@ class RegexpMatcher(RuleBasedAnnotator):
                 text=text,
                 spans=spans,
                 attrs=attrs,
-                origin=Origin(
-                    processing_id=self.description.id, ann_ids=[input_ann.id]
-                ),
+                origin=Origin(operation_id=self.description.id, ann_ids=[input_ann.id]),
                 metadata=metadata,
             )
 
             yield entity
 
     @classmethod
-    def from_description(cls, description: ProcessingDescription):
+    def from_description(cls, description: OperationDescription):
         return cls(proc_id=description.id, **description.config)
 
     @staticmethod

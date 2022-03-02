@@ -9,7 +9,7 @@ import yaml
 
 from flashtext import KeywordProcessor
 
-from medkit.core import Collection, Origin, ProcessingDescription
+from medkit.core import Collection, Origin, OperationDescription
 from medkit.core.text import Segment, TextDocument, span_utils
 
 
@@ -31,7 +31,7 @@ class SectionTokenizer:
     """Section segmentation annotator based on keyword rules"""
 
     @property
-    def description(self) -> ProcessingDescription:
+    def description(self) -> OperationDescription:
         return self._description
 
     def __init__(
@@ -73,7 +73,7 @@ class SectionTokenizer:
             section_rules=section_rules,
         )
 
-        self._description = ProcessingDescription(
+        self._description = OperationDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )
 
@@ -97,7 +97,7 @@ class SectionTokenizer:
                 metadata = dict(name=section)
                 output_ann = Segment(
                     origin=Origin(
-                        processing_id=self.description.id, ann_ids=[input_ann.id]
+                        operation_id=self.description.id, ann_ids=[input_ann.id]
                     ),
                     label=self.output_label,
                     spans=spans,
@@ -171,7 +171,7 @@ class SectionTokenizer:
         return section_tokenizer
 
     @classmethod
-    def from_description(cls, description: ProcessingDescription):
+    def from_description(cls, description: OperationDescription):
         return cls(proc_id=description.id, **description.config)
 
     @staticmethod

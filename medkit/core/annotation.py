@@ -109,8 +109,8 @@ class Origin:
 
     Parameters
     ----------
-    processing_id:
-        Identifier of the `ProcessingDescription` describing
+    operation_id:
+        Identifier of the `OperationDescription` describing
         the processing module that generated the annotation.
         Should never be None except for RAW_TEXT annotation.
 
@@ -121,5 +121,5 @@ class Origin:
         or several.
     """
 
-    processing_id: Optional[str] = None
+    operation_id: Optional[str] = None
     ann_ids: List[str] = dataclasses.field(default_factory=lambda: [])

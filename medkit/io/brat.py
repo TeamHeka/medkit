@@ -9,7 +9,7 @@ from medkit.core import (
     Attribute,
     Origin,
     InputConverter,
-    ProcessingDescription,
+    OperationDescription,
 )
 from medkit.core.text import TextDocument, Entity, Relation
 import medkit.io._brat_utils as brat_utils
@@ -19,11 +19,11 @@ class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
 
     @property
-    def description(self) -> ProcessingDescription:
+    def description(self) -> OperationDescription:
         return self._description
 
     def __init__(self, config=None):
-        self._description = ProcessingDescription(
+        self._description = OperationDescription(
             name=self.__class__.__name__, config=config
         )
 
@@ -98,7 +98,7 @@ class BratInputConverter(InputConverter):
 
     def _convert_brat_entity(self, brat_entity: brat_utils.Entity) -> Entity:
         return Entity(
-            origin=Origin(processing_id=self.description.id),
+            origin=Origin(operation_id=self.description.id),
             label=brat_entity.type,
             spans=brat_entity.span,
             text=brat_entity.text,
@@ -109,7 +109,7 @@ class BratInputConverter(InputConverter):
         self, brat_relation: brat_utils.Relation, brat_ann: dict
     ) -> Relation:
         return Relation(
-            origin=Origin(processing_id=self.description.id),
+            origin=Origin(operation_id=self.description.id),
             label=brat_relation.type,
             source_id=brat_ann[brat_relation.subj].id,
             target_id=brat_ann[brat_relation.obj].id,
@@ -120,7 +120,7 @@ class BratInputConverter(InputConverter):
         self, brat_attribute: brat_utils.Attribute
     ) -> Attribute:
         return Attribute(
-            origin=Origin(processing_id=self.description.id),
+            origin=Origin(operation_id=self.description.id),
             label=brat_attribute.type,
             value=brat_attribute.value,
             metadata={"brat_id": brat_attribute.id},
