@@ -4,14 +4,10 @@ __all__ = ["SentenceTokenizer"]
 
 import dataclasses
 import re
-from typing import Iterator, List, Tuple, TYPE_CHECKING
+from typing import Iterator, List, Tuple
 
 from medkit.core import Origin, OperationDescription, RuleBasedAnnotator
 from medkit.core.text import Segment, TextDocument, span_utils
-
-if TYPE_CHECKING:
-    from medkit.core.document import Collection
-    from medkit.core.text.span import AnySpan
 
 
 @dataclasses.dataclass(frozen=True)
@@ -74,74 +70,27 @@ class SentenceTokenizer(RuleBasedAnnotator):
             id=proc_id, name=self.__class__.__name__, config=config
         )
 
-    def annotate(self, collection: Collection):
+    def process(self, segments: List[Segment]) -> List[Segment]:
         """
-        Process the collection of documents for extracting sentences.
-        Sentences are represented by annotations in each text document of the
-        collection.
+        Return sentences detected in `segments`.
 
         Parameters
         ----------
-        collection: Collection
-            Collection of documents
-        """
-        for doc in collection.documents:
-            if isinstance(doc, TextDocument):
-                self.annotate_document(doc)
-
-    def annotate_document(self, document: TextDocument):
-        """
-        Process a document for extracting sentences.
-        Sentences are represented by annotations in the text document
-
-        Parameters
-        ----------
-        document: TextDocument
-            The text document to process
+        segments:
+            List of segments into which to look for sentences
 
         Returns
         -------
-
+        List[Segments]:
+            Sentences segments found in `segments`
         """
-        # Retrieve annotations on which we want to apply sentence segmentation
-        # e.g., section
-        input_ann_ids = document.segments.get(self.input_label, None)
-        if input_ann_ids:
-            input_anns = [
-                document.get_annotation_by_id(ann_id) for ann_id in input_ann_ids
-            ]
-            output_anns = self._process_doc_annotations(input_anns)
-            for ann in output_anns:
-                # Add each sentence as annotation in doc
-                document.add_annotation(ann)
+        return [
+            sentence
+            for segment in segments
+            for sentence in self._find_sentences_in_segment(segment)
+        ]
 
-    def _process_doc_annotations(self, annotations: List[Segment]) -> Iterator[Segment]:
-        """
-        Create an annotation for each sentence detected in input annotations
-
-        Parameters
-        ----------
-        annotations: List[Segment]
-            List of input annotations to process
-        Yields
-        -------
-        Segment:
-            Created annotation representing a sentence
-        """
-        for ann in annotations:
-            sentences = self._extract_sentences_and_spans(ann)
-            for text, spans in sentences:
-                new_annotation = Segment(
-                    origin=Origin(operation_id=self.description.id, ann_ids=[ann.id]),
-                    label=self.output_label,
-                    spans=spans,
-                    text=text,
-                )
-                yield new_annotation
-
-    def _extract_sentences_and_spans(
-        self, text_annotation: Segment
-    ) -> Iterator[(str, List[AnySpan])]:
+    def _find_sentences_in_segment(self, segment: Segment) -> Iterator[Segment]:
         regex_rule = (
             "(?P<blanks> *)"  # Blanks at the beginning of the sentence
             + "(?P<sentence>.+?)"  # Sentence to detect
@@ -151,24 +100,28 @@ class SentenceTokenizer(RuleBasedAnnotator):
         )
         pattern = re.compile(regex_rule)
 
-        for match in pattern.finditer(text_annotation.text):
-            sentence = match.group("sentence")
-            if len(sentence.strip()) == 0:  # Ignore empty sentences
+        for match in pattern.finditer(segment.text):
+            # Ignore empty sentences
+            if len(match.group("sentence").strip()) == 0:
                 continue
+
             start = match.start("sentence")
-            if self.keep_punct:
-                sentence += match.group("punctuation")
-                end = match.end("punctuation")
-            else:
-                end = match.end("sentence")
+            end = match.end("punctuation") if self.keep_punct else match.end("sentence")
 
             # Extract raw span list from regex match ranges
             text, spans = span_utils.extract(
-                text=text_annotation.text,
-                spans=text_annotation.spans,
+                text=segment.text,
+                spans=segment.spans,
                 ranges=[(start, end)],
             )
-            yield text, spans
+
+            sentence = Segment(
+                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
+                label=self.output_label,
+                spans=spans,
+                text=text,
+            )
+            yield sentence
 
     @classmethod
     def from_description(cls, description: OperationDescription):

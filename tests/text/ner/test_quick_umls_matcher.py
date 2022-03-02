@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 import spacy.cli
 
-from medkit.core import Collection, Attribute, Origin
-from medkit.core.text import TextDocument, Span
+from medkit.core import Origin, Attribute
+from medkit.core.text import Segment, Span
 from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher
 
 # QuickUMLSMatcher is a wrapper around 3d-party quickumls.core.QuickUMLS,
@@ -68,23 +68,33 @@ def setup():
     QuickUMLSMatcher.clear_installs()
 
 
-def _find_entity_with_label(doc, label):
-    entity_ids = doc.entities.get(label, [])
-    if len(entity_ids) == 0:
+def _get_sentence_segment(text):
+    return Segment(
+        origin=Origin(),
+        label="sentence",
+        spans=[Span(0, len(text))],
+        text=text,
+    )
+
+
+def _find_entity(entities, label):
+    try:
+        return next(e for e in entities if e.label == label)
+    except StopIteration:
         return None
-    return doc.get_annotation_by_id(entity_ids[0])
 
 
 def test_single_match():
-    doc = TextDocument(text="The patient has asthma.")
+    sentence = _get_sentence_segment("The patient has asthma.")
 
     umls_matcher = QuickUMLSMatcher(
-        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="ENG"
+        input_label="sentence", version="2021AB", language="ENG"
     )
-    umls_matcher.annotate_document(doc)
+    entities = umls_matcher.process([sentence])
 
     # entity
-    entity = _find_entity_with_label(doc, "asthma")
+    assert len(entities) == 1
+    entity = _find_entity(entities, "asthma")
     assert entity is not None
     assert entity.text == "asthma"
     assert entity.spans == [Span(16, 22)]
@@ -99,16 +109,18 @@ def test_single_match():
     assert attr.metadata["sem_types"] == ["T047"]
 
 
-def test_multiple_matchs():
-    doc = TextDocument(text="The patient has asthma and type 1 diabetes.")
+def test_multiple_matches():
+    sentence = _get_sentence_segment("The patient has asthma and type 1 diabetes.")
 
     umls_matcher = QuickUMLSMatcher(
-        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="ENG"
+        input_label="sentence", version="2021AB", language="ENG"
     )
-    umls_matcher.annotate_document(doc)
+    entities = umls_matcher.process([sentence])
+
+    assert len(entities) == 2
 
     # 1st entity
-    entity = _find_entity_with_label(doc, "asthma")
+    entity = _find_entity(entities, "asthma")
     assert entity is not None
     assert entity.text == "asthma"
     assert entity.spans == [Span(16, 22)]
@@ -118,7 +130,7 @@ def test_multiple_matchs():
     assert attr.value == _ASTHMA_CUI
 
     # 2d entity
-    entity = _find_entity_with_label(doc, "type 1 diabetes")
+    entity = _find_entity(entities, "type 1 diabetes")
     assert entity is not None
     assert entity.text == "type 1 diabetes"
     assert entity.spans == [Span(27, 42)]
@@ -129,15 +141,15 @@ def test_multiple_matchs():
 
 
 def test_language():
-    doc = TextDocument(text="Le patient fait de l'Asthme.")
+    sentence = _get_sentence_segment("Le patient fait de l'Asthme.")
 
     umls_matcher = QuickUMLSMatcher(
-        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="FRE"
+        input_label="sentence", version="2021AB", language="FRE"
     )
-    umls_matcher.annotate_document(doc)
+    entities = umls_matcher.process([sentence])
 
     # entity
-    entity = _find_entity_with_label(doc, "Asthme")
+    entity = _find_entity(entities, "Asthme")
     assert entity is not None
     assert entity.text == "Asthme"
 
@@ -148,89 +160,66 @@ def test_language():
 
 
 def test_lowercase():
-    doc = TextDocument(text="Le patient fait de l'asthme.")
+    sentence = _get_sentence_segment("Le patient fait de l'asthme.")
 
     # no match without lowercase flag because concept is only
     # available with leading uppercase in french
     umls_matcher = QuickUMLSMatcher(
-        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="FRE"
+        input_label="sentence", version="2021AB", language="FRE"
     )
-    umls_matcher.annotate_document(doc)
-    assert _find_entity_with_label(doc, "asthme") is None
+    entities = umls_matcher.process([sentence])
+    assert _find_entity(entities, "asthme") is None
 
     # with lowercase flag, entity is found
     umls_matcher_lowercase = QuickUMLSMatcher(
-        input_label=TextDocument.RAW_TEXT_LABEL,
+        input_label="sentence",
         language="FRE",
         version="2021AB",
         lowercase=True,
     )
-    umls_matcher_lowercase.annotate_document(doc)
-    entity = _find_entity_with_label(doc, "asthme")
+    entities = umls_matcher_lowercase.process([sentence])
+    entity = _find_entity(entities, "asthme")
     assert entity is not None
     assert entity.text == "asthme"
 
 
 def test_ambiguous_match():
-    doc = TextDocument(text="The patient has diabetes.")
+    sentence = _get_sentence_segment("The patient has diabetes.")
 
     umls_matcher = QuickUMLSMatcher(
-        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="ENG"
+        input_label="sentence", version="2021AB", language="ENG"
     )
-    umls_matcher.annotate_document(doc)
+    entities = umls_matcher.process([sentence])
 
     # "diabetes" is a term of several CUIs but only 1 entity with
     # 1 normalization attribute is created
-    entity_ids = doc.entities.get("diabetes", [])
-    assert len(entity_ids) == 1
-    entity = doc.get_annotation_by_id(entity_ids[0])
+    assert len(entities) == 1
+    entity = entities[0]
     assert len(entity.attrs) == 1
 
 
 def test_attrs_to_copy():
-    doc = TextDocument(text="The patient has asthma.")
-    # add attribute to input ann
-    raw_ann = doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)[0]
-    raw_ann.attrs.append(Attribute(origin=Origin(), label="negation", value=True))
+    sentence = _get_sentence_segment("The patient has asthma.")
+    sentence.attrs.append(Attribute(origin=Origin(), label="negation", value=True))
 
     # attribute not copied
     umls_matcher = QuickUMLSMatcher(
-        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="ENG"
+        input_label="sentence", version="2021AB", language="ENG"
     )
-    umls_matcher.annotate_document(doc)
-    entity = _find_entity_with_label(doc, "asthma")
+    entities = umls_matcher.process([sentence])
+    entity = _find_entity(entities, "asthma")
     assert not any(a.label == "negation" for a in entity.attrs)
 
-    # rebuild doc
-    doc = TextDocument(text="The patient has asthma.")
-    # add attribute to input ann
-    raw_ann = doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)[0]
-    raw_ann.attrs.append(Attribute(origin=Origin(), label="negation", value=True))
-
     # attribute not copied
     umls_matcher = QuickUMLSMatcher(
-        input_label=TextDocument.RAW_TEXT_LABEL,
+        input_label="sentence",
         version="2021AB",
         language="ENG",
         attrs_to_copy=["negation"],
     )
-    umls_matcher.annotate_document(doc)
-    entity = _find_entity_with_label(doc, "asthma")
+    entities = umls_matcher.process([sentence])
+    entity = _find_entity(entities, "asthma")
     non_norm_attrs = [a for a in entity.attrs if a.label != "umls"]
     assert len(non_norm_attrs) == 1
     attr = non_norm_attrs[0]
     assert attr.label == "negation" and attr.value is True
-
-
-def test_annotate_collection():
-    doc = TextDocument(text="The patient has asthma.")
-    collection = Collection([doc])
-
-    umls_matcher = QuickUMLSMatcher(
-        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="ENG"
-    )
-    umls_matcher.annotate(collection)
-
-    entity = _find_entity_with_label(doc, "asthma")
-    assert entity is not None
-    assert len(entity.attrs) == 1

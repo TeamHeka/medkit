@@ -11,10 +11,11 @@ __all__ = [
 
 import abc
 import dataclasses
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple, Union
 
 from medkit.core.id import generate_id
 from medkit.core.document import Collection
+from medkit.core.annotation import Annotation
 
 
 class Operation(abc.ABC):
@@ -56,7 +57,28 @@ class OperationDescription:
 class ProcessingOperation(Operation):
     """Operation that processes annotations"""
 
-    pass
+    @abc.abstractmethod
+    def process(
+        self, **all_input_annotations: List[Annotation]
+    ) -> Union[None, List[Any], Tuple[List[Any], ...]]:
+        """Main processing function to implement
+
+        Params
+        ------
+        all_input_annotations:
+            One or several list of annotations to process
+            (according to the number of input the operation needs)
+
+        Returns
+        -------
+        Union[None, List[Any], Tuple[List[Any], ...]]
+            Tuple of list of all new annotations created by the operation.
+            Can be None if the operation does not create any new annotation
+            but rather modify input annotations in-place (for instance by
+            adding attributes).
+            If there is only one list of created annotations, it is possible
+            to return directly that list without wrapping it in a tuple.
+        """
 
 
 class RuleBasedAnnotator(ProcessingOperation):

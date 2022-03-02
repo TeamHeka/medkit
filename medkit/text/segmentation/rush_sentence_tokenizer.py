@@ -5,16 +5,12 @@ __all__ = ["RushSentenceTokenizer"]
 import dataclasses
 from pathlib import Path
 import re
-from typing import Iterator, List, Optional, Union, TYPE_CHECKING
+from typing import Iterator, List, Optional, Union
 
 from PyRuSH import RuSH
 
 from medkit.core import Origin, OperationDescription, RuleBasedAnnotator
 from medkit.core.text import Segment, TextDocument, span_utils
-
-if TYPE_CHECKING:
-    from medkit.core.document import Collection
-    from medkit.core.text.span import AnySpan
 
 
 @dataclasses.dataclass(frozen=True)
@@ -85,77 +81,32 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
             id=proc_id, name=self.__class__.__name__, config=config
         )
 
-    def annotate(self, collection: Collection):
+    def process(self, segments: List[Segment]) -> List[Segment]:
         """
-        Process the collection of documents for extracting sentences.
-        Sentences are represented by segment annotations
-        in each text document of the collection.
+        Return sentences detected in `segments`.
 
         Parameters
         ----------
-        collection: Collection
-            Collection of documents
+        segments:
+            List of segments into which to look for sentences
+
+        Returns
+        -------
+        List[Segments]:
+            Sentences segments found in `segments`
         """
-        for doc in collection.documents:
-            if isinstance(doc, TextDocument):
-                self.annotate_document(doc)
+        return [
+            sentence
+            for segment in segments
+            for sentence in self._find_sentences_in_segment(segment)
+        ]
 
-    def annotate_document(self, document: TextDocument):
-        """
-        Process a document for extracting sentences.
-        Sentences are represented by segment annotations
-        in each text document of the collection.
-
-        Parameters
-        ----------
-        document: TextDocument
-            The text document to process
-        """
-        # Retrieve annotations on which we want to apply sentence segmentation
-        # e.g., section
-        input_ann_ids = document.segments.get(self.input_label, None)
-        if input_ann_ids:
-            input_anns = [
-                document.get_annotation_by_id(ann_id) for ann_id in input_ann_ids
-            ]
-            output_anns = self._process_doc_annotations(input_anns)
-            for ann in output_anns:
-                # Add each sentence as annotation in doc
-                document.add_annotation(ann)
-
-    def _process_doc_annotations(self, annotations: List[Segment]) -> Iterator[Segment]:
-        """
-        Create an annotation for each sentence detected in input annotations
-
-        Parameters
-        ----------
-        annotations:
-            List of input annotations to process
-
-        Yields
-        ------
-        Segment:
-            Created annotation representing a token
-        """
-        for ann in annotations:
-            sentences = self._extract_sentences_and_spans(ann)
-            for text, spans in sentences:
-                new_annotation = Segment(
-                    origin=Origin(operation_id=self.description.id, ann_ids=[ann.id]),
-                    label=self.output_label,
-                    spans=spans,
-                    text=text,
-                )
-                yield new_annotation
-
-    def _extract_sentences_and_spans(
-        self, text_annotation: Segment
-    ) -> Iterator[(str, List[AnySpan])]:
-        rush_spans = self._rush.segToSentenceSpans(text_annotation.text)
+    def _find_sentences_in_segment(self, segment: Segment) -> Iterator[Segment]:
+        rush_spans = self._rush.segToSentenceSpans(segment.text)
         for rush_span in rush_spans:
             text, spans = span_utils.extract(
-                text=text_annotation.text,
-                spans=text_annotation.spans,
+                text=segment.text,
+                spans=segment.spans,
                 ranges=[(rush_span.begin, rush_span.end)],
             )
 
@@ -164,7 +115,13 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
                 replacements = " " * len(ranges)
                 text, spans = span_utils.replace(text, spans, ranges, replacements)
 
-            yield text, spans
+            sentence = Segment(
+                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
+                label=self.output_label,
+                spans=spans,
+                text=text,
+            )
+            yield sentence
 
     @classmethod
     def from_description(cls, description: OperationDescription):

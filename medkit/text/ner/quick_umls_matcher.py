@@ -7,18 +7,12 @@ from quickumls import QuickUMLS
 import quickumls.constants
 
 from medkit.core import (
-    Collection,
     Attribute,
     Origin,
     OperationDescription,
     RuleBasedAnnotator,
 )
-from medkit.core.text import (
-    Entity,
-    Segment,
-    TextDocument,
-    span_utils,
-)
+from medkit.core.text import Entity, Segment, span_utils
 
 
 # workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/issues/68
@@ -225,67 +219,37 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
     def description(self) -> OperationDescription:
         return self._description
 
-    def annotate(self, collection: Collection):
-        """Process a collection of documents for identifying entities
-
-        Entities and corresponding normalization attributes are added to the text document.
+    def process(self, segments: List[Segment]) -> List[Entity]:
+        """Return entities (with UMLS normalization attributes) for each match in `segments`
 
         Parameters
         ----------
-        collection:
-            The collection of documents to process. Only TextDocuments will be processed.
+        segments:
+            List of segments into which to look for matches
+
+        Returns
+        -------
+        entities: List[Entity]
+            Entities found in `segments` (with UMLS normalization attributes)
         """
-        for doc in collection.documents:
-            if isinstance(doc, TextDocument):
-                self.annotate_document(doc)
+        return [
+            entity
+            for segment in segments
+            for entity in self._find_matches_in_segment(segment)
+        ]
 
-    def annotate_document(self, doc: TextDocument):
-        """Process a document for identifying entities
-
-        Entities with normalization attributes are added to the text document.
-
-        Parameters
-        ----------
-        document:
-            The text document to process
-        """
-        input_ann_ids = doc.segments.get(self.input_label)
-        if input_ann_ids is None:
-            return
-        input_anns = [doc.get_annotation_by_id(id) for id in input_ann_ids]
-        output_anns = self._process_input_annotations(input_anns)
-        for output_ann in output_anns:
-            doc.add_annotation(output_ann)
-
-    def _process_input_annotations(self, input_anns: List[Segment]) -> Iterator[Entity]:
-        """Create a entity annotation with a normalization attribute
-        for each entity detected in `input_anns`
-
-        Parameters
-        ----------
-        input_anns:
-            List of input annotations to process
-
-        Yields
-        ------
-        Entity:
-            Created entity annotation
-        """
-        for input_ann in input_anns:
-            yield from self._match(input_ann)
-
-    def _match(self, input_ann: Segment) -> Iterator[Entity]:
-        matches = self._matcher.match(input_ann.text)
+    def _find_matches_in_segment(self, segment: Segment) -> Iterator[Entity]:
+        matches = self._matcher.match(segment.text)
         for match_candidates in matches:
             # only the best matching CUI (1st match candidate) is returned
             # TODO should we create a normalization attributes for each CUI instead?
             match = match_candidates[0]
 
             text, spans = span_utils.extract(
-                input_ann.text, input_ann.spans, [(match["start"], match["end"])]
+                segment.text, segment.spans, [(match["start"], match["end"])]
             )
 
-            attrs = [a for a in input_ann.attrs if a.label in self.attrs_to_copy]
+            attrs = [a for a in segment.attrs if a.label in self.attrs_to_copy]
 
             # TODO force now we consider the version, score and semtypes
             # to be just extra informational metadata
@@ -299,7 +263,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
                     score=match["similarity"],
                     sem_types=list(match["semtypes"]),
                 ),
-                origin=Origin(operation_id=self.description.id, ann_ids=[input_ann.id]),
+                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
             )
             attrs.append(norm_attr)
 
@@ -308,7 +272,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
                 text=text,
                 spans=spans,
                 attrs=attrs,
-                origin=Origin(operation_id=self.description.id, ann_ids=[input_ann.id])
+                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id])
                 # TODO decide how to handle that in medkit
                 # **input_entity.attributes,
             )
