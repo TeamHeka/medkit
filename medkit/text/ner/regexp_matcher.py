@@ -90,7 +90,6 @@ class RegexpMatcher(RuleBasedAnnotator):
 
     def __init__(
         self,
-        input_label,
         rules: Optional[List[RegexpMatcherRule]] = None,
         attrs_to_copy: Optional[List[str]] = None,
         proc_id: Optional[str] = None,
@@ -100,9 +99,6 @@ class RegexpMatcher(RuleBasedAnnotator):
 
         Parameters
         ----------
-        input_label:
-            The input label of the segment annotations to use as input.
-            NB: other type of annotations such as entities are not supported
         rules:
             The set of rules to use when matching entities. If none provided,
             the rules in "regexp_matcher_default_rules.yml" will be used
@@ -113,7 +109,6 @@ class RegexpMatcher(RuleBasedAnnotator):
         proc_id:
             Identifier of the tokenizer
         """
-        self.input_label = input_label
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
         self.rules = rules
@@ -121,7 +116,7 @@ class RegexpMatcher(RuleBasedAnnotator):
             attrs_to_copy = []
         self.attrs_to_copy = attrs_to_copy
 
-        config = dict(input_label=input_label, rules=rules, attrs_to_copy=attrs_to_copy)
+        config = dict(rules=rules, attrs_to_copy=attrs_to_copy)
         self._description = OperationDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )

@@ -9,7 +9,7 @@ TEST_CONFIG = [
     (
         "Sentence testing the dot. Newlines\ndo not split. Test"
         " interrogation? Semicolon; and exclamation marks! do not split",
-        RushSentenceTokenizer(input_label="clean_text"),
+        RushSentenceTokenizer(),
         [
             (
                 "Sentence testing the dot.",
@@ -31,7 +31,7 @@ TEST_CONFIG = [
     ),
     (
         "Newlines\ncan be\nreplaced.",
-        RushSentenceTokenizer(input_label="clean_text", keep_newlines=False),
+        RushSentenceTokenizer(keep_newlines=False),
         [
             (
                 "Newlines can be replaced.",

@@ -79,7 +79,7 @@ def test_process_with_rules():
         ),
     )
     section_tokenizer = SectionTokenizer(
-        input_label="CLEAN_TEXT", section_dict=section_dict, section_rules=section_rules
+        section_dict=section_dict, section_rules=section_rules
     )
     sections = section_tokenizer.process([clean_text_segment])
 

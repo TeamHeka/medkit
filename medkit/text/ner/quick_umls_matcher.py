@@ -55,7 +55,6 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
     and finally instantiate the matcher with:
 
         matcher = QuickUMLSMatcher(
-            input_label,
             version="2021AB",
             language="FRE",
             lowercase=True,
@@ -127,7 +126,6 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
 
     def __init__(
         self,
-        input_label: str,
         version: str,
         language: str,
         lowercase: bool = False,
@@ -144,9 +142,6 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
 
         Parameters
         ----------
-        input_label:
-            The input label of the segment annotations to use as input.
-            NB: other type of annotations such as entities are not supported
         version:
             UMLS version of the QuickUMLS install to use, for instance "2021AB"
             Will be used to decide with QuickUMLS to use
@@ -176,7 +171,6 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             (negation, antecendent, etc)
         """
 
-        self.input_label = input_label
         self.version = version
         path_to_install = self._get_path_to_install(
             version, language, lowercase, normalize_unicode
@@ -199,7 +193,6 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
         self.attrs_to_copy = attrs_to_copy
 
         config = dict(
-            input_label=input_label,
             language=language,
             version=version,
             lowercase=lowercase,

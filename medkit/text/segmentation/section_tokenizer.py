@@ -15,7 +15,6 @@ from medkit.core.text import Segment, span_utils
 
 @dataclasses.dataclass(frozen=True)
 class DefaultConfig:
-    input_label: str = "CLEAN_TEXT"
     output_label: str = "SECTION"
 
 
@@ -37,7 +36,6 @@ class SectionTokenizer:
     def __init__(
         self,
         section_dict: Dict[str, List[str]],
-        input_label: str = DefaultConfig.input_label,
         output_label: str = DefaultConfig.output_label,
         section_rules: Tuple[SectionModificationRule] = (),
         proc_id: str = None,
@@ -50,8 +48,6 @@ class SectionTokenizer:
         section_dict
             Dictionary containing the section name as key and the list of mappings
             as value (cf. content of default_section_dict.yml as example)
-        input_label
-            Segment label to use as input. Default is CLEAN_TEXT.
         output_label
             Segment label to use for annotation output. Default is SECTION.
         section_rules
@@ -59,7 +55,6 @@ class SectionTokenizer:
             sections.
         """
 
-        self.input_label = input_label
         self.output_label = output_label
         self.section_dict = section_dict
         self.section_rules = section_rules
@@ -67,7 +62,6 @@ class SectionTokenizer:
         self.keyword_processor.add_keywords_from_dict(section_dict)
 
         config = dict(
-            input_label=input_label,
             output_label=output_label,
             section_dict=section_dict,
             section_rules=section_rules,

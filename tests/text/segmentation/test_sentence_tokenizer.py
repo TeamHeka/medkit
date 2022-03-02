@@ -23,7 +23,7 @@ def _get_clean_text_segment():
 
 TEST_CONFIG = [
     (
-        SentenceTokenizer(input_label="clean_text"),
+        SentenceTokenizer(),
         [
             ("Sentence testing the dot", [Span(start=0, end=24)]),
             ("We are testing the carriage return", [Span(start=26, end=60)]),
@@ -35,7 +35,7 @@ TEST_CONFIG = [
         ],
     ),
     (
-        SentenceTokenizer(input_label="clean_text", keep_punct=True),
+        SentenceTokenizer(keep_punct=True),
         [
             ("Sentence testing the dot.", [Span(start=0, end=25)]),
             ("We are testing the carriage return\r", [Span(start=26, end=61)]),

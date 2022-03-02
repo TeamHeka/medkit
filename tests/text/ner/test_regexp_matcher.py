@@ -1,5 +1,5 @@
 from medkit.core import Origin, Attribute
-from medkit.core.text import TextDocument, Segment, Span
+from medkit.core.text import Segment, Span
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,
@@ -34,7 +34,7 @@ def test_single_match():
         regexp="diabetes",
         version="1",
     )
-    matcher = RegexpMatcher(input_label="sentence", rules=[rule])
+    matcher = RegexpMatcher(rules=[rule])
     entities = matcher.process([sentence])
 
     assert len(entities) == 1
@@ -61,7 +61,7 @@ def test_multiple_matches():
         regexp="asthma",
         version="1",
     )
-    matcher = RegexpMatcher(input_label="sentence", rules=[rule_1, rule_2])
+    matcher = RegexpMatcher(rules=[rule_1, rule_2])
     entities = matcher.process([sentence])
 
     assert len(entities) == 2
@@ -91,7 +91,7 @@ def test_normalization():
         version="1",
         normalizations=[RegexpMatcherNormalization("umls", "2020AB", "C0011849")],
     )
-    matcher = RegexpMatcher(input_label="sentence", rules=[rule])
+    matcher = RegexpMatcher(rules=[rule])
     entities = matcher.process([sentence])
 
     entity = _find_entity(entities, "Diabetes")
@@ -113,7 +113,7 @@ def test_exclusion_regex():
         regexp_exclude="type 1 diabetes",
         version="1",
     )
-    matcher = RegexpMatcher(input_label="sentence", rules=[rule])
+    matcher = RegexpMatcher(rules=[rule])
     entities = matcher.process([sentence])
 
     assert _find_entity(entities, "Diabetes") is None
@@ -128,7 +128,7 @@ def test_case_sensitivity_off():
         regexp="DIABETES",
         version="1",
     )
-    matcher = RegexpMatcher(input_label="sentence", rules=[rule])
+    matcher = RegexpMatcher(rules=[rule])
     entities = matcher.process([sentence])
 
     assert _find_entity(entities, "Diabetes") is not None
@@ -144,7 +144,7 @@ def test_case_sensitivity_on():
         version="1",
         case_sensitive=True,
     )
-    matcher = RegexpMatcher(input_label="sentence", rules=[rule])
+    matcher = RegexpMatcher(rules=[rule])
     entities = matcher.process([sentence])
 
     assert _find_entity(entities, "Diabetes") is None
@@ -161,7 +161,7 @@ def test_case_sensitivity_exclusion_on():
         case_sensitive=True,
         version="1",
     )
-    matcher = RegexpMatcher(input_label="sentence", rules=[rule])
+    matcher = RegexpMatcher(rules=[rule])
     entities = matcher.process([sentence])
 
     assert _find_entity(entities, "Diabetes") is not None
@@ -179,14 +179,13 @@ def test_attrs_to_copy():
     )
 
     # attribute not copied
-    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
+    matcher = RegexpMatcher(rules=[rule])
     entities = matcher.process([sentence])
     entity = _find_entity(entities, "Diabetes")
     assert not entity.attrs
 
     # attribute copied
     matcher = RegexpMatcher(
-        input_label=TextDocument.RAW_TEXT_LABEL,
         rules=[rule],
         attrs_to_copy=["negation"],
     )
@@ -201,5 +200,5 @@ def test_default_rules():
     sentence = _get_sentence_segment()
 
     # make sure default rules can be loaded and executed
-    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL)
+    matcher = RegexpMatcher()
     _ = matcher.process([sentence])

@@ -87,9 +87,7 @@ def _find_entity(entities, label):
 def test_single_match():
     sentence = _get_sentence_segment("The patient has asthma.")
 
-    umls_matcher = QuickUMLSMatcher(
-        input_label="sentence", version="2021AB", language="ENG"
-    )
+    umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
     entities = umls_matcher.process([sentence])
 
     # entity
@@ -112,9 +110,7 @@ def test_single_match():
 def test_multiple_matches():
     sentence = _get_sentence_segment("The patient has asthma and type 1 diabetes.")
 
-    umls_matcher = QuickUMLSMatcher(
-        input_label="sentence", version="2021AB", language="ENG"
-    )
+    umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
     entities = umls_matcher.process([sentence])
 
     assert len(entities) == 2
@@ -143,9 +139,7 @@ def test_multiple_matches():
 def test_language():
     sentence = _get_sentence_segment("Le patient fait de l'Asthme.")
 
-    umls_matcher = QuickUMLSMatcher(
-        input_label="sentence", version="2021AB", language="FRE"
-    )
+    umls_matcher = QuickUMLSMatcher(version="2021AB", language="FRE")
     entities = umls_matcher.process([sentence])
 
     # entity
@@ -164,18 +158,13 @@ def test_lowercase():
 
     # no match without lowercase flag because concept is only
     # available with leading uppercase in french
-    umls_matcher = QuickUMLSMatcher(
-        input_label="sentence", version="2021AB", language="FRE"
-    )
+    umls_matcher = QuickUMLSMatcher(version="2021AB", language="FRE")
     entities = umls_matcher.process([sentence])
     assert _find_entity(entities, "asthme") is None
 
     # with lowercase flag, entity is found
     umls_matcher_lowercase = QuickUMLSMatcher(
-        input_label="sentence",
-        language="FRE",
-        version="2021AB",
-        lowercase=True,
+        language="FRE", version="2021AB", lowercase=True
     )
     entities = umls_matcher_lowercase.process([sentence])
     entity = _find_entity(entities, "asthme")
@@ -186,9 +175,7 @@ def test_lowercase():
 def test_ambiguous_match():
     sentence = _get_sentence_segment("The patient has diabetes.")
 
-    umls_matcher = QuickUMLSMatcher(
-        input_label="sentence", version="2021AB", language="ENG"
-    )
+    umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
     entities = umls_matcher.process([sentence])
 
     # "diabetes" is a term of several CUIs but only 1 entity with
@@ -203,16 +190,13 @@ def test_attrs_to_copy():
     sentence.attrs.append(Attribute(origin=Origin(), label="negation", value=True))
 
     # attribute not copied
-    umls_matcher = QuickUMLSMatcher(
-        input_label="sentence", version="2021AB", language="ENG"
-    )
+    umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
     entities = umls_matcher.process([sentence])
     entity = _find_entity(entities, "asthma")
     assert not any(a.label == "negation" for a in entity.attrs)
 
     # attribute not copied
     umls_matcher = QuickUMLSMatcher(
-        input_label="sentence",
         version="2021AB",
         language="ENG",
         attrs_to_copy=["negation"],

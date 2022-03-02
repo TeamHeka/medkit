@@ -10,12 +10,11 @@ from typing import Iterator, List, Optional, Union
 from PyRuSH import RuSH
 
 from medkit.core import Origin, OperationDescription, RuleBasedAnnotator
-from medkit.core.text import Segment, TextDocument, span_utils
+from medkit.core.text import Segment, span_utils
 
 
 @dataclasses.dataclass(frozen=True)
 class DefaultConfig:
-    input_label = TextDocument.RAW_TEXT_LABEL
     output_label = "SENTENCE"
     path_to_rules = None
     keep_newlines = True
@@ -35,7 +34,6 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
 
     def __init__(
         self,
-        input_label: str = DefaultConfig.input_label,
         output_label: str = DefaultConfig.output_label,
         path_to_rules: Union[str, Path] = DefaultConfig.path_to_rules,
         keep_newlines: bool = DefaultConfig.keep_newlines,
@@ -46,9 +44,6 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
 
         Parameters
         ----------
-        input_label:
-            The input label of the annotations to use as input.
-            Default: "RAW_TEXT" (cf. DefaultConfig)
         output_label:
             The output label of the created annotations.
             Default: "SENTENCE" (cf.DefaultConfig)
@@ -63,7 +58,7 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
         proc_id:
             Identifier of the tokenizer
         """
-        self.input_label = input_label
+
         self.output_label = output_label
         if path_to_rules is None:
             path_to_rules = _PATH_TO_DEFAULT_RULES
@@ -71,7 +66,6 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
         self.keep_newlines = keep_newlines
 
         config = dict(
-            input_label=input_label,
             output_label=output_label,
             path_to_rules=path_to_rules,
             keep_newlines=keep_newlines,

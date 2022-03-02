@@ -7,12 +7,11 @@ import re
 from typing import Iterator, List, Tuple
 
 from medkit.core import Origin, OperationDescription, RuleBasedAnnotator
-from medkit.core.text import Segment, TextDocument, span_utils
+from medkit.core.text import Segment, span_utils
 
 
 @dataclasses.dataclass(frozen=True)
 class DefaultConfig:
-    input_label = TextDocument.RAW_TEXT_LABEL
     output_label = "SENTENCE"
     punct_chars = ("\r", "\n", ".", ";", "?", "!")
     keep_punct = False
@@ -27,7 +26,6 @@ class SentenceTokenizer(RuleBasedAnnotator):
 
     def __init__(
         self,
-        input_label: str = DefaultConfig.input_label,
         output_label: str = DefaultConfig.output_label,
         punct_chars: Tuple[str] = DefaultConfig.punct_chars,
         keep_punct: bool = DefaultConfig.keep_punct,
@@ -38,9 +36,6 @@ class SentenceTokenizer(RuleBasedAnnotator):
 
         Parameters
         ----------
-        input_label: str, Optional
-            The input label of the annotations to use as input.
-            Default: "RAW_TEXT" (cf. DefaultConfig)
         output_label: str, Optional
             The output label of the created annotations.
             Default: "SENTENCE" (cf.DefaultConfig)
@@ -54,13 +49,11 @@ class SentenceTokenizer(RuleBasedAnnotator):
         proc_id: str, Optional
             Identifier of the tokenizer
         """
-        self.input_label = input_label
         self.output_label = output_label
         self.punct_chars = punct_chars
         self.keep_punct = keep_punct
 
         config = dict(
-            input_label=input_label,
             output_label=output_label,
             punct_chars=punct_chars,
             keep_punct=keep_punct,
