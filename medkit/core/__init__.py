@@ -12,6 +12,8 @@ __all__ = [
     "RuleBasedAnnotator",
     "InputConverter",
     "OutputConverter",
+    "Pipeline",
+    "PipelineStep",
 ]
 
 from . import text
@@ -26,3 +28,4 @@ from .operation import (
     InputConverter,
     OutputConverter,
 )
+from .pipeline import Pipeline, PipelineStep
