@@ -264,10 +264,10 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
     def _match(
         self, input_ann: TextBoundAnnotation
     ) -> Iterator[Tuple[Entity, Attribute]]:
-        matches = self._matcher.match(input_ann.text, best_match=True)
+        matches = self._matcher.match(input_ann.text)
         for match_candidates in matches:
-            # only the best matching CUI is returned
-            assert len(match_candidates) == 1
+            # only the best matching CUI (1st match candidate) is returned
+            # TODO should we create a normalization attributes for each CUI instead?
             match = match_candidates[0]
 
             text, spans = span_utils.extract(

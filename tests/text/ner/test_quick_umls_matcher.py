@@ -188,6 +188,22 @@ def test_lowercase():
     assert entity.text == "asthme"
 
 
+def test_ambiguous_match():
+    doc = _get_doc("The patient has diabetes.")
+
+    umls_matcher = QuickUMLSMatcher(
+        input_label="RAW_TEXT", version="2021AB", language="ENG"
+    )
+    umls_matcher.annotate_document(doc)
+
+    # "diabetes" is a term of several CUIs but only 1 entity with
+    # 1 normalization attribute is created
+    entity_ids = doc.entities.get("diabetes", [])
+    assert len(entity_ids) == 1
+    attribute_ids = doc.attributes.get(entity_ids[0], [])
+    assert len(attribute_ids) == 1
+
+
 def test_annotate_collection():
     doc = _get_doc("The patient has asthma.")
     collection = Collection([doc])
