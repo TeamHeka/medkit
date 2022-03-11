@@ -71,12 +71,14 @@ class NegationDetector(RuleBasedAnnotator):
         self._patterns_by_rule_id = {
             rule.id: re.compile(rule.regexp, flags=re.IGNORECASE) for rule in self.rules
         }
-        # TODO: join all regexs in one pattern with "|"?
         self._exclusion_patterns_by_rule_id = {
-            rule.id: [
-                re.compile(r, flags=re.IGNORECASE) for r in rule.exclusion_regexps
-            ]
+            rule.id: re.compile(
+                "|".join(
+                    f"(?:{r})" for r in rule.exclusion_regexps
+                ),  # join all exclusions in one pattern
+            )
             for rule in self.rules
+            if rule.exclusion_regexps
         }
 
         config = dict(output_label=output_label, rules=rules)
@@ -106,13 +108,14 @@ class NegationDetector(RuleBasedAnnotator):
             # try all rules until we have a match
             for rule in self.rules:
                 pattern = self._patterns_by_rule_id[rule.id]
-                exclusion_patterns = self._exclusion_patterns_by_rule_id[rule.id]
-
-                is_negated = pattern.search(segment.text) is not None and all(
-                    p.search(segment.text) is None for p in exclusion_patterns
-                )
-                if is_negated:
-                    break
+                if pattern.search(segment.text) is not None:
+                    exclusion_pattern = self._exclusion_patterns_by_rule_id.get(rule.id)
+                    if (
+                        exclusion_pattern is None
+                        or exclusion_pattern.search(segment.text) is None
+                    ):
+                        is_negated = True
+                        break
 
             attr = Attribute(
                 origin=Origin(
