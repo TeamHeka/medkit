@@ -143,6 +143,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
         window: int = 5,
         similarity: Literal["dice", "jaccard", "cosine", "overlap"] = "jaccard",
         accepted_semtypes: List[str] = quickumls.constants.ACCEPTED_SEMTYPES,
+        attrs_to_copy: Optional[List[str]] = None,
         proc_id: Optional[str] = None,
     ):
         """Instantiate the QuickUMLS matcher
@@ -175,6 +176,10 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             Similarity measure to use (cf QuickUMLS doc)
         accepted_semtypes:
             UMLS semantic types that matched concepts should belong to (cf QuickUMLS doc).
+        attrs_to_copy:
+            Labels of the attributes that should be copied from the source segment
+            to the created entity. Useful for propagating context attributes
+            (negation, antecendent, etc)
         """
 
         self.input_label = input_label
@@ -195,6 +200,9 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             and self._matcher.to_lowercase_flag == lowercase
             and self._matcher.normalize_unicode_flag == normalize_unicode
         ), "Inconsistent QuickUMLS install flags"
+        if attrs_to_copy is None:
+            attrs_to_copy = []
+        self.attrs_to_copy = attrs_to_copy
 
         config = dict(
             input_label=input_label,
@@ -207,6 +215,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             similarity=similarity,
             window=window,
             accepted_semtypes=accepted_semtypes,
+            attrs_to_copy=attrs_to_copy,
         )
         self._description = ProcessingDescription(
             id=proc_id, name=self.__class__.__name__, config=config
@@ -276,6 +285,8 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
                 input_ann.text, input_ann.spans, [(match["start"], match["end"])]
             )
 
+            attrs = [a for a in input_ann.attrs if a.label in self.attrs_to_copy]
+
             # TODO force now we consider the version, score and semtypes
             # to be just extra informational metadata
             # We might need to reconsider this if these items
@@ -292,12 +303,13 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
                     processing_id=self.description.id, ann_ids=[input_ann.id]
                 ),
             )
+            attrs.append(norm_attr)
 
             entity = Entity(
                 label=match["term"],
                 text=text,
                 spans=spans,
-                attrs=[norm_attr],
+                attrs=attrs,
                 origin=Origin(processing_id=self.description.id, ann_ids=[input_ann.id])
                 # TODO decide how to handle that in medkit
                 # **input_entity.attributes,

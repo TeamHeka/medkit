@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import spacy.cli
 
-from medkit.core import Collection
+from medkit.core import Collection, Attribute, Origin
 from medkit.core.text import TextDocument, Span
 from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher
 
@@ -185,6 +185,41 @@ def test_ambiguous_match():
     assert len(entity_ids) == 1
     entity = doc.get_annotation_by_id(entity_ids[0])
     assert len(entity.attrs) == 1
+
+
+def test_attrs_to_copy():
+    doc = TextDocument(text="The patient has asthma.")
+    # add attribute to input ann
+    raw_ann = doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)[0]
+    raw_ann.attrs.append(Attribute(origin=Origin(), label="negation", value=True))
+
+    # attribute not copied
+    umls_matcher = QuickUMLSMatcher(
+        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="ENG"
+    )
+    umls_matcher.annotate_document(doc)
+    entity = _find_entity_with_label(doc, "asthma")
+    assert not any(a.label == "negation" for a in entity.attrs)
+
+    # rebuild doc
+    doc = TextDocument(text="The patient has asthma.")
+    # add attribute to input ann
+    raw_ann = doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)[0]
+    raw_ann.attrs.append(Attribute(origin=Origin(), label="negation", value=True))
+
+    # attribute not copied
+    umls_matcher = QuickUMLSMatcher(
+        input_label=TextDocument.RAW_TEXT_LABEL,
+        version="2021AB",
+        language="ENG",
+        attrs_to_copy=["negation"],
+    )
+    umls_matcher.annotate_document(doc)
+    entity = _find_entity_with_label(doc, "asthma")
+    non_norm_attrs = [a for a in entity.attrs if a.label != "umls"]
+    assert len(non_norm_attrs) == 1
+    attr = non_norm_attrs[0]
+    assert attr.label == "negation" and attr.value is True
 
 
 def test_annotate_collection():

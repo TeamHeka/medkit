@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import Collection
+from medkit.core import Collection, Attribute, Origin
 from medkit.core.text import TextDocument, Span
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
@@ -153,6 +153,44 @@ def test_case_sensitivity_exclusion_on(doc):
     matcher.annotate_document(doc)
 
     assert _find_entity_with_label(doc, "Diabetes") is not None
+
+
+def test_attrs_to_copy():
+    doc = TextDocument(text=TEXT)
+    # add attribute to input ann
+    raw_ann = doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)[0]
+    raw_ann.attrs.append(Attribute(origin=Origin(), label="negation", value=True))
+
+    rule = RegexpMatcherRule(
+        id="id_regexp_diabetes",
+        label="Diabetes",
+        regexp="diabetes",
+        version="1",
+    )
+
+    # attribute not copied
+    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
+    matcher.annotate_document(doc)
+    entity = _find_entity_with_label(doc, "Diabetes")
+    assert not entity.attrs
+
+    # rebuild doc
+    doc = TextDocument(text=TEXT)
+    # add attribute to input ann
+    raw_ann = doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)[0]
+    raw_ann.attrs.append(Attribute(origin=Origin(), label="negation", value=True))
+
+    # attribute copied
+    matcher = RegexpMatcher(
+        input_label=TextDocument.RAW_TEXT_LABEL,
+        rules=[rule],
+        attrs_to_copy=["negation"],
+    )
+    matcher.annotate_document(doc)
+    entity = _find_entity_with_label(doc, "Diabetes")
+    assert len(entity.attrs) == 1
+    attr = entity.attrs[0]
+    assert attr.label == "negation" and attr.value is True
 
 
 def test_annotate_collection(collection):

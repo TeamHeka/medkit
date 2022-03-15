@@ -98,6 +98,7 @@ class RegexpMatcher(RuleBasedAnnotator):
         self,
         input_label,
         rules: Optional[List[RegexpMatcherRule]] = None,
+        attrs_to_copy: Optional[List[str]] = None,
         proc_id: Optional[str] = None,
     ):
         """
@@ -111,6 +112,10 @@ class RegexpMatcher(RuleBasedAnnotator):
         rules:
             The set of rules to use when matching entities. If none provided,
             the rules in "regexp_matcher_default_rules.yml" will be used
+        attrs_to_copy:
+            Labels of the attributes that should be copied from the source segment
+            to the created entity. Useful for propagating context attributes
+            (negation, antecendent, etc)
         proc_id:
             Identifier of the tokenizer
         """
@@ -118,8 +123,11 @@ class RegexpMatcher(RuleBasedAnnotator):
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
         self.rules = rules
+        if attrs_to_copy is None:
+            attrs_to_copy = []
+        self.attrs_to_copy = attrs_to_copy
 
-        config = dict(input_label=input_label, rules=rules)
+        config = dict(input_label=input_label, rules=rules, attrs_to_copy=attrs_to_copy)
         self._description = ProcessingDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )
@@ -207,12 +215,15 @@ class RegexpMatcher(RuleBasedAnnotator):
                 # **syntagme.attributes,
             )
 
+            attrs = [a for a in input_ann.attrs if a.label in self.attrs_to_copy]
+
             # create normalization attributes for each normalization descriptor
             # of the rule
             # TODO should we have a NormalizationAttribute class
             # with specific fields (name, id, version) ?
-            norm_attrs = [
-                Attribute(
+
+            for norm in rule.normalizations:
+                norm_attr = Attribute(
                     origin=Origin(
                         processing_id=self.description.id, ann_ids=[input_ann.id]
                     ),
@@ -220,14 +231,13 @@ class RegexpMatcher(RuleBasedAnnotator):
                     value=norm.id,
                     metadata=dict(version=norm.kb_version),
                 )
-                for norm in rule.normalizations
-            ]
+                attrs.append(norm_attr)
 
             entity = Entity(
                 label=rule.label,
                 text=text,
                 spans=spans,
-                attrs=norm_attrs,
+                attrs=attrs,
                 origin=Origin(
                     processing_id=self.description.id, ann_ids=[input_ann.id]
                 ),
