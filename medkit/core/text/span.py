@@ -1,6 +1,7 @@
 __all__ = [
     "Span",
     "ModifiedSpan",
+    "AnySpan",
     "replace",
     "remove",
     "extract",
@@ -51,6 +52,9 @@ class ModifiedSpan:
     replaced_spans: List[Span]
 
 
+AnySpan = Union[Span, ModifiedSpan]
+
+
 def _spans_have_same_length_as_text(text, spans):
     return len(text) == sum(sp.length for sp in spans)
 
@@ -73,10 +77,10 @@ def _positions_are_within_text(text, positions):
 
 def replace(
     text: str,
-    spans: List[Union[Span, ModifiedSpan]],
+    spans: List[AnySpan],
     ranges: List[Tuple[int, int]],
     replacement_texts: List[str],
-) -> Tuple[str, List[Union[Span, ModifiedSpan]]]:
+) -> Tuple[str, List[AnySpan]]:
     """Replace parts of a text, and update accordingly its associated spans
 
     Parameters
@@ -254,9 +258,9 @@ def _replace_in_spans(spans, ranges, replacement_lengths):
 
 def remove(
     text: str,
-    spans: List[Union[Span, ModifiedSpan]],
+    spans: List[AnySpan],
     ranges: List[Tuple[int, int]],
-) -> Tuple[str, List[Union[Span, ModifiedSpan]]]:
+) -> Tuple[str, List[AnySpan]]:
     """Remove parts of a text, while also removing accordingly its associated spans
 
     Parameters
@@ -303,9 +307,9 @@ def _remove_in_spans(spans, ranges):
 
 def extract(
     text: str,
-    spans: List[Union[Span, ModifiedSpan]],
+    spans: List[AnySpan],
     ranges: List[Tuple[int, int]],
-) -> Tuple[str, List[Union[Span, ModifiedSpan]]]:
+) -> Tuple[str, List[AnySpan]]:
     """Extract parts of a text as well as its associated spans
 
     Parameters
@@ -358,10 +362,10 @@ def _extract_in_spans(spans, ranges):
 
 def insert(
     text: str,
-    spans: List[Union[Span, ModifiedSpan]],
+    spans: List[AnySpan],
     positions: List[int],
     insertion_texts: List[str],
-) -> Tuple[str, List[Union[Span, ModifiedSpan]]]:
+) -> Tuple[str, List[AnySpan]]:
     """Insert strings in text, and update accordingly its associated spans
 
     Parameters
@@ -431,10 +435,10 @@ def _insert_in_spans(spans, positions, insertion_lengths):
 
 def move(
     text: str,
-    spans: List[Union[Span, ModifiedSpan]],
+    spans: List[AnySpan],
     range: Tuple[int, int],
     destination: int,
-) -> Tuple[str, List[Union[Span, ModifiedSpan]]]:
+) -> Tuple[str, List[AnySpan]]:
     """Move part of a text to another position, also moving its associated spans
 
     Parameters
@@ -547,8 +551,8 @@ def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
 
 
 def concatenate(
-    texts: List[str], all_spans: List[List[Union[Span, ModifiedSpan]]]
-) -> Tuple[str, List[Union[Span, ModifiedSpan]]]:
+    texts: List[str], all_spans: List[List[AnySpan]]
+) -> Tuple[str, List[AnySpan]]:
     """Concatenate text and span objects"""
 
     assert _lists_have_same_dimension(

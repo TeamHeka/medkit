@@ -15,7 +15,7 @@ import medkit.core.text.span as span_utils
 
 if TYPE_CHECKING:
     from medkit.core.document import Collection
-    from medkit.core.text.span import Span, ModifiedSpan
+    from medkit.core.text.span import AnySpan
 
 
 @dataclasses.dataclass(frozen=True)
@@ -153,7 +153,7 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
 
     def _extract_sentences_and_spans(
         self, text_annotation: TextBoundAnnotation
-    ) -> Iterator[(str, List[Union[Span, ModifiedSpan]])]:
+    ) -> Iterator[(str, List[AnySpan])]:
         rush_spans = self._rush.segToSentenceSpans(text_annotation.text)
         for rush_span in rush_spans:
             text, spans = span_utils.extract(

@@ -4,7 +4,7 @@ __all__ = ["SentenceTokenizer"]
 
 import dataclasses
 import re
-from typing import Iterator, List, Tuple, Union, TYPE_CHECKING
+from typing import Iterator, List, Tuple, TYPE_CHECKING
 
 from medkit.core import Origin, ProcessingDescription, RuleBasedAnnotator
 from medkit.core.text import TextBoundAnnotation, TextDocument
@@ -12,7 +12,7 @@ import medkit.core.text.span as span_utils
 
 if TYPE_CHECKING:
     from medkit.core.document import Collection
-    from medkit.core.text.span import Span, ModifiedSpan
+    from medkit.core.text.span import AnySpan
 
 
 @dataclasses.dataclass(frozen=True)
@@ -144,7 +144,7 @@ class SentenceTokenizer(RuleBasedAnnotator):
 
     def _extract_sentences_and_spans(
         self, text_annotation: TextBoundAnnotation
-    ) -> Iterator[(str, List[Union[Span, ModifiedSpan]])]:
+    ) -> Iterator[(str, List[AnySpan])]:
         regex_rule = (
             "(?P<blanks> *)"  # Blanks at the beginning of the sentence
             + "(?P<sentence>.+?)"  # Sentence to detect
