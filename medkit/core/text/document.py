@@ -2,16 +2,23 @@ from __future__ import annotations
 
 __all__ = ["TextDocument"]
 
+import random
 from typing import Dict, TYPE_CHECKING
+import uuid
 
+from medkit.core.annotation import Origin
 from medkit.core.document import Document
 from medkit.core.text.annotation import TextBoundAnnotation, Entity, Relation, Attribute
+from medkit.core.text.span import Span
 
 if TYPE_CHECKING:
     from medkit.core.annotation import Annotation
 
 
 class TextDocument(Document):
+
+    RAW_TEXT_LABEL = "RAW_TEXT"
+
     def __init__(self, doc_id: str = None, text: str = None, metadata=None):
         """
         Initializes the text document
@@ -36,6 +43,10 @@ class TextDocument(Document):
         self.entities = dict()  # Key: label
         self.relations = dict()  # Key: TODO : determine the key
         self.attributes = dict()  # Key : target_id
+
+        if self.text is not None:
+            raw_text_ann = self._gen_raw_text_annotation()
+            self.add_annotation(raw_text_ann)
 
     def add_annotation(self, annotation: Annotation):
         """
@@ -106,3 +117,17 @@ class TextDocument(Document):
                 res[attribute.label] = []
             res[attribute.label].append(attribute)
         return res
+
+    def _gen_raw_text_annotation(self):
+        # generate deterministic uuid based on document id
+        # so that the annotation id is the same if the doc id is the same
+        rng = random.Random(self.id)
+        id = str(uuid.UUID(int=rng.getrandbits(128)))
+
+        return TextBoundAnnotation(
+            origin=Origin(),
+            label=self.RAW_TEXT_LABEL,
+            spans=[Span(0, len(self.text))],
+            text=self.text,
+            ann_id=id,
+        )

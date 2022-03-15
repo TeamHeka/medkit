@@ -1,7 +1,7 @@
 import pytest
 
-from medkit.core import Collection, Origin
-from medkit.core.text import TextDocument, TextBoundAnnotation, Span
+from medkit.core import Collection
+from medkit.core.text import TextDocument, Span
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,
@@ -13,15 +13,7 @@ TEXT = "The patient has asthma and type 1 diabetes."
 
 @pytest.fixture
 def doc():
-    doc = TextDocument(text=TEXT)
-    raw_text = TextBoundAnnotation(
-        origin=Origin(),
-        label="RAW_TEXT",
-        spans=[Span(0, len(TEXT))],
-        text=TEXT,
-    )
-    doc.add_annotation(raw_text)
-    return doc
+    return TextDocument(text=TEXT)
 
 
 @pytest.fixture
@@ -43,7 +35,7 @@ def test_single_match(doc):
         regexp="diabetes",
         version="1",
     )
-    matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
+    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
     matcher.annotate_document(doc)
 
     entity = _find_entity_with_label(doc, "Diabetes")
@@ -67,7 +59,9 @@ def test_multiple_matches(doc):
         regexp="asthma",
         version="1",
     )
-    matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule_1, rule_2])
+    matcher = RegexpMatcher(
+        input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule_1, rule_2]
+    )
     matcher.annotate_document(doc)
 
     entity_1 = _find_entity_with_label(doc, "Diabetes")
@@ -93,7 +87,7 @@ def test_normalization(doc):
         version="1",
         normalizations=[RegexpMatcherNormalization("umls", "2020AB", "C0011849")],
     )
-    matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
+    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
     matcher.annotate_document(doc)
 
     entity = _find_entity_with_label(doc, "Diabetes")
@@ -116,7 +110,7 @@ def test_exclusion_regex(doc):
         regexp_exclude="type 1 diabetes",
         version="1",
     )
-    matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
+    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
     matcher.annotate_document(doc)
 
     assert _find_entity_with_label(doc, "Diabetes") is None
@@ -129,7 +123,7 @@ def test_case_sensitivity_off(doc):
         regexp="DIABETES",
         version="1",
     )
-    matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
+    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
     matcher.annotate_document(doc)
 
     assert _find_entity_with_label(doc, "Diabetes") is not None
@@ -143,7 +137,7 @@ def test_case_sensitivity_on(doc):
         version="1",
         case_sensitive=True,
     )
-    matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
+    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
     matcher.annotate_document(doc)
 
     assert _find_entity_with_label(doc, "Diabetes") is None
@@ -158,7 +152,7 @@ def test_case_sensitivity_exclusion_on(doc):
         case_sensitive=True,
         version="1",
     )
-    matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
+    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
     matcher.annotate_document(doc)
 
     assert _find_entity_with_label(doc, "Diabetes") is not None
@@ -171,7 +165,7 @@ def test_annotate_collection(collection):
         regexp="diabetes",
         version="1",
     )
-    matcher = RegexpMatcher(input_label="RAW_TEXT", rules=[rule])
+    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
     matcher.annotate(collection)
     doc = collection.documents[0]
     assert _find_entity_with_label(doc, "Diabetes") is not None
@@ -179,5 +173,5 @@ def test_annotate_collection(collection):
 
 def test_default_rules(collection):
     # make sure default rules can be loaded and executed
-    matcher = RegexpMatcher(input_label="RAW_TEXT")
+    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL)
     matcher.annotate(collection)

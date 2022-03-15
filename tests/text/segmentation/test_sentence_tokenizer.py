@@ -1,8 +1,7 @@
 import pytest
 
-from medkit.core import Collection, Origin
+from medkit.core import Collection
 from medkit.core.text import TextDocument
-from medkit.core.text.annotation import TextBoundAnnotation
 from medkit.core.text.span import Span
 from medkit.text.segmentation import SentenceTokenizer
 
@@ -15,7 +14,7 @@ TEXT = (
 
 TEST_CONFIG = [
     (
-        SentenceTokenizer(input_label="RAW_TEXT"),
+        SentenceTokenizer(input_label=TextDocument.RAW_TEXT_LABEL),
         [
             ("Sentence testing the dot", [Span(start=0, end=24)]),
             ("We are testing the carriage return", [Span(start=26, end=60)]),
@@ -27,7 +26,7 @@ TEST_CONFIG = [
         ],
     ),
     (
-        SentenceTokenizer(input_label="RAW_TEXT", keep_punct=True),
+        SentenceTokenizer(input_label=TextDocument.RAW_TEXT_LABEL, keep_punct=True),
         [
             ("Sentence testing the dot.", [Span(start=0, end=25)]),
             ("We are testing the carriage return\r", [Span(start=26, end=61)]),
@@ -43,14 +42,7 @@ TEST_CONFIG = [
 
 @pytest.fixture
 def collection():
-    doc = TextDocument()
-    raw_text = TextBoundAnnotation(
-        origin=Origin(),
-        label="RAW_TEXT",
-        spans=[Span(0, len(TEXT))],
-        text=TEXT,
-    )
-    doc.add_annotation(raw_text)
+    doc = TextDocument(text=TEXT)
     return Collection([doc])
 
 
@@ -58,7 +50,7 @@ def collection():
     "sentence_tokenizer,expected_sentences", TEST_CONFIG, ids=["default", "keep_punct"]
 )
 def test_annotate(collection, sentence_tokenizer, expected_sentences):
-    assert sentence_tokenizer.input_label == "RAW_TEXT"
+    assert sentence_tokenizer.input_label == TextDocument.RAW_TEXT_LABEL
 
     sentence_tokenizer.annotate(collection)
     doc = collection.documents[0]
