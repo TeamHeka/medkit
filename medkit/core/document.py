@@ -19,6 +19,7 @@ class Document(abc.ABC):
         else:
             self.id = str(uuid.uuid1())
         self.annotations: Dict[str, Annotation] = {}
+        self.annotation_ids_by_label: Dict[str, List[str]] = {}
         self.operations: Dict[str, ProcessingDescription] = {}
         self.metadata = metadata  # TODO: what is metadata format ?
 
@@ -37,20 +38,29 @@ class Document(abc.ABC):
         ValueError
             If `annotation.id` is already in Document.annotations.
         """
-        if annotation.id not in self.annotations.keys():
-            self.annotations[annotation.id] = annotation
-        else:
-            msg = (
-                f"Impossible to add this annotation.The id {annotation.id} already"
+        id = annotation.id
+        if id in self.annotations:
+            raise ValueError(
+                f"Impossible to add this annotation.The id {id} already"
                 " exists in the document"
             )
-            raise ValueError(msg)
+        self.annotations[id] = annotation
+
+        label = annotation.label
+        if label not in self.annotation_ids_by_label:
+            self.annotation_ids_by_label[label] = []
+        self.annotation_ids_by_label[label].append(id)
 
     def get_annotation_by_id(self, annotation_id):
         return self.annotations.get(annotation_id)
 
     def get_annotations(self):
         return list(self.annotations.values())
+
+    def get_annotations_by_label(self, label):
+        return [
+            self.annotations[id] for id in self.annotation_ids_by_label.get(label, [])
+        ]
 
     def add_operation(self, processing_desc: ProcessingDescription):
         self.operations[processing_desc.id] = processing_desc

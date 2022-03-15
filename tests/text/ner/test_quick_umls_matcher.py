@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 import spacy.cli
 
-from medkit.core import Collection, Origin
-from medkit.core.text import TextDocument, TextBoundAnnotation, Span
+from medkit.core import Collection
+from medkit.core.text import TextDocument, Span
 from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher
 
 # QuickUMLSMatcher is a wrapper around 3d-party quickumls.core.QuickUMLS,
@@ -68,15 +68,6 @@ def setup():
     QuickUMLSMatcher.clear_installs()
 
 
-def _get_doc(text):
-    doc = TextDocument(text=text)
-    raw_text_ann = TextBoundAnnotation(
-        origin=Origin(), label="RAW_TEXT", spans=[Span(0, len(text))], text=text
-    )
-    doc.add_annotation(raw_text_ann)
-    return doc
-
-
 def _find_entity_with_label(doc, label):
     entity_ids = doc.entities.get(label, [])
     if len(entity_ids) == 0:
@@ -92,10 +83,10 @@ def _find_attribute_for_entity(doc, entity):
 
 
 def test_single_match():
-    doc = _get_doc("The patient has asthma.")
+    doc = TextDocument(text="The patient has asthma.")
 
     umls_matcher = QuickUMLSMatcher(
-        input_label="RAW_TEXT", version="2021AB", language="ENG"
+        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="ENG"
     )
     umls_matcher.annotate_document(doc)
 
@@ -117,10 +108,10 @@ def test_single_match():
 
 
 def test_multiple_matchs():
-    doc = _get_doc("The patient has asthma and type 1 diabetes.")
+    doc = TextDocument(text="The patient has asthma and type 1 diabetes.")
 
     umls_matcher = QuickUMLSMatcher(
-        input_label="RAW_TEXT", version="2021AB", language="ENG"
+        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="ENG"
     )
     umls_matcher.annotate_document(doc)
 
@@ -148,10 +139,10 @@ def test_multiple_matchs():
 
 
 def test_language():
-    doc = _get_doc("Le patient fait de l'Asthme.")
+    doc = TextDocument(text="Le patient fait de l'Asthme.")
 
     umls_matcher = QuickUMLSMatcher(
-        input_label="RAW_TEXT", version="2021AB", language="FRE"
+        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="FRE"
     )
     umls_matcher.annotate_document(doc)
 
@@ -168,19 +159,22 @@ def test_language():
 
 
 def test_lowercase():
-    doc = _get_doc("Le patient fait de l'asthme.")
+    doc = TextDocument(text="Le patient fait de l'asthme.")
 
     # no match without lowercase flag because concept is only
     # available with leading uppercase in french
     umls_matcher = QuickUMLSMatcher(
-        input_label="RAW_TEXT", version="2021AB", language="FRE"
+        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="FRE"
     )
     umls_matcher.annotate_document(doc)
     assert _find_entity_with_label(doc, "asthme") is None
 
     # with lowercase flag, entity is found
     umls_matcher_lowercase = QuickUMLSMatcher(
-        input_label="RAW_TEXT", language="FRE", version="2021AB", lowercase=True
+        input_label=TextDocument.RAW_TEXT_LABEL,
+        language="FRE",
+        version="2021AB",
+        lowercase=True,
     )
     umls_matcher_lowercase.annotate_document(doc)
     entity = _find_entity_with_label(doc, "asthme")
@@ -189,10 +183,10 @@ def test_lowercase():
 
 
 def test_ambiguous_match():
-    doc = _get_doc("The patient has diabetes.")
+    doc = TextDocument(text="The patient has diabetes.")
 
     umls_matcher = QuickUMLSMatcher(
-        input_label="RAW_TEXT", version="2021AB", language="ENG"
+        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="ENG"
     )
     umls_matcher.annotate_document(doc)
 
@@ -205,11 +199,11 @@ def test_ambiguous_match():
 
 
 def test_annotate_collection():
-    doc = _get_doc("The patient has asthma.")
+    doc = TextDocument(text="The patient has asthma.")
     collection = Collection([doc])
 
     umls_matcher = QuickUMLSMatcher(
-        input_label="RAW_TEXT", version="2021AB", language="ENG"
+        input_label=TextDocument.RAW_TEXT_LABEL, version="2021AB", language="ENG"
     )
     umls_matcher.annotate(collection)
 

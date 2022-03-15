@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 @dataclasses.dataclass(frozen=True)
 class DefaultConfig:
-    input_label = "RAW_TEXT"
+    input_label = TextDocument.RAW_TEXT_LABEL
     output_label = "SENTENCE"
     path_to_rules = None
     keep_newlines = True
