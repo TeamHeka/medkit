@@ -4,13 +4,12 @@ __all__ = ["SectionModificationRule", "SectionTokenizer"]
 
 import dataclasses
 import pathlib
+from typing import Dict, List, Literal, Tuple
 import yaml
 
 from flashtext import KeywordProcessor
-from typing import Dict, List, Literal, Tuple
 
-from medkit.core import Collection, Origin
-from medkit.core.processing import ProcessingDescription
+from medkit.core import Collection, Origin, ProcessingDescription
 from medkit.core.text import TextBoundAnnotation, TextDocument
 from medkit.core.text import span as span_utils
 

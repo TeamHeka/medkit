@@ -4,9 +4,8 @@ __all__ = ["Annotation", "Origin"]
 
 import abc
 import dataclasses
-import uuid
-
 from typing import Dict, List, Optional
+import uuid
 
 
 class Annotation(abc.ABC):

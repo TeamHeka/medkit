@@ -1,4 +1,5 @@
 import pytest
+
 from medkit.core.text.span import (
     Span,
     ModifiedSpan,

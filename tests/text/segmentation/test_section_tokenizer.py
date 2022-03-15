@@ -1,5 +1,4 @@
 import pytest
-import tests.data_utils as data_utils
 
 import medkit.text.segmentation.section_tokenizer as st
 from medkit.core import Origin
@@ -8,6 +7,7 @@ from medkit.text.segmentation.section_tokenizer import (
     SectionTokenizer,
     SectionModificationRule,
 )
+import tests.data_utils as data_utils
 
 TEST_CONFIG = [
     (

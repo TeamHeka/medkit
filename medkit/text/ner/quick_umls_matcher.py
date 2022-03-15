@@ -6,8 +6,7 @@ from typing import Dict, Iterator, List, Literal, NamedTuple, Optional, Tuple, U
 from quickumls import QuickUMLS
 import quickumls.constants
 
-from medkit.core import Collection, Origin
-from medkit.core.processing import ProcessingDescription, RuleBasedAnnotator
+from medkit.core import Collection, Origin, ProcessingDescription, RuleBasedAnnotator
 from medkit.core.text import Attribute, Entity, TextBoundAnnotation, TextDocument
 import medkit.core.text.span as span_utils
 

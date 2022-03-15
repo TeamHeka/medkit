@@ -1,4 +1,4 @@
-from medkit.core.text.span import ModifiedSpan, Span
+from medkit.core.text import Span, ModifiedSpan
 from medkit.core.text.utils import (
     _replace_big_parentheses,
     _replace_small_parentheses,

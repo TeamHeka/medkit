@@ -9,9 +9,8 @@ __all__ = [
 
 import abc
 import dataclasses
-import uuid
-
 from typing import Any, Dict, TYPE_CHECKING
+import uuid
 
 if TYPE_CHECKING:
     from medkit.core.document import Collection

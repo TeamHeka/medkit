@@ -1,15 +1,15 @@
 __all__ = [
-    "TextDocument",
-    "Span",
+    "utils",
     "TextBoundAnnotation",
     "Entity",
-    "Attribute",
     "Relation",
+    "Attribute",
+    "TextDocument",
+    "Span",
+    "ModifiedSpan",
 ]
 
-from .annotation import Attribute
-from .annotation import Entity
-from .annotation import Relation
-from .annotation import TextBoundAnnotation
+from . import utils
+from .annotation import TextBoundAnnotation, Entity, Relation, Attribute
 from .document import TextDocument
-from .span import Span
+from .span import Span, ModifiedSpan

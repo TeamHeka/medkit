@@ -15,7 +15,7 @@ import re
 from typing import List, Tuple, Union
 
 import medkit.core.text.span as span_utils
-from medkit.core.text.span import ModifiedSpan, Span
+from medkit.core.text.span import Span, ModifiedSpan
 
 # Some strings for character classification
 _NUMERIC_CHARS = "0-9"

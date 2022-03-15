@@ -3,9 +3,8 @@ from __future__ import annotations
 __all__ = ["Collection", "Document"]
 
 import abc
-import uuid
-
 from typing import Dict, List, TYPE_CHECKING
+import uuid
 
 if TYPE_CHECKING:
     from medkit.core.annotation import Annotation

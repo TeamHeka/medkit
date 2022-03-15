@@ -9,8 +9,7 @@ from typing import Any, Iterator, List, Optional, Tuple
 
 import yaml
 
-from medkit.core import Collection, Origin
-from medkit.core.processing import ProcessingDescription, RuleBasedAnnotator
+from medkit.core import Collection, Origin, ProcessingDescription, RuleBasedAnnotator
 from medkit.core.text import Attribute, Entity, TextBoundAnnotation, TextDocument
 import medkit.core.text.span as span_utils
 
