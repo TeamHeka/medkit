@@ -10,9 +10,14 @@ from typing import Any, Iterator, List, Optional, Tuple
 import yaml
 
 
-from medkit.core import Collection, Origin, ProcessingDescription, RuleBasedAnnotator
-from medkit.core.text import (
+from medkit.core import (
+    Collection,
     Attribute,
+    Origin,
+    ProcessingDescription,
+    RuleBasedAnnotator,
+)
+from medkit.core.text import (
     Entity,
     Segment,
     TextDocument,

@@ -6,9 +6,14 @@ from typing import Dict, Iterator, List, Literal, NamedTuple, Optional, Tuple, U
 from quickumls import QuickUMLS
 import quickumls.constants
 
-from medkit.core import Collection, Origin, ProcessingDescription, RuleBasedAnnotator
-from medkit.core.text import (
+from medkit.core import (
+    Collection,
     Attribute,
+    Origin,
+    ProcessingDescription,
+    RuleBasedAnnotator,
+)
+from medkit.core.text import (
     Entity,
     Segment,
     TextDocument,

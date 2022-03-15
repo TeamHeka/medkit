@@ -1,6 +1,7 @@
 __all__ = [
     "text",
     "Annotation",
+    "Attribute",
     "Origin",
     "Collection",
     "Document",
@@ -12,7 +13,7 @@ __all__ = [
 ]
 
 from . import text
-from .annotation import Annotation, Origin
+from .annotation import Annotation, Attribute, Origin
 from .document import Collection, Document
 from .id import generate_id
 from .processing import (

@@ -4,8 +4,14 @@ import pathlib
 
 from smart_open import open
 
-from medkit.core import Collection, Origin, InputConverter, ProcessingDescription
-from medkit.core.text import TextDocument, Entity, Relation, Attribute
+from medkit.core import (
+    Collection,
+    Attribute,
+    Origin,
+    InputConverter,
+    ProcessingDescription,
+)
+from medkit.core.text import TextDocument, Entity, Relation
 import medkit.io._brat_utils as brat_utils
 
 

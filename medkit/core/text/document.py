@@ -6,9 +6,9 @@ import random
 from typing import Dict, TYPE_CHECKING
 import uuid
 
-from medkit.core.annotation import Origin
+from medkit.core.annotation import Origin, Attribute
 from medkit.core.document import Document
-from medkit.core.text.annotation import Segment, Entity, Relation, Attribute
+from medkit.core.text.annotation import Segment, Entity, Relation
 from medkit.core.text.span import Span
 
 if TYPE_CHECKING:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["Segment", "Entity", "Attribute", "Relation"]
+__all__ = ["Segment", "Entity", "Relation"]
 
 from typing import TYPE_CHECKING
 
@@ -85,37 +85,6 @@ class Entity(Segment):
             The metadata of the entity
         """
         super().__init__(origin, label, spans, text, entity_id, metadata)
-
-
-class Attribute(Annotation):
-    def __init__(
-        self, origin, label, target_id, value=None, attr_id=None, metadata=None
-    ):
-        """
-        Initialize a medkit attribute
-
-        Parameters
-        ----------
-        origin: Origin
-            Description of how this attribute annotation was generated
-        label: str
-            The attribute label
-        target_id: str
-            The id of the entity on which the attribute is applied
-        value: str, Optional
-            The value of the attribute
-        attr_id: str, Optional
-            The id of the attribute (if existing)
-        metadata: Dict[str, Any], Optional
-            The metadata of the attribute
-        """
-        super().__init__(ann_id=attr_id, origin=origin, label=label, metadata=metadata)
-        self.target_id = target_id
-        self.value = value
-
-    def __repr__(self):
-        annotation = super().__repr__()
-        return f"{annotation}, target_id={self.target_id!r}, value={self.value}"
 
 
 class Relation(Annotation):

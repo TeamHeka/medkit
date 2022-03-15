@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["Annotation", "Origin"]
+__all__ = ["Annotation", "Attribute", "Origin"]
 
 import abc
 import dataclasses
@@ -45,6 +45,37 @@ class Annotation(abc.ABC):
     @abc.abstractmethod
     def __repr__(self):
         return f"{self.__class__.__qualname__} : id={self.id!r}, label={self.label!r}"
+
+
+class Attribute(Annotation):
+    def __init__(
+        self, origin, label, target_id, value=None, attr_id=None, metadata=None
+    ):
+        """
+        Initialize a medkit attribute
+
+        Parameters
+        ----------
+        origin: Origin
+            Description of how this attribute annotation was generated
+        label: str
+            The attribute label
+        target_id: str
+            The id of the entity on which the attribute is applied
+        value: str, Optional
+            The value of the attribute
+        attr_id: str, Optional
+            The id of the attribute (if existing)
+        metadata: Dict[str, Any], Optional
+            The metadata of the attribute
+        """
+        super().__init__(ann_id=attr_id, origin=origin, label=label, metadata=metadata)
+        self.target_id = target_id
+        self.value = value
+
+    def __repr__(self):
+        annotation = super().__repr__()
+        return f"{annotation}, target_id={self.target_id!r}, value={self.value}"
 
 
 @dataclasses.dataclass(frozen=True)

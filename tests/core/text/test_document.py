@@ -1,8 +1,8 @@
 import pytest
 
-from medkit.core import Origin, generate_id
+from medkit.core import Origin, Attribute, generate_id
 from medkit.core.text.document import TextDocument
-from medkit.core.text.annotation import Entity, Relation, Attribute, Segment
+from medkit.core.text.annotation import Entity, Relation, Segment
 from medkit.core.text.span import Span
 
 
