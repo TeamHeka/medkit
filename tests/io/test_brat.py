@@ -13,5 +13,7 @@ def test_load():
     assert doc.text.startswith("The")
     assert "disease" in doc.entities.keys()
     T4 = doc.entities["disease"][1]
-    assert doc.get_annotation_by_id(T4).text == "Hypothyroidism"
-    assert T4 in doc.attributes.keys()
+    entity = doc.get_annotation_by_id(T4)
+    assert entity.text == "Hypothyroidism"
+    assert len(entity.attrs) == 1
+    assert entity.attrs[0].label == "antecedent"

@@ -1,7 +1,7 @@
 __all__ = ["QuickUMLSMatcher"]
 
 from pathlib import Path
-from typing import Dict, Iterator, List, Literal, NamedTuple, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Literal, NamedTuple, Optional, Union
 
 from quickumls import QuickUMLS
 import quickumls.constants
@@ -233,7 +233,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
     def annotate_document(self, doc: TextDocument):
         """Process a document for identifying entities
 
-        Entities and corresponding normalization attributes are added to the text document.
+        Entities with normalization attributes are added to the text document.
 
         Parameters
         ----------
@@ -244,15 +244,12 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
         if input_ann_ids is None:
             return
         input_anns = [doc.get_annotation_by_id(id) for id in input_ann_ids]
-        output_anns_and_attrs = self._process_input_annotations(input_anns)
-        for output_ann, output_attr in output_anns_and_attrs:
+        output_anns = self._process_input_annotations(input_anns)
+        for output_ann in output_anns:
             doc.add_annotation(output_ann)
-            doc.add_annotation(output_attr)
 
-    def _process_input_annotations(
-        self, input_anns: List[Segment]
-    ) -> Iterator[Tuple[Entity, Attribute]]:
-        """Create a entity annotation and a corresponding normalization attribute
+    def _process_input_annotations(self, input_anns: List[Segment]) -> Iterator[Entity]:
+        """Create a entity annotation with a normalization attribute
         for each entity detected in `input_anns`
 
         Parameters
@@ -264,13 +261,11 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
         ------
         Entity:
             Created entity annotation
-        Attribute:
-            Created normalization attribute attached to each entity
         """
         for input_ann in input_anns:
             yield from self._match(input_ann)
 
-    def _match(self, input_ann: Segment) -> Iterator[Tuple[Entity, Attribute]]:
+    def _match(self, input_ann: Segment) -> Iterator[Entity]:
         matches = self._matcher.match(input_ann.text)
         for match_candidates in matches:
             # only the best matching CUI (1st match candidate) is returned
@@ -280,34 +275,35 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             text, spans = span_utils.extract(
                 input_ann.text, input_ann.spans, [(match["start"], match["end"])]
             )
-            entity = Entity(
-                label=match["term"],
-                text=text,
-                spans=spans,
-                origin=Origin(processing_id=self.description.id, ann_ids=[input_ann.id])
-                # TODO decide how to handle that in medkit
-                # **input_entity.attributes,
-            )
 
             # TODO force now we consider the version, score and semtypes
             # to be just extra informational metadata
             # We might need to reconsider this if these items
             # are actually accessed in other "downstream" processing modules
-            metadata = dict(
-                version=self.version,
-                score=match["similarity"],
-                sem_types=list(match["semtypes"]),
-            )
-            attribute = Attribute(
+            norm_attr = Attribute(
                 label="umls",
-                target_id=entity.id,
                 value=match["cui"],
-                metadata=metadata,
+                metadata=dict(
+                    version=self.version,
+                    score=match["similarity"],
+                    sem_types=list(match["semtypes"]),
+                ),
                 origin=Origin(
                     processing_id=self.description.id, ann_ids=[input_ann.id]
                 ),
             )
-            yield entity, attribute
+
+            entity = Entity(
+                label=match["term"],
+                text=text,
+                spans=spans,
+                attrs=[norm_attr],
+                origin=Origin(processing_id=self.description.id, ann_ids=[input_ann.id])
+                # TODO decide how to handle that in medkit
+                # **input_entity.attributes,
+            )
+
+            yield entity
 
     @classmethod
     def from_description(cls, description: ProcessingDescription):

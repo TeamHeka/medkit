@@ -93,13 +93,10 @@ def test_normalization(doc):
     entity = _find_entity_with_label(doc, "Diabetes")
     assert entity is not None
 
-    assert entity.id in doc.attributes
-    attribute_ids = doc.attributes[entity.id]
-    assert len(attribute_ids) == 1
-    attribute = doc.get_annotation_by_id(attribute_ids[0])
-    assert attribute.target_id == entity.id
-    assert attribute.label == "umls"
-    assert attribute.value == "C0011849"
+    assert len(entity.attrs) == 1
+    attr = entity.attrs[0]
+    assert attr.label == "umls"
+    assert attr.value == "C0011849"
 
 
 def test_exclusion_regex(doc):

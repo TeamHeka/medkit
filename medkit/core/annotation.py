@@ -11,7 +11,12 @@ from medkit.core.id import generate_id
 
 class Annotation(abc.ABC):
     def __init__(
-        self, origin: Origin, label: str, ann_id: str = None, metadata: Dict = None
+        self,
+        origin: Origin,
+        label: str,
+        attrs: Optional[List[Attribute]] = None,
+        ann_id: str = None,
+        metadata: Dict = None,
     ):
         """
         Provide common initialization for annotation instances
@@ -22,6 +27,8 @@ class Annotation(abc.ABC):
             Description of how this annotation was generated
         label: str
             The annotation label
+        attrs:
+            The attributes of the annotation
         ann_id: str, Optional
             The annotation id
         metadata: dict
@@ -31,8 +38,12 @@ class Annotation(abc.ABC):
             self.id = ann_id
         else:
             self.id = generate_id()
+        if attrs is None:
+            attrs = []
+
         self.origin = origin
         self.label = label
+        self.attrs: List[Attribute] = attrs
         self.metadata = metadata
 
     def add_metadata(self, key, value):
@@ -44,15 +55,16 @@ class Annotation(abc.ABC):
 
     @abc.abstractmethod
     def __repr__(self):
-        return f"{self.__class__.__qualname__} : id={self.id!r}, label={self.label!r}"
+        return (
+            f"{self.__class__.__qualname__} : id={self.id!r}, label={self.label!r},"
+            f" nb_attrs={len(self.attrs)}"
+        )
 
 
-class Attribute(Annotation):
-    def __init__(
-        self, origin, label, target_id, value=None, attr_id=None, metadata=None
-    ):
+class Attribute:
+    def __init__(self, origin, label, value=None, attr_id=None, metadata=None):
         """
-        Initialize a medkit attribute
+        Initialize a medkit attribute, to be added to an annotation
 
         Parameters
         ----------
@@ -60,8 +72,6 @@ class Attribute(Annotation):
             Description of how this attribute annotation was generated
         label: str
             The attribute label
-        target_id: str
-            The id of the entity on which the attribute is applied
         value: str, Optional
             The value of the attribute
         attr_id: str, Optional
@@ -69,13 +79,28 @@ class Attribute(Annotation):
         metadata: Dict[str, Any], Optional
             The metadata of the attribute
         """
-        super().__init__(ann_id=attr_id, origin=origin, label=label, metadata=metadata)
-        self.target_id = target_id
+        if attr_id:
+            attr_id = generate_id()
+
+        self.id = attr_id
+        self.origin = origin
+        self.label = label
+        self.metadata = metadata
         self.value = value
 
+    def add_metadata(self, key, value):
+        if self.metadata is None:
+            self.metadata = {}
+        if key in self.metadata.keys():
+            raise ValueError(f"Metadata key {key} is already used")
+        self.metadata[key] = value
+
+    @abc.abstractmethod
     def __repr__(self):
-        annotation = super().__repr__()
-        return f"{annotation}, target_id={self.target_id!r}, value={self.value}"
+        return (
+            f"{self.__class__.__qualname__} : id={self.id!r}, label={self.label!r},"
+            f" value={self.value}"
+        )
 
 
 @dataclasses.dataclass(frozen=True)

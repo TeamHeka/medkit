@@ -5,7 +5,7 @@ __all__ = ["RegexpMatcher", "RegexpMatcherRule", "RegexpMatcherNormalization"]
 import dataclasses
 from pathlib import Path
 import re
-from typing import Any, Iterator, List, Optional, Tuple
+from typing import Any, Iterator, List, Optional
 
 import yaml
 
@@ -158,17 +158,13 @@ class RegexpMatcher(RuleBasedAnnotator):
         if input_ann_ids is None:
             return
         input_anns = [doc.get_annotation_by_id(id) for id in input_ann_ids]
-        output_anns_and_attrs = self._process_input_annotations(input_anns)
-        for output_ann, output_attrs in output_anns_and_attrs:
+        output_anns = self._process_input_annotations(input_anns)
+        for output_ann in output_anns:
             doc.add_annotation(output_ann)
-            for attribute in output_attrs:
-                doc.add_annotation(attribute)
 
-    def _process_input_annotations(
-        self, input_anns: List[Segment]
-    ) -> Iterator[Tuple[Entity, List[Attribute]]]:
+    def _process_input_annotations(self, input_anns: List[Segment]) -> Iterator[Entity]:
         """
-        Create a entity annotation and optional attribute annotations
+        Create a entity annotation with optional normalization attributes
         for each entity detected in `input_anns`
 
         Parameters
@@ -180,17 +176,12 @@ class RegexpMatcher(RuleBasedAnnotator):
         ------
         Entity:
             Created entity annotations
-        List[Attribute]:
-            Created attribute annotations attached to each entity
-            (might be empty)
         """
         for input_ann in input_anns:
             for rule in self.rules:
                 yield from self._match(rule, input_ann)
 
-    def _match(
-        self, rule: RegexpMatcherRule, input_ann: Segment
-    ) -> Iterator[Tuple[Entity, List[Attribute]]]:
+    def _match(self, rule: RegexpMatcherRule, input_ann: Segment) -> Iterator[Entity]:
         flags = 0 if rule.case_sensitive else re.IGNORECASE
 
         for match in re.finditer(rule.regexp, input_ann.text, flags):
@@ -203,44 +194,47 @@ class RegexpMatcher(RuleBasedAnnotator):
                 exclude_match = re.search(rule.regexp_exclude, input_ann.text, flags)
                 if exclude_match is not None:
                     continue
+
             # extract raw span list from regex match range
             text, spans = span_utils.extract(
                 input_ann.text, input_ann.spans, [match.span(rule.index_extract)]
             )
+
             metadata = dict(
                 id_regexp=rule.id,
                 version=rule.version,
                 # TODO decide how to handle that in medkit
                 # **syntagme.attributes,
             )
-            entity = Entity(
-                label=rule.label,
-                text=text,
-                spans=spans,
-                origin=Origin(
-                    processing_id=self.description.id, ann_ids=[input_ann.id]
-                ),
-                metadata=metadata,
-            )
 
-            # add normalization attribute for each normalization descriptor
+            # create normalization attributes for each normalization descriptor
             # of the rule
             # TODO should we have a NormalizationAttribute class
             # with specific fields (name, id, version) ?
-            attributes = [
+            norm_attrs = [
                 Attribute(
                     origin=Origin(
                         processing_id=self.description.id, ann_ids=[input_ann.id]
                     ),
                     label=norm.kb_name,
-                    target_id=entity.id,
                     value=norm.id,
                     metadata=dict(version=norm.kb_version),
                 )
                 for norm in rule.normalizations
             ]
 
-            yield entity, attributes
+            entity = Entity(
+                label=rule.label,
+                text=text,
+                spans=spans,
+                attrs=norm_attrs,
+                origin=Origin(
+                    processing_id=self.description.id, ann_ids=[input_ann.id]
+                ),
+                metadata=metadata,
+            )
+
+            yield entity
 
     @classmethod
     def from_description(cls, description: ProcessingDescription):

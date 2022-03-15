@@ -75,13 +75,6 @@ def _find_entity_with_label(doc, label):
     return doc.get_annotation_by_id(entity_ids[0])
 
 
-def _find_attribute_for_entity(doc, entity):
-    attribute_ids = doc.attributes.get(entity.id, [])
-    if len(attribute_ids) == 0:
-        return None
-    return doc.get_annotation_by_id(attribute_ids[0])
-
-
 def test_single_match():
     doc = TextDocument(text="The patient has asthma.")
 
@@ -97,14 +90,13 @@ def test_single_match():
     assert entity.spans == [Span(16, 22)]
 
     # normalization attribute
-    attribute = _find_attribute_for_entity(doc, entity)
-    assert attribute is not None
-    assert attribute.target_id == entity.id
-    assert attribute.label == "umls"
-    assert attribute.value == _ASTHMA_CUI
-    assert attribute.metadata["version"] == "2021AB"
-    assert attribute.metadata["score"] == 1.0
-    assert attribute.metadata["sem_types"] == ["T047"]
+    assert len(entity.attrs) == 1
+    attr = entity.attrs[0]
+    assert attr.label == "umls"
+    assert attr.value == _ASTHMA_CUI
+    assert attr.metadata["version"] == "2021AB"
+    assert attr.metadata["score"] == 1.0
+    assert attr.metadata["sem_types"] == ["T047"]
 
 
 def test_multiple_matchs():
@@ -121,10 +113,9 @@ def test_multiple_matchs():
     assert entity.text == "asthma"
     assert entity.spans == [Span(16, 22)]
 
-    attribute = _find_attribute_for_entity(doc, entity)
-    assert attribute is not None
-    assert attribute.target_id == entity.id
-    assert attribute.value == _ASTHMA_CUI
+    attr = entity.attrs[0]
+    assert attr.label == "umls"
+    assert attr.value == _ASTHMA_CUI
 
     # 2d entity
     entity = _find_entity_with_label(doc, "type 1 diabetes")
@@ -132,10 +123,9 @@ def test_multiple_matchs():
     assert entity.text == "type 1 diabetes"
     assert entity.spans == [Span(27, 42)]
 
-    attribute = _find_attribute_for_entity(doc, entity)
-    assert attribute is not None
-    assert attribute.target_id == entity.id
-    assert attribute.value == _DIABETES_CUI
+    attr = entity.attrs[0]
+    assert attr.label == "umls"
+    assert attr.value == _DIABETES_CUI
 
 
 def test_language():
@@ -152,10 +142,9 @@ def test_language():
     assert entity.text == "Asthme"
 
     # normalization attribute, same CUI as in english
-    attribute = _find_attribute_for_entity(doc, entity)
-    assert attribute is not None
-    assert attribute.target_id == entity.id
-    assert attribute.value == _ASTHMA_CUI
+    attr = entity.attrs[0]
+    assert attr.label == "umls"
+    assert attr.value == _ASTHMA_CUI
 
 
 def test_lowercase():
@@ -194,8 +183,8 @@ def test_ambiguous_match():
     # 1 normalization attribute is created
     entity_ids = doc.entities.get("diabetes", [])
     assert len(entity_ids) == 1
-    attribute_ids = doc.attributes.get(entity_ids[0], [])
-    assert len(attribute_ids) == 1
+    entity = doc.get_annotation_by_id(entity_ids[0])
+    assert len(entity.attrs) == 1
 
 
 def test_annotate_collection():
@@ -209,5 +198,4 @@ def test_annotate_collection():
 
     entity = _find_entity_with_label(doc, "asthma")
     assert entity is not None
-    attribute = _find_attribute_for_entity(doc, entity)
-    assert attribute is not None
+    assert len(entity.attrs) == 1
