@@ -14,8 +14,8 @@ __all__ = [
 import re
 from typing import List, Tuple, Union
 
-import medkit.core.text.span as span_utils
 from medkit.core.text.span import AnySpan
+import medkit.core.text.span_utils as span_utils
 
 # Some strings for character classification
 _NUMERIC_CHARS = "0-9"

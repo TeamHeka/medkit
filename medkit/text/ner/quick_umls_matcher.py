@@ -7,8 +7,13 @@ from quickumls import QuickUMLS
 import quickumls.constants
 
 from medkit.core import Collection, Origin, ProcessingDescription, RuleBasedAnnotator
-from medkit.core.text import Attribute, Entity, TextBoundAnnotation, TextDocument
-import medkit.core.text.span as span_utils
+from medkit.core.text import (
+    Attribute,
+    Entity,
+    TextBoundAnnotation,
+    TextDocument,
+    span_utils,
+)
 
 
 # workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/issues/68

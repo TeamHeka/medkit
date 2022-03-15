@@ -10,8 +10,7 @@ import yaml
 from flashtext import KeywordProcessor
 
 from medkit.core import Collection, Origin, ProcessingDescription
-from medkit.core.text import TextBoundAnnotation, TextDocument
-from medkit.core.text import span as span_utils
+from medkit.core.text import TextBoundAnnotation, TextDocument, span_utils
 
 
 @dataclasses.dataclass(frozen=True)

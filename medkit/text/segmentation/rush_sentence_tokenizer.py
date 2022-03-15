@@ -10,8 +10,7 @@ from typing import Iterator, List, Optional, Union, TYPE_CHECKING
 from PyRuSH import RuSH
 
 from medkit.core import Origin, ProcessingDescription, RuleBasedAnnotator
-from medkit.core.text import TextBoundAnnotation, TextDocument
-import medkit.core.text.span as span_utils
+from medkit.core.text import TextBoundAnnotation, TextDocument, span_utils
 
 if TYPE_CHECKING:
     from medkit.core.document import Collection

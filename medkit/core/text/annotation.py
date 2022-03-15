@@ -5,7 +5,7 @@ __all__ = ["TextBoundAnnotation", "Entity", "Attribute", "Relation"]
 from typing import TYPE_CHECKING
 
 from medkit.core.annotation import Annotation
-from medkit.core.text import span as span_utils
+from medkit.core.text import span_utils
 
 if TYPE_CHECKING:
     from medkit.core.text.document import TextDocument
