@@ -4,7 +4,8 @@ __all__ = ["Collection", "Document"]
 
 import abc
 from typing import Dict, List, TYPE_CHECKING
-import uuid
+
+from medkit.core.id import generate_id
 
 if TYPE_CHECKING:
     from medkit.core.annotation import Annotation
@@ -16,7 +17,7 @@ class Document(abc.ABC):
         if doc_id:
             self.id = doc_id
         else:
-            self.id = str(uuid.uuid1())
+            self.id = generate_id()
         self.annotations: Dict[str, Annotation] = {}
         self.annotation_ids_by_label: Dict[str, List[str]] = {}
         self.operations: Dict[str, ProcessingDescription] = {}

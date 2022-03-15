@@ -1,7 +1,6 @@
 import pytest
-import uuid
 
-from medkit.core import Origin
+from medkit.core import Origin, generate_id
 from medkit.core.text.document import TextDocument
 from medkit.core.text.annotation import Entity, Relation, Attribute, TextBoundAnnotation
 from medkit.core.text.span import Span
@@ -79,7 +78,7 @@ def test_raw_text_annotation():
     assert len(anns) == 0
 
     # docs with same ids should have raw text anns with same id
-    doc_id = uuid.uuid1()
+    doc_id = generate_id()
     doc_1 = TextDocument(doc_id=doc_id, text=text)
     ann_1 = doc_1.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)[0]
     doc_2 = TextDocument(doc_id=doc_id, text=text)

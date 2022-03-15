@@ -4,6 +4,7 @@ __all__ = [
     "Origin",
     "Collection",
     "Document",
+    "generate_id",
     "InputConverter",
     "OutputConverter",
     "ProcessingDescription",
@@ -13,6 +14,7 @@ __all__ = [
 from . import text
 from .annotation import Annotation, Origin
 from .document import Collection, Document
+from .id import generate_id
 from .processing import (
     InputConverter,
     OutputConverter,
