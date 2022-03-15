@@ -14,7 +14,7 @@ from medkit.core import Collection, Origin, ProcessingDescription, RuleBasedAnno
 from medkit.core.text import (
     Attribute,
     Entity,
-    TextBoundAnnotation,
+    Segment,
     TextDocument,
     span_utils,
 )
@@ -101,7 +101,7 @@ class RegexpMatcher(RuleBasedAnnotator):
         Parameters
         ----------
         input_label:
-            The input label of the text-bound annotations to use as input.
+            The input label of the segment annotations to use as input.
             NB: other type of annotations such as entities are not supported
         rules:
             The set of rules to use when matching entities. If none provided,
@@ -160,7 +160,7 @@ class RegexpMatcher(RuleBasedAnnotator):
                 doc.add_annotation(attribute)
 
     def _process_input_annotations(
-        self, input_anns: List[TextBoundAnnotation]
+        self, input_anns: List[Segment]
     ) -> Iterator[Tuple[Entity, List[Attribute]]]:
         """
         Create a entity annotation and optional attribute annotations
@@ -184,7 +184,7 @@ class RegexpMatcher(RuleBasedAnnotator):
                 yield from self._match(rule, input_ann)
 
     def _match(
-        self, rule: RegexpMatcherRule, input_ann: TextBoundAnnotation
+        self, rule: RegexpMatcherRule, input_ann: Segment
     ) -> Iterator[Tuple[Entity, List[Attribute]]]:
         flags = 0 if rule.case_sensitive else re.IGNORECASE
 

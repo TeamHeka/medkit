@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["TextBoundAnnotation", "Entity", "Attribute", "Relation"]
+__all__ = ["Segment", "Entity", "Attribute", "Relation"]
 
 from typing import TYPE_CHECKING
 
@@ -11,10 +11,10 @@ if TYPE_CHECKING:
     from medkit.core.text.document import TextDocument
 
 
-class TextBoundAnnotation(Annotation):
+class Segment(Annotation):
     def __init__(self, origin, label, spans, text, ann_id=None, metadata=None):
         """
-        Initialize a medkit text-bound annotation
+        Initialize a medkit segment
 
         Parameters
         ----------
@@ -64,7 +64,7 @@ class TextBoundAnnotation(Annotation):
         return f"{annotation}, spans={self.spans!r}, text={self.text!r}"
 
 
-class Entity(TextBoundAnnotation):
+class Entity(Segment):
     def __init__(self, origin, label, spans, text, entity_id=None, metadata=None):
         """
         Initialize a medkit text entity

@@ -10,7 +10,7 @@ from medkit.core import Collection, Origin, ProcessingDescription, RuleBasedAnno
 from medkit.core.text import (
     Attribute,
     Entity,
-    TextBoundAnnotation,
+    Segment,
     TextDocument,
     span_utils,
 )
@@ -145,7 +145,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
         Parameters
         ----------
         input_label:
-            The input label of the text-bound annotations to use as input.
+            The input label of the segment annotations to use as input.
             NB: other type of annotations such as entities are not supported
         version:
             UMLS version of the QuickUMLS install to use, for instance "2021AB"
@@ -245,7 +245,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             doc.add_annotation(output_attr)
 
     def _process_input_annotations(
-        self, input_anns: List[TextBoundAnnotation]
+        self, input_anns: List[Segment]
     ) -> Iterator[Tuple[Entity, Attribute]]:
         """Create a entity annotation and a corresponding normalization attribute
         for each entity detected in `input_anns`
@@ -265,9 +265,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
         for input_ann in input_anns:
             yield from self._match(input_ann)
 
-    def _match(
-        self, input_ann: TextBoundAnnotation
-    ) -> Iterator[Tuple[Entity, Attribute]]:
+    def _match(self, input_ann: Segment) -> Iterator[Tuple[Entity, Attribute]]:
         matches = self._matcher.match(input_ann.text)
         for match_candidates in matches:
             # only the best matching CUI (1st match candidate) is returned

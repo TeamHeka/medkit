@@ -2,7 +2,7 @@ import pytest
 
 from medkit.core import Origin, generate_id
 from medkit.core.text.document import TextDocument
-from medkit.core.text.annotation import Entity, Relation, Attribute, TextBoundAnnotation
+from medkit.core.text.annotation import Entity, Relation, Attribute, Segment
 from medkit.core.text.span import Span
 
 
@@ -70,7 +70,7 @@ def test_raw_text_annotation():
     ann = anns[0]
     assert ann.label == TextDocument.RAW_TEXT_LABEL
     assert ann.text == doc.text
-    assert type(ann) == TextBoundAnnotation
+    assert type(ann) == Segment
 
     # no raw text ann if no text provided
     doc = TextDocument()

@@ -8,7 +8,7 @@ import uuid
 
 from medkit.core.annotation import Origin
 from medkit.core.document import Document
-from medkit.core.text.annotation import TextBoundAnnotation, Entity, Relation, Attribute
+from medkit.core.text.annotation import Segment, Entity, Relation, Attribute
 from medkit.core.text.span import Span
 
 if TYPE_CHECKING:
@@ -56,7 +56,7 @@ class TextDocument(Document):
         in the Document.
         It also adds the annotation id to the corresponding dictionary view (segments,
         entities, relations, attributes)
-        according to the annotation category (TextBoundAnnotation, Entity, Relation,
+        according to the annotation category (Segment, Entity, Relation,
         Attribute).
 
         Note that entity is also considered as a segment of the text.
@@ -76,7 +76,7 @@ class TextDocument(Document):
         except ValueError as err:
             raise err
 
-        if isinstance(annotation, TextBoundAnnotation):
+        if isinstance(annotation, Segment):
             if annotation.label not in self.segments.keys():
                 self.segments[annotation.label] = [annotation.id]
             else:
@@ -124,7 +124,7 @@ class TextDocument(Document):
         rng = random.Random(self.id)
         id = str(uuid.UUID(int=rng.getrandbits(128)))
 
-        return TextBoundAnnotation(
+        return Segment(
             origin=Origin(),
             label=self.RAW_TEXT_LABEL,
             spans=[Span(0, len(self.text))],
