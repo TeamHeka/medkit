@@ -465,6 +465,20 @@ def _move_in_spans(spans, range, destination):
     return spans
 
 
+def concatenate(
+    texts: List[str], all_spans: List[List[AnySpan]]
+) -> Tuple[str, List[AnySpan]]:
+    """Concatenate text and span objects"""
+
+    assert _lists_have_same_dimension(
+        texts, all_spans
+    ), "Text and all_spans should have the same dimension"
+    text = "".join(texts)
+    span = [sp for spans in all_spans for sp in spans]
+
+    return text, span
+
+
 def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
     """
     Return a transformed of `spans` in which all instances of ModifiedSpan are
@@ -506,17 +520,3 @@ def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
             all_spans_merged.append(span)
 
     return all_spans_merged
-
-
-def concatenate(
-    texts: List[str], all_spans: List[List[AnySpan]]
-) -> Tuple[str, List[AnySpan]]:
-    """Concatenate text and span objects"""
-
-    assert _lists_have_same_dimension(
-        texts, all_spans
-    ), "Text and all_spans should have the same dimension"
-    text = "".join(texts)
-    span = [sp for spans in all_spans for sp in spans]
-
-    return text, span
