@@ -9,9 +9,9 @@ __all__ = [
 
 import abc
 import dataclasses
-import uuid
-
 from typing import Any, Dict, TYPE_CHECKING
+
+from medkit.core.id import generate_id
 
 if TYPE_CHECKING:
     from medkit.core.document import Collection
@@ -34,7 +34,7 @@ class ProcessingDescription:
     """
 
     name: str
-    id: str = dataclasses.field(default_factory=lambda: str(uuid.uuid1()))
+    id: str = dataclasses.field(default_factory=generate_id)
     config: Dict[str, Any] = None
 
 

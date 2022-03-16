@@ -9,14 +9,12 @@ from typing import Iterator, List, Optional, Union, TYPE_CHECKING
 
 from PyRuSH import RuSH
 
-from medkit.core import Origin
-from medkit.core.processing import ProcessingDescription, RuleBasedAnnotator
-from medkit.core.text import TextBoundAnnotation, TextDocument
-import medkit.core.text.span as span_utils
+from medkit.core import Origin, ProcessingDescription, RuleBasedAnnotator
+from medkit.core.text import Segment, TextDocument, span_utils
 
 if TYPE_CHECKING:
     from medkit.core.document import Collection
-    from medkit.core.text.span import Span, ModifiedSpan
+    from medkit.core.text.span import AnySpan
 
 
 @dataclasses.dataclass(frozen=True)
@@ -90,7 +88,7 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
     def annotate(self, collection: Collection):
         """
         Process the collection of documents for extracting sentences.
-        Sentences are represented by text bound annotations
+        Sentences are represented by segment annotations
         in each text document of the collection.
 
         Parameters
@@ -105,7 +103,7 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
     def annotate_document(self, document: TextDocument):
         """
         Process a document for extracting sentences.
-        Sentences are represented by text bound annotations
+        Sentences are represented by segment annotations
         in each text document of the collection.
 
         Parameters
@@ -125,9 +123,7 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
                 # Add each sentence as annotation in doc
                 document.add_annotation(ann)
 
-    def _process_doc_annotations(
-        self, annotations: List[TextBoundAnnotation]
-    ) -> Iterator[TextBoundAnnotation]:
+    def _process_doc_annotations(self, annotations: List[Segment]) -> Iterator[Segment]:
         """
         Create an annotation for each sentence detected in input annotations
 
@@ -138,13 +134,13 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
 
         Yields
         ------
-        TextBoundAnnotation:
+        Segment:
             Created annotation representing a token
         """
         for ann in annotations:
             sentences = self._extract_sentences_and_spans(ann)
             for text, spans in sentences:
-                new_annotation = TextBoundAnnotation(
+                new_annotation = Segment(
                     origin=Origin(processing_id=self.description.id, ann_ids=[ann.id]),
                     label=self.output_label,
                     spans=spans,
@@ -153,8 +149,8 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
                 yield new_annotation
 
     def _extract_sentences_and_spans(
-        self, text_annotation: TextBoundAnnotation
-    ) -> Iterator[(str, List[Union[Span, ModifiedSpan]])]:
+        self, text_annotation: Segment
+    ) -> Iterator[(str, List[AnySpan])]:
         rush_spans = self._rush.segToSentenceSpans(text_annotation.text)
         for rush_span in rush_spans:
             text, spans = span_utils.extract(

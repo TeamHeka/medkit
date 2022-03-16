@@ -4,15 +4,13 @@ __all__ = ["SectionModificationRule", "SectionTokenizer"]
 
 import dataclasses
 import pathlib
+from typing import Dict, List, Literal, Tuple
 import yaml
 
 from flashtext import KeywordProcessor
-from typing import Dict, List, Literal, Tuple
 
-from medkit.core import Collection, Origin
-from medkit.core.processing import ProcessingDescription
-from medkit.core.text import TextBoundAnnotation, TextDocument
-from medkit.core.text import span as span_utils
+from medkit.core import Collection, Origin, ProcessingDescription
+from medkit.core.text import Segment, TextDocument, span_utils
 
 
 @dataclasses.dataclass(frozen=True)
@@ -97,7 +95,7 @@ class SectionTokenizer:
             for section, text, spans in sections:
                 # add section name in metadata
                 metadata = dict(name=section)
-                output_ann = TextBoundAnnotation(
+                output_ann = Segment(
                     origin=Origin(
                         processing_id=self.description.id, ann_ids=[input_ann.id]
                     ),
@@ -108,7 +106,7 @@ class SectionTokenizer:
                 )
                 document.add_annotation(output_ann)
 
-    def _extract_sections_and_spans(self, input_ann: TextBoundAnnotation):
+    def _extract_sections_and_spans(self, input_ann: Segment):
         # Process mappings
         match = self.keyword_processor.extract_keywords(input_ann.text, span_info=True)
 

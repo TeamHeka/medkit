@@ -4,16 +4,14 @@ __all__ = ["SentenceTokenizer"]
 
 import dataclasses
 import re
-from typing import Iterator, List, Tuple, Union, TYPE_CHECKING
+from typing import Iterator, List, Tuple, TYPE_CHECKING
 
-from medkit.core import Origin
-from medkit.core.processing import ProcessingDescription, RuleBasedAnnotator
-from medkit.core.text import TextBoundAnnotation, TextDocument
-import medkit.core.text.span as span_utils
+from medkit.core import Origin, ProcessingDescription, RuleBasedAnnotator
+from medkit.core.text import Segment, TextDocument, span_utils
 
 if TYPE_CHECKING:
     from medkit.core.document import Collection
-    from medkit.core.text.span import Span, ModifiedSpan
+    from medkit.core.text.span import AnySpan
 
 
 @dataclasses.dataclass(frozen=True)
@@ -117,25 +115,23 @@ class SentenceTokenizer(RuleBasedAnnotator):
                 # Add each sentence as annotation in doc
                 document.add_annotation(ann)
 
-    def _process_doc_annotations(
-        self, annotations: List[TextBoundAnnotation]
-    ) -> Iterator[TextBoundAnnotation]:
+    def _process_doc_annotations(self, annotations: List[Segment]) -> Iterator[Segment]:
         """
         Create an annotation for each sentence detected in input annotations
 
         Parameters
         ----------
-        annotations: List[TextBoundAnnotation]
+        annotations: List[Segment]
             List of input annotations to process
         Yields
         -------
-        TextBoundAnnotation:
+        Segment:
             Created annotation representing a sentence
         """
         for ann in annotations:
             sentences = self._extract_sentences_and_spans(ann)
             for text, spans in sentences:
-                new_annotation = TextBoundAnnotation(
+                new_annotation = Segment(
                     origin=Origin(processing_id=self.description.id, ann_ids=[ann.id]),
                     label=self.output_label,
                     spans=spans,
@@ -144,8 +140,8 @@ class SentenceTokenizer(RuleBasedAnnotator):
                 yield new_annotation
 
     def _extract_sentences_and_spans(
-        self, text_annotation: TextBoundAnnotation
-    ) -> Iterator[(str, List[Union[Span, ModifiedSpan]])]:
+        self, text_annotation: Segment
+    ) -> Iterator[(str, List[AnySpan])]:
         regex_rule = (
             "(?P<blanks> *)"  # Blanks at the beginning of the sentence
             + "(?P<sentence>.+?)"  # Sentence to detect

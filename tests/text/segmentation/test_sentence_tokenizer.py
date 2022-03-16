@@ -1,8 +1,7 @@
 import pytest
 
 from medkit.core import Collection
-from medkit.core.text import TextDocument
-from medkit.core.text.span import Span
+from medkit.core.text import TextDocument, Span
 from medkit.text.segmentation import SentenceTokenizer
 
 

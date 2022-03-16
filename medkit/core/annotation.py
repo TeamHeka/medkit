@@ -4,9 +4,9 @@ __all__ = ["Annotation", "Origin"]
 
 import abc
 import dataclasses
-import uuid
-
 from typing import Dict, List, Optional
+
+from medkit.core.id import generate_id
 
 
 class Annotation(abc.ABC):
@@ -30,7 +30,7 @@ class Annotation(abc.ABC):
         if ann_id:
             self.id = ann_id
         else:
-            self.id = str(uuid.uuid1())
+            self.id = generate_id()
         self.origin = origin
         self.label = label
         self.metadata = metadata

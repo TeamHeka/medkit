@@ -1,11 +1,11 @@
+__all__ = ["BratInputConverter"]
+
 import pathlib
 
 from smart_open import open
 
-from medkit.core import Collection, Origin
+from medkit.core import Collection, Origin, InputConverter, ProcessingDescription
 from medkit.core.text import TextDocument, Entity, Relation, Attribute
-from medkit.core.processing import InputConverter, ProcessingDescription
-
 import medkit.io._brat_utils as brat_utils
 
 

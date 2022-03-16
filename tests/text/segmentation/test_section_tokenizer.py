@@ -1,13 +1,13 @@
 import pytest
-import tests.data_utils as data_utils
 
 import medkit.text.segmentation.section_tokenizer as st
 from medkit.core import Origin
-from medkit.core.text import Span, TextBoundAnnotation
+from medkit.core.text import Span, Segment
 from medkit.text.segmentation.section_tokenizer import (
     SectionTokenizer,
     SectionModificationRule,
 )
+import tests.data_utils as data_utils
 
 TEST_CONFIG = [
     (
@@ -41,7 +41,7 @@ TEST_CONFIG = [
 def test_annotate_document(filepath, expected_sections):
     doc = data_utils.get_text_document(filepath)
     section_tokenizer = SectionTokenizer.get_example()
-    clean_text = TextBoundAnnotation(
+    clean_text = Segment(
         origin=Origin(),
         label=st.DefaultConfig.input_label,
         spans=[Span(0, len(doc.text))],
@@ -60,7 +60,7 @@ def test_annotate_document(filepath, expected_sections):
 def test_annotate_document_with_rules():
     filepath = TEST_CONFIG[0][0]
     doc = data_utils.get_text_document(filepath)
-    clean_text = TextBoundAnnotation(
+    clean_text = Segment(
         origin=Origin(),
         label=st.DefaultConfig.input_label,
         spans=[Span(0, len(doc.text))],

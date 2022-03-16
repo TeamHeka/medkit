@@ -1,7 +1,6 @@
 import pytest
 
-from medkit.core.text import TextDocument
-from medkit.core.text.span import Span, ModifiedSpan
+from medkit.core.text import TextDocument, Span, ModifiedSpan
 from medkit.text.segmentation.rush_sentence_tokenizer import RushSentenceTokenizer
 
 
