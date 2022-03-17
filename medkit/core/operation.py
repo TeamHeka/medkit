@@ -60,7 +60,7 @@ class ProcessingOperation(Operation):
     @abc.abstractmethod
     def process(
         self, **all_input_annotations: List[Annotation]
-    ) -> Union[None, List[Any], Tuple[List[Any], ...]]:
+    ) -> Union[None, List[Annotation], Tuple[List[Annotation], ...]]:
         """Main processing function to implement
 
         Params
@@ -71,7 +71,7 @@ class ProcessingOperation(Operation):
 
         Returns
         -------
-        Union[None, List[Any], Tuple[List[Any], ...]]
+        Union[None, List[Annotation], Tuple[List[Annotation], ...]]
             Tuple of list of all new annotations created by the operation.
             Can be None if the operation does not create any new annotation
             but rather modify input annotations in-place (for instance by
