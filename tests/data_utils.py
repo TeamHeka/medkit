@@ -1,3 +1,5 @@
+__all__ = ["get_text_collection", "get_text_document", "get_text"]
+
 from pathlib import Path
 
 from medkit.core import Collection
@@ -21,3 +23,10 @@ def get_text_document(name):
     with open(path) as f:
         text = f.read()
     return TextDocument(text=text)
+
+
+def get_text(name):
+    path = _PATH_TO_TEXT_DOCS / (name + ".txt")
+    with open(path) as f:
+        text = f.read()
+    return text

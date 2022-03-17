@@ -1,19 +1,29 @@
 import pytest
 
-from medkit.core import Collection
-from medkit.core.text import TextDocument, Span
+from medkit.core import Origin
+from medkit.core.text import Segment, Span
 from medkit.text.segmentation import SentenceTokenizer
 
 
-TEXT = (
+_TEXT = (
     "Sentence testing the dot. We are testing the carriage return\rthis is the"
     " newline\n Test interrogation ? Now, testing semicolon;Exclamation! Several"
     " punctuation characters?!..."
 )
 
+
+def _get_clean_text_segment():
+    return Segment(
+        origin=Origin(),
+        label="clean_text",
+        spans=[Span(0, len(_TEXT))],
+        text=_TEXT,
+    )
+
+
 TEST_CONFIG = [
     (
-        SentenceTokenizer(input_label=TextDocument.RAW_TEXT_LABEL),
+        SentenceTokenizer(),
         [
             ("Sentence testing the dot", [Span(start=0, end=24)]),
             ("We are testing the carriage return", [Span(start=26, end=60)]),
@@ -25,7 +35,7 @@ TEST_CONFIG = [
         ],
     ),
     (
-        SentenceTokenizer(input_label=TextDocument.RAW_TEXT_LABEL, keep_punct=True),
+        SentenceTokenizer(keep_punct=True),
         [
             ("Sentence testing the dot.", [Span(start=0, end=25)]),
             ("We are testing the carriage return\r", [Span(start=26, end=61)]),
@@ -39,22 +49,13 @@ TEST_CONFIG = [
 ]
 
 
-@pytest.fixture
-def collection():
-    doc = TextDocument(text=TEXT)
-    return Collection([doc])
-
-
 @pytest.mark.parametrize(
     "sentence_tokenizer,expected_sentences", TEST_CONFIG, ids=["default", "keep_punct"]
 )
-def test_annotate(collection, sentence_tokenizer, expected_sentences):
-    assert sentence_tokenizer.input_label == TextDocument.RAW_TEXT_LABEL
+def test_process(sentence_tokenizer, expected_sentences):
+    clean_text_segment = _get_clean_text_segment()
+    sentences = sentence_tokenizer.process([clean_text_segment])
 
-    sentence_tokenizer.annotate(collection)
-    doc = collection.documents[0]
-    assert isinstance(doc, TextDocument)
-    sentences = [doc.get_annotation_by_id(ann) for ann in doc.segments.get("SENTENCE")]
     assert len(sentences) == 7
     for i, (text, spans) in enumerate(expected_sentences):
         assert sentences[i].text == text

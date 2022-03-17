@@ -1,19 +1,18 @@
 __all__ = ["QuickUMLSMatcher"]
 
 from pathlib import Path
-from typing import Dict, Iterator, List, Literal, NamedTuple, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Literal, NamedTuple, Optional, Union
 
 from quickumls import QuickUMLS
 import quickumls.constants
 
-from medkit.core import Collection, Origin, ProcessingDescription, RuleBasedAnnotator
-from medkit.core.text import (
+from medkit.core import (
     Attribute,
-    Entity,
-    Segment,
-    TextDocument,
-    span_utils,
+    Origin,
+    OperationDescription,
+    RuleBasedAnnotator,
 )
+from medkit.core.text import Entity, Segment, span_utils
 
 
 # workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/issues/68
@@ -56,13 +55,12 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
     and finally instantiate the matcher with:
 
         matcher = QuickUMLSMatcher(
-            input_label,
             version="2021AB",
             language="FRE",
             lowercase=True,
         )
 
-    This mechanism makes it possible to store in the ProcessingDescription
+    This mechanism makes it possible to store in the OperationDescription
     how the used QuickUMLS was created, and to reinstantiate the same matcher
     on a different environment if a similar install is available.
     """
@@ -128,7 +126,6 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
 
     def __init__(
         self,
-        input_label: str,
         version: str,
         language: str,
         lowercase: bool = False,
@@ -138,15 +135,13 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
         window: int = 5,
         similarity: Literal["dice", "jaccard", "cosine", "overlap"] = "jaccard",
         accepted_semtypes: List[str] = quickumls.constants.ACCEPTED_SEMTYPES,
+        attrs_to_copy: Optional[List[str]] = None,
         proc_id: Optional[str] = None,
     ):
         """Instantiate the QuickUMLS matcher
 
         Parameters
         ----------
-        input_label:
-            The input label of the segment annotations to use as input.
-            NB: other type of annotations such as entities are not supported
         version:
             UMLS version of the QuickUMLS install to use, for instance "2021AB"
             Will be used to decide with QuickUMLS to use
@@ -170,9 +165,12 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             Similarity measure to use (cf QuickUMLS doc)
         accepted_semtypes:
             UMLS semantic types that matched concepts should belong to (cf QuickUMLS doc).
+        attrs_to_copy:
+            Labels of the attributes that should be copied from the source segment
+            to the created entity. Useful for propagating context attributes
+            (negation, antecendent, etc)
         """
 
-        self.input_label = input_label
         self.version = version
         path_to_install = self._get_path_to_install(
             version, language, lowercase, normalize_unicode
@@ -190,9 +188,11 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             and self._matcher.to_lowercase_flag == lowercase
             and self._matcher.normalize_unicode_flag == normalize_unicode
         ), "Inconsistent QuickUMLS install flags"
+        if attrs_to_copy is None:
+            attrs_to_copy = []
+        self.attrs_to_copy = attrs_to_copy
 
         config = dict(
-            input_label=input_label,
             language=language,
             version=version,
             lowercase=lowercase,
@@ -202,108 +202,76 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             similarity=similarity,
             window=window,
             accepted_semtypes=accepted_semtypes,
+            attrs_to_copy=attrs_to_copy,
         )
-        self._description = ProcessingDescription(
+        self._description = OperationDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )
 
     @property
-    def description(self) -> ProcessingDescription:
+    def description(self) -> OperationDescription:
         return self._description
 
-    def annotate(self, collection: Collection):
-        """Process a collection of documents for identifying entities
-
-        Entities and corresponding normalization attributes are added to the text document.
+    def process(self, segments: List[Segment]) -> List[Entity]:
+        """Return entities (with UMLS normalization attributes) for each match in `segments`
 
         Parameters
         ----------
-        collection:
-            The collection of documents to process. Only TextDocuments will be processed.
+        segments:
+            List of segments into which to look for matches
+
+        Returns
+        -------
+        entities: List[Entity]
+            Entities found in `segments` (with UMLS normalization attributes)
         """
-        for doc in collection.documents:
-            if isinstance(doc, TextDocument):
-                self.annotate_document(doc)
+        return [
+            entity
+            for segment in segments
+            for entity in self._find_matches_in_segment(segment)
+        ]
 
-    def annotate_document(self, doc: TextDocument):
-        """Process a document for identifying entities
-
-        Entities and corresponding normalization attributes are added to the text document.
-
-        Parameters
-        ----------
-        document:
-            The text document to process
-        """
-        input_ann_ids = doc.segments.get(self.input_label)
-        if input_ann_ids is None:
-            return
-        input_anns = [doc.get_annotation_by_id(id) for id in input_ann_ids]
-        output_anns_and_attrs = self._process_input_annotations(input_anns)
-        for output_ann, output_attr in output_anns_and_attrs:
-            doc.add_annotation(output_ann)
-            doc.add_annotation(output_attr)
-
-    def _process_input_annotations(
-        self, input_anns: List[Segment]
-    ) -> Iterator[Tuple[Entity, Attribute]]:
-        """Create a entity annotation and a corresponding normalization attribute
-        for each entity detected in `input_anns`
-
-        Parameters
-        ----------
-        input_anns:
-            List of input annotations to process
-
-        Yields
-        ------
-        Entity:
-            Created entity annotation
-        Attribute:
-            Created normalization attribute attached to each entity
-        """
-        for input_ann in input_anns:
-            yield from self._match(input_ann)
-
-    def _match(self, input_ann: Segment) -> Iterator[Tuple[Entity, Attribute]]:
-        matches = self._matcher.match(input_ann.text)
+    def _find_matches_in_segment(self, segment: Segment) -> Iterator[Entity]:
+        matches = self._matcher.match(segment.text)
         for match_candidates in matches:
             # only the best matching CUI (1st match candidate) is returned
             # TODO should we create a normalization attributes for each CUI instead?
             match = match_candidates[0]
 
             text, spans = span_utils.extract(
-                input_ann.text, input_ann.spans, [(match["start"], match["end"])]
+                segment.text, segment.spans, [(match["start"], match["end"])]
             )
-            entity = Entity(
-                label=match["term"],
-                text=text,
-                spans=spans,
-                origin=Origin(processing_id=self.description.id, ann_ids=[input_ann.id])
-                # TODO decide how to handle that in medkit
-                # **input_entity.attributes,
-            )
+
+            attrs = [a for a in segment.attrs if a.label in self.attrs_to_copy]
 
             # TODO force now we consider the version, score and semtypes
             # to be just extra informational metadata
             # We might need to reconsider this if these items
             # are actually accessed in other "downstream" processing modules
-            metadata = dict(
-                version=self.version,
-                score=match["similarity"],
-                sem_types=list(match["semtypes"]),
-            )
-            attribute = Attribute(
+            norm_attr = Attribute(
                 label="umls",
-                target_id=entity.id,
                 value=match["cui"],
-                metadata=metadata,
-                origin=Origin(
-                    processing_id=self.description.id, ann_ids=[input_ann.id]
+                metadata=dict(
+                    version=self.version,
+                    score=match["similarity"],
+                    sem_types=list(match["semtypes"]),
                 ),
+                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
             )
-            yield entity, attribute
+            attrs.append(norm_attr)
+
+            entity = Entity(
+                label=match["term"],
+                text=text,
+                spans=spans,
+                attrs=attrs,
+                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id])
+                # TODO decide how to handle that in medkit
+                # **input_entity.attributes,
+            )
+
+            yield entity
 
     @classmethod
-    def from_description(cls, description: ProcessingDescription):
+    def from_description(cls, description: OperationDescription):
         return cls(proc_id=description.id, **description.config)

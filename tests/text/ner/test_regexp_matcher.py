@@ -1,44 +1,44 @@
-import pytest
-
-from medkit.core import Collection
-from medkit.core.text import TextDocument, Span
+from medkit.core import Origin, Attribute
+from medkit.core.text import Segment, Span
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,
     RegexpMatcherNormalization,
 )
 
-TEXT = "The patient has asthma and type 1 diabetes."
+_TEXT = "The patient has asthma and type 1 diabetes."
 
 
-@pytest.fixture
-def doc():
-    return TextDocument(text=TEXT)
+def _get_sentence_segment():
+    return Segment(
+        origin=Origin(),
+        label="sentence",
+        spans=[Span(0, len(_TEXT))],
+        text=_TEXT,
+    )
 
 
-@pytest.fixture
-def collection(doc):
-    return Collection([doc])
-
-
-def _find_entity_with_label(doc, label):
-    entity_ids = doc.entities.get(label, [])
-    if len(entity_ids) == 0:
+def _find_entity(entities, label):
+    try:
+        return next(e for e in entities if e.label == label)
+    except StopIteration:
         return None
-    return doc.get_annotation_by_id(entity_ids[0])
 
 
-def test_single_match(doc):
+def test_single_match():
+    sentence = _get_sentence_segment()
+
     rule = RegexpMatcherRule(
         id="id_regexp_diabetes",
         label="Diabetes",
         regexp="diabetes",
         version="1",
     )
-    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
-    matcher.annotate_document(doc)
+    matcher = RegexpMatcher(rules=[rule])
+    entities = matcher.process([sentence])
 
-    entity = _find_entity_with_label(doc, "Diabetes")
+    assert len(entities) == 1
+    entity = _find_entity(entities, "Diabetes")
     assert entity is not None
     assert entity.text == "diabetes"
     assert entity.spans == [Span(34, 42)]
@@ -46,7 +46,9 @@ def test_single_match(doc):
     assert entity.metadata["version"] == "1"
 
 
-def test_multiple_matches(doc):
+def test_multiple_matches():
+    sentence = _get_sentence_segment()
+
     rule_1 = RegexpMatcherRule(
         id="id_regexp_diabetes",
         label="Diabetes",
@@ -59,19 +61,19 @@ def test_multiple_matches(doc):
         regexp="asthma",
         version="1",
     )
-    matcher = RegexpMatcher(
-        input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule_1, rule_2]
-    )
-    matcher.annotate_document(doc)
+    matcher = RegexpMatcher(rules=[rule_1, rule_2])
+    entities = matcher.process([sentence])
 
-    entity_1 = _find_entity_with_label(doc, "Diabetes")
+    assert len(entities) == 2
+
+    entity_1 = _find_entity(entities, "Diabetes")
     assert entity_1 is not None
     assert entity_1.text == "diabetes"
     assert entity_1.spans == [Span(34, 42)]
     assert entity_1.metadata["id_regexp"] == "id_regexp_diabetes"
     assert entity_1.metadata["version"] == "1"
 
-    entity_2 = _find_entity_with_label(doc, "Asthma")
+    entity_2 = _find_entity(entities, "Asthma")
     assert entity_2 is not None
     assert entity_2.text == "asthma"
     assert entity_2.spans == [Span(16, 22)]
@@ -79,7 +81,9 @@ def test_multiple_matches(doc):
     assert entity_2.metadata["version"] == "1"
 
 
-def test_normalization(doc):
+def test_normalization():
+    sentence = _get_sentence_segment()
+
     rule = RegexpMatcherRule(
         id="id_regexp_diabetes",
         label="Diabetes",
@@ -87,22 +91,21 @@ def test_normalization(doc):
         version="1",
         normalizations=[RegexpMatcherNormalization("umls", "2020AB", "C0011849")],
     )
-    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
-    matcher.annotate_document(doc)
+    matcher = RegexpMatcher(rules=[rule])
+    entities = matcher.process([sentence])
 
-    entity = _find_entity_with_label(doc, "Diabetes")
+    entity = _find_entity(entities, "Diabetes")
     assert entity is not None
 
-    assert entity.id in doc.attributes
-    attribute_ids = doc.attributes[entity.id]
-    assert len(attribute_ids) == 1
-    attribute = doc.get_annotation_by_id(attribute_ids[0])
-    assert attribute.target_id == entity.id
-    assert attribute.label == "umls"
-    assert attribute.value == "C0011849"
+    assert len(entity.attrs) == 1
+    attr = entity.attrs[0]
+    assert attr.label == "umls"
+    assert attr.value == "C0011849"
 
 
-def test_exclusion_regex(doc):
+def test_exclusion_regex():
+    sentence = _get_sentence_segment()
+
     rule = RegexpMatcherRule(
         id="id_regexp_diabetes",
         label="Diabetes",
@@ -110,26 +113,30 @@ def test_exclusion_regex(doc):
         regexp_exclude="type 1 diabetes",
         version="1",
     )
-    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
-    matcher.annotate_document(doc)
+    matcher = RegexpMatcher(rules=[rule])
+    entities = matcher.process([sentence])
 
-    assert _find_entity_with_label(doc, "Diabetes") is None
+    assert _find_entity(entities, "Diabetes") is None
 
 
-def test_case_sensitivity_off(doc):
+def test_case_sensitivity_off():
+    sentence = _get_sentence_segment()
+
     rule = RegexpMatcherRule(
         id="id_regexp_diabetes",
         label="Diabetes",
         regexp="DIABETES",
         version="1",
     )
-    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
-    matcher.annotate_document(doc)
+    matcher = RegexpMatcher(rules=[rule])
+    entities = matcher.process([sentence])
 
-    assert _find_entity_with_label(doc, "Diabetes") is not None
+    assert _find_entity(entities, "Diabetes") is not None
 
 
-def test_case_sensitivity_on(doc):
+def test_case_sensitivity_on():
+    sentence = _get_sentence_segment()
+
     rule = RegexpMatcherRule(
         id="id_regexp_diabetes",
         label="Diabetes",
@@ -137,13 +144,15 @@ def test_case_sensitivity_on(doc):
         version="1",
         case_sensitive=True,
     )
-    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
-    matcher.annotate_document(doc)
+    matcher = RegexpMatcher(rules=[rule])
+    entities = matcher.process([sentence])
 
-    assert _find_entity_with_label(doc, "Diabetes") is None
+    assert _find_entity(entities, "Diabetes") is None
 
 
-def test_case_sensitivity_exclusion_on(doc):
+def test_case_sensitivity_exclusion_on():
+    sentence = _get_sentence_segment()
+
     rule = RegexpMatcherRule(
         id="id_regexp_diabetes",
         label="Diabetes",
@@ -152,26 +161,44 @@ def test_case_sensitivity_exclusion_on(doc):
         case_sensitive=True,
         version="1",
     )
-    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
-    matcher.annotate_document(doc)
+    matcher = RegexpMatcher(rules=[rule])
+    entities = matcher.process([sentence])
 
-    assert _find_entity_with_label(doc, "Diabetes") is not None
+    assert _find_entity(entities, "Diabetes") is not None
 
 
-def test_annotate_collection(collection):
+def test_attrs_to_copy():
+    sentence = _get_sentence_segment()
+    sentence.attrs.append(Attribute(origin=Origin(), label="negation", value=True))
+
     rule = RegexpMatcherRule(
         id="id_regexp_diabetes",
         label="Diabetes",
         regexp="diabetes",
         version="1",
     )
-    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL, rules=[rule])
-    matcher.annotate(collection)
-    doc = collection.documents[0]
-    assert _find_entity_with_label(doc, "Diabetes") is not None
+
+    # attribute not copied
+    matcher = RegexpMatcher(rules=[rule])
+    entities = matcher.process([sentence])
+    entity = _find_entity(entities, "Diabetes")
+    assert not entity.attrs
+
+    # attribute copied
+    matcher = RegexpMatcher(
+        rules=[rule],
+        attrs_to_copy=["negation"],
+    )
+    entities = matcher.process([sentence])
+    entity = _find_entity(entities, "Diabetes")
+    assert len(entity.attrs) == 1
+    attr = entity.attrs[0]
+    assert attr.label == "negation" and attr.value is True
 
 
-def test_default_rules(collection):
+def test_default_rules():
+    sentence = _get_sentence_segment()
+
     # make sure default rules can be loaded and executed
-    matcher = RegexpMatcher(input_label=TextDocument.RAW_TEXT_LABEL)
-    matcher.annotate(collection)
+    matcher = RegexpMatcher()
+    _ = matcher.process([sentence])

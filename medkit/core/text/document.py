@@ -3,12 +3,12 @@ from __future__ import annotations
 __all__ = ["TextDocument"]
 
 import random
-from typing import Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING
 import uuid
 
 from medkit.core.annotation import Origin
 from medkit.core.document import Document
-from medkit.core.text.annotation import Segment, Entity, Relation, Attribute
+from medkit.core.text.annotation import Segment, Entity, Relation
 from medkit.core.text.span import Span
 
 if TYPE_CHECKING:
@@ -24,8 +24,7 @@ class TextDocument(Document):
         Initializes the text document
 
         The method uses the abstract class Document to initialize a part
-        and creates dictionary views for accessing entities, attributes and
-        relations.
+        and creates dictionary views for accessing entities and relations.
 
         Parameters
         ----------
@@ -42,7 +41,6 @@ class TextDocument(Document):
         self.segments = dict()  # Key: label
         self.entities = dict()  # Key: label
         self.relations = dict()  # Key: TODO : determine the key
-        self.attributes = dict()  # Key : target_id
 
         if self.text is not None:
             raw_text_ann = self._gen_raw_text_annotation()
@@ -55,9 +53,8 @@ class TextDocument(Document):
         The method uses the abstract class method to add the annotation
         in the Document.
         It also adds the annotation id to the corresponding dictionary view (segments,
-        entities, relations, attributes)
-        according to the annotation category (Segment, Entity, Relation,
-        Attribute).
+        entities, relations)
+        according to the annotation category (Segment, Entity, Relation).
 
         Note that entity is also considered as a segment of the text.
 
@@ -89,34 +86,6 @@ class TextDocument(Document):
                 self.entities[annotation.label].append(annotation.id)
         elif isinstance(annotation, Relation):
             pass  # TODO: complete when key is determined
-        elif isinstance(annotation, Attribute):
-            if annotation.target_id not in self.attributes.keys():
-                self.attributes[annotation.target_id] = [annotation.id]
-            else:
-                self.attributes[annotation.target_id].append(annotation.id)
-
-    def get_attributes_by_annotation(self, ann_id: str) -> Dict[str, Attribute]:
-        """
-        Retrieve all attributes targeted onto an annotation.
-
-        Parameters
-        ----------
-        ann_id
-            The annotation id for which we want to get attributes.
-
-        Returns
-        -------
-        Dict[str, List[Attribute]]
-            A dictionary where key correspond to the Attribute label and
-            where value is a list of Attribute instance having this label.
-        """
-        res = dict()
-        for attr_id in self.attributes.get(ann_id, []):
-            attribute = self.get_annotation_by_id(attr_id)
-            if attribute.label not in res.keys():
-                res[attribute.label] = []
-            res[attribute.label].append(attribute)
-        return res
 
     def _gen_raw_text_annotation(self):
         # generate deterministic uuid based on document id

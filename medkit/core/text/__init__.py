@@ -4,7 +4,6 @@ __all__ = [
     "Segment",
     "Entity",
     "Relation",
-    "Attribute",
     "TextDocument",
     "Span",
     "ModifiedSpan",
@@ -13,6 +12,6 @@ __all__ = [
 
 from . import utils
 from . import span_utils
-from .annotation import Segment, Entity, Relation, Attribute
+from .annotation import Segment, Entity, Relation
 from .document import TextDocument
 from .span import Span, ModifiedSpan, AnySpan

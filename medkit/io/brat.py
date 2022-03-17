@@ -4,8 +4,14 @@ import pathlib
 
 from smart_open import open
 
-from medkit.core import Collection, Origin, InputConverter, ProcessingDescription
-from medkit.core.text import TextDocument, Entity, Relation, Attribute
+from medkit.core import (
+    Collection,
+    Attribute,
+    Origin,
+    InputConverter,
+    OperationDescription,
+)
+from medkit.core.text import TextDocument, Entity, Relation
 import medkit.io._brat_utils as brat_utils
 
 
@@ -13,11 +19,11 @@ class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
 
     @property
-    def description(self) -> ProcessingDescription:
+    def description(self) -> OperationDescription:
         return self._description
 
     def __init__(self, config=None):
-        self._description = ProcessingDescription(
+        self._description = OperationDescription(
             name=self.__class__.__name__, config=config
         )
 
@@ -80,20 +86,19 @@ class BratInputConverter(InputConverter):
         for brat_entity in brat_doc.entities.values():
             internal_entity = self._convert_brat_entity(brat_entity)
             internal_doc.add_annotation(internal_entity)
-            brat_ann[brat_entity.id] = internal_entity.id
+            brat_ann[brat_entity.id] = internal_entity
         for brat_relation in brat_doc.relations.values():
             internal_relation = self._convert_brat_relation(brat_relation, brat_ann)
             internal_doc.add_annotation(internal_relation)
-            brat_ann[brat_relation.id] = internal_relation.id
+            brat_ann[brat_relation.id] = internal_relation
         for brat_attribute in brat_doc.attributes.values():
-            internal_attribute = self._convert_brat_attribute(brat_attribute, brat_ann)
-            internal_doc.add_annotation(internal_attribute)
-            brat_ann[brat_attribute.id] = internal_attribute.id
+            internal_attribute = self._convert_brat_attribute(brat_attribute)
+            brat_ann[brat_attribute.target].attrs.append(internal_attribute)
         return internal_doc
 
     def _convert_brat_entity(self, brat_entity: brat_utils.Entity) -> Entity:
         return Entity(
-            origin=Origin(processing_id=self.description.id),
+            origin=Origin(operation_id=self.description.id),
             label=brat_entity.type,
             spans=brat_entity.span,
             text=brat_entity.text,
@@ -104,20 +109,19 @@ class BratInputConverter(InputConverter):
         self, brat_relation: brat_utils.Relation, brat_ann: dict
     ) -> Relation:
         return Relation(
-            origin=Origin(processing_id=self.description.id),
+            origin=Origin(operation_id=self.description.id),
             label=brat_relation.type,
-            source_id=brat_ann[brat_relation.subj],
-            target_id=brat_ann[brat_relation.obj],
+            source_id=brat_ann[brat_relation.subj].id,
+            target_id=brat_ann[brat_relation.obj].id,
             metadata={"brat_id": brat_relation.id},
         )
 
     def _convert_brat_attribute(
-        self, brat_attribute: brat_utils.Attribute, brat_ann: dict
+        self, brat_attribute: brat_utils.Attribute
     ) -> Attribute:
         return Attribute(
-            origin=Origin(processing_id=self.description.id),
+            origin=Origin(operation_id=self.description.id),
             label=brat_attribute.type,
-            target_id=brat_ann[brat_attribute.target],
             value=brat_attribute.value,
             metadata={"brat_id": brat_attribute.id},
         )

@@ -9,13 +9,12 @@ import yaml
 
 from flashtext import KeywordProcessor
 
-from medkit.core import Collection, Origin, ProcessingDescription
-from medkit.core.text import Segment, TextDocument, span_utils
+from medkit.core import Origin, OperationDescription
+from medkit.core.text import Segment, span_utils
 
 
 @dataclasses.dataclass(frozen=True)
 class DefaultConfig:
-    input_label: str = "CLEAN_TEXT"
     output_label: str = "SECTION"
 
 
@@ -31,13 +30,12 @@ class SectionTokenizer:
     """Section segmentation annotator based on keyword rules"""
 
     @property
-    def description(self) -> ProcessingDescription:
+    def description(self) -> OperationDescription:
         return self._description
 
     def __init__(
         self,
         section_dict: Dict[str, List[str]],
-        input_label: str = DefaultConfig.input_label,
         output_label: str = DefaultConfig.output_label,
         section_rules: Tuple[SectionModificationRule] = (),
         proc_id: str = None,
@@ -50,8 +48,6 @@ class SectionTokenizer:
         section_dict
             Dictionary containing the section name as key and the list of mappings
             as value (cf. content of default_section_dict.yml as example)
-        input_label
-            Segment label to use as input. Default is CLEAN_TEXT.
         output_label
             Segment label to use for annotation output. Default is SECTION.
         section_rules
@@ -59,7 +55,6 @@ class SectionTokenizer:
             sections.
         """
 
-        self.input_label = input_label
         self.output_label = output_label
         self.section_dict = section_dict
         self.section_rules = section_rules
@@ -67,48 +62,38 @@ class SectionTokenizer:
         self.keyword_processor.add_keywords_from_dict(section_dict)
 
         config = dict(
-            input_label=input_label,
             output_label=output_label,
             section_dict=section_dict,
             section_rules=section_rules,
         )
 
-        self._description = ProcessingDescription(
+        self._description = OperationDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )
 
-    def annotate(self, collection: Collection):
-        """Annotate a collection of documents"""
-        for doc in collection.documents:
-            if isinstance(doc, TextDocument):
-                self.annotate_document(doc)
+    def process(self, segments: List[Segment]) -> List[Segment]:
+        """
+        Return sections detected in `segments`.
 
-    def annotate_document(self, document: TextDocument):
-        """Annotate a document"""
-        # Retrieve annotations on which we want to apply section segmentation
-        # e.g., raw text
-        input_ann_ids = document.segments.get(self.input_label, None)
-        if input_ann_ids:
-            # only applicable on the complete text (i.e., raw or cleaned text)
-            input_ann = document.get_annotation_by_id(input_ann_ids[0])
-            sections = self._extract_sections_and_spans(input_ann)
-            for section, text, spans in sections:
-                # add section name in metadata
-                metadata = dict(name=section)
-                output_ann = Segment(
-                    origin=Origin(
-                        processing_id=self.description.id, ann_ids=[input_ann.id]
-                    ),
-                    label=self.output_label,
-                    spans=spans,
-                    text=text,
-                    metadata=metadata,
-                )
-                document.add_annotation(output_ann)
+        Parameters
+        ----------
+        segments:
+            List of segments into which to look for sections
 
-    def _extract_sections_and_spans(self, input_ann: Segment):
+        Returns
+        -------
+        List[Segments]:
+            Sections segments found in `segments`
+        """
+        return [
+            section
+            for segment in segments
+            for section in self._find_sections_in_segment(segment)
+        ]
+
+    def _find_sections_in_segment(self, segment: Segment):
         # Process mappings
-        match = self.keyword_processor.extract_keywords(input_ann.text, span_info=True)
+        match = self.keyword_processor.extract_keywords(segment.text, span_info=True)
 
         # Sort according to the match start
         match.sort(key=lambda x: x[1])
@@ -126,15 +111,25 @@ class SectionTokenizer:
             if index != len(match) - 1:
                 ranges = [(section[1], match[index + 1][1])]
             else:
-                ranges = [(section[1], len(input_ann.text))]
+                ranges = [(section[1], len(segment.text))]
 
             # Extract medkit spans from relative spans (i.e., ranges)
             text, spans = span_utils.extract(
-                text=input_ann.text,
-                spans=input_ann.spans,
+                text=segment.text,
+                spans=segment.spans,
                 ranges=ranges,
             )
-            yield name, text, spans
+
+            # add section name in metadata
+            metadata = dict(name=name)
+            section = Segment(
+                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
+                label=self.output_label,
+                spans=spans,
+                text=text,
+                metadata=metadata,
+            )
+            yield section
 
     def _get_sections_to_rename(self, match: List[Tuple]):
         match_type = [m[0] for m in match]
@@ -171,7 +166,7 @@ class SectionTokenizer:
         return section_tokenizer
 
     @classmethod
-    def from_description(cls, description: ProcessingDescription):
+    def from_description(cls, description: OperationDescription):
         return cls(proc_id=description.id, **description.config)
 
     @staticmethod

@@ -5,19 +5,18 @@ __all__ = ["RegexpMatcher", "RegexpMatcherRule", "RegexpMatcherNormalization"]
 import dataclasses
 from pathlib import Path
 import re
-from typing import Any, Iterator, List, Optional, Tuple
+from typing import Any, Iterator, List, Optional
 
 import yaml
 
 
-from medkit.core import Collection, Origin, ProcessingDescription, RuleBasedAnnotator
-from medkit.core.text import (
+from medkit.core import (
     Attribute,
-    Entity,
-    Segment,
-    TextDocument,
-    span_utils,
+    Origin,
+    OperationDescription,
+    RuleBasedAnnotator,
 )
+from medkit.core.text import Entity, Segment, span_utils
 
 
 @dataclasses.dataclass
@@ -91,8 +90,8 @@ class RegexpMatcher(RuleBasedAnnotator):
 
     def __init__(
         self,
-        input_label,
         rules: Optional[List[RegexpMatcherRule]] = None,
+        attrs_to_copy: Optional[List[str]] = None,
         proc_id: Optional[str] = None,
     ):
         """
@@ -100,145 +99,115 @@ class RegexpMatcher(RuleBasedAnnotator):
 
         Parameters
         ----------
-        input_label:
-            The input label of the segment annotations to use as input.
-            NB: other type of annotations such as entities are not supported
         rules:
             The set of rules to use when matching entities. If none provided,
             the rules in "regexp_matcher_default_rules.yml" will be used
+        attrs_to_copy:
+            Labels of the attributes that should be copied from the source segment
+            to the created entity. Useful for propagating context attributes
+            (negation, antecendent, etc)
         proc_id:
             Identifier of the tokenizer
         """
-        self.input_label = input_label
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
         self.rules = rules
+        if attrs_to_copy is None:
+            attrs_to_copy = []
+        self.attrs_to_copy = attrs_to_copy
 
-        config = dict(input_label=input_label, rules=rules)
-        self._description = ProcessingDescription(
+        config = dict(rules=rules, attrs_to_copy=attrs_to_copy)
+        self._description = OperationDescription(
             id=proc_id, name=self.__class__.__name__, config=config
         )
 
     @property
-    def description(self) -> ProcessingDescription:
+    def description(self) -> OperationDescription:
         return self._description
 
-    def annotate(self, collection: Collection):
+    def process(self, segments: List[Segment]) -> List[Entity]:
         """
-        Process a collection of documents for identifying entities
-
-        Entities and optional attributes annotations are added to the text document.
+        Return entities (with optional normalization attributes) matched in `segments`
 
         Parameters
         ----------
-        collection:
-            The collection of documents to process. Only TextDocuments will be processed.
+        segments:
+            List of segments into which to look for matches
+
+        Returns
+        -------
+        entities: List[Entity]:
+            Entities found in `segments` (with optional normalization attributes)
         """
-        for doc in collection.documents:
-            if isinstance(doc, TextDocument):
-                self.annotate_document(doc)
+        return [
+            entity
+            for segment in segments
+            for entity in self._find_matches_in_segment(segment)
+        ]
 
-    def annotate_document(self, doc: TextDocument):
-        """
-        Process a document for identifying entities
+    def _find_matches_in_segment(self, segment: Segment) -> Iterator[Entity]:
+        for rule in self.rules:
+            yield from self._find_matches_in_segment_for_rule(rule, segment)
 
-        Entities and optional attributes annotations are added to the text document.
-
-        Parameters
-        ----------
-        document:
-            The text document to process
-        """
-        input_ann_ids = doc.segments.get(self.input_label)
-        if input_ann_ids is None:
-            return
-        input_anns = [doc.get_annotation_by_id(id) for id in input_ann_ids]
-        output_anns_and_attrs = self._process_input_annotations(input_anns)
-        for output_ann, output_attrs in output_anns_and_attrs:
-            doc.add_annotation(output_ann)
-            for attribute in output_attrs:
-                doc.add_annotation(attribute)
-
-    def _process_input_annotations(
-        self, input_anns: List[Segment]
-    ) -> Iterator[Tuple[Entity, List[Attribute]]]:
-        """
-        Create a entity annotation and optional attribute annotations
-        for each entity detected in `input_anns`
-
-        Parameters
-        ----------
-        input_anns:
-            List of input annotations to process
-
-        Yields
-        ------
-        Entity:
-            Created entity annotations
-        List[Attribute]:
-            Created attribute annotations attached to each entity
-            (might be empty)
-        """
-        for input_ann in input_anns:
-            for rule in self.rules:
-                yield from self._match(rule, input_ann)
-
-    def _match(
-        self, rule: RegexpMatcherRule, input_ann: Segment
-    ) -> Iterator[Tuple[Entity, List[Attribute]]]:
+    def _find_matches_in_segment_for_rule(
+        self, rule: RegexpMatcherRule, segment: Segment
+    ) -> Iterator[Entity]:
         flags = 0 if rule.case_sensitive else re.IGNORECASE
 
-        for match in re.finditer(rule.regexp, input_ann.text, flags):
+        for match in re.finditer(rule.regexp, segment.text, flags):
             if rule.regexp_exclude is not None:
-                # note that we apply regexp_exclude to the whole input_annotation,
+                # note that we apply regexp_exclude to the whole segment,
                 # so we might have a match in a part of the text unrelated to the current
                 # match
                 # we could check if we have any exclude match overlapping with
                 # the current match but that wouldn't work for all cases
-                exclude_match = re.search(rule.regexp_exclude, input_ann.text, flags)
+                exclude_match = re.search(rule.regexp_exclude, segment.text, flags)
                 if exclude_match is not None:
                     continue
+
             # extract raw span list from regex match range
             text, spans = span_utils.extract(
-                input_ann.text, input_ann.spans, [match.span(rule.index_extract)]
+                segment.text, segment.spans, [match.span(rule.index_extract)]
             )
+
             metadata = dict(
                 id_regexp=rule.id,
                 version=rule.version,
                 # TODO decide how to handle that in medkit
                 # **syntagme.attributes,
             )
+
+            attrs = [a for a in segment.attrs if a.label in self.attrs_to_copy]
+
+            # create normalization attributes for each normalization descriptor
+            # of the rule
+            # TODO should we have a NormalizationAttribute class
+            # with specific fields (name, id, version) ?
+
+            for norm in rule.normalizations:
+                norm_attr = Attribute(
+                    origin=Origin(
+                        operation_id=self.description.id, ann_ids=[segment.id]
+                    ),
+                    label=norm.kb_name,
+                    value=norm.id,
+                    metadata=dict(version=norm.kb_version),
+                )
+                attrs.append(norm_attr)
+
             entity = Entity(
                 label=rule.label,
                 text=text,
                 spans=spans,
-                origin=Origin(
-                    processing_id=self.description.id, ann_ids=[input_ann.id]
-                ),
+                attrs=attrs,
+                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
                 metadata=metadata,
             )
 
-            # add normalization attribute for each normalization descriptor
-            # of the rule
-            # TODO should we have a NormalizationAttribute class
-            # with specific fields (name, id, version) ?
-            attributes = [
-                Attribute(
-                    origin=Origin(
-                        processing_id=self.description.id, ann_ids=[input_ann.id]
-                    ),
-                    label=norm.kb_name,
-                    target_id=entity.id,
-                    value=norm.id,
-                    metadata=dict(version=norm.kb_version),
-                )
-                for norm in rule.normalizations
-            ]
-
-            yield entity, attributes
+            yield entity
 
     @classmethod
-    def from_description(cls, description: ProcessingDescription):
+    def from_description(cls, description: OperationDescription):
         return cls(proc_id=description.id, **description.config)
 
     @staticmethod

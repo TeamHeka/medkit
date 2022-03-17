@@ -1,6 +1,5 @@
 import pytest
 
-import medkit.text.segmentation.section_tokenizer as st
 from medkit.core import Origin
 from medkit.core.text import Span, Segment
 from medkit.text.segmentation.section_tokenizer import (
@@ -37,60 +36,54 @@ TEST_CONFIG = [
 ]
 
 
-@pytest.mark.parametrize("filepath,expected_sections", TEST_CONFIG)
-def test_annotate_document(filepath, expected_sections):
-    doc = data_utils.get_text_document(filepath)
-    section_tokenizer = SectionTokenizer.get_example()
-    clean_text = Segment(
+def _get_clean_text_segment(filepath):
+    text = data_utils.get_text(filepath)
+    return Segment(
         origin=Origin(),
-        label=st.DefaultConfig.input_label,
-        spans=[Span(0, len(doc.text))],
-        text=doc.text,
+        label="clean_text",
+        spans=[Span(0, len(text))],
+        text=text,
     )
-    doc.add_annotation(clean_text)
-    section_tokenizer.annotate_document(doc)
-    section_ids = doc.segments.get(st.DefaultConfig.output_label)
-    assert len(section_ids) == len(expected_sections)
-    sections = [doc.get_annotation_by_id(section_id) for section_id in section_ids]
+
+
+@pytest.mark.parametrize("filepath,expected_sections", TEST_CONFIG)
+def test_process(filepath, expected_sections):
+    clean_text_segment = _get_clean_text_segment(filepath)
+
+    section_tokenizer = SectionTokenizer.get_example()
+    sections = section_tokenizer.process([clean_text_segment])
+
+    assert len(sections) == len(expected_sections)
     for i, (spans, attr_value) in enumerate(expected_sections):
         assert sections[i].spans == spans
         assert sections[i].metadata["name"] == attr_value
 
 
-def test_annotate_document_with_rules():
+def test_process_with_rules():
     filepath = TEST_CONFIG[0][0]
-    doc = data_utils.get_text_document(filepath)
-    clean_text = Segment(
-        origin=Origin(),
-        label=st.DefaultConfig.input_label,
-        spans=[Span(0, len(doc.text))],
-        text=doc.text,
-    )
-    doc.add_annotation(clean_text)
+    clean_text_segment = _get_clean_text_segment(filepath)
+
     section_dict = {"antecedent": ["Antécédents médicaux"], "examen": ["Examen :"]}
-    section_rules = tuple(
-        [
-            SectionModificationRule(
-                section_name="antecedent",
-                new_section_name="antecedent_before_exam",
-                order="BEFORE",
-                other_sections=["examen"],
-            ),
-            SectionModificationRule(
-                section_name="examen",
-                new_section_name="exam_after_antecedent",
-                order="AFTER",
-                other_sections=["antecedent"],
-            ),
-        ]
+    section_rules = (
+        SectionModificationRule(
+            section_name="antecedent",
+            new_section_name="antecedent_before_exam",
+            order="BEFORE",
+            other_sections=["examen"],
+        ),
+        SectionModificationRule(
+            section_name="examen",
+            new_section_name="exam_after_antecedent",
+            order="AFTER",
+            other_sections=["antecedent"],
+        ),
     )
     section_tokenizer = SectionTokenizer(
         section_dict=section_dict, section_rules=section_rules
     )
-    section_tokenizer.annotate_document(doc)
-    section_ids = doc.segments.get(st.DefaultConfig.output_label)
-    assert len(section_ids) == 2
-    sections = [doc.get_annotation_by_id(section_id) for section_id in section_ids]
+    sections = section_tokenizer.process([clean_text_segment])
+
+    assert len(sections) == 2
     sections_antecedent = [
         section
         for section in sections

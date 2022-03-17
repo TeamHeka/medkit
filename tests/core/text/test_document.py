@@ -1,20 +1,22 @@
 import pytest
 
-from medkit.core import Origin, generate_id
+from medkit.core import Origin, Attribute, generate_id
 from medkit.core.text.document import TextDocument
-from medkit.core.text.annotation import Entity, Relation, Attribute, Segment
+from medkit.core.text.annotation import Entity, Relation, Segment
 from medkit.core.text.span import Span
 
 
 @pytest.fixture()
 def init_data():
     doc = TextDocument()
-    ent1 = Entity(origin=Origin(), label="ent1", spans=[Span(0, 0)], text="")
+    attribute = Attribute(origin=Origin(), label="Negation")
+    ent1 = Entity(
+        origin=Origin(), label="ent1", spans=[Span(0, 0)], text="", attrs=[attribute]
+    )
     ent2 = Entity(origin=Origin(), label="ent2", spans=[Span(0, 0)], text="")
     relation = Relation(
         origin=Origin(), label="toto", source_id=ent1.id, target_id=ent2.id
     )
-    attribute = Attribute(origin=Origin(), label="Negation", target_id=ent1.id)
     return doc, ent1, ent2, relation, attribute
 
 
@@ -30,29 +32,16 @@ def test_add_annotation(init_data):
     doc.add_annotation(ent2)
     doc.add_annotation(relation)
     assert doc.get_annotation_by_id(relation.id) == relation
-    # Test attribute addition in attributes list
-    doc.add_annotation(attribute)
-    assert attribute.id in doc.attributes.get(attribute.target_id)
-
-
-def test_get_attributes_by_annotation(init_data):
-    doc, ent1, ent2, relation, attribute = init_data
-    doc.add_annotation(ent1)
-    doc.add_annotation(attribute)
-    ent1_attributes = doc.get_attributes_by_annotation(ent1.id)
-    assert attribute.label in ent1_attributes.keys()
-    assert ent1_attributes[attribute.label][0] is attribute
 
 
 def test_get_annotations_by_label(init_data):
     doc, ent1, ent2, relation, attribute = init_data
     doc.add_annotation(ent1)
     doc.add_annotation(ent2)
-    doc.add_annotation(attribute)
 
     assert doc.get_annotations_by_label(ent1.label) == [ent1]
+    assert doc.get_annotations_by_label(ent1.label)[0].attrs == [attribute]
     assert doc.get_annotations_by_label(ent2.label) == [ent2]
-    assert doc.get_annotations_by_label(attribute.label) == [attribute]
 
     # add 2d annotation for same label and make sure we find all annotations
     # for that label

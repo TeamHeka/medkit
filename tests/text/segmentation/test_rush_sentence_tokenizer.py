@@ -1,6 +1,7 @@
 import pytest
 
-from medkit.core.text import TextDocument, Span, ModifiedSpan
+from medkit.core import Origin
+from medkit.core.text import Segment, Span, ModifiedSpan
 from medkit.text.segmentation.rush_sentence_tokenizer import RushSentenceTokenizer
 
 
@@ -8,7 +9,7 @@ TEST_CONFIG = [
     (
         "Sentence testing the dot. Newlines\ndo not split. Test"
         " interrogation? Semicolon; and exclamation marks! do not split",
-        RushSentenceTokenizer(input_label=TextDocument.RAW_TEXT_LABEL),
+        RushSentenceTokenizer(),
         [
             (
                 "Sentence testing the dot.",
@@ -30,9 +31,7 @@ TEST_CONFIG = [
     ),
     (
         "Newlines\ncan be\nreplaced.",
-        RushSentenceTokenizer(
-            input_label=TextDocument.RAW_TEXT_LABEL, keep_newlines=False
-        ),
+        RushSentenceTokenizer(keep_newlines=False),
         [
             (
                 "Newlines can be replaced.",
@@ -49,17 +48,24 @@ TEST_CONFIG = [
 ]
 
 
+def _get_clean_text_segment(text):
+    return Segment(
+        origin=Origin(),
+        label="clean_text",
+        spans=[Span(0, len(text))],
+        text=text,
+    )
+
+
 @pytest.mark.parametrize(
     "text,sentence_tokenizer,expected_sentences",
     TEST_CONFIG,
     ids=["default", "keep_newlines"],
 )
 def test_default_rules(text, sentence_tokenizer, expected_sentences):
-    assert sentence_tokenizer.input_label == TextDocument.RAW_TEXT_LABEL
+    clean_text_segment = _get_clean_text_segment(text)
 
-    doc = TextDocument(text=text)
-    sentence_tokenizer.annotate_document(doc)
-    sentences = [doc.get_annotation_by_id(ann) for ann in doc.segments["SENTENCE"]]
+    sentences = sentence_tokenizer.process([clean_text_segment])
     assert len(sentences) == len(expected_sentences)
     for i, (text, spans) in enumerate(expected_sentences):
         assert sentences[i].text == text
