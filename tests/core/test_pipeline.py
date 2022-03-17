@@ -3,6 +3,7 @@ import re
 from medkit.core import (
     Document,
     Annotation,
+    Attribute,
     Origin,
     OperationDescription,
     ProcessingOperation,
@@ -166,6 +167,24 @@ class _KeywordMatcher(ProcessingOperation):
                 )
                 entities.append(entity)
         return entities
+
+
+class _AttributeAdder(ProcessingOperation):
+    """Mock processing operation adding attributes to existing annotations"""
+
+    def __init__(self, output_label):
+        self.output_label = output_label
+        self._description = OperationDescription(name="AttributeAdder")
+
+    @property
+    def description(self):
+        return self._description
+
+    def process(self, anns):
+        for ann in anns:
+            ann.attrs.append(
+                Attribute(origin=Origin(), label=self.output_label, value=True)
+            )
 
 
 _SENTENCES = [
@@ -424,6 +443,39 @@ def test_step_with_multiple_inputs():
 
     expected_texts = [a.text.upper() + prefix + a.text for a in anns]
     assert [a.text for a in merged_anns] == expected_texts
+
+
+def test_step_with_no_output():
+    """Pipeline with a step having no output, because it modifies the annotations
+    it receives by adding attributes to them"""
+    pipeline = Pipeline()
+    pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
+
+    step_1 = PipelineStep(
+        operation=_Uppercaser(output_label="uppercased_sentence"),
+        input_keys=["SENTENCE"],
+        output_keys=["UPPERCASE"],
+    )
+    pipeline.add_step(step_1)
+
+    step_2 = PipelineStep(
+        operation=_AttributeAdder(output_label="validated"),
+        input_keys=["UPPERCASE"],
+        output_keys=[],
+    )
+    pipeline.add_step(step_2)
+
+    doc = _get_doc()
+    pipeline.run_on_doc(doc)
+
+    anns = doc.get_annotations_by_label("sentence")
+    uppercase_anns = doc.get_annotations_by_label("uppercased_sentence")
+    assert len(uppercase_anns) == len(anns)
+
+    for ann in uppercase_anns:
+        assert len(ann.attrs) == 1
+        attr = ann.attrs[0]
+        assert attr.label == "validated" and attr.value is True
 
 
 def test_labels_for_input_key():
