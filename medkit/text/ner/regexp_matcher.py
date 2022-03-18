@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 from typing import Any, Iterator, List, Optional
 
+import unidecode
 import yaml
 
 
@@ -55,10 +56,20 @@ class RegexpMatcherRule:
     version: str
     index_extract: int = 0
     case_sensitive: bool = False
+    unicode_sensitive: bool = False
     exclusion_regexp: Optional[str] = None
     normalizations: List[RegexpMatcherNormalization] = dataclasses.field(
         default_factory=list
     )
+
+    def __post_init__(self):
+        assert self.unicode_sensitive or (
+            self.regexp.isascii()
+            and (self.exclusion_regexp is None or self.exclusion_regexp.isascii())
+        ), (
+            "NegationDetectorRule regexps shouldn't contain non-ASCII chars when"
+            " unicode_sensitive is False"
+        )
 
 
 @dataclasses.dataclass
@@ -131,6 +142,9 @@ class RegexpMatcher(RuleBasedAnnotator):
             for rule in self.rules
             if rule.exclusion_regexp is not None
         }
+        self._has_non_unicode_sensitive_rule = any(
+            not r.unicode_sensitive for r in rules
+        )
 
         config = dict(rules=rules, attrs_to_copy=attrs_to_copy)
         self._description = OperationDescription(
@@ -162,16 +176,23 @@ class RegexpMatcher(RuleBasedAnnotator):
         ]
 
     def _find_matches_in_segment(self, segment: Segment) -> Iterator[Entity]:
+        text_ascii = (
+            unidecode.unidecode(segment.text)
+            if self._has_non_unicode_sensitive_rule
+            else None
+        )
+
         for rule in self.rules:
-            yield from self._find_matches_in_segment_for_rule(rule, segment)
+            yield from self._find_matches_in_segment_for_rule(rule, segment, text_ascii)
 
     def _find_matches_in_segment_for_rule(
-        self, rule: RegexpMatcherRule, segment: Segment
+        self, rule: RegexpMatcherRule, segment: Segment, text_ascii: Optional[str]
     ) -> Iterator[Entity]:
         flags = 0 if rule.case_sensitive else re.IGNORECASE
+        text_to_match = segment.text if rule.unicode_sensitive else text_ascii
 
         pattern = self._patterns_by_rule_id[rule.id]
-        for match in pattern.finditer(segment.text, flags):
+        for match in pattern.finditer(text_to_match, flags):
             # note that we apply exclusion_regexp to the whole segment,
             # so we might have a match in a part of the text unrelated to the current
             # match
@@ -180,7 +201,7 @@ class RegexpMatcher(RuleBasedAnnotator):
             exclusion_pattern = self._exclusion_patterns_by_rule_id.get(rule.id)
             if (
                 exclusion_pattern is not None
-                and exclusion_pattern.search(segment.text, flags) is not None
+                and exclusion_pattern.search(text_to_match, flags) is not None
             ):
                 continue
 

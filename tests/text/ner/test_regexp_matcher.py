@@ -9,12 +9,12 @@ from medkit.text.ner.regexp_matcher import (
 _TEXT = "The patient has asthma and type 1 diabetes."
 
 
-def _get_sentence_segment():
+def _get_sentence_segment(text=_TEXT):
     return Segment(
         origin=Origin(),
         label="sentence",
-        spans=[Span(0, len(_TEXT))],
-        text=_TEXT,
+        spans=[Span(0, len(text))],
+        text=text,
     )
 
 
@@ -165,6 +165,38 @@ def test_case_sensitivity_exclusion_on():
     entities = matcher.process([sentence])
 
     assert _find_entity(entities, "Diabetes") is not None
+
+
+def test_unicode_sensitive_off():
+    sentence = _get_sentence_segment("Le patient fait du diabète")
+
+    rule = RegexpMatcherRule(
+        id="id_regexp_diabetes",
+        label="Diabetes",
+        regexp="diabete",
+        version="1",
+        unicode_sensitive=False,
+    )
+    matcher = RegexpMatcher(rules=[rule])
+    entities = matcher.process([sentence])
+
+    assert _find_entity(entities, "Diabetes") is not None
+
+
+def test_unicode_sensitive_on():
+    sentence = _get_sentence_segment("Le patient fait du diabète")
+
+    rule = RegexpMatcherRule(
+        id="id_regexp_diabetes",
+        label="Diabetes",
+        regexp="diabete",
+        version="1",
+        unicode_sensitive=True,
+    )
+    matcher = RegexpMatcher(rules=[rule])
+    entities = matcher.process([sentence])
+
+    assert _find_entity(entities, "Diabetes") is None
 
 
 def test_attrs_to_copy():
