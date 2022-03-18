@@ -125,41 +125,42 @@ class NegationDetector(RuleBasedAnnotator):
         """
 
         for segment in segments:
-            # skip empty annotations
-            if self._non_empty_text_pattern.search(segment.text) is None:
-                continue
+            neg_attr = self._detect_negation_in_segment(segment)
+            segment.attrs.append(neg_attr)
 
-            text_unicode = segment.text
-            text_ascii = (
-                unidecode.unidecode(text_unicode)
-                if self._has_non_unicode_sensitive_rule
-                else None
-            )
+    def _detect_negation_in_segment(self, segment: Segment):
+        # skip empty segment
+        if self._non_empty_text_pattern.search(segment.text) is None:
+            return
 
-            # try all rules until we have a match
-            is_negated = False
-            for rule in self.rules:
-                text = text_unicode if rule.unicode_sensitive else text_ascii
-                pattern = self._patterns_by_rule_id[rule.id]
-                if pattern.search(text) is not None:
-                    exclusion_pattern = self._exclusion_patterns_by_rule_id.get(rule.id)
-                    if (
-                        exclusion_pattern is None
-                        or exclusion_pattern.search(text) is None
-                    ):
-                        is_negated = True
-                        break
+        text_unicode = segment.text
+        text_ascii = (
+            unidecode.unidecode(text_unicode)
+            if self._has_non_unicode_sensitive_rule
+            else None
+        )
 
-            attr = Attribute(
-                origin=Origin(
-                    operation_id=self.description.id,
-                    ann_ids=[segment.id],
-                ),
-                label=self.output_label,
-                value=is_negated,
-                metadata=dict(rule_id=rule.id) if is_negated else None,
-            )
-            segment.attrs.append(attr)
+        # try all rules until we have a match
+        is_negated = False
+        for rule in self.rules:
+            text = text_unicode if rule.unicode_sensitive else text_ascii
+            pattern = self._patterns_by_rule_id[rule.id]
+            if pattern.search(text) is not None:
+                exclusion_pattern = self._exclusion_patterns_by_rule_id.get(rule.id)
+                if exclusion_pattern is None or exclusion_pattern.search(text) is None:
+                    is_negated = True
+                    break
+
+        neg_attr = Attribute(
+            origin=Origin(
+                operation_id=self.description.id,
+                ann_ids=[segment.id],
+            ),
+            label=self.output_label,
+            value=is_negated,
+            metadata=dict(rule_id=rule.id) if is_negated else None,
+        )
+        return neg_attr
 
     @staticmethod
     def load_rules(path_to_rules) -> List[NegationDetectorRule]:
