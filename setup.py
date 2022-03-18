@@ -9,7 +9,7 @@ setup(
     packages=find_packages(include=["medkit", "medkit.*"]),
     package_data={"": ["*.yml", "*.tsv"]},
     python_requires=">=3.8",
-    install_requires=["flashtext", "pyaml", "smart_open"],
+    install_requires=["flashtext", "pyaml", "smart_open", "Unidecode"],
     extras_require={
         "optional": [
             "PyRuSH",

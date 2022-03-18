@@ -2,8 +2,9 @@
 - id: "id_regexp_infarct"
   label: "Infarctus, IDM, myocarde, cardiopathie ischémique, angor, angine de poitrine"
   regexp: "infarctus|[^a-z]IDM[^a-z]|infarctus.{0,5}du.{0,5}myocarde|cardiopathie.{0,5}isch[eéè]mique|[^a-z]angor[^a-z]|angine.{0,5}de.{0,5}poitrine|crise.{0,5}cardiaque|syndrome *coronarien *aigu"
-  regexp_exclude: "infarctus +pulmonaire|infarctus +c[ée]r[ée]bral|AVC *avec *infarctus|infarctus *spl[ée]nique|petit *infarctus"
+  exclusion_regexp: "infarctus +pulmonaire|infarctus +c[ée]r[ée]bral|AVC *avec *infarctus|infarctus *spl[ée]nique|petit *infarctus"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -22,48 +23,57 @@
   label: "Kawasaki"
   regexp: "Kawasaki"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_allongementqt"
   label: "allongement QT"
   regexp: "allongement.{0,10}QT"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_allergiehydroxchloroquine"
   label: "allergie hydroxchloroquine"
   regexp: "allergi.{0,10}hydroxchloroquine|hydroxchloroquine.{0,10}allergi"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_retinopathie"
   label: "retinopathie"
   regexp: "r[ée]tinopathie"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_igs2"
   index_extract: 2
   label: "igs2"
   regexp: "igs2[^0-9]{0,10}(24h)?[^0-9]{0,10}([0-9]+)"
   version: "3"
+  unicode_sensitive: True
 
 - id: "id_regexp_encephalopathie"
   label: "encephalopathie"
   regexp: "enc[ée]phalopathie"
   version: "2"
+  unicode_sensitive: True
 
 - id: "id_regexp_insrenchronique"
   label: "Insuffisance rénale chronique"
   regexp: "Insuffisance *r[ée]nale *chronique"
   version: "2"
+  unicode_sensitive: True
 
 - id: "id_regexp_insrenaigue"
   label: "Insuffisance rénale aiguë"
   regexp: "Insuffisance *r[ée]nale *aigu[ëe]"
   version: "2"
+  unicode_sensitive: True
 
 - id: "id_regexp_diabete"
   label: "Diabète"
   regexp: "(?<!pre)(?<!pre.)diab[ée]te|[^a-z]DID[^a-z]|[^a-z]DNID[^a-z]|diab[ée]tique"
-  regexp_exclude: "diab[ée]te *insipide|diab[ée]te *gestationnel|diab[ée]te:[.]"
+  exclusion_regexp: "diab[ée]te *insipide|diab[ée]te *gestationnel|diab[ée]te:[.]"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -75,8 +85,9 @@
 - id: "id_regexp_hta"
   label: "HTA"
   regexp: "[^A-Z]HTA[^A-Z]|hyperten[st]ion.{0,5}art[eé]rielle|hyperten[st]ion.{0,5}[eé]s{1,2}entiel{1,2}."
-  regexp_exclude: "HTA:[.]"
+  exclusion_regexp: "HTA:[.]"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -86,6 +97,7 @@
   label: "Dyslipidémies"
   regexp: "dyslipid.mi.?|hyperlipid.mi.?|hyper.{0,5}cholest.rol.mi.?|cholest.rol.{0,5}[ée]l[ée]v[ée]|hypertriglyc.rid.mi.?|triglyc[ée]rides? +[ée]lev[ée]s?"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -96,6 +108,7 @@
   label: "Hyperlipidémies"
   regexp: "hyperlipid.mi.?"
   version: "1"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -105,6 +118,7 @@
   label: "Hypercholestérolémie"
   regexp: "hyper.{0,5}cholest.rol.mi.?|cholest.rol.{0,5}[ée]l[ée]v[ée]"
   version: "1"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -114,6 +128,7 @@
   label: "Hypertriglycéridémies"
   regexp: "hypertriglyc.rid.mi.?|triglyc[ée]rides? +[ée]lev[ée]s?"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -124,6 +139,7 @@
   label: "IMC,BMI"
   regexp: "(^|[^a-z])(IMC|BMI) *(est *de|de|=|:)? *([0-9]+[,.]?[0-9]*)[^\\/]?"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -133,6 +149,7 @@
   label: "Surpoids"
   regexp: "surpoi.{0,2}|surcharge *pond[ée]rale?"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -142,6 +159,7 @@
   label: "Obésité"
   regexp: "ob[éeè]sit[éeè]|ob[èeé]se"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -154,6 +172,7 @@
   label: "pose/présence stent, endoprothèse, angioplastie"
   regexp: "[^a-z]stents?[^a-z].{0,5}|[ae]ndoproth?.se|[ae]ngioplasti."
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -169,6 +188,7 @@
   label: "trouble du rythme, AC/FA, arythmie, fibrillation, flutter"
   regexp: "[^a-z]ACFA[^a-z]|[^a-z]AC\\/FA[^a-z]|ar.thmi.|fibril{1,}ation|flut{1,}er|trouble.?.{0,5}du.{0,5}r.thme|d.sr.thmie"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -187,6 +207,7 @@
   label: "trouble du rythme, AC/FA, arythmie, fibrillation, flutter"
   regexp: "[^a-z]ACFA[^a-z]|[^a-z]AC\\/FA[^a-z]|ar.thmi.|fibril{1,}ation|flut{1,}er|trouble.?.{0,5}du.{0,5}r.thme|d.sr.thmie"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -203,6 +224,7 @@
   label: "Arrêt respiratoire, arrêt cardiaque"
   regexp: "[^a-z]arr?[éêe]t *respiratoire|[^a-z]arr?[éêe]t *cardiaque|arr[êeèé]t *cardio[^a-z]*respiratoire|[^a-z]ACR[^a-z]"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -219,6 +241,7 @@
   label: "Arrêt respiratoire, arrêt cardiaque"
   regexp: "[^a-z]arr?[éêe]t *respiratoire|[^a-z]arr?[éêe]t *cardiaque|arr[êeèé]t *cardio[^a-z]*respiratoire|[^a-z]ACR[^a-z]"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -234,6 +257,7 @@
   label: "Insuffisance cardiaque, défaillance cardiaque"
   regexp: "insuf{1,}isance.{0,5}cardiaque|d[ée]faill[ea]nce.{0,5}cardiaque"
   version: "1"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -245,8 +269,9 @@
 - id: "id_regexp_avc"
   label: "AVC, accident vasculaire cérébral, accident ischémique cérébral"
   regexp: "[^a-z]AVC[^a-z]|acc*ident.{0,5}vasculaire.{0,5}c[ée]r[ée]bral|acc*ident.{0,5}isch?[ée]mique.{0,5}c[ée]r[ée]bral|acc*ident.{0,3}h[ée]morragique.{0,3}c[ée]r[ée]bral"
-  regexp_exclude: "APHP AVC|UHCD AVC|AVC UNITE"
+  exclusion_regexp: "APHP AVC|UHCD AVC|AVC UNITE"
   version: "4"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -262,6 +287,7 @@
   label: "hémorragie sous-arachnoïdienne"
   regexp: "h[ée]morr?agi.{0,5}m[ée]ning[ée]e|h[ée]morr?agi.{0,5}sous-?arachno[ïi]dienne"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -274,6 +300,7 @@
   label: "BPCO, maladie pulmonaire, pneumopathie, HTAP"
   regexp: "[^a-z]BPCO[^a-z]|[^a-z]HTAP[^a-z]|bronchopneumopathie|maladie.{0,5}pulmonaire|pneumopathie|a[sth][sth][sth]me|bronch?ospasme|a[sth][sth][sth]matique|insuf.{1,2}isance.{0,5}respiratoire.{0,5}chronique|emph.s[èe]me|emf.s[èe]me"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -310,6 +337,7 @@
   label: "Asthme, bronchospasmes"
   regexp: "a[sth][sth][sth]me|bronch?ospasme|a[sth][sth][sth]matique"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -325,6 +353,7 @@
   label: "Insuffisance repiratoire chronique"
   regexp: "insuf.{1,2}isance.{0,5}respiratoire.{0,5}chronique"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -337,6 +366,7 @@
   label: "Emphysème"
   regexp: "emph.s[èe]me|emf.s[èe]me"
   version: "1"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -349,6 +379,7 @@
   label: "Insuffisance rénale chronique, maladie rénale, néphropathie,IRC,Insuffisance rénale aiguë"
   regexp: "maladie.{0,5}r[eé]nale|n[eé]phropathie|Insuffisance.{0,5}r[eé]nale.{0,5}chronique|[^a-z]IRC[^a-z]|[^a-z]dialyse|h[ée]modialyse"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -369,8 +400,9 @@
 - id: "id_regexp_somnolence"
   label: "Somnolence"
   regexp: "somnole(nce|nt|nte)?"
-  regexp_exclude: "non *somnolente?|somnolen(t|ce|te) *non|risque *de *somnolence"
+  exclusion_regexp: "non *somnolente?|somnolen(t|ce|te) *non|risque *de *somnolence"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -380,29 +412,34 @@
   index_extract: 1
   label: "Debit O2 L/Min"
   regexp: "[^0-9,]([0-9]+,?[0-9]*) *L *\\/ *mi?n?"
-  regexp_exclude: "cardiaque|[^a-z]dc[^a-z]|[^a-z]dq[^a-z]|[^a-z]dc[^a-z]|[^a-z]DEP[^a-z]|[^A-Z]DEP[^A-Z]|PeakFlow"
+  exclusion_regexp: "cardiaque|[^a-z]dc[^a-z]|[^a-z]dq[^a-z]|[^a-z]dc[^a-z]|[^a-z]DEP[^a-z]|[^A-Z]DEP[^A-Z]|PeakFlow"
   version: "2"
+  unicode_sensitive: True
 
 - id: "id_regexp_sofa"
   index_extract: 2
   label: "Score SOFA"
   regexp: "SOFA[^a-z0-9]*(.{0,5}24h)?[^a-z0-9]*([0-9]+)"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_plaquenil"
   label: "Hydroxychloroquine, Plaquenil"
   regexp: "hydroxychloroquine|plaqu[ée]nil"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_nivaquin"
   label: "Chloroquine"
   regexp: "[^a-z]chloroquine?|[^a-z]nivaquin"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_sep"
   label: "Sclérose en Plaques"
   regexp: "scl[ée]rose.{0,5}en.{0,5}plaque.?|[^a-z]SEP[^a-z]"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -415,6 +452,7 @@
   label: "Cancer"
   regexp: "(?<!pre)(?<!pre )cancer[^a-z]|tumeur(?!.{0,7}b[eéè]nigne)|carcinome|m[eé]lanome|n[eé]oplasie|sarcome"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -430,13 +468,15 @@
 - id: "id_regexp_ventilation"
   label: "Ventilation, Intubation"
   regexp: "intub[eé]|intubation|extubation|[^a-z]ventil[ée]|mise?\\s*sous\\s*respirateur|\\bIOT\\b|\\bVM\\b|\\bVNI\\b"
-  regexp_exclude: "d[ée]cision\\s*de\\s*non\\s*intubation|fonction\\s+ventilatoire\\s*précaire|ventilation\\s*manuelle|non-?intubation|VNI.{0,5}\\s*ne\\s*pas\\s*d[ée]]buter"
+  exclusion_regexp: "d[ée]cision\\s*de\\s*non\\s*intubation|fonction\\s+ventilatoire\\s*précaire|ventilation\\s*manuelle|non-?intubation|VNI.{0,5}\\s*ne\\s*pas\\s*d[ée]]buter"
   version: "2"
+  unicode_sensitive: True
 
 - id: "id_regexp_cirrhose"
   label: "Cirrhose, hypertension portale"
   regexp: "cirrhose|h[yi]perten[ts]ion.{0,5}portale|cirrhotique"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -449,6 +489,7 @@
   label: "Lymphome"
   regexp: "Lymphome"
   version: "1"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -461,6 +502,7 @@
   label: "Leucémie"
   regexp: "Leuc[ée]mie"
   version: "1"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -476,6 +518,7 @@
   label: "Hémopathie"
   regexp: "leuc[ée]mie|lymphome|my[ée]lome"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -493,8 +536,9 @@
 - id: "id_regexp_defimmun"
   label: "Déficit immunitaire"
   regexp: "D[ée]ficit *immunitaire|Syndromes *d.immunod[eé]ficience|Hypogammaglobulin[ée]mie"
-  regexp_exclude: "Syndrome *d.immunodeficience *acquise"
+  exclusion_regexp: "Syndrome *d.immunodeficience *acquise"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
@@ -507,8 +551,9 @@
 - id: "id_regexp_vih"
   label: "VIH - SIDA - Séropositif"
   regexp: "[^A-Z]HIV+[^A-Z]|[^A-Z]VIH[^A-Z]|[^A-Z]SIDA[^A-Z]|S[ée]ropositi.."
-  regexp_exclude: "[^A-Z]VIH[^.]{0,20}n..?gative|[^A-Z]VIH[ :]*-[^0-9]"
+  exclusion_regexp: "[^A-Z]VIH[^.]{0,20}n..?gative|[^A-Z]VIH[ :]*-[^0-9]"
   version: "1"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -520,8 +565,9 @@
 - id: "id_regexp_hepb"
   label: "Hépatite B, VHB"
   regexp: "(h[eé]patite *B|VHB) *(chronique|compliqu[eé]|suivi|contr[ôo]l[ée]|trait[eé])|cirrhose *VHB|pour (h[ée]patite B|VHB)|(dans *le *cadre.|suivi|trait[eéè]|en charge){0,20}(h[ée]patite b|VHB)"
-  regexp_exclude: "vaccination hepatite B|vaccin vhb|vhb-"
+  exclusion_regexp: "vaccination hepatite B|vaccin vhb|vhb-"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -531,6 +577,7 @@
   label: "AOMI, artériopathie oblitérante des membres inférieurs"
   regexp: "[^a-z]AOMI[^a-z]|art[eé]riopathi..{0,5}oblit.r[ea]nte|art.rite.{0,5}des.{0,5}membres.{0,5}inf.rieurs"
   version: "1"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -540,6 +587,7 @@
   label: "SDRA, détresse respiratoire"
   regexp: "[^a-z]SDRA[^a-z]|d[ée]tresse.{0,5}respiratoire"
   version: "1"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -549,6 +597,7 @@
   label: "Sepsis, choc septique"
   regexp: "sepsis|choc.{0,5}septique"
   version: "1"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -559,6 +608,7 @@
   label: "Chirurgie récente"
   regexp: "chirurgie.{0,5}?r.cente|chirurgie"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -567,8 +617,9 @@
 - id: "id_regexp_grossesse"
   label: "Grossesse en cours, enceinte, semaines d'aménorrhée, SA"
   regexp: "grossesse.{0,5}en.{0,5}cours|[enceinte.{0,5}|semaine *d.?am[ée]norr?h[ée]|gravid.?"
-  regexp_exclude: "femmes enceintes|femme non enceinte|femme *enceinte *: *[0-9]"
+  exclusion_regexp: "femmes enceintes|femme non enceinte|femme *enceinte *: *[0-9]"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -579,6 +630,7 @@
   label: "taux de BetaHCG, hCG"
   regexp: "betaHCG|[^a-z]HCG[^a-z]"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -589,6 +641,7 @@
   label: "voyage *récent"
   regexp: "voyage|retour.d[eu]?|avion|[aà] *l.[ée]tranger"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -601,6 +654,7 @@
   label: "SLA"
   regexp: "[^A-Z]SLA[^A-Z]|Scl[ée]rose *lat[ée]rale *amyotrophiq|maladie *de *charcot|un *charcot"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -611,25 +665,29 @@
   label: "Taille"
   regexp: "taille[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z,<>]*([0-9]+[.,]?[0-9]* *(cm|m)[0-9]*)(?!DS)"
   version: "2"
+  unicode_sensitive: True
 
 - id: "id_regexp_poids"
   index_extract: 3
   label: "Poids"
   regexp: "(Poids|p[éeè]se)[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z<>,]*([0-9]+[.,]?[0-9]* *(kg|g)[0-9]*)"
-  regexp_exclude: "prise de poids"
+  exclusion_regexp: "prise de poids"
   version: "2"
+  unicode_sensitive: True
 
 - id: "id_regexp_greffe"
   label: "Greffe"
   regexp: "greff[ée]|transplantation|patient *transplant"
-  regexp_exclude: "en *attente *de *greffe|en *attente *de *transplantation|bilan[^a-z]*pre[^a-z]*greffe"
+  exclusion_regexp: "en *attente *de *greffe|en *attente *de *transplantation|bilan[^a-z]*pre[^a-z]*greffe"
   version: "2"
+  unicode_sensitive: True
 
 # on supprime, inclu dans surinfection
 - id: "id_regexp_surinfbact"
   label: "Surinfection *bactérienne"
   regexp: "Surinfection *bact[ée]rienne"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -645,6 +703,7 @@
   label: "Surinfection"
   regexp: "Surinfection"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -659,8 +718,9 @@
 - id: "id_regexp_candida"
   label: "Candida"
   regexp: "[^a-z]candida[^a-z]|candidose"
-  regexp_exclude: "en cours"
+  exclusion_regexp: "en cours"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -669,8 +729,9 @@
 - id: "id_regexp_fumeur"
   label: "Fumeur, tabagisme, paquet-année (PA)"
   regexp: "fumeur|fumeuse|[^-]tabagi|[^a-z]tabac[^a-z]|paquet.{0,5}?ann[ée].?"
-  regexp_exclude: "non\\s+fumeur|tabac\\s+non|tabagisme\\s+non|Tabac\\s*[=:]?\\s*0|tabagi(sm|qu)e\\s+sevr|(pas|ni|ou)\\s+de\\s+(consommation\\s+de\\s+)?taba|pas\\s+d\\'intoxication\\s+tabagi|0 tabac"
+  exclusion_regexp: "non\\s+fumeur|tabac\\s+non|tabagisme\\s+non|Tabac\\s*[=:]?\\s*0|tabagi(sm|qu)e\\s+sevr|(pas|ni|ou)\\s+de\\s+(consommation\\s+de\\s+)?taba|pas\\s+d\\'intoxication\\s+tabagi|0 tabac"
   version: "2"
+  unicode_sensitive: True
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
@@ -681,65 +742,78 @@
   label: "Paquet-année (PA)"
   regexp: "(\\d{1,4})\\s*(paquet|cigarette|cig)s?\\s*(par|/|-)\\s*(an(n[ée]e)?)( *(pendant|jusqu.[àa]) *\\d+.{7})?"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_paquetjour"
   index_extract: 1
   label: "Paquet-jour)"
   regexp: "(\\d{1,4})\\s*(paquet|cigarette|cig)s?\\s*(par|/|-)\\s*(j|jour)( *(pendant|jusqu.[àa]) *\\d+.{7})?"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_chimio"
   label: "Chimiotherapie"
   regexp: "chimio.* "
   version: "2"
+  unicode_sensitive: True
 
 - id: "id_regexp_radiotherapie"
   label: "radiotherapie"
   regexp: "radioth[eéè]rapie"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_embolie"
   case_sensitive: true
   label: "Embolie pulmonaire"
   regexp: "[Ee]mbolie *[pP]ulmonaire|[^a-zA-Z]EP[^a-zA-Z]"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_thrombose"
   label: "Thrombose"
   regexp: "thrombose|thrombus"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_ischemiedigestive"
   label: "Ischémie digestive"
   regexp: "isch[eé]mie *digestive|isch[eé]mie *intestinale?|isch[eé]mie *m[eé]sent[eé]rique"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_ischemierenale"
   label: "Ischémie rénale"
   regexp: "isch[eé]mie *r[eé]nale|isch[eé]mie *n[eé]phrique|rein *isch[eé]mique"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_bariatrique"
   label: "Chirurgie bariatrique"
   regexp: "chirurgie *(bariatrique|.{0,10}ob[eé]sit[eé])"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_sleeve"
   label: "Sleeve"
   regexp: "[^a-z]sleeve[^a-z]|[^a-z]slive[^a-z]|gastroplastie *verticale *calibr[eé]e *avec *r[eé]section *gastrique"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_bypass"
   label: "Bypass"
   regexp: "bypass|by-pass|minibypass|court.?circuit *gastrique"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_anneaugastrique"
   label: "Anneau gastrique"
   regexp: "anneau *gastrique"
   version: "1"
+  unicode_sensitive: True
 
 - id: "id_regexp_dermatolupique"
   label: "Raynaud, engelures, livedo, vascularite cutanée"
   regexp: "[^a-z]de *Raynaud[^a-z]|engelures|[^a-z]livedo[^a-z]|vascularite *cutan[eé]e"
   version: "1"
+  unicode_sensitive: True

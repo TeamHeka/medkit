@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 from typing import Any, Iterator, List, Optional
 
+import unidecode
 import yaml
 
 
@@ -38,10 +39,10 @@ class RegexpMatcherRule:
         If the regexp has groups, the index of the group to use to extract
         the entity
     case_sensitive:
-        Wether to ignore case when running `regexp and `regexp_exclude`
-    regexp_exclude:
+        Wether to ignore case when running `regexp and `exclusion_regexp`
+    exclusion_regexp:
         An optional exclusion pattern. Note that this exclusion pattern will
-        executed on the whole input annotation, so when relying on `regexp_exclude`
+        executed on the whole input annotation, so when relying on `exclusion_regexp`
         make sure the input annotations passed to `RegexpMatcher` are "local"-enough
         (sentences or syntagmes) rather than the whole text or paragraphs
     normalization:
@@ -55,10 +56,20 @@ class RegexpMatcherRule:
     version: str
     index_extract: int = 0
     case_sensitive: bool = False
-    regexp_exclude: Optional[str] = None
+    unicode_sensitive: bool = False
+    exclusion_regexp: Optional[str] = None
     normalizations: List[RegexpMatcherNormalization] = dataclasses.field(
-        default_factory=lambda: []
+        default_factory=list
     )
+
+    def __post_init__(self):
+        assert self.unicode_sensitive or (
+            self.regexp.isascii()
+            and (self.exclusion_regexp is None or self.exclusion_regexp.isascii())
+        ), (
+            "NegationDetectorRule regexps shouldn't contain non-ASCII chars when"
+            " unicode_sensitive is False"
+        )
 
 
 @dataclasses.dataclass
@@ -111,10 +122,29 @@ class RegexpMatcher(RuleBasedAnnotator):
         """
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
-        self.rules = rules
         if attrs_to_copy is None:
             attrs_to_copy = []
+
+        self.rules = rules
         self.attrs_to_copy = attrs_to_copy
+
+        # pre-compile patterns
+        self._patterns_by_rule_id = {
+            rule.id: re.compile(
+                rule.regexp, flags=0 if rule.case_sensitive else re.IGNORECASE
+            )
+            for rule in self.rules
+        }
+        self._exclusion_patterns_by_rule_id = {
+            rule.id: re.compile(
+                rule.exclusion_regexp, flags=0 if rule.case_sensitive else re.IGNORECASE
+            )
+            for rule in self.rules
+            if rule.exclusion_regexp is not None
+        }
+        self._has_non_unicode_sensitive_rule = any(
+            not r.unicode_sensitive for r in rules
+        )
 
         config = dict(rules=rules, attrs_to_copy=attrs_to_copy)
         self._description = OperationDescription(
@@ -146,24 +176,34 @@ class RegexpMatcher(RuleBasedAnnotator):
         ]
 
     def _find_matches_in_segment(self, segment: Segment) -> Iterator[Entity]:
+        text_ascii = (
+            unidecode.unidecode(segment.text)
+            if self._has_non_unicode_sensitive_rule
+            else None
+        )
+
         for rule in self.rules:
-            yield from self._find_matches_in_segment_for_rule(rule, segment)
+            yield from self._find_matches_in_segment_for_rule(rule, segment, text_ascii)
 
     def _find_matches_in_segment_for_rule(
-        self, rule: RegexpMatcherRule, segment: Segment
+        self, rule: RegexpMatcherRule, segment: Segment, text_ascii: Optional[str]
     ) -> Iterator[Entity]:
         flags = 0 if rule.case_sensitive else re.IGNORECASE
+        text_to_match = segment.text if rule.unicode_sensitive else text_ascii
 
-        for match in re.finditer(rule.regexp, segment.text, flags):
-            if rule.regexp_exclude is not None:
-                # note that we apply regexp_exclude to the whole segment,
-                # so we might have a match in a part of the text unrelated to the current
-                # match
-                # we could check if we have any exclude match overlapping with
-                # the current match but that wouldn't work for all cases
-                exclude_match = re.search(rule.regexp_exclude, segment.text, flags)
-                if exclude_match is not None:
-                    continue
+        pattern = self._patterns_by_rule_id[rule.id]
+        for match in pattern.finditer(text_to_match, flags):
+            # note that we apply exclusion_regexp to the whole segment,
+            # so we might have a match in a part of the text unrelated to the current
+            # match
+            # we could check if we have any exclude match overlapping with
+            # the current match but that wouldn't work for all cases
+            exclusion_pattern = self._exclusion_patterns_by_rule_id.get(rule.id)
+            if (
+                exclusion_pattern is not None
+                and exclusion_pattern.search(text_to_match, flags) is not None
+            ):
+                continue
 
             # extract raw span list from regex match range
             text, spans = span_utils.extract(
@@ -171,10 +211,8 @@ class RegexpMatcher(RuleBasedAnnotator):
             )
 
             metadata = dict(
-                id_regexp=rule.id,
+                rule_id=rule.id,
                 version=rule.version,
-                # TODO decide how to handle that in medkit
-                # **syntagme.attributes,
             )
 
             attrs = [a for a in segment.attrs if a.label in self.attrs_to_copy]

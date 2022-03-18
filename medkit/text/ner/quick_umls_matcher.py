@@ -265,9 +265,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
                 text=text,
                 spans=spans,
                 attrs=attrs,
-                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id])
-                # TODO decide how to handle that in medkit
-                # **input_entity.attributes,
+                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
             )
 
             yield entity
