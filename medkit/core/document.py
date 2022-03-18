@@ -9,7 +9,7 @@ from medkit.core.id import generate_id
 
 if TYPE_CHECKING:
     from medkit.core.annotation import Annotation
-    from medkit.core.processing import OperationDescription
+    from medkit.core.operation import OperationDescription
 
 
 class Document(abc.ABC):
