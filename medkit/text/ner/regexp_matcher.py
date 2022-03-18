@@ -173,8 +173,6 @@ class RegexpMatcher(RuleBasedAnnotator):
             metadata = dict(
                 id_regexp=rule.id,
                 version=rule.version,
-                # TODO decide how to handle that in medkit
-                # **syntagme.attributes,
             )
 
             attrs = [a for a in segment.attrs if a.label in self.attrs_to_copy]
