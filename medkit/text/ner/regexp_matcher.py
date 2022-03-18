@@ -38,10 +38,10 @@ class RegexpMatcherRule:
         If the regexp has groups, the index of the group to use to extract
         the entity
     case_sensitive:
-        Wether to ignore case when running `regexp and `regexp_exclude`
-    regexp_exclude:
+        Wether to ignore case when running `regexp and `exclusion_regexp`
+    exclusion_regexp:
         An optional exclusion pattern. Note that this exclusion pattern will
-        executed on the whole input annotation, so when relying on `regexp_exclude`
+        executed on the whole input annotation, so when relying on `exclusion_regexp`
         make sure the input annotations passed to `RegexpMatcher` are "local"-enough
         (sentences or syntagmes) rather than the whole text or paragraphs
     normalization:
@@ -55,7 +55,7 @@ class RegexpMatcherRule:
     version: str
     index_extract: int = 0
     case_sensitive: bool = False
-    regexp_exclude: Optional[str] = None
+    exclusion_regexp: Optional[str] = None
     normalizations: List[RegexpMatcherNormalization] = dataclasses.field(
         default_factory=lambda: []
     )
@@ -155,13 +155,13 @@ class RegexpMatcher(RuleBasedAnnotator):
         flags = 0 if rule.case_sensitive else re.IGNORECASE
 
         for match in re.finditer(rule.regexp, segment.text, flags):
-            if rule.regexp_exclude is not None:
-                # note that we apply regexp_exclude to the whole segment,
+            if rule.exclusion_regexp is not None:
+                # note that we apply exclusion_regexp to the whole segment,
                 # so we might have a match in a part of the text unrelated to the current
                 # match
                 # we could check if we have any exclude match overlapping with
                 # the current match but that wouldn't work for all cases
-                exclude_match = re.search(rule.regexp_exclude, segment.text, flags)
+                exclude_match = re.search(rule.exclusion_regexp, segment.text, flags)
                 if exclude_match is not None:
                     continue
 

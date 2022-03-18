@@ -2,7 +2,7 @@
 - id: "id_regexp_infarct"
   label: "Infarctus, IDM, myocarde, cardiopathie ischémique, angor, angine de poitrine"
   regexp: "infarctus|[^a-z]IDM[^a-z]|infarctus.{0,5}du.{0,5}myocarde|cardiopathie.{0,5}isch[eéè]mique|[^a-z]angor[^a-z]|angine.{0,5}de.{0,5}poitrine|crise.{0,5}cardiaque|syndrome *coronarien *aigu"
-  regexp_exclude: "infarctus +pulmonaire|infarctus +c[ée]r[ée]bral|AVC *avec *infarctus|infarctus *spl[ée]nique|petit *infarctus"
+  exclusion_regexp: "infarctus +pulmonaire|infarctus +c[ée]r[ée]bral|AVC *avec *infarctus|infarctus *spl[ée]nique|petit *infarctus"
   version: "2"
   normalizations:
     - kb_name: "icd"
@@ -62,7 +62,7 @@
 - id: "id_regexp_diabete"
   label: "Diabète"
   regexp: "(?<!pre)(?<!pre.)diab[ée]te|[^a-z]DID[^a-z]|[^a-z]DNID[^a-z]|diab[ée]tique"
-  regexp_exclude: "diab[ée]te *insipide|diab[ée]te *gestationnel|diab[ée]te:[.]"
+  exclusion_regexp: "diab[ée]te *insipide|diab[ée]te *gestationnel|diab[ée]te:[.]"
   version: "2"
   normalizations:
     - kb_name: "icd"
@@ -75,7 +75,7 @@
 - id: "id_regexp_hta"
   label: "HTA"
   regexp: "[^A-Z]HTA[^A-Z]|hyperten[st]ion.{0,5}art[eé]rielle|hyperten[st]ion.{0,5}[eé]s{1,2}entiel{1,2}."
-  regexp_exclude: "HTA:[.]"
+  exclusion_regexp: "HTA:[.]"
   version: "2"
   normalizations:
     - kb_name: "umls"
@@ -245,7 +245,7 @@
 - id: "id_regexp_avc"
   label: "AVC, accident vasculaire cérébral, accident ischémique cérébral"
   regexp: "[^a-z]AVC[^a-z]|acc*ident.{0,5}vasculaire.{0,5}c[ée]r[ée]bral|acc*ident.{0,5}isch?[ée]mique.{0,5}c[ée]r[ée]bral|acc*ident.{0,3}h[ée]morragique.{0,3}c[ée]r[ée]bral"
-  regexp_exclude: "APHP AVC|UHCD AVC|AVC UNITE"
+  exclusion_regexp: "APHP AVC|UHCD AVC|AVC UNITE"
   version: "4"
   normalizations:
     - kb_name: "icd"
@@ -369,7 +369,7 @@
 - id: "id_regexp_somnolence"
   label: "Somnolence"
   regexp: "somnole(nce|nt|nte)?"
-  regexp_exclude: "non *somnolente?|somnolen(t|ce|te) *non|risque *de *somnolence"
+  exclusion_regexp: "non *somnolente?|somnolen(t|ce|te) *non|risque *de *somnolence"
   version: "2"
   normalizations:
     - kb_name: "icd"
@@ -380,7 +380,7 @@
   index_extract: 1
   label: "Debit O2 L/Min"
   regexp: "[^0-9,]([0-9]+,?[0-9]*) *L *\\/ *mi?n?"
-  regexp_exclude: "cardiaque|[^a-z]dc[^a-z]|[^a-z]dq[^a-z]|[^a-z]dc[^a-z]|[^a-z]DEP[^a-z]|[^A-Z]DEP[^A-Z]|PeakFlow"
+  exclusion_regexp: "cardiaque|[^a-z]dc[^a-z]|[^a-z]dq[^a-z]|[^a-z]dc[^a-z]|[^a-z]DEP[^a-z]|[^A-Z]DEP[^A-Z]|PeakFlow"
   version: "2"
 
 - id: "id_regexp_sofa"
@@ -430,7 +430,7 @@
 - id: "id_regexp_ventilation"
   label: "Ventilation, Intubation"
   regexp: "intub[eé]|intubation|extubation|[^a-z]ventil[ée]|mise?\\s*sous\\s*respirateur|\\bIOT\\b|\\bVM\\b|\\bVNI\\b"
-  regexp_exclude: "d[ée]cision\\s*de\\s*non\\s*intubation|fonction\\s+ventilatoire\\s*précaire|ventilation\\s*manuelle|non-?intubation|VNI.{0,5}\\s*ne\\s*pas\\s*d[ée]]buter"
+  exclusion_regexp: "d[ée]cision\\s*de\\s*non\\s*intubation|fonction\\s+ventilatoire\\s*précaire|ventilation\\s*manuelle|non-?intubation|VNI.{0,5}\\s*ne\\s*pas\\s*d[ée]]buter"
   version: "2"
 
 - id: "id_regexp_cirrhose"
@@ -493,7 +493,7 @@
 - id: "id_regexp_defimmun"
   label: "Déficit immunitaire"
   regexp: "D[ée]ficit *immunitaire|Syndromes *d.immunod[eé]ficience|Hypogammaglobulin[ée]mie"
-  regexp_exclude: "Syndrome *d.immunodeficience *acquise"
+  exclusion_regexp: "Syndrome *d.immunodeficience *acquise"
   version: "2"
   normalizations:
     - kb_name: "icd"
@@ -507,7 +507,7 @@
 - id: "id_regexp_vih"
   label: "VIH - SIDA - Séropositif"
   regexp: "[^A-Z]HIV+[^A-Z]|[^A-Z]VIH[^A-Z]|[^A-Z]SIDA[^A-Z]|S[ée]ropositi.."
-  regexp_exclude: "[^A-Z]VIH[^.]{0,20}n..?gative|[^A-Z]VIH[ :]*-[^0-9]"
+  exclusion_regexp: "[^A-Z]VIH[^.]{0,20}n..?gative|[^A-Z]VIH[ :]*-[^0-9]"
   version: "1"
   normalizations:
     - kb_name: "umls"
@@ -520,7 +520,7 @@
 - id: "id_regexp_hepb"
   label: "Hépatite B, VHB"
   regexp: "(h[eé]patite *B|VHB) *(chronique|compliqu[eé]|suivi|contr[ôo]l[ée]|trait[eé])|cirrhose *VHB|pour (h[ée]patite B|VHB)|(dans *le *cadre.|suivi|trait[eéè]|en charge){0,20}(h[ée]patite b|VHB)"
-  regexp_exclude: "vaccination hepatite B|vaccin vhb|vhb-"
+  exclusion_regexp: "vaccination hepatite B|vaccin vhb|vhb-"
   version: "2"
   normalizations:
     - kb_name: "umls"
@@ -567,7 +567,7 @@
 - id: "id_regexp_grossesse"
   label: "Grossesse en cours, enceinte, semaines d'aménorrhée, SA"
   regexp: "grossesse.{0,5}en.{0,5}cours|[enceinte.{0,5}|semaine *d.?am[ée]norr?h[ée]|gravid.?"
-  regexp_exclude: "femmes enceintes|femme non enceinte|femme *enceinte *: *[0-9]"
+  exclusion_regexp: "femmes enceintes|femme non enceinte|femme *enceinte *: *[0-9]"
   version: "2"
   normalizations:
     - kb_name: "umls"
@@ -616,13 +616,13 @@
   index_extract: 3
   label: "Poids"
   regexp: "(Poids|p[éeè]se)[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z<>,]*([0-9]+[.,]?[0-9]* *(kg|g)[0-9]*)"
-  regexp_exclude: "prise de poids"
+  exclusion_regexp: "prise de poids"
   version: "2"
 
 - id: "id_regexp_greffe"
   label: "Greffe"
   regexp: "greff[ée]|transplantation|patient *transplant"
-  regexp_exclude: "en *attente *de *greffe|en *attente *de *transplantation|bilan[^a-z]*pre[^a-z]*greffe"
+  exclusion_regexp: "en *attente *de *greffe|en *attente *de *transplantation|bilan[^a-z]*pre[^a-z]*greffe"
   version: "2"
 
 # on supprime, inclu dans surinfection
@@ -659,7 +659,7 @@
 - id: "id_regexp_candida"
   label: "Candida"
   regexp: "[^a-z]candida[^a-z]|candidose"
-  regexp_exclude: "en cours"
+  exclusion_regexp: "en cours"
   version: "2"
   normalizations:
     - kb_name: "umls"
@@ -669,7 +669,7 @@
 - id: "id_regexp_fumeur"
   label: "Fumeur, tabagisme, paquet-année (PA)"
   regexp: "fumeur|fumeuse|[^-]tabagi|[^a-z]tabac[^a-z]|paquet.{0,5}?ann[ée].?"
-  regexp_exclude: "non\\s+fumeur|tabac\\s+non|tabagisme\\s+non|Tabac\\s*[=:]?\\s*0|tabagi(sm|qu)e\\s+sevr|(pas|ni|ou)\\s+de\\s+(consommation\\s+de\\s+)?taba|pas\\s+d\\'intoxication\\s+tabagi|0 tabac"
+  exclusion_regexp: "non\\s+fumeur|tabac\\s+non|tabagisme\\s+non|Tabac\\s*[=:]?\\s*0|tabagi(sm|qu)e\\s+sevr|(pas|ni|ou)\\s+de\\s+(consommation\\s+de\\s+)?taba|pas\\s+d\\'intoxication\\s+tabagi|0 tabac"
   version: "2"
   normalizations:
     - kb_name: "umls"

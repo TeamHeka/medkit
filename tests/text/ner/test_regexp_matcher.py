@@ -110,7 +110,7 @@ def test_exclusion_regex():
         id="id_regexp_diabetes",
         label="Diabetes",
         regexp="diabetes",
-        regexp_exclude="type 1 diabetes",
+        exclusion_regexp="type 1 diabetes",
         version="1",
     )
     matcher = RegexpMatcher(rules=[rule])
@@ -157,7 +157,7 @@ def test_case_sensitivity_exclusion_on():
         id="id_regexp_diabetes",
         label="Diabetes",
         regexp="diabetes",
-        regexp_exclude="TYPE 1 DIABETES",
+        exclusion_regexp="TYPE 1 DIABETES",
         case_sensitive=True,
         version="1",
     )
