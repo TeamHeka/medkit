@@ -111,10 +111,26 @@ class RegexpMatcher(RuleBasedAnnotator):
         """
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
-        self.rules = rules
         if attrs_to_copy is None:
             attrs_to_copy = []
+
+        self.rules = rules
         self.attrs_to_copy = attrs_to_copy
+
+        # pre-compile patterns
+        self._patterns_by_rule_id = {
+            rule.id: re.compile(
+                rule.regexp, flags=0 if rule.case_sensitive else re.IGNORECASE
+            )
+            for rule in self.rules
+        }
+        self._exclusion_patterns_by_rule_id = {
+            rule.id: re.compile(
+                rule.exclusion_regexp, flags=0 if rule.case_sensitive else re.IGNORECASE
+            )
+            for rule in self.rules
+            if rule.exclusion_regexp is not None
+        }
 
         config = dict(rules=rules, attrs_to_copy=attrs_to_copy)
         self._description = OperationDescription(
@@ -154,16 +170,19 @@ class RegexpMatcher(RuleBasedAnnotator):
     ) -> Iterator[Entity]:
         flags = 0 if rule.case_sensitive else re.IGNORECASE
 
-        for match in re.finditer(rule.regexp, segment.text, flags):
-            if rule.exclusion_regexp is not None:
-                # note that we apply exclusion_regexp to the whole segment,
-                # so we might have a match in a part of the text unrelated to the current
-                # match
-                # we could check if we have any exclude match overlapping with
-                # the current match but that wouldn't work for all cases
-                exclude_match = re.search(rule.exclusion_regexp, segment.text, flags)
-                if exclude_match is not None:
-                    continue
+        pattern = self._patterns_by_rule_id[rule.id]
+        for match in pattern.finditer(segment.text, flags):
+            # note that we apply exclusion_regexp to the whole segment,
+            # so we might have a match in a part of the text unrelated to the current
+            # match
+            # we could check if we have any exclude match overlapping with
+            # the current match but that wouldn't work for all cases
+            exclusion_pattern = self._exclusion_patterns_by_rule_id.get(rule.id)
+            if (
+                exclusion_pattern is not None
+                and exclusion_pattern.search(segment.text, flags) is not None
+            ):
+                continue
 
             # extract raw span list from regex match range
             text, spans = span_utils.extract(
