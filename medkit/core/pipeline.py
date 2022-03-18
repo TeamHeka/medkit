@@ -56,52 +56,36 @@ class Pipeline:
     the corresponding document.
     """
 
-    def __init__(self):
-        self._steps: List[PipelineStep] = []
-        self._labels_by_input_key: Dict[str, List[str]] = {}
-
-    def add_step(self, step: PipelineStep):
-        """Add a step to the pipeline
-
-        Steps will be executed in the order in which they were added,
-        so make sure to add first the steps generated data used by other steps.
+    def __init__(
+        self, steps: List[PipelineStep], labels_by_input_key: Dict[str, List[str]]
+    ):
+        """Initialize the pipeline
 
         Params
         ------
-        step:
-            The step to add
+        steps:
+            List of pipeline steps.
+
+            Steps will be executed in the order in which they were added,
+            so make sure to add first the steps generating data used by other steps.
+
+        labels_by_input_key:
+            Mapping of input key to document annotation labels.
+
+            This is a way to feed into the pipeline annotations
+            that are not the result of a pipeline step, but that
+            are pre-attached to the document on which the pipeline
+            is running.
+
+            For all pipeline step using `key` as an input key,
+            the annotations of the document having the label `label'
+            will be used as input.
+
+            It is possible to associate several labels to one key,
+            as well as to associate a label to several keys
         """
-        self._steps.append(step)
-
-    def add_label_for_input_key(self, label: str, key: str):
-        """Associate an annotation label to an input key
-
-        This is a way to feed into the pipeline annotations
-        that are not the result of a pipeline step, but that
-        are pre-attached to the document on which the pipeline
-        is running.
-
-        For all pipeline step using `key` as an input key,
-        the annotations of the document having the label `label'
-        will be used as input.
-
-        It is possible to associate several labels to one key,
-        as well as to associate a label to several keys
-
-        Params
-        ------
-        label:
-            The document annotation label
-        key:
-            The pipeline input key
-        """
-        assert label not in self._labels_by_input_key.get(
-            key, []
-        ), f"Label {label} is already associated to key {key}"
-
-        if key not in self._labels_by_input_key:
-            self._labels_by_input_key[key] = []
-        self._labels_by_input_key[key].append(label)
+        self._steps: List[PipelineStep] = steps
+        self._labels_by_input_key: Dict[str, List[str]] = labels_by_input_key
 
     def run_on_doc(self, doc: Document):
         """Run the pipeline on a document.

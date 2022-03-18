@@ -179,16 +179,14 @@ def _get_doc():
 
 def test_single_step():
     """Minimalist pipeline with only one step, retrieving input annotations from doc"""
-    pipeline = Pipeline()
-    pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
-
     uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step = PipelineStep(
         operation=uppercaser,
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
-    pipeline.add_step(step)
+
+    pipeline = Pipeline(steps=[step], labels_by_input_key={"SENTENCE": ["sentence"]})
 
     doc = _get_doc()
     pipeline.run_on_doc(doc)
@@ -205,16 +203,12 @@ def test_single_step():
 
 def test_multiple_steps():
     """Simple pipeline with 2 consecutive steps"""
-    pipeline = Pipeline()
-    pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
-
     uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
         operation=uppercaser,
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
-    pipeline.add_step(step_1)
 
     prefix = "Hello! "
     prefixer = _Prefixer(output_label="prefixed_uppercased_sentence", prefix=prefix)
@@ -223,7 +217,10 @@ def test_multiple_steps():
         input_keys=["UPPERCASE"],
         output_keys=["PREFIX"],
     )
-    pipeline.add_step(step_2)
+
+    pipeline = Pipeline(
+        steps=[step_1, step_2], labels_by_input_key={"SENTENCE": ["sentence"]}
+    )
 
     doc = _get_doc()
     pipeline.run_on_doc(doc)
@@ -250,9 +247,6 @@ def test_multiple_steps():
 def test_multiple_steps_with_same_output_key():
     """Pipeline with 2 step using the same output key, and another step
     using it as input"""
-    pipeline = Pipeline()
-    pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
-
     prefix_1 = "Hello! "
     prefixer_1 = _Prefixer(output_label="prefixed_sentence", prefix=prefix_1)
     step_1 = PipelineStep(
@@ -260,7 +254,6 @@ def test_multiple_steps_with_same_output_key():
         input_keys=["SENTENCE"],
         output_keys=["PREFIX"],
     )
-    pipeline.add_step(step_1)
 
     prefix_2 = "Hi! "
     prefixer_2 = _Prefixer(output_label="prefixed_sentence", prefix=prefix_2)
@@ -269,7 +262,6 @@ def test_multiple_steps_with_same_output_key():
         input_keys=["SENTENCE"],
         output_keys=["PREFIX"],
     )
-    pipeline.add_step(step_2)
 
     uppercaser = _Uppercaser(output_label="uppercased_prefixed_sentence")
     step_3 = PipelineStep(
@@ -277,7 +269,10 @@ def test_multiple_steps_with_same_output_key():
         input_keys=["PREFIX"],
         output_keys=["UPPERCASE"],
     )
-    pipeline.add_step(step_3)
+
+    pipeline = Pipeline(
+        steps=[step_1, step_2, step_3], labels_by_input_key={"SENTENCE": ["sentence"]}
+    )
 
     doc = _get_doc()
     pipeline.run_on_doc(doc)
@@ -294,16 +289,12 @@ def test_multiple_steps_with_same_output_key():
 def test_multiple_steps_with_same_input_key():
     """Pipeline with 2 step using the same input key,
     which is also the output key of a previous step"""
-    pipeline = Pipeline()
-    pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
-
     uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
         operation=uppercaser,
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
-    pipeline.add_step(step_1)
 
     prefix_1 = "Hello! "
     prefixer_2 = _Prefixer(
@@ -314,7 +305,6 @@ def test_multiple_steps_with_same_input_key():
         input_keys=["UPPERCASE"],
         output_keys=["PREFIX_1"],
     )
-    pipeline.add_step(step_2)
 
     prefix_2 = "Hello! "
     prefixer_2 = _Prefixer(
@@ -325,7 +315,10 @@ def test_multiple_steps_with_same_input_key():
         input_keys=["UPPERCASE"],
         output_keys=["PREFIX_2"],
     )
-    pipeline.add_step(step_3)
+
+    pipeline = Pipeline(
+        steps=[step_1, step_2, step_3], labels_by_input_key={"SENTENCE": ["sentence"]}
+    )
 
     doc = _get_doc()
     pipeline.run_on_doc(doc)
@@ -347,16 +340,12 @@ def test_multiple_steps_with_same_input_key():
 
 def test_step_with_multiple_outputs():
     """Pipeline with a step having more than 1 output"""
-    pipeline = Pipeline()
-    pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
-
     splitter = _Splitter(output_label="split_sentence")
     step_1 = PipelineStep(
         operation=splitter,
         input_keys=["SENTENCE"],
         output_keys=["SPLIT_LEFT", "SPLIT_RIGHT"],
     )
-    pipeline.add_step(step_1)
 
     uppercaser = _Uppercaser(output_label="uppercased_left_sentence")
     step_2 = PipelineStep(
@@ -364,7 +353,6 @@ def test_step_with_multiple_outputs():
         input_keys=["SPLIT_LEFT"],
         output_keys=["UPPERCASE"],
     )
-    pipeline.add_step(step_2)
 
     prefix = "Hello! "
     prefixer = _Prefixer(output_label="prefixed_right_sentence", prefix=prefix)
@@ -373,7 +361,10 @@ def test_step_with_multiple_outputs():
         input_keys=["SPLIT_RIGHT"],
         output_keys=["PREFIX"],
     )
-    pipeline.add_step(step_3)
+
+    pipeline = Pipeline(
+        steps=[step_1, step_2, step_3], labels_by_input_key={"SENTENCE": ["sentence"]}
+    )
 
     doc = _get_doc()
     pipeline.run_on_doc(doc)
@@ -391,16 +382,12 @@ def test_step_with_multiple_outputs():
 
 def test_step_with_multiple_inputs():
     """Pipeline with a step having more than 1 input"""
-    pipeline = Pipeline()
-    pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
-
     uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
         operation=uppercaser,
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
-    pipeline.add_step(step_1)
 
     prefix = "Hello! "
     prefixer = _Prefixer(output_label="prefixed_sentence", prefix=prefix)
@@ -409,7 +396,6 @@ def test_step_with_multiple_inputs():
         input_keys=["SENTENCE"],
         output_keys=["PREFIX"],
     )
-    pipeline.add_step(step_2)
 
     merger = _Merger(output_label="merged_sentence")
     step_3 = PipelineStep(
@@ -417,7 +403,10 @@ def test_step_with_multiple_inputs():
         input_keys=["UPPERCASE", "PREFIX"],
         output_keys=["MERGE"],
     )
-    pipeline.add_step(step_3)
+
+    pipeline = Pipeline(
+        steps=[step_1, step_2, step_3], labels_by_input_key={"SENTENCE": ["sentence"]}
+    )
 
     doc = _get_doc()
     pipeline.run_on_doc(doc)
@@ -431,16 +420,14 @@ def test_step_with_multiple_inputs():
 def test_step_with_no_output():
     """Pipeline with a step having no output, because it modifies the annotations
     it receives by adding attributes to them"""
-    pipeline = Pipeline()
-    pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
-
     attribute_adder = _AttributeAdder(output_label="validated")
     step_1 = PipelineStep(
         operation=attribute_adder,
         input_keys=["SENTENCE"],
         output_keys=[],
     )
-    pipeline.add_step(step_1)
+
+    pipeline = Pipeline(steps=[step_1], labels_by_input_key={"SENTENCE": ["sentence"]})
 
     doc = _get_doc()
     pipeline.run_on_doc(doc)
@@ -464,18 +451,12 @@ def test_labels_for_input_key():
     for text in ["Entity1", "Entity2"]:
         doc.add_annotation(_TextAnnotation(label="entity", text=text))
 
-    pipeline = Pipeline()
-    pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
-    pipeline.add_label_for_input_key(label="alt_sentence", key="SENTENCE")
-    pipeline.add_label_for_input_key(label="entity", key="ENTITY")
-
     uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
         operation=uppercaser,
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
-    pipeline.add_step(step_1)
 
     prefix = "Hello! "
     prefixer = _Prefixer(output_label="prefixed_entity", prefix=prefix)
@@ -484,7 +465,13 @@ def test_labels_for_input_key():
         input_keys=["ENTITY"],
         output_keys=["PREFIX"],
     )
-    pipeline.add_step(step_2)
+
+    labels_by_input_key = {
+        "SENTENCE": ["sentence", "alt_sentence"],
+        "ENTITY": ["entity"],
+    }
+
+    pipeline = Pipeline(steps=[step_1, step_2], labels_by_input_key=labels_by_input_key)
 
     pipeline.run_on_doc(doc)
     sentence_anns = doc.get_annotations_by_label("sentence")
@@ -506,9 +493,6 @@ def test_labels_for_input_key():
 def test_step_with_different_output_length():
     """Simple pipeline with 2 consecutive steps. 1st step returns a number of annotations
     different from the number of annotations it received as input"""
-    pipeline = Pipeline()
-    pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
-
     keyword_matcher = _KeywordMatcher(
         output_label="entities", keywords=["sentence", "another"]
     )
@@ -517,7 +501,6 @@ def test_step_with_different_output_length():
         input_keys=["SENTENCE"],
         output_keys=["KEYWORD_MATCH"],
     )
-    pipeline.add_step(step_1)
 
     uppercaser = _Uppercaser(output_label="uppercased_entities")
     step_2 = PipelineStep(
@@ -525,7 +508,10 @@ def test_step_with_different_output_length():
         input_keys=["KEYWORD_MATCH"],
         output_keys=["UPPERCASE"],
     )
-    pipeline.add_step(step_2)
+
+    pipeline = Pipeline(
+        steps=[step_1, step_2], labels_by_input_key={"SENTENCE": ["sentence"]}
+    )
 
     doc = _get_doc()
     pipeline.run_on_doc(doc)
