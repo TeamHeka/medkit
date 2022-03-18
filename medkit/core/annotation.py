@@ -122,4 +122,4 @@ class Origin:
     """
 
     operation_id: Optional[str] = None
-    ann_ids: List[str] = dataclasses.field(default_factory=lambda: [])
+    ann_ids: List[str] = dataclasses.field(default_factory=list)

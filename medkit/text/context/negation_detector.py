@@ -37,7 +37,7 @@ class NegationDetectorRule:
     """
 
     regexp: str
-    exclusion_regexps: List[str] = dataclasses.field(default_factory=lambda: [])
+    exclusion_regexps: List[str] = dataclasses.field(default_factory=list)
     id: Optional[str] = None
     case_sensitive: bool = False
     unicode_sensitive: bool = False

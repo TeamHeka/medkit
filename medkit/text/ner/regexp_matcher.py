@@ -57,7 +57,7 @@ class RegexpMatcherRule:
     case_sensitive: bool = False
     exclusion_regexp: Optional[str] = None
     normalizations: List[RegexpMatcherNormalization] = dataclasses.field(
-        default_factory=lambda: []
+        default_factory=list
     )
 
 
