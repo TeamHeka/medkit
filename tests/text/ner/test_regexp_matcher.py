@@ -42,7 +42,7 @@ def test_single_match():
     assert entity is not None
     assert entity.text == "diabetes"
     assert entity.spans == [Span(34, 42)]
-    assert entity.metadata["id_regexp"] == "id_regexp_diabetes"
+    assert entity.metadata["rule_id"] == "id_regexp_diabetes"
     assert entity.metadata["version"] == "1"
 
 
@@ -70,14 +70,14 @@ def test_multiple_matches():
     assert entity_1 is not None
     assert entity_1.text == "diabetes"
     assert entity_1.spans == [Span(34, 42)]
-    assert entity_1.metadata["id_regexp"] == "id_regexp_diabetes"
+    assert entity_1.metadata["rule_id"] == "id_regexp_diabetes"
     assert entity_1.metadata["version"] == "1"
 
     entity_2 = _find_entity(entities, "Asthma")
     assert entity_2 is not None
     assert entity_2.text == "asthma"
     assert entity_2.spans == [Span(16, 22)]
-    assert entity_2.metadata["id_regexp"] == "id_regexp_asthma"
+    assert entity_2.metadata["rule_id"] == "id_regexp_asthma"
     assert entity_2.metadata["version"] == "1"
 
 

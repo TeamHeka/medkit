@@ -171,7 +171,7 @@ class RegexpMatcher(RuleBasedAnnotator):
             )
 
             metadata = dict(
-                id_regexp=rule.id,
+                rule_id=rule.id,
                 version=rule.version,
             )
 
