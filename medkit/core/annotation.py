@@ -79,7 +79,7 @@ class Attribute:
         metadata: Dict[str, Any], Optional
             The metadata of the attribute
         """
-        if attr_id:
+        if attr_id is None:
             attr_id = generate_id()
 
         self.id = attr_id
