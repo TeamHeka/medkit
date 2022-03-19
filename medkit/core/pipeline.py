@@ -110,15 +110,15 @@ class Pipeline:
             be added to this document.
         """
         # init dictionary that will hold all input/output annotations by key
-        output_anns_by_key = {}
+        anns_by_key = {}
 
         # perform each step, get input annotations from anns_by_key
         # and/or document, and adding output annotations to anns_by_key
         for step in self._steps:
-            self._perform_next_step(step, output_anns_by_key, doc)
+            self._perform_next_step(step, anns_by_key, doc)
 
         # attach all generated annotations to document
-        for output_anns in output_anns_by_key.values():
+        for output_anns in anns_by_key.values():
             for ann in output_anns:
                 doc.add_annotation(ann)
 
@@ -135,13 +135,11 @@ class Pipeline:
         for doc in collection.documents:
             self.run_on_document(doc)
 
-    def _perform_next_step(self, step, output_anns_by_key, doc):
+    def _perform_next_step(self, step, anns_by_key, doc):
         # find input annotations for processing operation
         all_input_anns = []
         for input_key in step.input_keys:
-            input_anns = self._get_input_anns_for_key(
-                input_key, output_anns_by_key, doc
-            )
+            input_anns = self._get_input_anns_for_key(input_key, anns_by_key, doc)
             all_input_anns.append(input_anns)
 
         # call processing operation
@@ -164,13 +162,13 @@ class Pipeline:
 
         # store output anns
         for output_key, output_data in zip(step.output_keys, all_output_anns):
-            if output_key not in output_anns_by_key:
-                output_anns_by_key[output_key] = output_data
+            if output_key not in anns_by_key:
+                anns_by_key[output_key] = output_data
             else:
-                output_anns_by_key[output_key] += output_data
+                anns_by_key[output_key] += output_data
 
-    def _get_input_anns_for_key(self, key, output_anns_by_key, doc):
-        if key not in output_anns_by_key and key not in self._labels_by_input_key:
+    def _get_input_anns_for_key(self, key, anns_by_key, doc):
+        if key not in anns_by_key and key not in self._labels_by_input_key:
             message = f"No annotations found for input key {key}"
             if any(key in s.input_keys for s in self._steps):
                 message += (
@@ -179,7 +177,7 @@ class Pipeline:
             raise RuntimeError(message)
 
         # retrieve input anns from outputs of previous steps
-        input_anns = output_anns_by_key.get(key, [])
+        input_anns = anns_by_key.get(key, [])
 
         # retrieve input anns from doc
         if key in self._labels_by_input_key:
