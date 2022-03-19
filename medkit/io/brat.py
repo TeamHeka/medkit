@@ -12,6 +12,7 @@ from medkit.core import (
     Origin,
     InputConverter,
     OperationDescription,
+    ProvBuilder,
     generate_id,
 )
 from medkit.core.text import TextDocument, Entity, Relation, Span
@@ -26,9 +27,14 @@ class BratInputConverter(InputConverter):
             id = generate_id()
         self.id: str = id
 
+        self._prov_builder: Optional[ProvBuilder] = None
+
     @property
     def description(self) -> OperationDescription:
         return OperationDescription(id=self.id, name=self.__class__.__name__)
+
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
 
     def load(
         self, dir_path: Union[str, Path], ann_ext: str = ".ann", text_ext: str = ".txt"
@@ -134,6 +140,10 @@ class BratInputConverter(InputConverter):
                 metadata=dict(brat_id=brat_entity.id),
             )
             anns_by_brat_id[brat_entity.id] = entity
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    entity.id, self.description.id, source_ids=[]
+                )
 
         for brat_relation in brat_doc.relations.values():
             relation = Relation(
@@ -144,6 +154,10 @@ class BratInputConverter(InputConverter):
                 metadata=dict(brat_id=brat_relation.id),
             )
             anns_by_brat_id[brat_relation.id] = relation
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    relation.id, self.description.id, source_ids=[]
+                )
 
         for brat_attribute in brat_doc.attributes.values():
             attribute = Attribute(
@@ -153,5 +167,9 @@ class BratInputConverter(InputConverter):
                 metadata=dict(brat_id=brat_attribute.id),
             )
             anns_by_brat_id[brat_attribute.target].attrs.append(attribute)
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    attribute.id, self.description.id, source_ids=[]
+                )
 
         return anns_by_brat_id.values()

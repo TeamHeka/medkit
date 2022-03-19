@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import spacy.cli
 
-from medkit.core import Origin, Attribute
+from medkit.core import Origin, Attribute, ProvBuilder
 from medkit.core.text import Segment, Span
 from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher
 
@@ -207,3 +207,26 @@ def test_attrs_to_copy():
     assert len(non_norm_attrs) == 1
     attr = non_norm_attrs[0]
     assert attr.label == "negation" and attr.value is True
+
+
+def test_prov():
+    sentence = _get_sentence_segment("The patient has asthma.")
+
+    umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
+
+    prov_builder = ProvBuilder()
+    umls_matcher.set_prov_builder(prov_builder)
+    entities = umls_matcher.process([sentence])
+    graph = prov_builder.graph
+
+    entity = _find_entity(entities, "asthma")
+    entity_node = graph.get_node(entity.id)
+    assert entity_node.data_item_id == entity.id
+    assert entity_node.operation_id == umls_matcher.id
+    assert entity_node.source_ids == [sentence.id]
+
+    attr = entity.attrs[0]
+    attr_node = graph.get_node(attr.id)
+    assert attr_node.data_item_id == attr.id
+    assert attr_node.operation_id == umls_matcher.id
+    assert attr_node.source_ids == [sentence.id]

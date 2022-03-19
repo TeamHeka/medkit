@@ -9,7 +9,13 @@ import yaml
 
 from flashtext import KeywordProcessor
 
-from medkit.core import Origin, OperationDescription, RuleBasedAnnotator, generate_id
+from medkit.core import (
+    Origin,
+    OperationDescription,
+    RuleBasedAnnotator,
+    ProvBuilder,
+    generate_id,
+)
 from medkit.core.text import Segment, span_utils
 
 
@@ -60,6 +66,8 @@ class SectionTokenizer(RuleBasedAnnotator):
         self.keyword_processor = KeywordProcessor(case_sensitive=True)
         self.keyword_processor.add_keywords_from_dict(section_dict)
 
+        self._prov_builder: Optional[ProvBuilder] = None
+
     @property
     def description(self) -> OperationDescription:
         config = dict(
@@ -71,6 +79,9 @@ class SectionTokenizer(RuleBasedAnnotator):
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
         )
+
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
 
     def process(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -130,6 +141,12 @@ class SectionTokenizer(RuleBasedAnnotator):
                 text=text,
                 metadata=metadata,
             )
+
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    section.id, self.id, source_ids=[segment.id]
+                )
+
             yield section
 
     def _get_sections_to_rename(self, match: List[Tuple]):

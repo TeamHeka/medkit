@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import Origin
+from medkit.core import Origin, ProvBuilder
 from medkit.core.text import Segment, Span
 from medkit.text.segmentation import SentenceTokenizer
 
@@ -12,12 +12,12 @@ _TEXT = (
 )
 
 
-def _get_clean_text_segment():
+def _get_clean_text_segment(text=_TEXT):
     return Segment(
         origin=Origin(),
         label="clean_text",
-        spans=[Span(0, len(_TEXT))],
-        text=_TEXT,
+        spans=[Span(0, len(text))],
+        text=text,
     )
 
 
@@ -60,3 +60,27 @@ def test_process(sentence_tokenizer, expected_sentences):
     for i, (text, spans) in enumerate(expected_sentences):
         assert sentences[i].text == text
         assert sentences[i].spans == spans
+
+
+def test_prov():
+    clean_text_segment = _get_clean_text_segment(
+        "This is a sentence. This is another sentence."
+    )
+
+    tokenizer = SentenceTokenizer()
+    prov_builder = ProvBuilder()
+    tokenizer.set_prov_builder(prov_builder)
+    sentences = tokenizer.process([clean_text_segment])
+    graph = prov_builder.graph
+
+    sentence_1 = sentences[0]
+    node_1 = graph.get_node(sentence_1.id)
+    assert node_1.data_item_id == sentence_1.id
+    assert node_1.operation_id == tokenizer.id
+    assert node_1.source_ids == [clean_text_segment.id]
+
+    sentence_2 = sentences[1]
+    node_2 = graph.get_node(sentence_2.id)
+    assert node_2.data_item_id == sentence_2.id
+    assert node_2.operation_id == tokenizer.id
+    assert node_2.source_ids == [clean_text_segment.id]

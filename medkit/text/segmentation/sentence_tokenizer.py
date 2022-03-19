@@ -6,7 +6,13 @@ import dataclasses
 import re
 from typing import Iterator, List, Optional, Tuple
 
-from medkit.core import Origin, OperationDescription, RuleBasedAnnotator, generate_id
+from medkit.core import (
+    Origin,
+    OperationDescription,
+    RuleBasedAnnotator,
+    ProvBuilder,
+    generate_id,
+)
 from medkit.core.text import Segment, span_utils
 
 
@@ -53,6 +59,8 @@ class SentenceTokenizer(RuleBasedAnnotator):
         self.punct_chars = punct_chars
         self.keep_punct = keep_punct
 
+        self._prov_builder: Optional[ProvBuilder] = None
+
     @property
     def description(self) -> OperationDescription:
         config = dict(
@@ -60,10 +68,12 @@ class SentenceTokenizer(RuleBasedAnnotator):
             punct_chars=self.punct_chars,
             keep_punct=self.keep_punct,
         )
-
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
         )
+
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
 
     def process(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -116,6 +126,12 @@ class SentenceTokenizer(RuleBasedAnnotator):
                 spans=spans,
                 text=text,
             )
+
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    sentence.id, self.id, source_ids=[segment.id]
+                )
+
             yield sentence
 
     @classmethod

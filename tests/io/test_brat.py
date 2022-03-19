@@ -1,3 +1,4 @@
+from medkit.core import ProvBuilder
 from medkit.core.text import TextDocument, Span
 from medkit.io.brat import BratInputConverter
 
@@ -60,3 +61,18 @@ def test_load_no_anns():
         assert doc.text is not None
         anns = doc.get_annotations()
         assert len(anns) == 1 and anns[0].label == TextDocument.RAW_TEXT_LABEL
+
+
+def test_prov():
+    brat_converter = BratInputConverter()
+    prov_builder = ProvBuilder()
+    brat_converter.set_prov_builder(prov_builder)
+    collection = brat_converter.load(dir_path="tests/data/brat")
+    graph = prov_builder.graph
+
+    doc = collection.documents[0]
+    entity_id = doc.entities["disease"][1]
+    node = graph.get_node(entity_id)
+    assert node.data_item_id == entity_id
+    assert node.operation_id == brat_converter.id
+    assert not node.source_ids

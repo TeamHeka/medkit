@@ -1,4 +1,4 @@
-from medkit.core import Origin, Attribute
+from medkit.core import Origin, Attribute, ProvBuilder
 from medkit.core.text import Segment, Span
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
@@ -234,3 +234,33 @@ def test_default_rules():
     # make sure default rules can be loaded and executed
     matcher = RegexpMatcher()
     _ = matcher.process([sentence])
+
+
+def test_prov():
+    sentence = _get_sentence_segment()
+
+    rule = RegexpMatcherRule(
+        id="id_regexp_diabetes",
+        label="Diabetes",
+        regexp="diabetes",
+        version="1",
+        normalizations=[RegexpMatcherNormalization("umls", "2020AB", "C0011849")],
+    )
+    matcher = RegexpMatcher(rules=[rule])
+
+    prov_builder = ProvBuilder()
+    matcher.set_prov_builder(prov_builder)
+    entities = matcher.process([sentence])
+    graph = prov_builder.graph
+
+    entity = _find_entity(entities, "Diabetes")
+    entity_node = graph.get_node(entity.id)
+    assert entity_node.data_item_id == entity.id
+    assert entity_node.operation_id == matcher.id
+    assert entity_node.source_ids == [sentence.id]
+
+    attr = entity.attrs[0]
+    attr_node = graph.get_node(attr.id)
+    assert attr_node.data_item_id == attr.id
+    assert attr_node.operation_id == matcher.id
+    assert attr_node.source_ids == [sentence.id]

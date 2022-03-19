@@ -11,6 +11,7 @@ from medkit.core import (
     Origin,
     OperationDescription,
     RuleBasedAnnotator,
+    ProvBuilder,
     generate_id,
 )
 from medkit.core.text import Entity, Segment, span_utils
@@ -206,6 +207,8 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             and self._matcher.normalize_unicode_flag == normalize_unicode
         ), "Inconsistent QuickUMLS install flags"
 
+        self._prov_builder: Optional[ProvBuilder] = None
+
     @property
     def description(self) -> OperationDescription:
         config = dict(
@@ -223,6 +226,9 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
         )
+
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
 
     def process(self, segments: List[Segment]) -> List[Entity]:
         """Return entities (with UMLS normalization attributes) for each match in `segments`
@@ -279,6 +285,12 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
                 attrs=attrs,
                 origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
             )
+
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(entity.id, self.id, source_ids=[segment.id])
+                self._prov_builder.add_prov(
+                    norm_attr.id, self.id, source_ids=[segment.id]
+                )
 
             yield entity
 

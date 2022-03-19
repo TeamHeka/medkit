@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import Origin
+from medkit.core import Origin, ProvBuilder
 from medkit.core.text import Span, Segment
 from medkit.text.segmentation.section_tokenizer import (
     SectionTokenizer,
@@ -96,3 +96,27 @@ def test_process_with_rules():
         if section.metadata["name"] == "exam_after_antecedent"
     ]
     assert len(section_examen) == 1
+
+
+def test_prov():
+    filepath = TEST_CONFIG[0][0]
+    clean_text_segment = _get_clean_text_segment(filepath)
+
+    section_dict = {"antecedent": ["Antécédents médicaux"], "examen": ["Examen :"]}
+    tokenizer = SectionTokenizer(section_dict)
+    prov_builder = ProvBuilder()
+    tokenizer.set_prov_builder(prov_builder)
+    sections = tokenizer.process([clean_text_segment])
+    graph = prov_builder.graph
+
+    section_1 = sections[0]
+    node_1 = graph.get_node(section_1.id)
+    assert node_1.data_item_id == section_1.id
+    assert node_1.operation_id == tokenizer.id
+    assert node_1.source_ids == [clean_text_segment.id]
+
+    section_2 = sections[1]
+    node_2 = graph.get_node(section_2.id)
+    assert node_2.data_item_id == section_2.id
+    assert node_2.operation_id == tokenizer.id
+    assert node_2.source_ids == [clean_text_segment.id]

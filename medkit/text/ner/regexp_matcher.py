@@ -16,6 +16,7 @@ from medkit.core import (
     Origin,
     OperationDescription,
     RuleBasedAnnotator,
+    ProvBuilder,
     generate_id,
 )
 from medkit.core.text import Entity, Segment, span_utils
@@ -152,12 +153,17 @@ class RegexpMatcher(RuleBasedAnnotator):
             not r.unicode_sensitive for r in rules
         )
 
+        self._prov_builder: Optional[ProvBuilder] = None
+
     @property
     def description(self) -> OperationDescription:
         config = dict(rules=self.rules, attrs_to_copy=self.attrs_to_copy)
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
         )
+
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
 
     def process(self, segments: List[Segment]) -> List[Entity]:
         """
@@ -226,14 +232,16 @@ class RegexpMatcher(RuleBasedAnnotator):
             # TODO should we have a NormalizationAttribute class
             # with specific fields (name, id, version) ?
 
-            for norm in rule.normalizations:
-                norm_attr = Attribute(
+            norm_attrs = [
+                Attribute(
                     origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
                     label=norm.kb_name,
                     value=norm.id,
                     metadata=dict(version=norm.kb_version),
                 )
-                attrs.append(norm_attr)
+                for norm in rule.normalizations
+            ]
+            attrs += norm_attrs
 
             entity = Entity(
                 label=rule.label,
@@ -243,6 +251,15 @@ class RegexpMatcher(RuleBasedAnnotator):
                 origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
                 metadata=metadata,
             )
+
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    entity.id, self.description.id, source_ids=[segment.id]
+                )
+                for norm_attr in norm_attrs:
+                    self._prov_builder.add_prov(
+                        norm_attr.id, self.id, source_ids=[segment.id]
+                    )
 
             yield entity
 

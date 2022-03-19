@@ -9,7 +9,13 @@ from typing import Iterator, List, Optional, Union
 
 from PyRuSH import RuSH
 
-from medkit.core import Origin, OperationDescription, RuleBasedAnnotator, generate_id
+from medkit.core import (
+    Origin,
+    OperationDescription,
+    RuleBasedAnnotator,
+    ProvBuilder,
+    generate_id,
+)
 from medkit.core.text import Segment, span_utils
 
 
@@ -66,6 +72,8 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
         self.keep_newlines = keep_newlines
         self._rush = RuSH(str(path_to_rules))
 
+        self._prov_builder: Optional[ProvBuilder] = None
+
     @property
     def description(self) -> OperationDescription:
         config = dict(
@@ -76,6 +84,9 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
         )
+
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
 
     def process(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -117,6 +128,12 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
                 spans=spans,
                 text=text,
             )
+
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    sentence.id, self.id, source_ids=[segment.id]
+                )
+
             yield sentence
 
     @classmethod

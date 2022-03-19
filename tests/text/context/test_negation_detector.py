@@ -1,4 +1,4 @@
-from medkit.core import Origin
+from medkit.core import Origin, ProvBuilder
 from medkit.core.text import Segment, Span
 from medkit.text.context.negation_detector import NegationDetector, NegationDetectorRule
 
@@ -159,6 +159,24 @@ def test_unicode_sensitive_on():
     assert attr_1.value is False
     attr_2 = syntagmas[1].attrs[0]
     assert attr_2.value is True
+
+
+def test_prov():
+    syntagmas = _get_syntagma_segments(["No sign of covid"])
+
+    rule = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b")
+    detector = NegationDetector(output_label="negation", rules=[rule])
+
+    prov_builder = ProvBuilder()
+    detector.set_prov_builder(prov_builder)
+    detector.process(syntagmas)
+    graph = prov_builder.graph
+
+    attr_1 = syntagmas[0].attrs[0]
+    node_1 = graph.get_node(attr_1.id)
+    assert node_1.data_item_id == attr_1.id
+    assert node_1.operation_id == detector.id
+    assert node_1.source_ids == [syntagmas[0].id]
 
 
 # fmt: off

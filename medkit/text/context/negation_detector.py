@@ -13,6 +13,7 @@ from medkit.core import (
     Attribute,
     OperationDescription,
     RuleBasedAnnotator,
+    ProvBuilder,
     generate_id,
 )
 from medkit.core.text import Segment
@@ -116,12 +117,17 @@ class NegationDetector(RuleBasedAnnotator):
             not r.unicode_sensitive for r in rules
         )
 
+        self._prov_builder: Optional[ProvBuilder] = None
+
     @property
     def description(self) -> OperationDescription:
         config = dict(output_label=self.output_label, rules=self.rules)
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
         )
+
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
 
     def process(self, segments: List[Segment]):
         """Add a negation attribute to each segment with a True/False value.
@@ -169,6 +175,10 @@ class NegationDetector(RuleBasedAnnotator):
             value=is_negated,
             metadata=dict(rule_id=rule.id) if is_negated else None,
         )
+
+        if self._prov_builder is not None:
+            self._prov_builder.add_prov(neg_attr.id, self.id, source_ids=[segment.id])
+
         return neg_attr
 
     @staticmethod
