@@ -3,7 +3,7 @@ __all__ = ["Pipeline", "PipelineStep"]
 import dataclasses
 from typing import Dict, List
 
-from medkit.core import Document, Collection
+from medkit.core.document import Document, Collection
 from medkit.core.operation import ProcessingOperation
 
 
