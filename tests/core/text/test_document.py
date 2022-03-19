@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import Origin, Attribute, generate_id
+from medkit.core import Attribute, generate_id
 from medkit.core.text.document import TextDocument
 from medkit.core.text.annotation import Entity, Relation, Segment
 from medkit.core.text.span import Span
@@ -9,14 +9,10 @@ from medkit.core.text.span import Span
 @pytest.fixture()
 def init_data():
     doc = TextDocument()
-    attribute = Attribute(origin=Origin(), label="Negation")
-    ent1 = Entity(
-        origin=Origin(), label="ent1", spans=[Span(0, 0)], text="", attrs=[attribute]
-    )
-    ent2 = Entity(origin=Origin(), label="ent2", spans=[Span(0, 0)], text="")
-    relation = Relation(
-        origin=Origin(), label="toto", source_id=ent1.id, target_id=ent2.id
-    )
+    attribute = Attribute(label="Negation")
+    ent1 = Entity(label="ent1", spans=[Span(0, 0)], text="", attrs=[attribute])
+    ent2 = Entity(label="ent2", spans=[Span(0, 0)], text="")
+    relation = Relation(label="toto", source_id=ent1.id, target_id=ent2.id)
     return doc, ent1, ent2, relation, attribute
 
 
@@ -45,7 +41,7 @@ def test_get_annotations_by_label(init_data):
 
     # add 2d annotation for same label and make sure we find all annotations
     # for that label
-    ent3 = Entity(origin=Origin(), label=ent1.label, spans=[Span(0, 0)], text="")
+    ent3 = Entity(label=ent1.label, spans=[Span(0, 0)], text="")
     doc.add_annotation(ent3)
     assert doc.get_annotations_by_label(ent1.label) == [ent1, ent3]
 

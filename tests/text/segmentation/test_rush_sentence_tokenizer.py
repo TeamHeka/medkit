@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import Origin, ProvBuilder
+from medkit.core import ProvBuilder
 from medkit.core.text import Segment, Span, ModifiedSpan
 from medkit.text.segmentation.rush_sentence_tokenizer import RushSentenceTokenizer
 
@@ -50,7 +50,6 @@ TEST_CONFIG = [
 
 def _get_clean_text_segment(text):
     return Segment(
-        origin=Origin(),
         label="clean_text",
         spans=[Span(0, len(text))],
         text=text,

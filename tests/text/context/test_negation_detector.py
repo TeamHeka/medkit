@@ -1,4 +1,4 @@
-from medkit.core import Origin, ProvBuilder
+from medkit.core import ProvBuilder
 from medkit.core.text import Segment, Span
 from medkit.text.context.negation_detector import NegationDetector, NegationDetectorRule
 
@@ -6,7 +6,6 @@ from medkit.text.context.negation_detector import NegationDetector, NegationDete
 def _get_syntagma_segments(syntama_texts):
     return [
         Segment(
-            origin=Origin(),
             label="syntagma",
             spans=[Span(0, len(text))],
             text=text,

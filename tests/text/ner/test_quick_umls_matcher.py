@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import spacy.cli
 
-from medkit.core import Origin, Attribute, ProvBuilder
+from medkit.core import Attribute, ProvBuilder
 from medkit.core.text import Segment, Span
 from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher
 
@@ -70,7 +70,6 @@ def setup():
 
 def _get_sentence_segment(text):
     return Segment(
-        origin=Origin(),
         label="sentence",
         spans=[Span(0, len(text))],
         text=text,
@@ -187,7 +186,7 @@ def test_ambiguous_match():
 
 def test_attrs_to_copy():
     sentence = _get_sentence_segment("The patient has asthma.")
-    sentence.attrs.append(Attribute(origin=Origin(), label="negation", value=True))
+    sentence.attrs.append(Attribute(label="negation", value=True))
 
     # attribute not copied
     umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")

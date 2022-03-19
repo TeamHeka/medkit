@@ -7,7 +7,6 @@ from medkit.core import (
     Document,
     Annotation,
     Attribute,
-    Origin,
     ProcessingOperation,
     OperationDescription,
 )
@@ -18,7 +17,7 @@ class _TextAnnotation(Annotation):
     """Mock text annotation"""
 
     def __init__(self, label, text):
-        super().__init__(origin=Origin(), label=label)
+        super().__init__(label=label)
         self.text = text
 
 
@@ -147,9 +146,7 @@ class _AttributeAdder(ProcessingOperation):
 
     def process(self, anns):
         for ann in anns:
-            ann.attrs.append(
-                Attribute(origin=Origin(), label=self.output_label, value=True)
-            )
+            ann.attrs.append(Attribute(label=self.output_label, value=True))
 
 
 def test_single_step():

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-__all__ = ["Annotation", "Attribute", "Origin"]
+__all__ = ["Annotation", "Attribute"]
 
 import abc
-import dataclasses
 from typing import Any, Dict, List, Optional
 
 from medkit.core.id import generate_id
@@ -12,7 +11,6 @@ from medkit.core.id import generate_id
 class Annotation(abc.ABC):
     def __init__(
         self,
-        origin: Origin,
         label: str,
         attrs: Optional[List[Attribute]] = None,
         ann_id: Optional[str] = None,
@@ -23,8 +21,6 @@ class Annotation(abc.ABC):
 
         Parameters
         ----------
-        origin: Origin
-            Description of how this annotation was generated
         label: str
             The annotation label
         attrs:
@@ -42,7 +38,6 @@ class Annotation(abc.ABC):
             metadata = {}
 
         self.id: str = ann_id
-        self.origin: Origin = origin
         self.label: str = label
         self.attrs: List[Attribute] = attrs
         self.metadata: Dict[str, Any] = metadata
@@ -62,7 +57,6 @@ class Annotation(abc.ABC):
 class Attribute:
     def __init__(
         self,
-        origin: Origin,
         label: str,
         value: Optional[Any] = None,
         attr_id: Optional[str] = None,
@@ -73,8 +67,6 @@ class Attribute:
 
         Parameters
         ----------
-        origin: Origin
-            Description of how this attribute annotation was generated
         label: str
             The attribute label
         value: str, Optional
@@ -90,7 +82,6 @@ class Attribute:
             metadata = {}
 
         self.id: str = attr_id
-        self.origin: Origin = origin
         self.label: str = label
         self.value: Optional[Any] = value
         self.metadata: Dict[str, Any] = metadata
@@ -105,25 +96,3 @@ class Attribute:
             f"{self.__class__.__qualname__} : id={self.id!r}, label={self.label!r},"
             f" value={self.value}"
         )
-
-
-@dataclasses.dataclass(frozen=True)
-class Origin:
-    """Description of how an annotation was generated
-
-    Parameters
-    ----------
-    operation_id:
-        Identifier of the `OperationDescription` describing
-        the processing module that generated the annotation.
-        Should never be None except for RAW_TEXT annotation.
-
-    ann_ids:
-        Identifier of the source annotations that were used
-        to generate the annotation. Typically there will
-        only be one source annotation but there might be none
-        or several.
-    """
-
-    operation_id: Optional[str] = None
-    ann_ids: List[str] = dataclasses.field(default_factory=list)

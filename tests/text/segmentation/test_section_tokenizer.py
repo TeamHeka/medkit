@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import Origin, ProvBuilder
+from medkit.core import ProvBuilder
 from medkit.core.text import Span, Segment
 from medkit.text.segmentation.section_tokenizer import (
     SectionTokenizer,
@@ -39,7 +39,6 @@ TEST_CONFIG = [
 def _get_clean_text_segment(filepath):
     text = data_utils.get_text(filepath)
     return Segment(
-        origin=Origin(),
         label="clean_text",
         spans=[Span(0, len(text))],
         text=text,

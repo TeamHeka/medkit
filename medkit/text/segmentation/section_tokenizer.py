@@ -10,7 +10,6 @@ import yaml
 from flashtext import KeywordProcessor
 
 from medkit.core import (
-    Origin,
     OperationDescription,
     RuleBasedAnnotator,
     ProvBuilder,
@@ -135,7 +134,6 @@ class SectionTokenizer(RuleBasedAnnotator):
             # add section name in metadata
             metadata = dict(name=name)
             section = Segment(
-                origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
                 label=self.output_label,
                 spans=spans,
                 text=text,

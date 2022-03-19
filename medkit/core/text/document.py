@@ -6,7 +6,6 @@ import random
 from typing import Any, Dict, List, Optional
 import uuid
 
-from medkit.core.annotation import Origin
 from medkit.core.document import Document
 from medkit.core.text.annotation import TextAnnotation, Segment, Entity, Relation
 from medkit.core.text.span import Span
@@ -99,7 +98,6 @@ class TextDocument(Document[TextAnnotation]):
         id = str(uuid.UUID(int=rng.getrandbits(128)))
 
         return Segment(
-            origin=Origin(),
             label=self.RAW_TEXT_LABEL,
             spans=[Span(0, len(self.text))],
             text=self.text,

@@ -5,7 +5,7 @@ __all__ = ["TextAnnotation", "Segment", "Entity", "Relation"]
 import abc
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
-from medkit.core.annotation import Annotation, Attribute, Origin
+from medkit.core.annotation import Annotation, Attribute
 from medkit.core.text import span_utils
 from medkit.core.text.span import AnySpanType
 
@@ -19,19 +19,17 @@ class TextAnnotation(Annotation):
     @abc.abstractmethod
     def __init__(
         self,
-        origin: Origin,
         label: str,
         attrs: Optional[List[Attribute]] = None,
         ann_id: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ):
-        return super().__init__(origin, label, attrs, ann_id, metadata)
+        return super().__init__(label, attrs, ann_id, metadata)
 
 
 class Segment(TextAnnotation):
     def __init__(
         self,
-        origin: Origin,
         label: str,
         spans: List[AnySpanType],
         text: str,
@@ -44,8 +42,6 @@ class Segment(TextAnnotation):
 
         Parameters
         ----------
-        origin: Origin
-            Description of how this annotation was generated
         label: str
             The label for this annotation (e.g., SENTENCE)
         spans: List[Span]
@@ -59,9 +55,7 @@ class Segment(TextAnnotation):
         metadata: dict[str, Any], Optional
             The metadata of the annotation
         """
-        super().__init__(
-            ann_id=ann_id, origin=origin, label=label, attrs=attrs, metadata=metadata
-        )
+        super().__init__(ann_id=ann_id, label=label, attrs=attrs, metadata=metadata)
         self.spans: List[AnySpanType] = spans
         self.text: str = text
 
@@ -97,7 +91,6 @@ class Segment(TextAnnotation):
 class Entity(Segment):
     def __init__(
         self,
-        origin: Origin,
         label: str,
         spans: List[AnySpanType],
         text: str,
@@ -110,8 +103,6 @@ class Entity(Segment):
 
         Parameters
         ----------
-        origin: Origin
-            Description of how this entity annotation was generated
         label: str
             The entity label
         spans: List[Span]
@@ -126,7 +117,6 @@ class Entity(Segment):
             The metadata of the entity
         """
         super().__init__(
-            origin=origin,
             label=label,
             spans=spans,
             text=text,
@@ -139,7 +129,6 @@ class Entity(Segment):
 class Relation(TextAnnotation):
     def __init__(
         self,
-        origin: Origin,
         label: str,
         source_id: str,
         target_id: str,
@@ -152,8 +141,6 @@ class Relation(TextAnnotation):
 
         Parameters
         ----------
-        origin: Origin
-            Description of how this relation annotation was generated
         label: str
             The relation label
         source_id: str
@@ -167,9 +154,7 @@ class Relation(TextAnnotation):
         metadata: Dict[str, Any], Optional
             The metadata of the relation
         """
-        super().__init__(
-            ann_id=rel_id, origin=origin, label=label, attrs=attrs, metadata=metadata
-        )
+        super().__init__(ann_id=rel_id, label=label, attrs=attrs, metadata=metadata)
         self.source_id: str = source_id
         self.target_id: str = target_id
 

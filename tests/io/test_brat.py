@@ -36,7 +36,6 @@ def test_load():
     assert entity_1.text == "Hypothyroidism"
     assert entity_1.spans == [Span(147, 161)]
     assert entity_1.metadata.get("brat_id") == "T4"
-    assert entity_1.origin.operation_id == brat_converter.description.id
 
     # check attribute
     assert len(entity_1.attrs) == 1
@@ -44,7 +43,6 @@ def test_load():
     assert attr.label == "antecedent"
     assert attr.value is None
     assert attr.metadata.get("brat_id") == "A3"
-    assert attr.origin.operation_id == brat_converter.description.id
 
     # check multi-span entity
     entity_id_2 = doc.entities["vitamin"][1]

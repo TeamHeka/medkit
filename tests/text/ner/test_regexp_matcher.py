@@ -1,4 +1,4 @@
-from medkit.core import Origin, Attribute, ProvBuilder
+from medkit.core import Attribute, ProvBuilder
 from medkit.core.text import Segment, Span
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
@@ -11,7 +11,6 @@ _TEXT = "The patient has asthma and type 1 diabetes."
 
 def _get_sentence_segment(text=_TEXT):
     return Segment(
-        origin=Origin(),
         label="sentence",
         spans=[Span(0, len(text))],
         text=text,
@@ -201,7 +200,7 @@ def test_unicode_sensitive_on():
 
 def test_attrs_to_copy():
     sentence = _get_sentence_segment()
-    sentence.attrs.append(Attribute(origin=Origin(), label="negation", value=True))
+    sentence.attrs.append(Attribute(label="negation", value=True))
 
     rule = RegexpMatcherRule(
         id="id_regexp_diabetes",

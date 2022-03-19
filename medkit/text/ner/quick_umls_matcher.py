@@ -8,7 +8,6 @@ import quickumls.constants
 
 from medkit.core import (
     Attribute,
-    Origin,
     OperationDescription,
     RuleBasedAnnotator,
     ProvBuilder,
@@ -274,7 +273,6 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
                     score=match["similarity"],
                     sem_types=list(match["semtypes"]),
                 ),
-                origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
             )
             attrs.append(norm_attr)
 
@@ -283,7 +281,6 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
                 text=text,
                 spans=spans,
                 attrs=attrs,
-                origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
             )
 
             if self._prov_builder is not None:

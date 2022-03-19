@@ -10,7 +10,6 @@ from typing import Iterator, List, Optional, Union
 from PyRuSH import RuSH
 
 from medkit.core import (
-    Origin,
     OperationDescription,
     RuleBasedAnnotator,
     ProvBuilder,
@@ -123,7 +122,6 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
                 text, spans = span_utils.replace(text, spans, ranges, replacements)
 
             sentence = Segment(
-                origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
                 label=self.output_label,
                 spans=spans,
                 text=text,

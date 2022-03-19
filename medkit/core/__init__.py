@@ -2,7 +2,6 @@ __all__ = [
     "text",
     "Annotation",
     "Attribute",
-    "Origin",
     "DocPipeline",
     "Collection",
     "Document",
@@ -22,7 +21,7 @@ __all__ = [
 ]
 
 from . import text
-from .annotation import Annotation, Attribute, Origin
+from .annotation import Annotation, Attribute
 from .doc_pipeline import DocPipeline
 from .document import Collection, Document
 from .id import generate_id

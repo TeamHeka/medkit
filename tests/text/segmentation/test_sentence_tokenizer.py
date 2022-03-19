@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import Origin, ProvBuilder
+from medkit.core import ProvBuilder
 from medkit.core.text import Segment, Span
 from medkit.text.segmentation import SentenceTokenizer
 
@@ -14,7 +14,6 @@ _TEXT = (
 
 def _get_clean_text_segment(text=_TEXT):
     return Segment(
-        origin=Origin(),
         label="clean_text",
         spans=[Span(0, len(text))],
         text=text,

@@ -9,7 +9,6 @@ import unidecode
 import yaml
 
 from medkit.core import (
-    Origin,
     Attribute,
     OperationDescription,
     RuleBasedAnnotator,
@@ -167,10 +166,6 @@ class NegationDetector(RuleBasedAnnotator):
                     break
 
         neg_attr = Attribute(
-            origin=Origin(
-                operation_id=self.id,
-                ann_ids=[segment.id],
-            ),
             label=self.output_label,
             value=is_negated,
             metadata=dict(rule_id=rule.id) if is_negated else None,

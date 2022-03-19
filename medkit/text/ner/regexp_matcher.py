@@ -13,7 +13,6 @@ import yaml
 
 from medkit.core import (
     Attribute,
-    Origin,
     OperationDescription,
     RuleBasedAnnotator,
     ProvBuilder,
@@ -234,7 +233,6 @@ class RegexpMatcher(RuleBasedAnnotator):
 
             norm_attrs = [
                 Attribute(
-                    origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
                     label=norm.kb_name,
                     value=norm.id,
                     metadata=dict(version=norm.kb_version),
@@ -248,7 +246,6 @@ class RegexpMatcher(RuleBasedAnnotator):
                 text=text,
                 spans=spans,
                 attrs=attrs,
-                origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
                 metadata=metadata,
             )
 

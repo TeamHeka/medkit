@@ -9,7 +9,6 @@ from smart_open import open
 from medkit.core import (
     Collection,
     Attribute,
-    Origin,
     InputConverter,
     OperationDescription,
     ProvBuilder,
@@ -133,7 +132,6 @@ class BratInputConverter(InputConverter):
         # because new annotation id is needed
         for brat_entity in brat_doc.entities.values():
             entity = Entity(
-                origin=Origin(operation_id=self.id),
                 label=brat_entity.type,
                 spans=[Span(*brat_span) for brat_span in brat_entity.span],
                 text=brat_entity.text,
@@ -147,7 +145,6 @@ class BratInputConverter(InputConverter):
 
         for brat_relation in brat_doc.relations.values():
             relation = Relation(
-                origin=Origin(operation_id=self.id),
                 label=brat_relation.type,
                 source_id=anns_by_brat_id[brat_relation.subj].id,
                 target_id=anns_by_brat_id[brat_relation.obj].id,
@@ -161,7 +158,6 @@ class BratInputConverter(InputConverter):
 
         for brat_attribute in brat_doc.attributes.values():
             attribute = Attribute(
-                origin=Origin(operation_id=self.id),
                 label=brat_attribute.type,
                 value=brat_attribute.value,
                 metadata=dict(brat_id=brat_attribute.id),

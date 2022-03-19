@@ -7,7 +7,6 @@ import re
 from typing import Iterator, List, Optional, Tuple
 
 from medkit.core import (
-    Origin,
     OperationDescription,
     RuleBasedAnnotator,
     ProvBuilder,
@@ -121,7 +120,6 @@ class SentenceTokenizer(RuleBasedAnnotator):
             )
 
             sentence = Segment(
-                origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
                 label=self.output_label,
                 spans=spans,
                 text=text,
