@@ -1,4 +1,9 @@
-__all__ = ["Pipeline", "PipelineStep", "DescribableOperation"]
+__all__ = [
+    "Pipeline",
+    "PipelineStep",
+    "DescribableOperation",
+    "ProvCompatibleOperation",
+]
 
 import dataclasses
 from typing import Dict, List, Optional, Protocol, Tuple, Union, runtime_checkable
@@ -7,7 +12,17 @@ import warnings
 from medkit.core.annotation import Annotation
 from medkit.core.document import Document
 from medkit.core.id import generate_id
-from medkit.core.operation import OperationDescription, ProcessingOperation
+from medkit.core.operation import (
+    OperationDescription,
+    ProcessingOperation,
+)
+from medkit.core.prov_builder import ProvBuilder
+
+
+@runtime_checkable
+class ProvCompatibleOperation(Protocol):
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        pass
 
 
 @runtime_checkable
@@ -82,6 +97,7 @@ class Pipeline(ProcessingOperation):
         self.output_keys: List[str] = output_keys
 
         self._doc: Optional[Document] = None
+        self._prov_builder: Optional[ProvBuilder] = None
 
     @property
     def description(self) -> OperationDescription:
@@ -103,6 +119,12 @@ class Pipeline(ProcessingOperation):
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
         )
+
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
+        for step in self.steps:
+            if isinstance(step.operation, ProvCompatibleOperation):
+                step.operation.set_prov_builder(self._prov_builder)
 
     def set_doc(self, doc: Document):
         self._doc = doc

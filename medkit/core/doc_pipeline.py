@@ -4,6 +4,7 @@ from typing import Dict, List
 
 from medkit.core.document import Document, Collection
 from medkit.core.pipeline import Pipeline, PipelineStep
+from medkit.core.prov_builder import ProvBuilder
 
 
 class DocPipeline:
@@ -59,6 +60,9 @@ class DocPipeline:
         )
 
         self.labels_by_input_key: Dict[str, List[str]] = labels_by_input_key
+
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._pipeline.set_prov_builder(prov_builder)
 
     def run_on_doc(self, doc: Document):
         """Run the pipeline on a document.
