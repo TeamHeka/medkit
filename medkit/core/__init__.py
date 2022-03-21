@@ -3,6 +3,7 @@ __all__ = [
     "Annotation",
     "Attribute",
     "Origin",
+    "DocPipeline",
     "Collection",
     "Document",
     "generate_id",
@@ -19,6 +20,7 @@ __all__ = [
 
 from . import text
 from .annotation import Annotation, Attribute, Origin
+from .doc_pipeline import DocPipeline
 from .document import Collection, Document
 from .id import generate_id
 from .operation import (
