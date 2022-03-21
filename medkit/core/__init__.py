@@ -16,6 +16,9 @@ __all__ = [
     "Pipeline",
     "PipelineStep",
     "DescribableOperation",
+    "ProvBuilder",
+    "ProvGraph",
+    "ProvNode",
 ]
 
 from . import text
@@ -32,3 +35,5 @@ from .operation import (
     OutputConverter,
 )
 from .pipeline import Pipeline, PipelineStep, DescribableOperation
+from .prov_builder import ProvBuilder
+from .prov_graph import ProvGraph, ProvNode
