@@ -294,16 +294,16 @@ def test_multiple_steps_with_same_output_key():
     doc = _get_doc()
     pipeline.run_on_doc(doc)
 
-    anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = doc.get_annotations_by_label("sentence")
     uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
-    assert len(uppercased_anns) == len(anns)
+    assert len(uppercased_anns) == len(sentence_anns)
     prefixed_anns = doc.get_annotations_by_label("prefixed_sentence")
-    assert len(prefixed_anns) == len(anns)
+    assert len(prefixed_anns) == len(sentence_anns)
     reversed_anns = doc.get_annotations_by_label("reversed_transformed_sentence")
     assert len(reversed_anns) == len(uppercased_anns) + len(prefixed_anns)
 
-    expected_texts = [a.text.upper()[::-1] for a in anns] + [
-        (prefix + a.text)[::-1] for a in anns
+    expected_texts = [a.text.upper()[::-1] for a in sentence_anns] + [
+        (prefix + a.text)[::-1] for a in sentence_anns
     ]
     assert [a.text for a in reversed_anns] == expected_texts
 
@@ -339,22 +339,22 @@ def test_multiple_steps_with_same_input_key():
     doc = _get_doc()
     pipeline.run_on_doc(doc)
 
-    anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = doc.get_annotations_by_label("sentence")
     uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
-    assert len(uppercased_anns) == len(anns)
+    assert len(uppercased_anns) == len(sentence_anns)
 
     prefixed_uppercased_anns = doc.get_annotations_by_label(
         "prefixed_uppercased_sentence"
     )
     assert len(prefixed_uppercased_anns) == len(uppercased_anns)
-    expected_texts = [prefix + a.text.upper() for a in anns]
+    expected_texts = [prefix + a.text.upper() for a in sentence_anns]
     assert [a.text for a in prefixed_uppercased_anns] == expected_texts
 
     reversed_uppercased_anns = doc.get_annotations_by_label(
         "reversed_uppercased_sentence"
     )
     assert len(reversed_uppercased_anns) == len(uppercased_anns)
-    expected_texts = [a.text.upper()[::-1] for a in anns]
+    expected_texts = [a.text.upper()[::-1] for a in sentence_anns]
     assert [a.text for a in reversed_uppercased_anns] == expected_texts
 
 
@@ -388,18 +388,18 @@ def test_step_with_multiple_outputs():
     doc = _get_doc()
     pipeline.run_on_doc(doc)
 
-    anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = doc.get_annotations_by_label("sentence")
     split_anns = doc.get_annotations_by_label("split_sentence")
-    assert len(split_anns) == 2 * len(anns)
+    assert len(split_anns) == 2 * len(sentence_anns)
     uppercased_left_anns = doc.get_annotations_by_label("uppercased_left_sentence")
     assert len(uppercased_left_anns) == len(split_anns) / 2
     prefixed_right_anns = doc.get_annotations_by_label("prefixed_right_sentence")
     assert len(prefixed_right_anns) == len(split_anns) / 2
 
-    expected_texts = [a.text[: len(a.text) // 2].upper() for a in anns]
+    expected_texts = [a.text[: len(a.text) // 2].upper() for a in sentence_anns]
     assert [a.text for a in uppercased_left_anns] == expected_texts
 
-    expected_texts = [prefix + a.text[len(a.text) // 2 :] for a in anns]
+    expected_texts = [prefix + a.text[len(a.text) // 2 :] for a in sentence_anns]
     assert [a.text for a in prefixed_right_anns] == expected_texts
 
 
@@ -433,15 +433,15 @@ def test_step_with_multiple_inputs():
     doc = _get_doc()
     pipeline.run_on_doc(doc)
 
-    anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = doc.get_annotations_by_label("sentence")
     uppercase_anns = doc.get_annotations_by_label("uppercased_sentence")
-    assert len(uppercase_anns) == len(anns)
+    assert len(uppercase_anns) == len(sentence_anns)
     prefixed_anns = doc.get_annotations_by_label("prefixed_sentence")
-    assert len(prefixed_anns) == len(anns)
+    assert len(prefixed_anns) == len(sentence_anns)
     merged_anns = doc.get_annotations_by_label("merged_sentence")
     assert len(merged_anns) == (len(uppercase_anns) + len(prefixed_anns)) / 2
 
-    expected_texts = [a.text.upper() + prefix + a.text for a in anns]
+    expected_texts = [a.text.upper() + prefix + a.text for a in sentence_anns]
     assert [a.text for a in merged_anns] == expected_texts
 
 
@@ -468,9 +468,9 @@ def test_step_with_no_output():
     doc = _get_doc()
     pipeline.run_on_doc(doc)
 
-    anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = doc.get_annotations_by_label("sentence")
     uppercase_anns = doc.get_annotations_by_label("uppercased_sentence")
-    assert len(uppercase_anns) == len(anns)
+    assert len(uppercase_anns) == len(sentence_anns)
 
     for ann in uppercase_anns:
         assert len(ann.attrs) == 1
