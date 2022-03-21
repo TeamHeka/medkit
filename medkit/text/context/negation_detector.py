@@ -8,7 +8,13 @@ from typing import List, Optional
 import unidecode
 import yaml
 
-from medkit.core import Origin, Attribute, OperationDescription, RuleBasedAnnotator
+from medkit.core import (
+    Origin,
+    Attribute,
+    OperationDescription,
+    RuleBasedAnnotator,
+    generate_id,
+)
 from medkit.core.text import Segment
 
 
@@ -77,11 +83,14 @@ class NegationDetector(RuleBasedAnnotator):
         proc_id:
             Identifier of the detector
         """
+        if proc_id is None:
+            proc_id = generate_id()
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
 
         assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
 
+        self.id: str = proc_id
         self.output_label = output_label
         self.rules = rules
 
@@ -107,14 +116,12 @@ class NegationDetector(RuleBasedAnnotator):
             not r.unicode_sensitive for r in rules
         )
 
-        config = dict(output_label=output_label, rules=rules)
-        self._description = OperationDescription(
-            id=proc_id, name=self.__class__.__name__, config=config
-        )
-
     @property
     def description(self) -> OperationDescription:
-        return self._description
+        config = dict(output_label=self.output_label, rules=self.rules)
+        return OperationDescription(
+            id=self.id, name=self.__class__.__name__, config=config
+        )
 
     def process(self, segments: List[Segment]):
         """Add a negation attribute to each segment with a True/False value.
@@ -155,7 +162,7 @@ class NegationDetector(RuleBasedAnnotator):
 
         neg_attr = Attribute(
             origin=Origin(
-                operation_id=self.description.id,
+                operation_id=self.id,
                 ann_ids=[segment.id],
             ),
             label=self.output_label,

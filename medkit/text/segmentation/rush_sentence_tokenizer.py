@@ -9,7 +9,7 @@ from typing import Iterator, List, Optional, Union
 
 from PyRuSH import RuSH
 
-from medkit.core import Origin, OperationDescription, RuleBasedAnnotator
+from medkit.core import Origin, OperationDescription, RuleBasedAnnotator, generate_id
 from medkit.core.text import Segment, span_utils
 
 
@@ -27,10 +27,6 @@ _PATH_TO_DEFAULT_RULES = (
 
 class RushSentenceTokenizer(RuleBasedAnnotator):
     """Sentence segmentation annotator based on PyRuSH."""
-
-    @property
-    def description(self) -> OperationDescription:
-        return self._description
 
     def __init__(
         self,
@@ -59,21 +55,26 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
             Identifier of the tokenizer
         """
 
+        if proc_id is None:
+            proc_id = generate_id()
         if path_to_rules is None:
             path_to_rules = _PATH_TO_DEFAULT_RULES
 
+        self.id: str = proc_id
         self.output_label = output_label
+        self.path_to_rules = path_to_rules
         self.keep_newlines = keep_newlines
         self._rush = RuSH(str(path_to_rules))
 
+    @property
+    def description(self) -> OperationDescription:
         config = dict(
-            output_label=output_label,
-            path_to_rules=path_to_rules,
-            keep_newlines=keep_newlines,
+            output_label=self.output_label,
+            path_to_rules=self.path_to_rules,
+            keep_newlines=self.keep_newlines,
         )
-
-        self._description = OperationDescription(
-            id=proc_id, name=self.__class__.__name__, config=config
+        return OperationDescription(
+            id=self.id, name=self.__class__.__name__, config=config
         )
 
     def process(self, segments: List[Segment]) -> List[Segment]:
@@ -111,7 +112,7 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
                 text, spans = span_utils.replace(text, spans, ranges, replacements)
 
             sentence = Segment(
-                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
+                origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
                 label=self.output_label,
                 spans=spans,
                 text=text,

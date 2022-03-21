@@ -7,6 +7,7 @@ from medkit.core import (
     Origin,
     OperationDescription,
     ProcessingOperation,
+    generate_id,
 )
 from medkit.core.pipeline import Pipeline, PipelineStep
 
@@ -30,12 +31,12 @@ class _Uppercaser(ProcessingOperation):
     """Mock processing operation uppercasing annotations"""
 
     def __init__(self, output_label):
+        self.id = generate_id()
         self.output_label = output_label
-        self._description = OperationDescription(name="Uppercaser")
 
     @property
     def description(self):
-        return self._description
+        return OperationDescription(id=self.id, name="Uppercaser")
 
     def process(self, anns):
         uppercase_anns = []
@@ -52,13 +53,13 @@ class _Prefixer(ProcessingOperation):
     """Mock processing operation prefixing annotations"""
 
     def __init__(self, output_label, prefix):
+        self.id = generate_id()
         self.output_label = output_label
         self.prefix = prefix
-        self._description = OperationDescription(name="Prefixer")
 
     @property
     def description(self):
-        return self._description
+        return OperationDescription(id=self.id, name="Prefixer")
 
     def process(self, anns):
         prefixed_anns = []
@@ -75,12 +76,12 @@ class _Splitter(ProcessingOperation):
     """Mock processing operation splitting annotations"""
 
     def __init__(self, output_label):
+        self.id = generate_id()
         self._output_label = output_label
-        self._description = OperationDescription(name="Splitter")
 
     @property
     def description(self):
-        return self._description
+        return OperationDescription(id=self.id, name="Splitter")
 
     def process(self, anns):
         left_anns = []
@@ -98,12 +99,12 @@ class _Merger(ProcessingOperation):
     """Mock processing operation merging annotations"""
 
     def __init__(self, output_label):
+        self.id = generate_id()
         self.output_label = output_label
-        self._description = OperationDescription(name="Merger")
 
     @property
     def description(self):
-        return self._description
+        return OperationDescription(id=self.id, name="Merger")
 
     def process(self, left_anns, right_anns):
         merged_anns = []
@@ -120,14 +121,13 @@ class _KeywordMatcher(ProcessingOperation):
     """Mock processing operation finding exact keyword matches"""
 
     def __init__(self, output_label, keywords):
+        self.id = generate_id()
         self.output_label = output_label
         self.keywords = keywords
 
-        self._description = OperationDescription(name="KeywordMatcher")
-
     @property
     def description(self):
-        return self._description
+        return OperationDescription(id=self.id, name="KeywordMatcher")
 
     def process(self, anns):
         entities = []
@@ -148,12 +148,12 @@ class _AttributeAdder(ProcessingOperation):
     """Mock processing operation adding attributes to existing annotations"""
 
     def __init__(self, output_label):
+        self.id = generate_id()
         self.output_label = output_label
-        self._description = OperationDescription(name="AttributeAdder")
 
     @property
     def description(self):
-        return self._description
+        return OperationDescription(id=self.id, name="AttributeAdder")
 
     def process(self, anns):
         for ann in anns:

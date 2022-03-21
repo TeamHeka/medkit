@@ -16,6 +16,7 @@ from medkit.core import (
     Origin,
     OperationDescription,
     RuleBasedAnnotator,
+    generate_id,
 )
 from medkit.core.text import Entity, Segment, span_utils
 
@@ -120,6 +121,8 @@ class RegexpMatcher(RuleBasedAnnotator):
         proc_id:
             Identifier of the tokenizer
         """
+        if proc_id is None:
+            proc_id = generate_id()
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
         if attrs_to_copy is None:
@@ -127,6 +130,7 @@ class RegexpMatcher(RuleBasedAnnotator):
 
         assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
 
+        self.id: str = proc_id
         self.rules = rules
         self.attrs_to_copy = attrs_to_copy
 
@@ -148,14 +152,12 @@ class RegexpMatcher(RuleBasedAnnotator):
             not r.unicode_sensitive for r in rules
         )
 
-        config = dict(rules=rules, attrs_to_copy=attrs_to_copy)
-        self._description = OperationDescription(
-            id=proc_id, name=self.__class__.__name__, config=config
-        )
-
     @property
     def description(self) -> OperationDescription:
-        return self._description
+        config = dict(rules=self.rules, attrs_to_copy=self.attrs_to_copy)
+        return OperationDescription(
+            id=self.id, name=self.__class__.__name__, config=config
+        )
 
     def process(self, segments: List[Segment]) -> List[Entity]:
         """
@@ -226,9 +228,7 @@ class RegexpMatcher(RuleBasedAnnotator):
 
             for norm in rule.normalizations:
                 norm_attr = Attribute(
-                    origin=Origin(
-                        operation_id=self.description.id, ann_ids=[segment.id]
-                    ),
+                    origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
                     label=norm.kb_name,
                     value=norm.id,
                     metadata=dict(version=norm.kb_version),
@@ -240,7 +240,7 @@ class RegexpMatcher(RuleBasedAnnotator):
                 text=text,
                 spans=spans,
                 attrs=attrs,
-                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
+                origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
                 metadata=metadata,
             )
 

@@ -12,6 +12,7 @@ from medkit.core import (
     Origin,
     InputConverter,
     OperationDescription,
+    generate_id,
 )
 from medkit.core.text import TextDocument, Entity, Relation, Span
 import medkit.io._brat_utils as brat_utils
@@ -20,14 +21,14 @@ import medkit.io._brat_utils as brat_utils
 class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
 
+    def __init__(self, id: Optional[str] = None):
+        if id is None:
+            id = generate_id()
+        self.id: str = id
+
     @property
     def description(self) -> OperationDescription:
-        return self._description
-
-    def __init__(self, id: Optional[str] = None):
-        self._description = OperationDescription(
-            id=id, name=self.__class__.__name__, config=None
-        )
+        return OperationDescription(id=self.id, name=self.__class__.__name__)
 
     def load(
         self, dir_path: Union[str, Path], ann_ext: str = ".ann", text_ext: str = ".txt"
@@ -126,7 +127,7 @@ class BratInputConverter(InputConverter):
         # because new annotation id is needed
         for brat_entity in brat_doc.entities.values():
             entity = Entity(
-                origin=Origin(operation_id=self.description.id),
+                origin=Origin(operation_id=self.id),
                 label=brat_entity.type,
                 spans=[Span(*brat_span) for brat_span in brat_entity.span],
                 text=brat_entity.text,
@@ -136,7 +137,7 @@ class BratInputConverter(InputConverter):
 
         for brat_relation in brat_doc.relations.values():
             relation = Relation(
-                origin=Origin(operation_id=self.description.id),
+                origin=Origin(operation_id=self.id),
                 label=brat_relation.type,
                 source_id=anns_by_brat_id[brat_relation.subj].id,
                 target_id=anns_by_brat_id[brat_relation.obj].id,
@@ -146,7 +147,7 @@ class BratInputConverter(InputConverter):
 
         for brat_attribute in brat_doc.attributes.values():
             attribute = Attribute(
-                origin=Origin(operation_id=self.description.id),
+                origin=Origin(operation_id=self.id),
                 label=brat_attribute.type,
                 value=brat_attribute.value,
                 metadata=dict(brat_id=brat_attribute.id),

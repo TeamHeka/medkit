@@ -13,7 +13,6 @@ import abc
 import dataclasses
 from typing import Any, Dict, List, Tuple, Union
 
-from medkit.core.id import generate_id
 from medkit.core.document import Collection
 from medkit.core.annotation import Annotation
 
@@ -50,7 +49,7 @@ class OperationDescription:
     """
 
     name: str
-    id: str = dataclasses.field(default_factory=generate_id)
+    id: str
     config: Dict[str, Any] = dataclasses.field(default_factory=dict)
 
 
@@ -87,19 +86,11 @@ class RuleBasedAnnotator(ProcessingOperation):
 
 class InputConverter(Operation):
     @abc.abstractmethod
-    def __init__(self, config=None):
-        pass
-
-    @abc.abstractmethod
     def load(self, **kwargs) -> Collection:
         pass
 
 
 class OutputConverter(Operation):
-    @abc.abstractmethod
-    def __init__(self, config=None):
-        pass
-
     @abc.abstractmethod
     def save(self, collection: Collection):
         pass

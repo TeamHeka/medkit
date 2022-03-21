@@ -11,6 +11,7 @@ from medkit.core import (
     Origin,
     OperationDescription,
     RuleBasedAnnotator,
+    generate_id,
 )
 from medkit.core.text import Entity, Segment, span_utils
 
@@ -170,10 +171,24 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
         """
+        if proc_id is None:
+            proc_id = generate_id()
         if attrs_to_copy is None:
             attrs_to_copy = []
 
+        self.id: str = proc_id
+
+        self.language = language
         self.version = version
+        self.lowercase = lowercase
+        self.normalize_unicode = normalize_unicode
+        self.overlapping = overlapping
+        self.threshold = threshold
+        self.similarity = similarity
+        self.window = window
+        self.accepted_semtypes = accepted_semtypes
+        self.attrs_to_copy = attrs_to_copy
+
         path_to_install = self._get_path_to_install(
             version, language, lowercase, normalize_unicode
         )
@@ -190,27 +205,24 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             and self._matcher.to_lowercase_flag == lowercase
             and self._matcher.normalize_unicode_flag == normalize_unicode
         ), "Inconsistent QuickUMLS install flags"
-        self.attrs_to_copy = attrs_to_copy
-
-        config = dict(
-            language=language,
-            version=version,
-            lowercase=lowercase,
-            normalize_unicode=normalize_unicode,
-            overlapping=overlapping,
-            threshold=threshold,
-            similarity=similarity,
-            window=window,
-            accepted_semtypes=accepted_semtypes,
-            attrs_to_copy=attrs_to_copy,
-        )
-        self._description = OperationDescription(
-            id=proc_id, name=self.__class__.__name__, config=config
-        )
 
     @property
     def description(self) -> OperationDescription:
-        return self._description
+        config = dict(
+            language=self.language,
+            version=self.version,
+            lowercase=self.lowercase,
+            normalize_unicode=self.normalize_unicode,
+            overlapping=self.overlapping,
+            threshold=self.threshold,
+            similarity=self.similarity,
+            window=self.window,
+            accepted_semtypes=self.accepted_semtypes,
+            attrs_to_copy=self.attrs_to_copy,
+        )
+        return OperationDescription(
+            id=self.id, name=self.__class__.__name__, config=config
+        )
 
     def process(self, segments: List[Segment]) -> List[Entity]:
         """Return entities (with UMLS normalization attributes) for each match in `segments`
@@ -256,7 +268,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
                     score=match["similarity"],
                     sem_types=list(match["semtypes"]),
                 ),
-                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
+                origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
             )
             attrs.append(norm_attr)
 
@@ -265,7 +277,7 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
                 text=text,
                 spans=spans,
                 attrs=attrs,
-                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
+                origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
             )
 
             yield entity

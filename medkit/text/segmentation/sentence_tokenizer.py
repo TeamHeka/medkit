@@ -4,9 +4,9 @@ __all__ = ["SentenceTokenizer"]
 
 import dataclasses
 import re
-from typing import Iterator, List, Tuple
+from typing import Iterator, List, Optional, Tuple
 
-from medkit.core import Origin, OperationDescription, RuleBasedAnnotator
+from medkit.core import Origin, OperationDescription, RuleBasedAnnotator, generate_id
 from medkit.core.text import Segment, span_utils
 
 
@@ -20,16 +20,12 @@ class DefaultConfig:
 class SentenceTokenizer(RuleBasedAnnotator):
     """Sentence segmentation annotator based on end punctuation rules"""
 
-    @property
-    def description(self) -> OperationDescription:
-        return self._description
-
     def __init__(
         self,
         output_label: str = DefaultConfig.output_label,
         punct_chars: Tuple[str] = DefaultConfig.punct_chars,
         keep_punct: bool = DefaultConfig.keep_punct,
-        proc_id=None,
+        proc_id: Optional[str] = None,
     ):
         """
         Instantiate the sentence tokenizer
@@ -49,18 +45,24 @@ class SentenceTokenizer(RuleBasedAnnotator):
         proc_id: str, Optional
             Identifier of the tokenizer
         """
+        if proc_id is None:
+            proc_id = generate_id()
+
+        self.id: str = proc_id
         self.output_label = output_label
         self.punct_chars = punct_chars
         self.keep_punct = keep_punct
 
+    @property
+    def description(self) -> OperationDescription:
         config = dict(
-            output_label=output_label,
-            punct_chars=punct_chars,
-            keep_punct=keep_punct,
+            output_label=self.output_label,
+            punct_chars=self.punct_chars,
+            keep_punct=self.keep_punct,
         )
 
-        self._description = OperationDescription(
-            id=proc_id, name=self.__class__.__name__, config=config
+        return OperationDescription(
+            id=self.id, name=self.__class__.__name__, config=config
         )
 
     def process(self, segments: List[Segment]) -> List[Segment]:
@@ -109,7 +111,7 @@ class SentenceTokenizer(RuleBasedAnnotator):
             )
 
             sentence = Segment(
-                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
+                origin=Origin(operation_id=self.id, ann_ids=[segment.id]),
                 label=self.output_label,
                 spans=spans,
                 text=text,
