@@ -340,7 +340,7 @@ def test_multiple_steps_with_same_input_key():
     pipeline.run_on_doc(doc)
 
     anns = doc.get_annotations_by_label("sentence")
-    uppercased_anns = doc.get_annotations_by_label("prefixed_uppercased_sentence")
+    uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
     assert len(uppercased_anns) == len(anns)
 
     prefixed_uppercased_anns = doc.get_annotations_by_label(
@@ -381,7 +381,7 @@ def test_step_with_multiple_outputs():
     step_3 = PipelineStep(
         operation=_Prefixer(output_label="prefixed_right_sentence", prefix=prefix),
         input_keys=["SPLIT_RIGHT"],
-        output_keys=["REVERSED"],
+        output_keys=["PREFIX"],
     )
     pipeline.add_step(step_3)
 
