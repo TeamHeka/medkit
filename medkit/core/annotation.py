@@ -95,7 +95,6 @@ class Attribute:
             raise ValueError(f"Metadata key {key} is already used")
         self.metadata[key] = value
 
-    @abc.abstractmethod
     def __repr__(self):
         return (
             f"{self.__class__.__qualname__} : id={self.id!r}, label={self.label!r},"
