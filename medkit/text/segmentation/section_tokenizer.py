@@ -9,7 +9,7 @@ import yaml
 
 from flashtext import KeywordProcessor
 
-from medkit.core import Origin, OperationDescription
+from medkit.core import Origin, OperationDescription, RuleBasedAnnotator
 from medkit.core.text import Segment, span_utils
 
 
@@ -26,7 +26,7 @@ class SectionModificationRule:
     order: Literal["BEFORE", "AFTER"]
 
 
-class SectionTokenizer:
+class SectionTokenizer(RuleBasedAnnotator):
     """Section segmentation annotator based on keyword rules"""
 
     @property
