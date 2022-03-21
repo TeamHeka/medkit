@@ -452,27 +452,17 @@ def test_step_with_no_output():
     pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
 
     step_1 = PipelineStep(
-        operation=_Uppercaser(output_label="uppercased_sentence"),
-        input_keys=["SENTENCE"],
-        output_keys=["UPPERCASE"],
-    )
-    pipeline.add_step(step_1)
-
-    step_2 = PipelineStep(
         operation=_AttributeAdder(output_label="validated"),
-        input_keys=["UPPERCASE"],
+        input_keys=["SENTENCE"],
         output_keys=[],
     )
-    pipeline.add_step(step_2)
+    pipeline.add_step(step_1)
 
     doc = _get_doc()
     pipeline.run_on_doc(doc)
 
     sentence_anns = doc.get_annotations_by_label("sentence")
-    uppercase_anns = doc.get_annotations_by_label("uppercased_sentence")
-    assert len(uppercase_anns) == len(sentence_anns)
-
-    for ann in uppercase_anns:
+    for ann in sentence_anns:
         assert len(ann.attrs) == 1
         attr = ann.attrs[0]
         assert attr.label == "validated" and attr.value is True
