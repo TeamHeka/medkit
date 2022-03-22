@@ -207,8 +207,9 @@ def test_single_step():
     pipeline = Pipeline()
     pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
 
+    uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step = PipelineStep(
-        operation=_Uppercaser(output_label="uppercased_sentence"),
+        operation=uppercaser,
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
@@ -230,16 +231,18 @@ def test_multiple_steps():
     pipeline = Pipeline()
     pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
 
+    uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
-        operation=_Uppercaser(output_label="uppercased_sentence"),
+        operation=uppercaser,
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
     pipeline.add_step(step_1)
 
     prefix = "Hello! "
+    prefixer = _Prefixer(output_label="prefixed_uppercased_sentence", prefix=prefix)
     step_2 = PipelineStep(
-        operation=_Prefixer(output_label="prefixed_uppercased_sentence", prefix=prefix),
+        operation=prefixer,
         input_keys=["UPPERCASE"],
         output_keys=["PREFIX"],
     )
@@ -271,23 +274,26 @@ def test_multiple_steps_with_same_output_key():
     pipeline = Pipeline()
     pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
 
+    uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
-        operation=_Uppercaser(output_label="uppercased_sentence"),
+        operation=uppercaser,
         input_keys=["SENTENCE"],
         output_keys=["TRANSFORMED"],
     )
     pipeline.add_step(step_1)
 
     prefix = "Hello! "
+    prefixer = _Prefixer(output_label="prefixed_sentence", prefix=prefix)
     step_2 = PipelineStep(
-        operation=_Prefixer(output_label="prefixed_sentence", prefix=prefix),
+        operation=prefixer,
         input_keys=["SENTENCE"],
         output_keys=["TRANSFORMED"],
     )
     pipeline.add_step(step_2)
 
+    reverser = _Reverser(output_label="reversed_transformed_sentence")
     step_3 = PipelineStep(
-        operation=_Reverser(output_label="reversed_transformed_sentence"),
+        operation=reverser,
         input_keys=["TRANSFORMED"],
         output_keys=["REVERSED"],
     )
@@ -311,23 +317,26 @@ def test_multiple_steps_with_same_input_key():
     pipeline = Pipeline()
     pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
 
+    uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
-        operation=_Uppercaser(output_label="uppercased_sentence"),
+        operation=uppercaser,
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
     pipeline.add_step(step_1)
 
     prefix = "Hello! "
+    prefixer = _Prefixer(output_label="prefixed_uppercased_sentence", prefix=prefix)
     step_2 = PipelineStep(
-        operation=_Prefixer(output_label="prefixed_uppercased_sentence", prefix=prefix),
+        operation=prefixer,
         input_keys=["UPPERCASE"],
         output_keys=["PREFIX"],
     )
     pipeline.add_step(step_2)
 
+    reverser = _Reverser(output_label="reversed_uppercased_sentence")
     step_3 = PipelineStep(
-        operation=_Reverser(output_label="reversed_uppercased_sentence"),
+        operation=reverser,
         input_keys=["UPPERCASE"],
         output_keys=["REVERSED"],
     )
@@ -349,23 +358,26 @@ def test_step_with_multiple_outputs():
     pipeline = Pipeline()
     pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
 
+    splitter = _Splitter(output_label="split_sentence")
     step_1 = PipelineStep(
-        operation=_Splitter(output_label="split_sentence"),
+        operation=splitter,
         input_keys=["SENTENCE"],
         output_keys=["SPLIT_LEFT", "SPLIT_RIGHT"],
     )
     pipeline.add_step(step_1)
 
+    uppercaser = _Uppercaser(output_label="uppercased_left_sentence")
     step_2 = PipelineStep(
-        operation=_Uppercaser(output_label="uppercased_left_sentence"),
+        operation=uppercaser,
         input_keys=["SPLIT_LEFT"],
         output_keys=["UPPERCASE"],
     )
     pipeline.add_step(step_2)
 
     prefix = "Hello! "
+    prefixer = _Prefixer(output_label="prefixed_right_sentence", prefix=prefix)
     step_3 = PipelineStep(
-        operation=_Prefixer(output_label="prefixed_right_sentence", prefix=prefix),
+        operation=prefixer,
         input_keys=["SPLIT_RIGHT"],
         output_keys=["PREFIX"],
     )
@@ -390,23 +402,26 @@ def test_step_with_multiple_inputs():
     pipeline = Pipeline()
     pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
 
+    uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
-        operation=_Uppercaser(output_label="uppercased_sentence"),
+        operation=uppercaser,
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
     pipeline.add_step(step_1)
 
     prefix = "Hello! "
+    prefixer = _Prefixer(output_label="prefixed_sentence", prefix=prefix)
     step_2 = PipelineStep(
-        operation=_Prefixer(output_label="prefixed_sentence", prefix=prefix),
+        operation=prefixer,
         input_keys=["SENTENCE"],
         output_keys=["PREFIX"],
     )
     pipeline.add_step(step_2)
 
+    merger = _Merger(output_label="merged_sentence")
     step_3 = PipelineStep(
-        operation=_Merger(output_label="merged_sentence"),
+        operation=merger,
         input_keys=["UPPERCASE", "PREFIX"],
         output_keys=["MERGE"],
     )
@@ -427,8 +442,9 @@ def test_step_with_no_output():
     pipeline = Pipeline()
     pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
 
+    attribute_adder = _AttributeAdder(output_label="validated")
     step_1 = PipelineStep(
-        operation=_AttributeAdder(output_label="validated"),
+        operation=attribute_adder,
         input_keys=["SENTENCE"],
         output_keys=[],
     )
@@ -461,16 +477,18 @@ def test_labels_for_input_key():
     pipeline.add_label_for_input_key(label="alt_sentence", key="SENTENCE")
     pipeline.add_label_for_input_key(label="entity", key="ENTITY")
 
+    uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
-        operation=_Uppercaser(output_label="uppercased_sentence"),
+        operation=uppercaser,
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
     pipeline.add_step(step_1)
 
     prefix = "Hello! "
+    prefixer = _Prefixer(output_label="prefixed_entity", prefix=prefix)
     step_2 = PipelineStep(
-        operation=_Prefixer(output_label="prefixed_entity", prefix=prefix),
+        operation=prefixer,
         input_keys=["ENTITY"],
         output_keys=["PREFIX"],
     )
@@ -499,17 +517,19 @@ def test_step_with_different_output_length():
     pipeline = Pipeline()
     pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
 
+    keyword_matcher = _KeywordMatcher(
+        output_label="entities", keywords=["sentence", "another"]
+    )
     step_1 = PipelineStep(
-        operation=_KeywordMatcher(
-            output_label="entities", keywords=["sentence", "another"]
-        ),
+        operation=keyword_matcher,
         input_keys=["SENTENCE"],
         output_keys=["KEYWORD_MATCH"],
     )
     pipeline.add_step(step_1)
 
+    uppercaser = _Uppercaser(output_label="uppercased_entities")
     step_2 = PipelineStep(
-        operation=_Uppercaser(output_label="uppercased_entities"),
+        operation=uppercaser,
         input_keys=["KEYWORD_MATCH"],
         output_keys=["UPPERCASE"],
     )
