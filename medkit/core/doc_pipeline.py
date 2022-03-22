@@ -1,14 +1,15 @@
 __all__ = ["DocPipeline"]
 
-from typing import Dict, List, Tuple, cast
+from typing import Dict, List, Optional, Tuple, cast
 
 from medkit.core.annotation import Annotation
-from medkit.core.document import Document, Collection
-from medkit.core.pipeline import Pipeline, PipelineStep
+from medkit.core.document import Document
+from medkit.core.operation import ProcessingOperation, OperationDescription
+from medkit.core.pipeline import Pipeline, PipelineStep, DescribableOperation
 from medkit.core.prov_builder import ProvBuilder
 
 
-class DocPipeline:
+class DocPipeline(ProcessingOperation):
     """Wrapper around the `Pipeline` class that applies a list of a document or a`collection
     of documents
 
@@ -23,6 +24,7 @@ class DocPipeline:
         steps: List[PipelineStep],
         labels_by_input_key: Dict[str, List[str]],
         output_keys: List[str],
+        id: Optional[str] = None,
     ):
         """Initialize the pipeline
 
@@ -54,32 +56,61 @@ class DocPipeline:
             added to documents
         """
 
+        self.steps: List[PipelineStep] = steps
+        self.labels_by_input_key: Dict[str, List[str]] = labels_by_input_key
+        self.output_keys: List[str] = output_keys
+
         input_keys = list(labels_by_input_key.keys())
         pipeline_steps = [
             PipelineStep(s.operation, s.input_keys, s.output_keys) for s in steps
         ]
         self._pipeline: Pipeline = Pipeline(
+            id=id,
             steps=pipeline_steps,
             input_keys=input_keys,
             output_keys=output_keys,
         )
 
-        self.labels_by_input_key: Dict[str, List[str]] = labels_by_input_key
+    @property
+    def description(self) -> OperationDescription:
+        steps_config = [
+            dict(
+                operation=s.operation.description
+                if isinstance(s.operation, DescribableOperation)
+                else None,
+                input_keys=s.input_keys,
+                output_keys=s.output_keys,
+            )
+            for s in self.steps
+        ]
+        config = dict(
+            steps=steps_config,
+            labels_by_input_key=self.labels_by_input_key,
+            output_keys=self.output_keys,
+        )
+        return OperationDescription(
+            id=self._pipeline.id, name=self.__class__.__name__, config=config
+        )
 
     def set_prov_builder(self, prov_builder: ProvBuilder):
         self._pipeline.set_prov_builder(prov_builder)
 
-    def run_on_doc(self, doc: Document):
-        """Run the pipeline on a document.
+    def process(self, docs: List[Document]):
+        """Run the pipeline on a list of documents, adding
+        the output annotations to each document
 
         Params
         ------
-        doc:
-            The document on which to run the pipeline.
+        docs:
+            The documents on which to run the pipeline.
             Labels to input keys association will be used to retrieve existing
-            annotations from this document, and all new annotations will also
-            be added to this document.
+            annotations from each document, and all output annotations will also
+            be added to each corresponding document.
         """
+        for doc in docs:
+            self._process_doc(doc)
+
+    def _process_doc(self, doc: Document):
         all_input_anns = {}
         for input_key, labels in self.labels_by_input_key.items():
             for label in labels:
@@ -107,16 +138,3 @@ class DocPipeline:
         for output_anns in all_output_anns:
             for output_ann in output_anns:
                 doc.add_annotation(output_ann)
-
-    def run_on_collection(self, collection: Collection):
-        """Run the pipeline on a collection of document.
-
-        Params
-        ------
-        collection:
-            The collection on which to run the pipeline.
-            `run_on_doc()` will be called for each document
-            in the collection.
-        """
-        for doc in collection.documents:
-            self.run_on_document(doc)

@@ -3,6 +3,7 @@ from medkit.core import (
     Document,
     Annotation,
     Attribute,
+    Pipeline,
     PipelineStep,
     ProcessingOperation,
     OperationDescription,
@@ -110,7 +111,7 @@ def test_single_step():
     )
 
     doc = _get_doc()
-    pipeline.run_on_doc(doc)
+    pipeline.process([doc])
 
     sentence_anns = doc.get_annotations_by_label("sentence")
 
@@ -145,7 +146,7 @@ def test_multiple_steps():
     )
 
     doc = _get_doc()
-    pipeline.run_on_doc(doc)
+    pipeline.process([doc])
 
     sentence_anns = doc.get_annotations_by_label("sentence")
 
@@ -160,9 +161,9 @@ def test_multiple_steps():
     assert [a.text for a in prefixed_uppercased_anns] == expected_texts
 
 
-def test_step_with_no_output():
-    """Doc pipeline with a step having no output, because it modifies the annotations
-    it receives by adding attributes to them"""
+def test_no_output():
+    """Doc pipeline having no output, because it has an operation that
+    modifies the annotations it receives by adding attributes to them"""
     attribute_adder = _AttributeAdder(output_label="validated")
     step_1 = PipelineStep(
         operation=attribute_adder,
@@ -175,13 +176,50 @@ def test_step_with_no_output():
     )
 
     doc = _get_doc()
-    pipeline.run_on_doc(doc)
+    pipeline.process([doc])
 
     sentence_anns = doc.get_annotations_by_label("sentence")
     for ann in sentence_anns:
         assert len(ann.attrs) == 1
         attr = ann.attrs[0]
         assert attr.label == "validated" and attr.value is True
+
+
+def test_multiple_outputs():
+    """Doc pipeline with more than 1 output"""
+    uppercaser = _Uppercaser(output_label="uppercased_sentence")
+    step_1 = PipelineStep(
+        operation=uppercaser,
+        input_keys=["SENTENCE"],
+        output_keys=["UPPERCASE"],
+    )
+
+    prefix = "Hello! "
+    prefixer = _Prefixer(output_label="prefixed_sentence", prefix=prefix)
+    step_2 = PipelineStep(
+        operation=prefixer,
+        input_keys=["SENTENCE"],
+        output_keys=["PREFIX"],
+    )
+
+    pipeline = DocPipeline(
+        steps=[step_1, step_2],
+        labels_by_input_key={"SENTENCE": ["sentence"]},
+        output_keys=["UPPERCASE", "PREFIX"],
+    )
+
+    doc = _get_doc()
+    pipeline.process([doc])
+
+    sentence_anns = doc.get_annotations_by_label("sentence")
+    uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
+    prefixed_anns = doc.get_annotations_by_label("prefixed_sentence")
+
+    expected_texts = [a.text.upper() for a in sentence_anns]
+    assert [a.text for a in uppercased_anns] == expected_texts
+
+    expected_texts = [prefix + a.text for a in sentence_anns]
+    assert [a.text for a in prefixed_anns] == expected_texts
 
 
 def test_labels_for_input_key():
@@ -222,7 +260,7 @@ def test_labels_for_input_key():
         output_keys=["UPPERCASE", "PREFIX"],
     )
 
-    pipeline.run_on_doc(doc)
+    pipeline.process([doc])
     sentence_anns = doc.get_annotations_by_label("sentence")
     alt_sentence_anns = doc.get_annotations_by_label("alt_sentence")
     uppercased_sentence_anns = doc.get_annotations_by_label("uppercased_sentence")
@@ -237,3 +275,37 @@ def test_labels_for_input_key():
 
     expected_texts = [prefix + a.text for a in entity_anns]
     assert [a.text for a in prefixed_entity_anns] == expected_texts
+
+
+def test_nested_pipeline():
+    """DocPipeline wrapped in a Pipeline"""
+    # build inner pipeline
+    uppercaser = _Uppercaser(output_label="uppercased_sentence")
+    sub_step = PipelineStep(
+        operation=uppercaser,
+        input_keys=["SENTENCE"],
+        output_keys=["UPPERCASE"],
+    )
+
+    sub_pipeline = DocPipeline(
+        steps=[sub_step],
+        labels_by_input_key={"SENTENCE": ["sentence"]},
+        output_keys=["UPPERCASE"],
+    )
+
+    # wrap it in main pipeline
+    step = PipelineStep(
+        operation=sub_pipeline,
+        input_keys=["DOC"],
+        output_keys=[],
+    )
+
+    pipeline = Pipeline(steps=[step], input_keys=["DOC"], output_keys=[])
+
+    doc = _get_doc()
+    pipeline.process([doc])
+    sentence_anns = doc.get_annotations_by_label("sentence")
+    # new annotations were added to the document
+    uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
+    # operation was properly called to generate new annotations
+    assert [a.text.upper() for a in sentence_anns] == [a.text for a in uppercased_anns]
