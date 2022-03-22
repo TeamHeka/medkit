@@ -65,6 +65,9 @@ class Document(abc.ABC):
     def add_operation(self, operation_desc: OperationDescription):
         self.operations[operation_desc.id] = operation_desc
 
+    def get_operations(self) -> List[OperationDescription]:
+        return list(self.operations.values())
+
 
 class Collection:
     """Collection of documents"""
