@@ -116,6 +116,7 @@ class Pipeline:
         # and/or document, and adding output annotations to anns_by_key
         for step in self._steps:
             self._perform_next_step(step, anns_by_key, doc)
+            doc.add_operation(step.operation.description)
 
         # attach all generated annotations to document
         for output_anns in anns_by_key.values():

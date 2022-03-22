@@ -222,6 +222,8 @@ def test_single_step():
     # new annotations were added to the document
     uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
     assert len(uppercased_anns) == len(sentence_anns)
+    # operation were added to the document
+    assert doc.get_operations() == [uppercaser.description]
     # operation was properly called to generate new annotations
     assert [a.text.upper() for a in sentence_anns] == [a.text for a in uppercased_anns]
 
@@ -257,6 +259,8 @@ def test_multiple_steps():
         "prefixed_uppercased_sentence"
     )
     assert len(prefixed_uppercased_anns) == len(sentence_anns)
+    # operation were added to the document
+    assert doc.get_operations() == [uppercaser.description, prefixer.description]
     # operations were properly called and in the correct order to generate new annotations
     expected_texts = [prefix + a.text.upper() for a in sentence_anns]
     assert [a.text for a in prefixed_uppercased_anns] == expected_texts
