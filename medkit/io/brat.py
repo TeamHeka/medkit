@@ -1,7 +1,7 @@
 __all__ = ["BratInputConverter"]
 
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, ValuesView
 import warnings
 
 from smart_open import open
@@ -54,16 +54,32 @@ class BratInputConverter(InputConverter):
         documents = list()
         dir_path = Path(dir_path)
 
+        # find all base paths with at least a corresponding text or ann file
+        base_paths = set()
+        for ann_path in sorted(dir_path.glob("*" + ann_ext)):
+            base_paths.add(dir_path / ann_path.stem)
         for text_path in sorted(dir_path.glob("*" + text_ext)):
-            ann_filename = text_path.stem + ann_ext
-            ann_path = dir_path / ann_filename
-            if ann_path.exists():
-                documents.append(self._load_doc(text_path, ann_path))
+            base_paths.add(dir_path / text_path.stem)
+
+        # load doc for each base_path
+        for base_path in sorted(base_paths):
+            text_path = base_path.with_suffix(text_ext)
+            if not text_path.exists():
+                text_path = None
+            ann_path = base_path.with_suffix(ann_ext)
+            if not ann_path.exists():
+                ann_path = None
+            doc = self._load_doc(ann_path=ann_path, text_path=text_path)
+            documents.append(doc)
+
         if not documents:
             warnings.warn(f"Didn't load any document from dir {dir_path}")
+
         return Collection(documents)
 
-    def _load_doc(self, text_path: Path, ann_path: Path) -> TextDocument:
+    def _load_doc(
+        self, ann_path: Optional[Path] = None, text_path: Optional[Path] = None
+    ) -> TextDocument:
         """
         Create a TextDocument from text file and its associated annotation file (.ann)
 
@@ -79,17 +95,35 @@ class BratInputConverter(InputConverter):
         TextDocument
             The document containing the text and the annotations
         """
-        with open(text_path, encoding="utf-8") as text_file:
-            text = text_file.read()
-        metadata = dict(path_to_text=text_path, path_to_ann=ann_path)
+        assert ann_path is not None or text_path is not None
+
+        metadata = dict()
+        if text_path is not None:
+            metadata.update(path_to_text=text_path)
+            with open(text_path, encoding="utf-8") as text_file:
+                text = text_file.read()
+        else:
+            text = None
+
+        if ann_path is not None:
+            metadata.update(path_to_ann=ann_path)
+            anns = self._load_anns(ann_path)
+        else:
+            anns = []
+
         doc = TextDocument(text=text, metadata=metadata)
         doc.add_operation(self.description)
+        for ann in anns:
+            doc.add_annotation(ann)
 
-        # First convert entities, then relations, finally attributes
-        # because new annotation id is needed
+        return doc
+
+    def _load_anns(self, ann_path: Path) -> ValuesView[Union[Entity, Relation]]:
         brat_doc = brat_utils.parse_file(ann_path)
         anns_by_brat_id = dict()
 
+        # First convert entities, then relations, finally attributes
+        # because new annotation id is needed
         for brat_entity in brat_doc.entities.values():
             entity = Entity(
                 origin=Origin(operation_id=self.description.id),
@@ -98,7 +132,6 @@ class BratInputConverter(InputConverter):
                 text=brat_entity.text,
                 metadata=dict(brat_id=brat_entity.id),
             )
-            doc.add_annotation(entity)
             anns_by_brat_id[brat_entity.id] = entity
 
         for brat_relation in brat_doc.relations.values():
@@ -109,7 +142,6 @@ class BratInputConverter(InputConverter):
                 target_id=anns_by_brat_id[brat_relation.obj].id,
                 metadata=dict(brat_id=brat_relation.id),
             )
-            doc.add_annotation(relation)
             anns_by_brat_id[brat_relation.id] = relation
 
         for brat_attribute in brat_doc.attributes.values():
@@ -121,4 +153,4 @@ class BratInputConverter(InputConverter):
             )
             anns_by_brat_id[brat_attribute.target].attrs.append(attribute)
 
-        return doc
+        return anns_by_brat_id.values()
