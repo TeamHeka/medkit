@@ -3,19 +3,19 @@ from __future__ import annotations
 __all__ = ["TextDocument"]
 
 import random
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional
 import uuid
 
 from medkit.core.annotation import Origin
 from medkit.core.document import Document
-from medkit.core.text.annotation import Segment, Entity, Relation
+from medkit.core.text.annotation import TextAnnotation, Segment, Entity, Relation
 from medkit.core.text.span import Span
 
-if TYPE_CHECKING:
-    from medkit.core.annotation import Annotation
 
+class TextDocument(Document[TextAnnotation]):
+    """Document holding text annotations
 
-class TextDocument(Document):
+    Annotations must be subclasses of `TextAnnotation`."""
 
     RAW_TEXT_LABEL = "RAW_TEXT"
 
@@ -51,7 +51,7 @@ class TextDocument(Document):
             raw_text_ann = self._gen_raw_text_annotation()
             self.add_annotation(raw_text_ann)
 
-    def add_annotation(self, annotation: Annotation):
+    def add_annotation(self, annotation: TextAnnotation):
         """
         Add the annotation to this document
 
@@ -65,7 +65,7 @@ class TextDocument(Document):
 
         Parameters
         ----------
-        annotation : Annotation
+        annotation:
             Annotation to add.
 
         Raises

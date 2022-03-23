@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-__all__ = ["Segment", "Entity", "Relation"]
+__all__ = ["TextAnnotation", "Segment", "Entity", "Relation"]
 
+import abc
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from medkit.core.annotation import Annotation, Attribute, Origin
@@ -12,7 +13,22 @@ if TYPE_CHECKING:
     from medkit.core.text.document import TextDocument
 
 
-class Segment(Annotation):
+class TextAnnotation(Annotation):
+    """Base abstract class for all text annotations"""
+
+    @abc.abstractmethod
+    def __init__(
+        self,
+        origin: Origin,
+        label: str,
+        attrs: Optional[List[Attribute]] = None,
+        ann_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
+        return super().__init__(origin, label, attrs, ann_id, metadata)
+
+
+class Segment(TextAnnotation):
     def __init__(
         self,
         origin: Origin,
@@ -120,7 +136,7 @@ class Entity(Segment):
         )
 
 
-class Relation(Annotation):
+class Relation(TextAnnotation):
     def __init__(
         self,
         origin: Origin,
