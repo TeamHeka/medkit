@@ -13,7 +13,7 @@ from medkit.core import (
     InputConverter,
     OperationDescription,
 )
-from medkit.core.text import TextDocument, Entity, Relation
+from medkit.core.text import TextDocument, Entity, Relation, Span
 import medkit.io._brat_utils as brat_utils
 
 
@@ -128,7 +128,7 @@ class BratInputConverter(InputConverter):
             entity = Entity(
                 origin=Origin(operation_id=self.description.id),
                 label=brat_entity.type,
-                spans=brat_entity.span,
+                spans=[Span(*brat_span) for brat_span in brat_entity.span],
                 text=brat_entity.text,
                 metadata=dict(brat_id=brat_entity.id),
             )

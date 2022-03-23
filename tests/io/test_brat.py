@@ -1,4 +1,4 @@
-from medkit.core.text import TextDocument
+from medkit.core.text import TextDocument, Span
 from medkit.io.brat import BratInputConverter
 
 
@@ -17,6 +17,7 @@ def test_load():
     assert entity.text == "Hypothyroidism"
     assert len(entity.attrs) == 1
     assert entity.attrs[0].label == "antecedent"
+    assert all(isinstance(s, Span) for s in entity.spans)
 
 
 def test_load_no_anns():
