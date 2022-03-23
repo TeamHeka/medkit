@@ -29,18 +29,22 @@ class BratInputConverter(InputConverter):
             id=id, name=self.__class__.__name__, config=None
         )
 
-    def load(self, dir_path: Union[str, Path], text_extension: str) -> Collection:
+    def load(
+        self, dir_path: Union[str, Path], ann_ext: str = ".ann", text_ext: str = ".txt"
+    ) -> Collection:
         """
         Create a Collection of TextDocuments from a folder containting text files
-        and associated brat annotations files (.ann).
+        and associated brat annotations files.
 
         Parameters
         ----------
         dir_path:
             The path to the directory containing the text files and the annotation
             files (.ann)
-        text_extension:
-            The extension of the text file (e.g., .txt)
+        ann_ext:
+            The extension of the brat annotation file (e.g. .ann)
+        text_ext:
+            The extension of the text file (e.g. .txt)
 
         Returns
         -------
@@ -50,8 +54,8 @@ class BratInputConverter(InputConverter):
         documents = list()
         dir_path = Path(dir_path)
 
-        for text_path in dir_path.glob("*" + text_extension):
-            ann_filename = text_path.stem + ".ann"
+        for text_path in dir_path.glob("*" + text_ext):
+            ann_filename = text_path.stem + ann_ext
             ann_path = dir_path / ann_filename
             if ann_path.exists():
                 documents.append(self._load_doc(text_path, ann_path))
