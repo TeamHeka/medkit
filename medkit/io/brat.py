@@ -54,7 +54,7 @@ class BratInputConverter(InputConverter):
         documents = list()
         dir_path = Path(dir_path)
 
-        for text_path in dir_path.glob("*" + text_ext):
+        for text_path in sorted(dir_path.glob("*" + text_ext)):
             ann_filename = text_path.stem + ann_ext
             ann_path = dir_path / ann_filename
             if ann_path.exists():
