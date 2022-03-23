@@ -52,10 +52,10 @@ class BratInputConverter(InputConverter):
             ann_filename = text_path.stem + ".ann"
             ann_path = dir_path / ann_filename
             if ann_path.exists():
-                documents.append(self._load_file(str(text_path), str(ann_path)))
+                documents.append(self._load_doc(str(text_path), str(ann_path)))
         return Collection(documents)
 
-    def _load_file(self, text_path: str, ann_path: str) -> TextDocument:
+    def _load_doc(self, text_path: str, ann_path: str) -> TextDocument:
         """
         Create a TextDocument from text file and its associated annotation file (.ann)
 
