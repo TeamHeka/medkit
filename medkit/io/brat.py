@@ -81,8 +81,7 @@ class BratInputConverter(InputConverter):
         """
         with open(text_path, encoding="utf-8") as text_file:
             text = text_file.read()
-        filename = text_path.name
-        metadata = dict(name=filename)
+        metadata = dict(path_to_text=text_path, path_to_ann=ann_path)
         doc = TextDocument(text=text, metadata=metadata)
         doc.add_operation(self.description)
 
