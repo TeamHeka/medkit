@@ -78,7 +78,7 @@ class BratInputConverter(InputConverter):
         with open(text_path, encoding="utf-8") as text_file:
             text = text_file.read()
         filename = text_path.name
-        metadata = {"name": filename}
+        metadata = dict(name=filename)
         doc = TextDocument(text=text, metadata=metadata)
         doc.add_operation(self.description)
 
@@ -93,7 +93,7 @@ class BratInputConverter(InputConverter):
                 label=brat_entity.type,
                 spans=brat_entity.span,
                 text=brat_entity.text,
-                metadata={"brat_id": brat_entity.id},
+                metadata=dict(brat_id=brat_entity.id),
             )
             doc.add_annotation(entity)
             brat_ann[brat_entity.id] = entity
@@ -104,7 +104,7 @@ class BratInputConverter(InputConverter):
                 label=brat_relation.type,
                 source_id=brat_ann[brat_relation.subj].id,
                 target_id=brat_ann[brat_relation.obj].id,
-                metadata={"brat_id": brat_relation.id},
+                metadata=dict(brat_id=brat_relation.id),
             )
             doc.add_annotation(relation)
             brat_ann[brat_relation.id] = relation
@@ -114,7 +114,7 @@ class BratInputConverter(InputConverter):
                 origin=Origin(operation_id=self.description.id),
                 label=brat_attribute.type,
                 value=brat_attribute.value,
-                metadata={"brat_id": brat_attribute.id},
+                metadata=dict(brat_id=brat_attribute.id),
             )
             brat_ann[brat_attribute.target].attrs.append(attribute)
 
