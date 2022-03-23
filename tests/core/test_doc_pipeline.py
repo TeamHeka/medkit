@@ -103,7 +103,11 @@ def test_single_step():
         output_keys=["UPPERCASE"],
     )
 
-    pipeline = DocPipeline(steps=[step], labels_by_input_key={"SENTENCE": ["sentence"]})
+    pipeline = DocPipeline(
+        steps=[step],
+        labels_by_input_key={"SENTENCE": ["sentence"]},
+        output_keys=["UPPERCASE"],
+    )
 
     doc = _get_doc()
     pipeline.run_on_doc(doc)
@@ -112,9 +116,6 @@ def test_single_step():
 
     # new annotations were added to the document
     uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
-    # operation was added to the document
-    assert doc.get_operations() == [uppercaser.description]
-    assert len(uppercased_anns) == len(sentence_anns)
 
     # operation was properly called to generate new annotations
     assert [a.text.upper() for a in sentence_anns] == [a.text for a in uppercased_anns]
@@ -138,7 +139,9 @@ def test_multiple_steps():
     )
 
     pipeline = DocPipeline(
-        steps=[step_1, step_2], labels_by_input_key={"SENTENCE": ["sentence"]}
+        steps=[step_1, step_2],
+        labels_by_input_key={"SENTENCE": ["sentence"]},
+        output_keys=["PREFIX"],
     )
 
     doc = _get_doc()
@@ -151,13 +154,6 @@ def test_multiple_steps():
         "prefixed_uppercased_sentence"
     )
     assert len(prefixed_uppercased_anns) == len(sentence_anns)
-    # intermediate annotations were also added to the document
-    uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
-    assert len(uppercased_anns) == len(sentence_anns)
-    expected_texts = [a.text.upper() for a in uppercased_anns]
-    assert [a.text for a in uppercased_anns] == expected_texts
-    # operation were added to the document
-    assert doc.get_operations() == [uppercaser.description, prefixer.description]
 
     # operations were properly called and in the correct order to generate new annotations
     expected_texts = [prefix + a.text.upper() for a in sentence_anns]
@@ -175,7 +171,7 @@ def test_step_with_no_output():
     )
 
     pipeline = DocPipeline(
-        steps=[step_1], labels_by_input_key={"SENTENCE": ["sentence"]}
+        steps=[step_1], labels_by_input_key={"SENTENCE": ["sentence"]}, output_keys=[]
     )
 
     doc = _get_doc()
@@ -221,7 +217,9 @@ def test_labels_for_input_key():
     }
 
     pipeline = DocPipeline(
-        steps=[step_1, step_2], labels_by_input_key=labels_by_input_key
+        steps=[step_1, step_2],
+        labels_by_input_key=labels_by_input_key,
+        output_keys=["UPPERCASE", "PREFIX"],
     )
 
     pipeline.run_on_doc(doc)

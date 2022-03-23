@@ -172,7 +172,9 @@ class NegationDetector(RuleBasedAnnotator):
         )
 
         if self._prov_builder is not None:
-            self._prov_builder.add_prov(neg_attr.id, self.id, source_ids=[segment.id])
+            self._prov_builder.add_prov(
+                neg_attr, self.description, source_data_items=[segment]
+            )
 
         return neg_attr
 

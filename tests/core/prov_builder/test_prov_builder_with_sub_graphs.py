@@ -1,4 +1,4 @@
-from medkit.core import generate_id
+from medkit.core import generate_id, OperationDescription
 from medkit.core.prov_builder import ProvBuilder
 
 from tests.core.prov_builder._common import get_text_items, Prefixer, Splitter, Merger
@@ -9,15 +9,15 @@ class _PrefixerWrapper:
         self.id = generate_id()
         self.prefixer = Prefixer()
         self.prov_builder = prov_builder
-        self.sub_prov_builder = ProvBuilder()
+        self.sub_prov_builder = ProvBuilder(prov_builder.store)
         self.prefixer.prov_builder = self.sub_prov_builder
+        self.description = OperationDescription(id=self.id, name="PrefixerWrapper")
 
     def process(self, input_items):
         output_items = self.prefixer.prefix(input_items)
 
-        output_item_ids = [i.id for i in output_items]
         self.prov_builder.add_prov_from_sub_graph(
-            output_item_ids, self.id, self.sub_prov_builder
+            output_items, self.description, self.sub_prov_builder
         )
 
         return output_items
@@ -81,17 +81,19 @@ class _DoublePrefixerWrapper:
         self.prefixer_1 = Prefixer()
         self.prefixer_2 = Prefixer()
         self.prov_builder = prov_builder
-        self.sub_prov_builder = ProvBuilder()
+        self.sub_prov_builder = ProvBuilder(prov_builder.store)
         self.prefixer_1.prov_builder = self.sub_prov_builder
         self.prefixer_2.prov_builder = self.sub_prov_builder
+        self.description = OperationDescription(
+            id=self.id, name="DoublePrefixerWrapper"
+        )
 
     def process(self, input_items):
         intermediate_items = self.prefixer_1.prefix(input_items)
         output_items = self.prefixer_2.prefix(intermediate_items)
 
-        output_item_ids = [i.id for i in output_items]
         self.prov_builder.add_prov_from_sub_graph(
-            output_item_ids, self.id, self.sub_prov_builder
+            output_items, self.description, self.sub_prov_builder
         )
 
         return output_items
@@ -156,16 +158,19 @@ class _PrefixerMergerWrapper:
         self.prefixer = Prefixer()
         self.merger = Merger()
         self.prov_builder = prov_builder
-        self.sub_prov_builder = ProvBuilder()
+        self.sub_prov_builder = ProvBuilder(prov_builder.store)
         self.prefixer.prov_builder = self.sub_prov_builder
         self.merger.prov_builder = self.sub_prov_builder
+        self.description = OperationDescription(
+            id=self.id, name="PrefixerMergerWrapper"
+        )
 
     def process(self, input_items):
         intermediate_items = self.prefixer.prefix(input_items)
         output_item = self.merger.merge(intermediate_items)
 
         self.prov_builder.add_prov_from_sub_graph(
-            [output_item.id], self.id, self.sub_prov_builder
+            [output_item], self.description, self.sub_prov_builder
         )
 
         return output_item
@@ -214,17 +219,19 @@ class _SplitterPrefixerWrapper:
         self.splitter = Splitter()
         self.prefixer = Prefixer()
         self.prov_builder = prov_builder
-        self.sub_prov_builder = ProvBuilder()
+        self.sub_prov_builder = ProvBuilder(prov_builder.store)
         self.splitter.prov_builder = self.sub_prov_builder
         self.prefixer.prov_builder = self.sub_prov_builder
+        self.description = OperationDescription(
+            id=self.id, name="SplitterPrefixerMWrapper"
+        )
 
     def process(self, input_items):
         intermediate_items = self.splitter.split(input_items)
         output_items = self.prefixer.prefix(intermediate_items)
 
-        output_item_ids = [i.id for i in output_items]
         self.prov_builder.add_prov_from_sub_graph(
-            output_item_ids, self.id, self.sub_prov_builder
+            output_items, self.description, self.sub_prov_builder
         )
 
         return output_items
@@ -281,18 +288,20 @@ class _BranchedPrefixerWrapper:
         self.prefixer_1 = Prefixer()
         self.prefixer_2 = Prefixer()
         self.prov_builder = prov_builder
-        self.sub_prov_builder = ProvBuilder()
+        self.sub_prov_builder = ProvBuilder(prov_builder.store)
         self.prefixer_1.prov_builder = self.sub_prov_builder
         self.prefixer_2.prov_builder = self.sub_prov_builder
+        self.description = OperationDescription(
+            id=self.id, name="BrancherPrefixerWrapper"
+        )
 
     def process(self, input_items):
         prefixed_items = self.prefixer_1.prefix(input_items)
         double_prefixed_items = self.prefixer_2.prefix(prefixed_items)
 
         output_items = prefixed_items + double_prefixed_items
-        output_item_ids = [i.id for i in output_items]
         self.prov_builder.add_prov_from_sub_graph(
-            output_item_ids, self.id, self.sub_prov_builder
+            output_items, self.description, self.sub_prov_builder
         )
 
         return prefixed_items, double_prefixed_items

@@ -127,7 +127,7 @@ class SentenceTokenizer(RuleBasedAnnotator):
 
             if self._prov_builder is not None:
                 self._prov_builder.add_prov(
-                    sentence.id, self.id, source_ids=[segment.id]
+                    sentence, self.description, source_data_items=[segment]
                 )
 
             yield sentence

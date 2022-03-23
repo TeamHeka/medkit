@@ -251,11 +251,11 @@ class RegexpMatcher(RuleBasedAnnotator):
 
             if self._prov_builder is not None:
                 self._prov_builder.add_prov(
-                    entity.id, self.description.id, source_ids=[segment.id]
+                    entity, self.description, source_data_items=[segment]
                 )
                 for norm_attr in norm_attrs:
                     self._prov_builder.add_prov(
-                        norm_attr.id, self.id, source_ids=[segment.id]
+                        norm_attr, self.description, source_data_items=[segment]
                     )
 
             yield entity

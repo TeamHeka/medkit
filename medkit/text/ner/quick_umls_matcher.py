@@ -284,9 +284,11 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             )
 
             if self._prov_builder is not None:
-                self._prov_builder.add_prov(entity.id, self.id, source_ids=[segment.id])
                 self._prov_builder.add_prov(
-                    norm_attr.id, self.id, source_ids=[segment.id]
+                    entity, self.description, source_data_items=[segment]
+                )
+                self._prov_builder.add_prov(
+                    norm_attr, self.description, source_data_items=[segment]
                 )
 
             yield entity

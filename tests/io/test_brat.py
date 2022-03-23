@@ -10,7 +10,6 @@ def test_load():
     assert len(collection.documents) == 2
 
     doc = collection.documents[0]
-    assert brat_converter.description.id in doc.operations.keys()
 
     assert "path_to_text" in doc.metadata
     assert "path_to_ann" in doc.metadata

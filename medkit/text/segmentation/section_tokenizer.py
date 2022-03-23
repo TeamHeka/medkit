@@ -142,7 +142,7 @@ class SectionTokenizer(RuleBasedAnnotator):
 
             if self._prov_builder is not None:
                 self._prov_builder.add_prov(
-                    section.id, self.id, source_ids=[segment.id]
+                    section, self.description, source_data_items=[segment]
                 )
 
             yield section

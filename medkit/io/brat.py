@@ -118,7 +118,6 @@ class BratInputConverter(InputConverter):
             anns = []
 
         doc = TextDocument(text=text, metadata=metadata)
-        doc.add_operation(self.description)
         for ann in anns:
             doc.add_annotation(ann)
 
@@ -140,7 +139,7 @@ class BratInputConverter(InputConverter):
             anns_by_brat_id[brat_entity.id] = entity
             if self._prov_builder is not None:
                 self._prov_builder.add_prov(
-                    entity.id, self.description.id, source_ids=[]
+                    entity, self.description, source_data_items=[]
                 )
 
         for brat_relation in brat_doc.relations.values():
@@ -153,7 +152,7 @@ class BratInputConverter(InputConverter):
             anns_by_brat_id[brat_relation.id] = relation
             if self._prov_builder is not None:
                 self._prov_builder.add_prov(
-                    relation.id, self.description.id, source_ids=[]
+                    relation, self.description, source_data_items=[]
                 )
 
         for brat_attribute in brat_doc.attributes.values():
@@ -165,7 +164,7 @@ class BratInputConverter(InputConverter):
             anns_by_brat_id[brat_attribute.target].attrs.append(attribute)
             if self._prov_builder is not None:
                 self._prov_builder.add_prov(
-                    attribute.id, self.description.id, source_ids=[]
+                    attribute, self.description, source_data_items=[]
                 )
 
         return anns_by_brat_id.values()

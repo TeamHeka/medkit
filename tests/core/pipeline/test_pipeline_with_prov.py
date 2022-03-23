@@ -1,6 +1,5 @@
 from medkit.core import (
     generate_id,
-    Document,
     Annotation,
     Attribute,
     ProcessingOperation,
@@ -25,12 +24,8 @@ _SENTENCES = [
 ]
 
 
-def _get_doc():
-    doc = Document()
-    for text in _SENTENCES:
-        ann = _TextAnnotation(label="sentence", text=text)
-        doc.add_annotation(ann)
-    return doc
+def _get_sentence_anns():
+    return [_TextAnnotation(label="sentence", text=text) for text in _SENTENCES]
 
 
 class _Uppercaser(ProcessingOperation):
@@ -57,7 +52,7 @@ class _Uppercaser(ProcessingOperation):
             uppercase_anns.append(uppercase_ann)
             if self._prov_builder is not None:
                 self._prov_builder.add_prov(
-                    uppercase_ann.id, self.description.id, source_ids=[ann.id]
+                    uppercase_ann, self.description, source_data_items=[ann]
                 )
         return uppercase_anns
 
@@ -86,7 +81,7 @@ class _Prefixer(ProcessingOperation):
             prefixed_anns.append(prefixed_ann)
             if self._prov_builder is not None:
                 self._prov_builder.add_prov(
-                    prefixed_ann.id, self.description.id, source_ids=[ann.id]
+                    prefixed_ann, self.description, source_data_items=[ann]
                 )
         return prefixed_anns
 
@@ -111,7 +106,7 @@ class _AttributeAdder(ProcessingOperation):
             ann.attrs.append(attr)
             if self._prov_builder is not None:
                 self._prov_builder.add_prov(
-                    attr.id, self.description.id, source_ids=[ann.id]
+                    attr, self.description, source_data_items=[ann]
                 )
 
 
@@ -128,9 +123,7 @@ def test_single_step():
 
     prov_builder = ProvBuilder()
     pipeline.set_prov_builder(prov_builder)
-    doc = _get_doc()
-    pipeline.set_doc(doc)
-    sentence_anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = _get_sentence_anns()
     uppercased_anns = pipeline.process(sentence_anns)
     assert len(uppercased_anns) == len(sentence_anns)
 
@@ -186,9 +179,7 @@ def test_multiple_steps():
 
     prov_builder = ProvBuilder()
     pipeline.set_prov_builder(prov_builder)
-    doc = _get_doc()
-    pipeline.set_doc(doc)
-    sentence_anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = _get_sentence_anns()
     uppercased_anns = pipeline.process(sentence_anns)
     assert len(uppercased_anns) == len(sentence_anns)
 
@@ -249,9 +240,7 @@ def test_step_with_attributes():
 
     prov_builder = ProvBuilder()
     pipeline.set_prov_builder(prov_builder)
-    doc = _get_doc()
-    pipeline.set_doc(doc)
-    sentence_anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = _get_sentence_anns()
     uppercased_anns = pipeline.process(sentence_anns)
     assert len(uppercased_anns) == len(sentence_anns)
 
@@ -327,9 +316,7 @@ def test_nested_pipeline():
 
     prov_builder = ProvBuilder()
     pipeline.set_prov_builder(prov_builder)
-    doc = _get_doc()
-    pipeline.set_doc(doc)
-    sentence_anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = _get_sentence_anns()
     output_anns = pipeline.process(sentence_anns)
     assert len(output_anns) == len(sentence_anns)
 
