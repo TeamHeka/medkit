@@ -77,49 +77,41 @@ class BratInputConverter(InputConverter):
         metadata = {"name": filename}
         doc = TextDocument(text=text, metadata=metadata)
         doc.add_operation(self.description)
-        brat_doc = brat_utils.parse_file(ann_path)
+
         # First convert entities, then relations, finally attributes
         # because new annotation id is needed
+        brat_doc = brat_utils.parse_file(ann_path)
         brat_ann = dict()
+
         for brat_entity in brat_doc.entities.values():
-            entity = self._convert_brat_entity(brat_entity)
+            entity = Entity(
+                origin=Origin(operation_id=self.description.id),
+                label=brat_entity.type,
+                spans=brat_entity.span,
+                text=brat_entity.text,
+                metadata={"brat_id": brat_entity.id},
+            )
             doc.add_annotation(entity)
             brat_ann[brat_entity.id] = entity
+
         for brat_relation in brat_doc.relations.values():
-            relation = self._convert_brat_relation(brat_relation, brat_ann)
+            relation = Relation(
+                origin=Origin(operation_id=self.description.id),
+                label=brat_relation.type,
+                source_id=brat_ann[brat_relation.subj].id,
+                target_id=brat_ann[brat_relation.obj].id,
+                metadata={"brat_id": brat_relation.id},
+            )
             doc.add_annotation(relation)
             brat_ann[brat_relation.id] = relation
+
         for brat_attribute in brat_doc.attributes.values():
-            attribute = self._convert_brat_attribute(brat_attribute)
+            attribute = Attribute(
+                origin=Origin(operation_id=self.description.id),
+                label=brat_attribute.type,
+                value=brat_attribute.value,
+                metadata={"brat_id": brat_attribute.id},
+            )
             brat_ann[brat_attribute.target].attrs.append(attribute)
+
         return doc
-
-    def _convert_brat_entity(self, brat_entity: brat_utils.Entity) -> Entity:
-        return Entity(
-            origin=Origin(operation_id=self.description.id),
-            label=brat_entity.type,
-            spans=brat_entity.span,
-            text=brat_entity.text,
-            metadata={"brat_id": brat_entity.id},
-        )
-
-    def _convert_brat_relation(
-        self, brat_relation: brat_utils.Relation, brat_ann: dict
-    ) -> Relation:
-        return Relation(
-            origin=Origin(operation_id=self.description.id),
-            label=brat_relation.type,
-            source_id=brat_ann[brat_relation.subj].id,
-            target_id=brat_ann[brat_relation.obj].id,
-            metadata={"brat_id": brat_relation.id},
-        )
-
-    def _convert_brat_attribute(
-        self, brat_attribute: brat_utils.Attribute
-    ) -> Attribute:
-        return Attribute(
-            origin=Origin(operation_id=self.description.id),
-            label=brat_attribute.type,
-            value=brat_attribute.value,
-            metadata={"brat_id": brat_attribute.id},
-        )
