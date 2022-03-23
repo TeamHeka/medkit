@@ -1,7 +1,7 @@
 __all__ = ["BratInputConverter"]
 
-import pathlib
-from typing import Optional
+from pathlib import Path
+from typing import Optional, Union
 import warnings
 
 from smart_open import open
@@ -29,17 +29,17 @@ class BratInputConverter(InputConverter):
             id=id, name=self.__class__.__name__, config=None
         )
 
-    def load(self, dir_path: str, text_extension: str) -> Collection:
+    def load(self, dir_path: Union[str, Path], text_extension: str) -> Collection:
         """
         Create a Collection of TextDocuments from a folder containting text files
         and associated brat annotations files (.ann).
 
         Parameters
         ----------
-        dir_path: str
+        dir_path:
             The path to the directory containing the text files and the annotation
             files (.ann)
-        text_extension: str
+        text_extension:
             The extension of the text file (e.g., .txt)
 
         Returns
@@ -48,26 +48,26 @@ class BratInputConverter(InputConverter):
             The collection of TextDocuments
         """
         documents = list()
-        dir_path = pathlib.Path(dir_path)
+        dir_path = Path(dir_path)
 
         for text_path in dir_path.glob("*%s" % text_extension):
             ann_filename = text_path.stem + ".ann"
             ann_path = dir_path / ann_filename
             if ann_path.exists():
-                documents.append(self._load_doc(str(text_path), str(ann_path)))
+                documents.append(self._load_doc(text_path, ann_path))
         if not documents:
             warnings.warn(f"Didn't load any document from dir {dir_path}")
         return Collection(documents)
 
-    def _load_doc(self, text_path: str, ann_path: str) -> TextDocument:
+    def _load_doc(self, text_path: Path, ann_path: Path) -> TextDocument:
         """
         Create a TextDocument from text file and its associated annotation file (.ann)
 
         Parameters
         ----------
-        text_path: str
+        text_path:
             The path to the text document file.
-        ann_path: str
+        ann_path:
             The path to the brat annotation file.
 
         Returns
@@ -77,7 +77,7 @@ class BratInputConverter(InputConverter):
         """
         with open(text_path, encoding="utf-8") as text_file:
             text = text_file.read()
-        filename = pathlib.Path(text_path).name
+        filename = text_path.name
         metadata = {"name": filename}
         doc = TextDocument(text=text, metadata=metadata)
         doc.add_operation(self.description)
