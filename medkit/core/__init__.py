@@ -2,17 +2,16 @@ __all__ = [
     "text",
     "Annotation",
     "Attribute",
+    "InputConverter",
+    "OutputConverter",
     "DocPipeline",
     "Collection",
     "Document",
     "generate_id",
     "OperationDescription",
-    "ProcessingOperation",
-    "RuleBasedAnnotator",
-    "InputConverter",
-    "OutputConverter",
     "Pipeline",
     "PipelineStep",
+    "PipelineCompatibleOperation",
     "DescribableOperation",
     "ProvCompatibleOperation",
     "IdentifiableDataItemWithAttrs",
@@ -25,19 +24,15 @@ __all__ = [
 
 from . import text
 from .annotation import Annotation, Attribute
+from .conversion import InputConverter, OutputConverter
 from .doc_pipeline import DocPipeline
 from .document import Collection, Document
 from .id import generate_id
-from .operation import (
-    OperationDescription,
-    ProcessingOperation,
-    RuleBasedAnnotator,
-    InputConverter,
-    OutputConverter,
-)
+from .operation_desc import OperationDescription
 from .pipeline import (
     Pipeline,
     PipelineStep,
+    PipelineCompatibleOperation,
     DescribableOperation,
     ProvCompatibleOperation,
     IdentifiableDataItemWithAttrs,

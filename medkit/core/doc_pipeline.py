@@ -4,12 +4,12 @@ from typing import Dict, List, Optional, Tuple, cast
 
 from medkit.core.annotation import Annotation
 from medkit.core.document import Document
-from medkit.core.operation import ProcessingOperation, OperationDescription
+from medkit.core.operation_desc import OperationDescription
 from medkit.core.pipeline import Pipeline, PipelineStep, DescribableOperation
 from medkit.core.prov_builder import ProvBuilder
 
 
-class DocPipeline(ProcessingOperation):
+class DocPipeline:
     """Wrapper around the `Pipeline` class that applies a list of a document or a`collection
     of documents
 

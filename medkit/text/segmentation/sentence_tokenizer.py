@@ -8,7 +8,6 @@ from typing import Iterator, List, Optional, Tuple
 
 from medkit.core import (
     OperationDescription,
-    RuleBasedAnnotator,
     ProvBuilder,
     generate_id,
 )
@@ -22,7 +21,7 @@ class DefaultConfig:
     keep_punct = False
 
 
-class SentenceTokenizer(RuleBasedAnnotator):
+class SentenceTokenizer:
     """Sentence segmentation annotator based on end punctuation rules"""
 
     def __init__(

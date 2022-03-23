@@ -14,7 +14,6 @@ import yaml
 from medkit.core import (
     Attribute,
     OperationDescription,
-    RuleBasedAnnotator,
     ProvBuilder,
     generate_id,
 )
@@ -97,7 +96,7 @@ class RegexpMatcherNormalization:
 _PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.yml"
 
 
-class RegexpMatcher(RuleBasedAnnotator):
+class RegexpMatcher:
     """Entity annotator relying on regexp-based rules"""
 
     def __init__(

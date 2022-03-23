@@ -9,7 +9,6 @@ import quickumls.constants
 from medkit.core import (
     Attribute,
     OperationDescription,
-    RuleBasedAnnotator,
     ProvBuilder,
     generate_id,
 )
@@ -29,7 +28,7 @@ class _QuickUMLSInstall(NamedTuple):
     normalize_unicode: bool
 
 
-class QuickUMLSMatcher(RuleBasedAnnotator):
+class QuickUMLSMatcher:
     """Entity annotator relying on QuickUMLS.
 
     This annotator requires a QuickUMLS installation performed

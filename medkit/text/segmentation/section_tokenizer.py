@@ -11,7 +11,6 @@ from flashtext import KeywordProcessor
 
 from medkit.core import (
     OperationDescription,
-    RuleBasedAnnotator,
     ProvBuilder,
     generate_id,
 )
@@ -31,7 +30,7 @@ class SectionModificationRule:
     order: Literal["BEFORE", "AFTER"]
 
 
-class SectionTokenizer(RuleBasedAnnotator):
+class SectionTokenizer:
     """Section segmentation annotator based on keyword rules"""
 
     def __init__(

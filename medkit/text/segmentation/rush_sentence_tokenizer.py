@@ -11,7 +11,6 @@ from PyRuSH import RuSH
 
 from medkit.core import (
     OperationDescription,
-    RuleBasedAnnotator,
     ProvBuilder,
     generate_id,
 )
@@ -30,7 +29,7 @@ _PATH_TO_DEFAULT_RULES = (
 )
 
 
-class RushSentenceTokenizer(RuleBasedAnnotator):
+class RushSentenceTokenizer:
     """Sentence segmentation annotator based on PyRuSH."""
 
     def __init__(

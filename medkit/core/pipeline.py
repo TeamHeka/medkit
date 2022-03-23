@@ -1,6 +1,7 @@
 __all__ = [
     "Pipeline",
     "PipelineStep",
+    "PipelineCompatibleOperation",
     "DescribableOperation",
     "ProvCompatibleOperation",
     "IdentifiableDataItemWithAttrs",
@@ -22,11 +23,31 @@ from typing import (
 )
 
 from medkit.core.id import generate_id
-from medkit.core.operation import (
-    OperationDescription,
-    ProcessingOperation,
-)
+from medkit.core.operation_desc import OperationDescription
 from medkit.core.prov_builder import ProvBuilder, IdentifiableDataItem
+
+
+@runtime_checkable
+class PipelineCompatibleOperation(Protocol):
+    def process(
+        self, **all_input_data: List[Any]
+    ) -> Union[None, List[Any], Tuple[List[Any], ...]]:
+        """Params
+        ------
+        all_input_data:
+            One or several list of data items to process
+            (according to the number of input the operation needs)
+
+        Returns
+        -------
+        Union[None, List[Any], Tuple[List[Any], ...]]
+            Tuple of list of all new data items created by the operation.
+            Can be None if the operation does not create any new data items
+            but rather modify existing items in-place (for instance by
+            adding attributes to existing annotations).
+            If there is only one list of created data items, it is possible
+            to return directly that list without wrapping it in a tuple.
+        """
 
 
 @runtime_checkable
@@ -68,12 +89,12 @@ class PipelineStep:
         new annotations.
     """
 
-    operation: ProcessingOperation
+    operation: PipelineCompatibleOperation
     input_keys: List[str]
     output_keys: List[str]
 
 
-class Pipeline(ProcessingOperation):
+class Pipeline:
     """Graph of processing operations
 
     A pipeline is made of pipeline steps, connecting together different processing

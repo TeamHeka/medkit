@@ -1,8 +1,4 @@
-from medkit.core import (
-    generate_id,
-    ProcessingOperation,
-    OperationDescription,
-)
+from medkit.core import generate_id, OperationDescription
 from medkit.core.pipeline import Pipeline, PipelineStep
 from medkit.core.prov_builder import ProvBuilder
 
@@ -36,7 +32,7 @@ def _get_sentence_segments():
     return [_Segment(text=text) for text in _SENTENCES]
 
 
-class _Uppercaser(ProcessingOperation):
+class _Uppercaser:
     """Mock processing operation uppercasing segments"""
 
     def __init__(self):
@@ -62,7 +58,7 @@ class _Uppercaser(ProcessingOperation):
         return uppercase_segments
 
 
-class _Prefixer(ProcessingOperation):
+class _Prefixer:
     """Mock processing operation prefixing segments"""
 
     def __init__(self, prefix):
@@ -88,7 +84,7 @@ class _Prefixer(ProcessingOperation):
         return prefixed_segments
 
 
-class _AttributeAdder(ProcessingOperation):
+class _AttributeAdder:
     """Mock processing operation adding attributes to existing segments"""
 
     def __init__(self, label):

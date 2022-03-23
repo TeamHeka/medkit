@@ -11,7 +11,6 @@ import yaml
 from medkit.core import (
     Attribute,
     OperationDescription,
-    RuleBasedAnnotator,
     ProvBuilder,
     generate_id,
 )
@@ -57,7 +56,7 @@ class NegationDetectorRule:
         )
 
 
-class NegationDetector(RuleBasedAnnotator):
+class NegationDetector:
     """Annotator creating negation Attributes with True/False values
 
     Because negation attributes will be attached to whole annotations,

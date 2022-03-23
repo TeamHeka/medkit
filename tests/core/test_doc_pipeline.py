@@ -5,7 +5,6 @@ from medkit.core import (
     Attribute,
     Pipeline,
     PipelineStep,
-    ProcessingOperation,
     OperationDescription,
 )
 from medkit.core.doc_pipeline import DocPipeline
@@ -34,7 +33,7 @@ def _get_doc():
     return doc
 
 
-class _Uppercaser(ProcessingOperation):
+class _Uppercaser:
     """Mock processing operation uppercasing annotations"""
 
     def __init__(self, output_label):
@@ -56,7 +55,7 @@ class _Uppercaser(ProcessingOperation):
         return uppercase_anns
 
 
-class _Prefixer(ProcessingOperation):
+class _Prefixer:
     """Mock processing operation prefixing annotations"""
 
     def __init__(self, output_label, prefix):
@@ -79,7 +78,7 @@ class _Prefixer(ProcessingOperation):
         return prefixed_anns
 
 
-class _AttributeAdder(ProcessingOperation):
+class _AttributeAdder:
     """Mock processing operation adding attributes to existing annotations"""
 
     def __init__(self, output_label):

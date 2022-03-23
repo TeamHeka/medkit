@@ -2,7 +2,6 @@ import re
 
 import pytest
 
-from medkit.core import ProcessingOperation
 from medkit.core.pipeline import Pipeline, PipelineStep
 
 
@@ -33,7 +32,7 @@ def _get_sentence_segments():
     return [_Segment(text) for text in _SENTENCES]
 
 
-class _Uppercaser(ProcessingOperation):
+class _Uppercaser:
     """Mock processing operation uppercasing segments"""
 
     def process(self, segments):
@@ -44,7 +43,7 @@ class _Uppercaser(ProcessingOperation):
         return uppercase_segments
 
 
-class _Prefixer(ProcessingOperation):
+class _Prefixer:
     """Mock processing operation prefixing segments"""
 
     def __init__(self, prefix):
@@ -58,7 +57,7 @@ class _Prefixer(ProcessingOperation):
         return prefixed_segments
 
 
-class _Splitter(ProcessingOperation):
+class _Splitter:
     """Mock processing operation splitting segments"""
 
     def process(self, segments):
@@ -73,7 +72,7 @@ class _Splitter(ProcessingOperation):
         return left_segments, right_segments
 
 
-class _Merger(ProcessingOperation):
+class _Merger:
     """Mock processing operation merging segments"""
 
     def process(self, left_segments, right_segments):
@@ -84,7 +83,7 @@ class _Merger(ProcessingOperation):
         return merged_segments
 
 
-class _KeywordMatcher(ProcessingOperation):
+class _KeywordMatcher:
     """Mock processing operation finding exact keyword matches"""
 
     def __init__(self, keywords):
@@ -102,7 +101,7 @@ class _KeywordMatcher(ProcessingOperation):
         return entities
 
 
-class _AttributeAdder(ProcessingOperation):
+class _AttributeAdder:
     """Mock processing operation adding attributes to existing segments"""
 
     def __init__(self, label):
