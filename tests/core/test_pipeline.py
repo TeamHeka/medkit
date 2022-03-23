@@ -18,9 +18,6 @@ class _TextAnnotation(Annotation):
         super().__init__(origin=Origin(), label=label)
         self.text = text
 
-    def __repr__(self):
-        return super().__repr__() + f", text={self.text}"
-
 
 class _TextDocument(Document):
     """Mock text document"""
