@@ -18,18 +18,9 @@ from medkit.core.annotation import Annotation
 
 
 class Operation(abc.ABC):
-    """Any medkit operation (io convertor, processing operation, etc)
+    """Any medkit operation (io convertor, processing operation, etc)"""
 
-    Parameters
-    ----------
-    description:
-        Description of the operation
-    """
-
-    @property
-    @abc.abstractmethod
-    def description(self) -> OperationDescription:
-        pass
+    pass
 
 
 @dataclasses.dataclass

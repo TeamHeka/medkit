@@ -1,10 +1,15 @@
-__all__ = ["Pipeline", "PipelineStep"]
+__all__ = ["Pipeline", "PipelineStep", "DescribableOperation"]
 
 import dataclasses
-from typing import Dict, List
+from typing import Dict, List, Protocol, runtime_checkable
 
 from medkit.core.document import Document, Collection
-from medkit.core.operation import ProcessingOperation
+from medkit.core.operation import ProcessingOperation, OperationDescription
+
+
+@runtime_checkable
+class DescribableOperation(Protocol):
+    description: OperationDescription
 
 
 @dataclasses.dataclass
@@ -116,7 +121,8 @@ class Pipeline:
         # and/or document, and adding output annotations to anns_by_key
         for step in self._steps:
             self._perform_next_step(step, anns_by_key, doc)
-            doc.add_operation(step.operation.description)
+            if isinstance(step.operation, DescribableOperation):
+                doc.add_operation(step.operation.description)
 
         # attach all generated annotations to document
         for output_anns in anns_by_key.values():

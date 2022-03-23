@@ -14,6 +14,7 @@ __all__ = [
     "OutputConverter",
     "Pipeline",
     "PipelineStep",
+    "DescribableOperation",
 ]
 
 from . import text
@@ -28,4 +29,4 @@ from .operation import (
     InputConverter,
     OutputConverter,
 )
-from .pipeline import Pipeline, PipelineStep
+from .pipeline import Pipeline, PipelineStep, DescribableOperation
