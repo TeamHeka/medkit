@@ -85,7 +85,7 @@ class BratInputConverter(InputConverter):
         # First convert entities, then relations, finally attributes
         # because new annotation id is needed
         brat_doc = brat_utils.parse_file(ann_path)
-        brat_ann = dict()
+        anns_by_brat_id = dict()
 
         for brat_entity in brat_doc.entities.values():
             entity = Entity(
@@ -96,18 +96,18 @@ class BratInputConverter(InputConverter):
                 metadata=dict(brat_id=brat_entity.id),
             )
             doc.add_annotation(entity)
-            brat_ann[brat_entity.id] = entity
+            anns_by_brat_id[brat_entity.id] = entity
 
         for brat_relation in brat_doc.relations.values():
             relation = Relation(
                 origin=Origin(operation_id=self.description.id),
                 label=brat_relation.type,
-                source_id=brat_ann[brat_relation.subj].id,
-                target_id=brat_ann[brat_relation.obj].id,
+                source_id=anns_by_brat_id[brat_relation.subj].id,
+                target_id=anns_by_brat_id[brat_relation.obj].id,
                 metadata=dict(brat_id=brat_relation.id),
             )
             doc.add_annotation(relation)
-            brat_ann[brat_relation.id] = relation
+            anns_by_brat_id[brat_relation.id] = relation
 
         for brat_attribute in brat_doc.attributes.values():
             attribute = Attribute(
@@ -116,6 +116,6 @@ class BratInputConverter(InputConverter):
                 value=brat_attribute.value,
                 metadata=dict(brat_id=brat_attribute.id),
             )
-            brat_ann[brat_attribute.target].attrs.append(attribute)
+            anns_by_brat_id[brat_attribute.target].attrs.append(attribute)
 
         return doc
