@@ -3,7 +3,7 @@ from __future__ import annotations
 __all__ = ["TextDocument"]
 
 import random
-from typing import TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 import uuid
 
 from medkit.core.annotation import Origin
@@ -19,7 +19,12 @@ class TextDocument(Document):
 
     RAW_TEXT_LABEL = "RAW_TEXT"
 
-    def __init__(self, doc_id: str = None, text: str = None, metadata=None):
+    def __init__(
+        self,
+        doc_id: Optional[str] = None,
+        text: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
         """
         Initializes the text document
 
@@ -36,11 +41,11 @@ class TextDocument(Document):
             Document metadata
 
         """
-        super().__init__(doc_id, metadata)
-        self.text = text
-        self.segments = dict()  # Key: label
-        self.entities = dict()  # Key: label
-        self.relations = dict()  # Key: TODO : determine the key
+        super().__init__(doc_id=doc_id, metadata=metadata)
+        self.text: Optional[str] = text
+        self.segments: Dict[str, List[str]] = dict()  # Key: label
+        self.entities: Dict[str, List[str]] = dict()  # Key: label
+        self.relations: Dict[str, List[str]] = dict()  # Key: TODO : determine the key
 
         if self.text is not None:
             raw_text_ann = self._gen_raw_text_annotation()
@@ -87,7 +92,7 @@ class TextDocument(Document):
         elif isinstance(annotation, Relation):
             pass  # TODO: complete when key is determined
 
-    def _gen_raw_text_annotation(self):
+    def _gen_raw_text_annotation(self) -> Segment:
         # generate deterministic uuid based on document id
         # so that the annotation id is the same if the doc id is the same
         rng = random.Random(self.id)

@@ -3,7 +3,7 @@ from __future__ import annotations
 __all__ = ["Collection", "Document"]
 
 import abc
-from typing import Dict, List, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from medkit.core.id import generate_id
 
@@ -13,15 +13,19 @@ if TYPE_CHECKING:
 
 
 class Document(abc.ABC):
-    def __init__(self, doc_id: str = None, metadata=None):
+    def __init__(
+        self, doc_id: Optional[str] = None, metadata: Optional[Dict[str, Any]] = None
+    ):
         if doc_id is None:
             doc_id = generate_id()
+        if metadata is None:
+            metadata = {}
 
-        self.id = doc_id
+        self.id: str = doc_id
         self.annotations: Dict[str, Annotation] = {}
         self.annotation_ids_by_label: Dict[str, List[str]] = {}
         self.operations: Dict[str, OperationDescription] = {}
-        self.metadata = metadata  # TODO: what is metadata format ?
+        self.metadata: Dict[str, Any] = metadata  # TODO: what is metadata format ?
 
     @abc.abstractmethod
     def add_annotation(self, annotation: Annotation):
@@ -51,13 +55,13 @@ class Document(abc.ABC):
             self.annotation_ids_by_label[label] = []
         self.annotation_ids_by_label[label].append(id)
 
-    def get_annotation_by_id(self, annotation_id):
+    def get_annotation_by_id(self, annotation_id) -> Optional[Annotation]:
         return self.annotations.get(annotation_id)
 
-    def get_annotations(self):
+    def get_annotations(self) -> List[Annotation]:
         return list(self.annotations.values())
 
-    def get_annotations_by_label(self, label):
+    def get_annotations_by_label(self, label) -> List[Annotation]:
         return [
             self.annotations[id] for id in self.annotation_ids_by_label.get(label, [])
         ]

@@ -51,7 +51,7 @@ class OperationDescription:
 
     name: str
     id: str = dataclasses.field(default_factory=generate_id)
-    config: Dict[str, Any] = None
+    config: Dict[str, Any] = dataclasses.field(default_factory=dict)
 
 
 class ProcessingOperation(Operation):

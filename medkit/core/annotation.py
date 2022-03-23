@@ -4,7 +4,7 @@ __all__ = ["Annotation", "Attribute", "Origin"]
 
 import abc
 import dataclasses
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from medkit.core.id import generate_id
 
@@ -15,8 +15,8 @@ class Annotation(abc.ABC):
         origin: Origin,
         label: str,
         attrs: Optional[List[Attribute]] = None,
-        ann_id: str = None,
-        metadata: Dict = None,
+        ann_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """
         Provide common initialization for annotation instances
@@ -38,16 +38,16 @@ class Annotation(abc.ABC):
             ann_id = generate_id()
         if attrs is None:
             attrs = []
+        if metadata is None:
+            metadata = {}
 
-        self.id = ann_id
-        self.origin = origin
-        self.label = label
+        self.id: str = ann_id
+        self.origin: Origin = origin
+        self.label: str = label
         self.attrs: List[Attribute] = attrs
-        self.metadata = metadata
+        self.metadata: Dict[str, Any] = metadata
 
-    def add_metadata(self, key, value):
-        if self.metadata is None:
-            self.metadata = {}
+    def add_metadata(self, key: str, value: Any):
         if key in self.metadata.keys():
             raise ValueError(f"Metadata key {key} is already used")
         self.metadata[key] = value
@@ -61,7 +61,14 @@ class Annotation(abc.ABC):
 
 
 class Attribute:
-    def __init__(self, origin, label, value=None, attr_id=None, metadata=None):
+    def __init__(
+        self,
+        origin: Origin,
+        label: str,
+        value: Optional[Any] = None,
+        attr_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
         """
         Initialize a medkit attribute, to be added to an annotation
 
@@ -80,16 +87,16 @@ class Attribute:
         """
         if attr_id is None:
             attr_id = generate_id()
+        if metadata is None:
+            metadata = {}
 
-        self.id = attr_id
-        self.origin = origin
-        self.label = label
-        self.metadata = metadata
-        self.value = value
+        self.id: str = attr_id
+        self.origin: Origin = origin
+        self.label: str = label
+        self.value: Optional[Any] = value
+        self.metadata: Dict[str, Any] = metadata
 
-    def add_metadata(self, key, value):
-        if self.metadata is None:
-            self.metadata = {}
+    def add_metadata(self, key: str, value: Any):
         if key in self.metadata.keys():
             raise ValueError(f"Metadata key {key} is already used")
         self.metadata[key] = value

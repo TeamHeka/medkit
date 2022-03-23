@@ -34,7 +34,7 @@ def test_single_rule():
     attr_2 = syntagmas[1].attrs[0]
     assert attr_2.label == "negation"
     assert attr_2.value is False
-    assert attr_2.metadata is None
+    assert not attr_2.metadata
 
 
 def test_multiple_rules():

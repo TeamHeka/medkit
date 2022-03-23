@@ -2,10 +2,11 @@ from __future__ import annotations
 
 __all__ = ["Segment", "Entity", "Relation"]
 
-from typing import Optional, List, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
-from medkit.core.annotation import Annotation, Attribute
+from medkit.core.annotation import Annotation, Attribute, Origin
 from medkit.core.text import span_utils
+from medkit.core.text.span import AnySpan
 
 if TYPE_CHECKING:
     from medkit.core.text.document import TextDocument
@@ -14,13 +15,13 @@ if TYPE_CHECKING:
 class Segment(Annotation):
     def __init__(
         self,
-        origin,
-        label,
-        spans,
-        text,
+        origin: Origin,
+        label: str,
+        spans: List[AnySpan],
+        text: str,
         attrs: Optional[List[Attribute]] = None,
-        ann_id=None,
-        metadata=None,
+        ann_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize a medkit segment
@@ -45,8 +46,8 @@ class Segment(Annotation):
         super().__init__(
             ann_id=ann_id, origin=origin, label=label, attrs=attrs, metadata=metadata
         )
-        self.spans = spans
-        self.text = text
+        self.spans: List[AnySpan] = spans
+        self.text: str = text
 
     def get_snippet(self, doc: TextDocument, max_extend_length: int) -> str:
         """Return a portion of the original text contaning the annotation
@@ -80,13 +81,13 @@ class Segment(Annotation):
 class Entity(Segment):
     def __init__(
         self,
-        origin,
-        label,
-        spans,
-        text,
+        origin: Origin,
+        label: str,
+        spans: List[AnySpan],
+        text: str,
         attrs: Optional[List[Attribute]] = None,
-        entity_id=None,
-        metadata=None,
+        entity_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize a medkit text entity
@@ -108,19 +109,27 @@ class Entity(Segment):
         metadata: dict[str, Any], Optional
             The metadata of the entity
         """
-        super().__init__(origin, label, spans, text, attrs, entity_id, metadata)
+        super().__init__(
+            origin=origin,
+            label=label,
+            spans=spans,
+            text=text,
+            attrs=attrs,
+            ann_id=entity_id,
+            metadata=metadata,
+        )
 
 
 class Relation(Annotation):
     def __init__(
         self,
-        origin,
-        label,
-        source_id,
-        target_id,
+        origin: Origin,
+        label: str,
+        source_id: str,
+        target_id: str,
         attrs: Optional[List[Attribute]] = None,
-        rel_id=None,
-        metadata=None,
+        rel_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize the medkit relation
@@ -145,8 +154,8 @@ class Relation(Annotation):
         super().__init__(
             ann_id=rel_id, origin=origin, label=label, attrs=attrs, metadata=metadata
         )
-        self.source_id = source_id
-        self.target_id = target_id
+        self.source_id: str = source_id
+        self.target_id: str = target_id
 
     def __repr__(self):
         annotation = super().__repr__()
