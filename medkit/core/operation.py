@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 __all__ = [
-    "Operation",
     "OperationDescription",
     "ProcessingOperation",
     "RuleBasedAnnotator",
@@ -14,12 +13,6 @@ import dataclasses
 from typing import Any, Dict, List, Tuple, Union
 
 from medkit.core.document import Collection
-
-
-class Operation(abc.ABC):
-    """Any medkit operation (io convertor, processing operation, etc)"""
-
-    pass
 
 
 @dataclasses.dataclass
@@ -43,7 +36,7 @@ class OperationDescription:
     config: Dict[str, Any] = dataclasses.field(default_factory=dict)
 
 
-class ProcessingOperation(Operation):
+class ProcessingOperation:
     """Operation that processes data items"""
 
     @abc.abstractmethod
@@ -74,13 +67,13 @@ class RuleBasedAnnotator(ProcessingOperation):
     pass
 
 
-class InputConverter(Operation):
+class InputConverter:
     @abc.abstractmethod
     def load(self, **kwargs) -> Collection:
         pass
 
 
-class OutputConverter(Operation):
+class OutputConverter:
     @abc.abstractmethod
     def save(self, collection: Collection):
         pass

@@ -6,7 +6,6 @@ __all__ = [
     "Collection",
     "Document",
     "generate_id",
-    "Operation",
     "OperationDescription",
     "ProcessingOperation",
     "RuleBasedAnnotator",
@@ -30,7 +29,6 @@ from .doc_pipeline import DocPipeline
 from .document import Collection, Document
 from .id import generate_id
 from .operation import (
-    Operation,
     OperationDescription,
     ProcessingOperation,
     RuleBasedAnnotator,
