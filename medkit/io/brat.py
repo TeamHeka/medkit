@@ -1,6 +1,7 @@
 __all__ = ["BratInputConverter"]
 
 import pathlib
+from typing import Optional
 
 from smart_open import open
 
@@ -22,9 +23,9 @@ class BratInputConverter(InputConverter):
     def description(self) -> OperationDescription:
         return self._description
 
-    def __init__(self, config=None):
+    def __init__(self, id: Optional[str] = None):
         self._description = OperationDescription(
-            name=self.__class__.__name__, config=config
+            id=id, name=self.__class__.__name__, config=None
         )
 
     def load(self, dir_path: str, text_extension: str) -> Collection:
