@@ -2,6 +2,7 @@ __all__ = ["BratInputConverter"]
 
 import pathlib
 from typing import Optional
+import warnings
 
 from smart_open import open
 
@@ -54,6 +55,8 @@ class BratInputConverter(InputConverter):
             ann_path = dir_path / ann_filename
             if ann_path.exists():
                 documents.append(self._load_doc(str(text_path), str(ann_path)))
+        if not documents:
+            warnings.warn(f"Didn't load any document from dir {dir_path}")
         return Collection(documents)
 
     def _load_doc(self, text_path: str, ann_path: str) -> TextDocument:
