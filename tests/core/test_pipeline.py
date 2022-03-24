@@ -74,28 +74,6 @@ class _Prefixer(ProcessingOperation):
         return prefixed_anns
 
 
-class _Reverser(ProcessingOperation):
-    """Mock processing operation reversing text of annotations"""
-
-    def __init__(self, output_label):
-        self.output_label = output_label
-        self._description = OperationDescription(name="Prefixer")
-
-    @property
-    def description(self):
-        return self._description
-
-    def process(self, anns):
-        prefixed_anns = []
-        for ann in anns:
-            prefixed_ann = _TextAnnotation(
-                label=self.output_label,
-                text=ann.text[::-1],
-            )
-            prefixed_anns.append(prefixed_ann)
-        return prefixed_anns
-
-
 class _Splitter(ProcessingOperation):
     """Mock processing operation splitting annotations"""
 
@@ -278,28 +256,29 @@ def test_multiple_steps_with_same_output_key():
     pipeline = Pipeline()
     pipeline.add_label_for_input_key(label="sentence", key="SENTENCE")
 
-    uppercaser = _Uppercaser(output_label="uppercased_sentence")
+    prefix_1 = "Hello! "
+    prefixer_1 = _Prefixer(output_label="prefixed_sentence", prefix=prefix_1)
     step_1 = PipelineStep(
-        operation=uppercaser,
+        operation=prefixer_1,
         input_keys=["SENTENCE"],
-        output_keys=["TRANSFORMED"],
+        output_keys=["PREFIX"],
     )
     pipeline.add_step(step_1)
 
-    prefix = "Hello! "
-    prefixer = _Prefixer(output_label="prefixed_sentence", prefix=prefix)
+    prefix_2 = "Hi! "
+    prefixer_2 = _Prefixer(output_label="prefixed_sentence", prefix=prefix_2)
     step_2 = PipelineStep(
-        operation=prefixer,
+        operation=prefixer_2,
         input_keys=["SENTENCE"],
-        output_keys=["TRANSFORMED"],
+        output_keys=["PREFIX"],
     )
     pipeline.add_step(step_2)
 
-    reverser = _Reverser(output_label="reversed_transformed_sentence")
+    uppercaser = _Uppercaser(output_label="uppercased_prefixed_sentence")
     step_3 = PipelineStep(
-        operation=reverser,
-        input_keys=["TRANSFORMED"],
-        output_keys=["REVERSED"],
+        operation=uppercaser,
+        input_keys=["PREFIX"],
+        output_keys=["UPPERCASE"],
     )
     pipeline.add_step(step_3)
 
@@ -307,12 +286,12 @@ def test_multiple_steps_with_same_output_key():
     pipeline.run_on_doc(doc)
 
     sentence_anns = doc.get_annotations_by_label("sentence")
-    reversed_anns = doc.get_annotations_by_label("reversed_transformed_sentence")
+    uppercased_anns = doc.get_annotations_by_label("uppercased_prefixed_sentence")
 
-    expected_texts = [a.text.upper()[::-1] for a in sentence_anns] + [
-        (prefix + a.text)[::-1] for a in sentence_anns
+    expected_texts = [(prefix_1 + a.text).upper() for a in sentence_anns] + [
+        (prefix_2 + a.text).upper() for a in sentence_anns
     ]
-    assert [a.text for a in reversed_anns] == expected_texts
+    assert [a.text for a in uppercased_anns] == expected_texts
 
 
 def test_multiple_steps_with_same_input_key():
@@ -329,20 +308,25 @@ def test_multiple_steps_with_same_input_key():
     )
     pipeline.add_step(step_1)
 
-    prefix = "Hello! "
-    prefixer = _Prefixer(output_label="prefixed_uppercased_sentence", prefix=prefix)
+    prefix_1 = "Hello! "
+    prefixer_2 = _Prefixer(
+        output_label="prefixed_uppercased_sentence_1", prefix=prefix_1
+    )
     step_2 = PipelineStep(
-        operation=prefixer,
+        operation=prefixer_2,
         input_keys=["UPPERCASE"],
-        output_keys=["PREFIX"],
+        output_keys=["PREFIX_1"],
     )
     pipeline.add_step(step_2)
 
-    reverser = _Reverser(output_label="reversed_uppercased_sentence")
+    prefix_2 = "Hello! "
+    prefixer_2 = _Prefixer(
+        output_label="prefixed_uppercased_sentence_2", prefix=prefix_2
+    )
     step_3 = PipelineStep(
-        operation=reverser,
+        operation=prefixer_2,
         input_keys=["UPPERCASE"],
-        output_keys=["REVERSED"],
+        output_keys=["PREFIX_2"],
     )
     pipeline.add_step(step_3)
 
@@ -350,11 +334,18 @@ def test_multiple_steps_with_same_input_key():
     pipeline.run_on_doc(doc)
 
     sentence_anns = doc.get_annotations_by_label("sentence")
-    reversed_uppercased_anns = doc.get_annotations_by_label(
-        "reversed_uppercased_sentence"
+
+    prefixed_uppercased_anns_1 = doc.get_annotations_by_label(
+        "prefixed_uppercased_sentence_1"
     )
-    expected_texts = [a.text.upper()[::-1] for a in sentence_anns]
-    assert [a.text for a in reversed_uppercased_anns] == expected_texts
+    expected_texts = [prefix_1 + a.text.upper() for a in sentence_anns]
+    assert [a.text for a in prefixed_uppercased_anns_1] == expected_texts
+
+    prefixed_uppercased_anns_2 = doc.get_annotations_by_label(
+        "prefixed_uppercased_sentence_2"
+    )
+    expected_texts = [prefix_2 + a.text.upper() for a in sentence_anns]
+    assert [a.text for a in prefixed_uppercased_anns_2] == expected_texts
 
 
 def test_step_with_multiple_outputs():
