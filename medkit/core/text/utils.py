@@ -14,7 +14,7 @@ __all__ = [
 import re
 from typing import List, Tuple, Union
 
-from medkit.core.text.span import AnySpan
+from medkit.core.text.span import AnySpanType
 import medkit.core.text.span_utils as span_utils
 
 # Some strings for character classification
@@ -25,8 +25,8 @@ _LOWERCASE_CHARS = "a-zàâäçéèêëîïôöùûüÿ"
 
 
 def clean_newline_character(
-    text: str, spans: List[AnySpan], keep_endlines: bool = False
-) -> Tuple[str, List[AnySpan]]:
+    text: str, spans: List[AnySpanType], keep_endlines: bool = False
+) -> Tuple[str, List[AnySpanType]]:
     """Replace the newline character depending on its position in the text.
     The endlines characters that are not suppressed can be either
     kept as endlines, or replaced by spaces.
@@ -54,7 +54,9 @@ def clean_newline_character(
     return text, spans
 
 
-def clean_parentheses_eds(text: str, spans: List[AnySpan]) -> Tuple[str, List[AnySpan]]:
+def clean_parentheses_eds(
+    text: str, spans: List[AnySpanType]
+) -> Tuple[str, List[AnySpanType]]:
     """Modify the text near the parentheses depending on its content.
     The rules are adapted for French documents"""
 
@@ -67,8 +69,8 @@ def clean_parentheses_eds(text: str, spans: List[AnySpan]) -> Tuple[str, List[An
 
 
 def clean_multiple_whitespaces_in_sentence(
-    text: str, spans: List[AnySpan]
-) -> Tuple[str, List[AnySpan]]:
+    text: str, spans: List[AnySpanType]
+) -> Tuple[str, List[AnySpanType]]:
     """Replace multiple white-spaces between alphanumeric characters and
     lowercase characters with a single whitespace"""
     alphanums_chars = _UPPERCASE_CHARS + _LOWERCASE_CHARS + _NUMERIC_CHARS
@@ -81,7 +83,7 @@ def clean_multiple_whitespaces_in_sentence(
 
 def replace_point_after_keywords(
     text: str,
-    spans: List[AnySpan],
+    spans: List[AnySpanType],
     keywords: List[str],
     strict: bool = False,
     replace_by: str = " ",
@@ -122,8 +124,8 @@ def replace_point_after_keywords(
 
 
 def replace_multiple_newline_after_sentence(
-    text: str, spans: List[AnySpan]
-) -> Tuple[str, List[AnySpan]]:
+    text: str, spans: List[AnySpanType]
+) -> Tuple[str, List[AnySpanType]]:
     """Replace all (non-alphanumeric) characters between a newline
     character `\\n` and a capital letter or a number with a single newline character.
 
@@ -146,8 +148,8 @@ def replace_multiple_newline_after_sentence(
 
 
 def replace_newline_inside_sentence(
-    text: str, spans: List[AnySpan]
-) -> Tuple[str, List[AnySpan]]:
+    text: str, spans: List[AnySpanType]
+) -> Tuple[str, List[AnySpanType]]:
     """Replace the newline character `\\n` between lowercase letters
     or punctuation marks with a space
 
@@ -170,8 +172,8 @@ def replace_newline_inside_sentence(
 
 
 def _replace_big_parentheses(
-    text: str, spans: List[AnySpan]
-) -> Tuple[str, List[AnySpan]]:
+    text: str, spans: List[AnySpanType]
+) -> Tuple[str, List[AnySpanType]]:
     """Modify the sentence containing large parentheses.
     The new sentence contains the text after the parentheses followed by
     the text that was inside the parentheses.
@@ -212,8 +214,8 @@ def _replace_big_parentheses(
 
 
 def _replace_small_parentheses(
-    text: str, spans: List[AnySpan]
-) -> Tuple[str, List[AnySpan]]:
+    text: str, spans: List[AnySpanType]
+) -> Tuple[str, List[AnySpanType]]:
     """Modify the sentence containing small parentheses.
     The new sentence has the text that was inside the parentheses surrounded by `,`
     """
@@ -228,11 +230,11 @@ def _replace_small_parentheses(
 
 def _replace_text(
     text: str,
-    spans: List[AnySpan],
+    spans: List[AnySpanType],
     pattern: str,
     repl: str,
     group: Union[str, int] = 0,
-) -> Tuple[str, List[AnySpan]]:
+) -> Tuple[str, List[AnySpanType]]:
     """Replace matches in `text` by `repl` and update its spans."""
     ranges = [(match.span(group)) for match in re.finditer(pattern, text)]
     return span_utils.replace(text, spans, ranges, [repl] * len(ranges))

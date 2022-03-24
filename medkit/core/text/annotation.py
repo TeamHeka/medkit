@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from medkit.core.annotation import Annotation, Attribute, Origin
 from medkit.core.text import span_utils
-from medkit.core.text.span import AnySpan
+from medkit.core.text.span import AnySpanType
 
 if TYPE_CHECKING:
     from medkit.core.text.document import TextDocument
@@ -33,7 +33,7 @@ class Segment(TextAnnotation):
         self,
         origin: Origin,
         label: str,
-        spans: List[AnySpan],
+        spans: List[AnySpanType],
         text: str,
         attrs: Optional[List[Attribute]] = None,
         ann_id: Optional[str] = None,
@@ -62,7 +62,7 @@ class Segment(TextAnnotation):
         super().__init__(
             ann_id=ann_id, origin=origin, label=label, attrs=attrs, metadata=metadata
         )
-        self.spans: List[AnySpan] = spans
+        self.spans: List[AnySpanType] = spans
         self.text: str = text
 
     def get_snippet(self, doc: TextDocument, max_extend_length: int) -> str:
@@ -99,7 +99,7 @@ class Entity(Segment):
         self,
         origin: Origin,
         label: str,
-        spans: List[AnySpan],
+        spans: List[AnySpanType],
         text: str,
         attrs: Optional[List[Attribute]] = None,
         entity_id: Optional[str] = None,

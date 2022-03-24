@@ -10,7 +10,7 @@ __all__ = [
 
 from typing import List, Tuple, Union
 
-from medkit.core.text.span import Span, ModifiedSpan, AnySpan
+from medkit.core.text.span import Span, ModifiedSpan, AnySpanType
 
 
 def _spans_have_same_length_as_text(text, spans):
@@ -35,10 +35,10 @@ def _positions_are_within_text(text, positions):
 
 def replace(
     text: str,
-    spans: List[AnySpan],
+    spans: List[AnySpanType],
     ranges: List[Tuple[int, int]],
     replacement_texts: List[str],
-) -> Tuple[str, List[AnySpan]]:
+) -> Tuple[str, List[AnySpanType]]:
     """Replace parts of a text, and update accordingly its associated spans
 
     Parameters
@@ -216,9 +216,9 @@ def _replace_in_spans(spans, ranges, replacement_lengths):
 
 def remove(
     text: str,
-    spans: List[AnySpan],
+    spans: List[AnySpanType],
     ranges: List[Tuple[int, int]],
-) -> Tuple[str, List[AnySpan]]:
+) -> Tuple[str, List[AnySpanType]]:
     """Remove parts of a text, while also removing accordingly its associated spans
 
     Parameters
@@ -265,9 +265,9 @@ def _remove_in_spans(spans, ranges):
 
 def extract(
     text: str,
-    spans: List[AnySpan],
+    spans: List[AnySpanType],
     ranges: List[Tuple[int, int]],
-) -> Tuple[str, List[AnySpan]]:
+) -> Tuple[str, List[AnySpanType]]:
     """Extract parts of a text as well as its associated spans
 
     Parameters
@@ -320,10 +320,10 @@ def _extract_in_spans(spans, ranges):
 
 def insert(
     text: str,
-    spans: List[AnySpan],
+    spans: List[AnySpanType],
     positions: List[int],
     insertion_texts: List[str],
-) -> Tuple[str, List[AnySpan]]:
+) -> Tuple[str, List[AnySpanType]]:
     """Insert strings in text, and update accordingly its associated spans
 
     Parameters
@@ -393,10 +393,10 @@ def _insert_in_spans(spans, positions, insertion_lengths):
 
 def move(
     text: str,
-    spans: List[AnySpan],
+    spans: List[AnySpanType],
     range: Tuple[int, int],
     destination: int,
-) -> Tuple[str, List[AnySpan]]:
+) -> Tuple[str, List[AnySpanType]]:
     """Move part of a text to another position, also moving its associated spans
 
     Parameters
@@ -466,8 +466,8 @@ def _move_in_spans(spans, range, destination):
 
 
 def concatenate(
-    texts: List[str], all_spans: List[List[AnySpan]]
-) -> Tuple[str, List[AnySpan]]:
+    texts: List[str], all_spans: List[List[AnySpanType]]
+) -> Tuple[str, List[AnySpanType]]:
     """Concatenate text and span objects"""
 
     assert _lists_have_same_dimension(

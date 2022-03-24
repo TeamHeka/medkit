@@ -8,11 +8,11 @@ __all__ = [
     "TextDocument",
     "Span",
     "ModifiedSpan",
-    "AnySpan",
+    "AnySpanType",
 ]
 
 from . import utils
 from . import span_utils
 from .annotation import TextAnnotation, Segment, Entity, Relation
 from .document import TextDocument
-from .span import Span, ModifiedSpan, AnySpan
+from .span import Span, ModifiedSpan, AnySpanType

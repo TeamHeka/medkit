@@ -1,7 +1,7 @@
 __all__ = [
     "Span",
     "ModifiedSpan",
-    "AnySpan",
+    "AnySpanType",
 ]
 
 import dataclasses
@@ -45,4 +45,4 @@ class ModifiedSpan:
     replaced_spans: List[Span]
 
 
-AnySpan = Union[Span, ModifiedSpan]
+AnySpanType = Union[Span, ModifiedSpan]
