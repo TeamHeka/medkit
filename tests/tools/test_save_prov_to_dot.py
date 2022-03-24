@@ -1,4 +1,10 @@
-from medkit.core import generate_id, ProvBuilder, OperationDescription, Attribute
+from medkit.core import (
+    generate_id,
+    ProvBuilder,
+    DictStore,
+    OperationDescription,
+    Attribute,
+)
 from medkit.core.text import Segment, Entity, Span
 from medkit.tools.save_prov_to_dot import save_prov_to_dot
 
@@ -40,7 +46,8 @@ def test_basic(tmp_path):
     """Basic usage"""
     # build provenance
     sentence_segment, syntagma_segment, entity = _get_segment_and_entity()
-    prov_builder = ProvBuilder()
+    store = DictStore()
+    prov_builder = ProvBuilder(store)
     _build_prov(prov_builder, sentence_segment, syntagma_segment, entity)
 
     # export to dot
@@ -48,7 +55,7 @@ def test_basic(tmp_path):
     with open(path_to_dot, mode="w") as file:
         save_prov_to_dot(
             prov_builder.graph,
-            prov_builder.store,
+            store,
             file,
             data_item_formatter=lambda a: f"{a.label}: {a.text}",
             op_formatter=lambda o: o.name,
@@ -78,7 +85,8 @@ def test_attrs(tmp_path):
     """Basic usage"""
     # build provenance
     sentence_segment, syntagma_segment, entity = _get_segment_and_entity(with_attr=True)
-    prov_builder = ProvBuilder()
+    store = DictStore()
+    prov_builder = ProvBuilder(store)
     _build_prov(prov_builder, sentence_segment, syntagma_segment, entity)
 
     # export to dot
@@ -86,7 +94,7 @@ def test_attrs(tmp_path):
     with open(path_to_dot, mode="w") as file:
         save_prov_to_dot(
             prov_builder.graph,
-            prov_builder.store,
+            store,
             file,
             data_item_formatter=lambda a: f"{a.label}",
             op_formatter=lambda o: o.name,
@@ -104,11 +112,12 @@ def test_attrs(tmp_path):
 
 def test_sub_prov_graph(tmp_path):
     """Handling of provenance sub graphs"""
-    prov_builder = ProvBuilder()
+    store = DictStore()
+    prov_builder = ProvBuilder(store)
 
     # build provenance for inner graph
     sentence_segment, syntagma_segment, entity = _get_segment_and_entity()
-    sub_prov_builder = ProvBuilder(prov_builder.store)
+    sub_prov_builder = ProvBuilder(store)
     _build_prov(sub_prov_builder, sentence_segment, syntagma_segment, entity)
 
     # wrap it in outer pipeline graph
@@ -120,7 +129,7 @@ def test_sub_prov_graph(tmp_path):
     with open(path_to_dot, mode="w") as file:
         save_prov_to_dot(
             prov_builder.graph,
-            prov_builder.store,
+            store,
             file,
             data_item_formatter=lambda a: f"{a.label}: {a.text}",
             op_formatter=lambda o: o.name,
@@ -139,7 +148,7 @@ def test_sub_prov_graph(tmp_path):
     with open(path_to_dot_full, mode="w") as file:
         save_prov_to_dot(
             prov_builder.graph,
-            prov_builder.store,
+            store,
             file,
             data_item_formatter=lambda a: f"{a.label}: {a.text}",
             op_formatter=lambda o: o.name,

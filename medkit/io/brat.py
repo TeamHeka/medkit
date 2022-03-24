@@ -10,6 +10,7 @@ from medkit.core import (
     Collection,
     Attribute,
     InputConverter,
+    Store,
     OperationDescription,
     ProvBuilder,
     generate_id,
@@ -21,10 +22,12 @@ import medkit.io._brat_utils as brat_utils
 class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
 
-    def __init__(self, id: Optional[str] = None):
+    def __init__(self, store: Optional[Store] = None, id: Optional[str] = None):
         if id is None:
             id = generate_id()
+
         self.id: str = id
+        self.store: Optional[Store] = store
 
         self._prov_builder: Optional[ProvBuilder] = None
 
@@ -117,7 +120,7 @@ class BratInputConverter(InputConverter):
         else:
             anns = []
 
-        doc = TextDocument(text=text, metadata=metadata)
+        doc = TextDocument(text=text, metadata=metadata, store=self.store)
         for ann in anns:
             doc.add_annotation(ann)
 

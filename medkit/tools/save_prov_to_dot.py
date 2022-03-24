@@ -4,7 +4,7 @@ from typing import Callable, TextIO, Optional
 
 from medkit.core import (
     OperationDescription,
-    ProvStore,
+    Store,
     ProvGraph,
     ProvNode,
     IdentifiableDataItem,
@@ -14,7 +14,7 @@ from medkit.core import (
 
 def save_prov_to_dot(
     prov_graph: ProvGraph,
-    prov_store: ProvStore,
+    store: Store,
     file: TextIO,
     data_item_formatter: Callable[[IdentifiableDataItem], str],
     op_formatter: Callable[[OperationDescription], str],
@@ -23,7 +23,7 @@ def save_prov_to_dot(
 ):
     """Generate a graphviz-compatible .dot file from a ProvGraph for visualization"""
     writer = _DotWriter(
-        prov_store,
+        store,
         file,
         data_item_formatter,
         op_formatter,
@@ -36,14 +36,14 @@ def save_prov_to_dot(
 class _DotWriter:
     def __init__(
         self,
-        store: ProvStore,
+        store: Store,
         file: TextIO,
         data_item_formatter: Callable[[IdentifiableDataItem], str],
         op_formatter: Callable[[OperationDescription], str],
         max_sub_graph_depth: Optional[int],
         show_attr_links: bool = True,
     ):
-        self._store: ProvStore = store
+        self._store: Store = store
         self._file: TextIO = file
         self._data_item_formatter: Callable[
             [IdentifiableDataItem], str

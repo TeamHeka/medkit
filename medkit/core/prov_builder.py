@@ -1,56 +1,21 @@
 from __future__ import annotations
 
-__all__ = ["ProvBuilder", "ProvStore"]
+__all__ = ["ProvBuilder"]
 
 import collections
-from typing import Dict, List, Optional, Protocol
+from typing import List, Optional
 
 from medkit.core.operation_desc import OperationDescription
 from medkit.core.prov_graph import ProvGraph, ProvNode
-
-
-class IdentifiableDataItem(Protocol):
-    id: str
-
-
-class ProvStore(Protocol):
-    def store_data_item(self, data_item: IdentifiableDataItem):
-        pass
-
-    def get_data_item(self, data_item_id: str) -> IdentifiableDataItem:
-        pass
-
-    def store_op_desc(self, op_desc: OperationDescription):
-        pass
-
-    def get_op_desc(self, operation_id: str) -> OperationDescription:
-        pass
-
-
-class _DefaultDictStore:
-    def __init__(self) -> None:
-        self._data_items_by_id: Dict[str, IdentifiableDataItem] = {}
-        self._op_descs_by_id: Dict[str, OperationDescription] = {}
-
-    def store_data_item(self, data_item: IdentifiableDataItem):
-        self._data_items_by_id[data_item.id] = data_item
-
-    def get_data_item(self, data_item_id: str) -> IdentifiableDataItem:
-        return self._data_items_by_id[data_item_id]
-
-    def store_op_desc(self, op_desc: OperationDescription):
-        self._op_descs_by_id[op_desc.id] = op_desc
-
-    def get_op_desc(self, operation_id: str) -> OperationDescription:
-        return self._op_descs_by_id[operation_id]
+from medkit.core.store import Store, DictStore, IdentifiableDataItem
 
 
 class ProvBuilder:
-    def __init__(self, store: Optional[ProvStore] = None):
+    def __init__(self, store: Optional[Store] = None):
         if store is None:
-            store = _DefaultDictStore()
+            store = DictStore()
 
-        self.store: ProvStore = store
+        self.store: Store = store
         self.graph: ProvGraph = ProvGraph()
 
     def add_prov(

@@ -16,10 +16,11 @@ __all__ = [
     "ProvCompatibleOperation",
     "IdentifiableDataItemWithAttrs",
     "ProvBuilder",
-    "ProvStore",
-    "IdentifiableDataItem",
     "ProvGraph",
     "ProvNode",
+    "Store",
+    "DictStore",
+    "IdentifiableDataItem",
 ]
 
 from . import text
@@ -37,5 +38,6 @@ from .pipeline import (
     ProvCompatibleOperation,
     IdentifiableDataItemWithAttrs,
 )
-from .prov_builder import ProvBuilder, ProvStore, IdentifiableDataItem
+from .prov_builder import ProvBuilder
 from .prov_graph import ProvGraph, ProvNode
+from .store import Store, DictStore, IdentifiableDataItem

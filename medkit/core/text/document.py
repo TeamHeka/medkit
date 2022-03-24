@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 import uuid
 
 from medkit.core.document import Document
+from medkit.core.store import Store
 from medkit.core.text.annotation import TextAnnotation, Segment, Entity, Relation
 from medkit.core.text.span import Span
 
@@ -23,6 +24,7 @@ class TextDocument(Document[TextAnnotation]):
         doc_id: Optional[str] = None,
         text: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        store: Optional[Store] = None,
     ):
         """
         Initializes the text document
@@ -38,9 +40,10 @@ class TextDocument(Document[TextAnnotation]):
             Document text
         metadata: dict  # TODO
             Document metadata
-
+        store:
+            Store to use for annotations
         """
-        super().__init__(doc_id=doc_id, metadata=metadata)
+        super().__init__(doc_id=doc_id, metadata=metadata, store=store)
         self.text: Optional[str] = text
         self.segments: Dict[str, List[str]] = dict()  # Key: label
         self.entities: Dict[str, List[str]] = dict()  # Key: label
