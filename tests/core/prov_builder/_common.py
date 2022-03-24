@@ -1,4 +1,4 @@
-__all__ = ["TextItem", "Generator", "Prefixer", "Splitter", "Merger"]
+__all__ = ["TextItem", "get_text_items", "Generator", "Prefixer", "Splitter", "Merger"]
 
 from medkit.core import generate_id
 
@@ -11,6 +11,10 @@ class TextItem:
         self.text = text
 
 
+def get_text_items(nb_items):
+    return [TextItem(f"This is the text item number {i}.") for i in range(nb_items)]
+
+
 class Generator:
     def __init__(self, prov_builder=None):
         """Mock operation generating text items"""
@@ -19,10 +23,7 @@ class Generator:
         self.prov_builder = prov_builder
 
     def generate(self, nb_items):
-        items = [
-            TextItem(f"This is the text item number {i}.") for i in range(nb_items)
-        ]
-
+        items = get_text_items(nb_items)
         if self.prov_builder is not None:
             for item in items:
                 self.prov_builder.add_prov(item.id, self.id, source_ids=[])
