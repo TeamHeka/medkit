@@ -81,6 +81,18 @@ class PipelineStep:
     input_keys: List[str]
     output_keys: List[str]
 
+    def to_dict(self) -> Dict[str, Any]:
+        operation = (
+            self.operation.description
+            if isinstance(self.operation, DescribableOperation)
+            else None
+        )
+        return dict(
+            operation=operation,
+            input_keys=self.input_keys,
+            output_keys=self.output_keys,
+        )
+
 
 class Pipeline:
     """Graph of processing operations
@@ -130,18 +142,9 @@ class Pipeline:
 
     @property
     def description(self) -> OperationDescription:
-        steps_config = [
-            dict(
-                operation=s.operation.description
-                if isinstance(s.operation, DescribableOperation)
-                else None,
-                input_keys=s.input_keys,
-                output_keys=s.output_keys,
-            )
-            for s in self.steps
-        ]
+        steps = [s.to_dict() for s in self.steps]
         config = dict(
-            steps=steps_config,
+            steps=steps,
             input_keys=self.input_keys,
             output_keys=self.output_keys,
         )

@@ -82,9 +82,20 @@ class Document(Generic[AnnotationType]):
         ]
         return cast(List[AnnotationType], anns)
 
+    def to_dict(self) -> Dict[str, Any]:
+        annotations = [
+            cast(AnnotationType, self.store.get_data_item(id)).to_dict()
+            for id in self.annotation_ids
+        ]
+        return dict(id=self.id, annotations=annotations, metadata=self.metadata)
+
 
 class Collection:
     """Collection of documents"""
 
     def __init__(self, documents: List[Document]):
         self.documents = documents
+
+    def to_dict(self) -> Dict[str, Any]:
+        documents = [d.to_dict() for d in self.documents]
+        return dict(documents=documents)

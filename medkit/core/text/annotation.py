@@ -59,6 +59,12 @@ class Segment(TextAnnotation):
         self.spans: List[AnySpanType] = spans
         self.text: str = text
 
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        spans = [s.to_dict() for s in self.spans]
+        data.update(spans=spans, text=self.text)
+        return data
+
     def get_snippet(self, doc: TextDocument, max_extend_length: int) -> str:
         """Return a portion of the original text contaning the annotation
 
@@ -157,6 +163,11 @@ class Relation(TextAnnotation):
         super().__init__(ann_id=rel_id, label=label, attrs=attrs, metadata=metadata)
         self.source_id: str = source_id
         self.target_id: str = target_id
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data.update(source_id=self.source_id, target_id=self.target_id)
+        return data
 
     def __repr__(self):
         annotation = super().__repr__()

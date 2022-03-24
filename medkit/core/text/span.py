@@ -5,7 +5,7 @@ __all__ = [
 ]
 
 import dataclasses
-from typing import List, NamedTuple, Union
+from typing import Any, Dict, List, NamedTuple, Union
 
 
 class Span(NamedTuple):
@@ -27,6 +27,9 @@ class Span(NamedTuple):
     def length(self):
         return self.end - self.start
 
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(start=self.start, end=self.end)
+
 
 @dataclasses.dataclass
 class ModifiedSpan:
@@ -43,6 +46,10 @@ class ModifiedSpan:
 
     length: int
     replaced_spans: List[Span]
+
+    def to_dict(self) -> Dict[str, Any]:
+        replaced_spans = [s.to_dict() for s in self.replaced_spans]
+        return dict(length=self.length, replaced_spans=replaced_spans)
 
 
 AnySpanType = Union[Span, ModifiedSpan]

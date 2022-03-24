@@ -106,3 +106,8 @@ class TextDocument(Document[TextAnnotation]):
             text=self.text,
             ann_id=id,
         )
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data.update(text=self.text)
+        return data

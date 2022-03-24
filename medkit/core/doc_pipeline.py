@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple, cast
 from medkit.core.annotation import Annotation
 from medkit.core.document import Document
 from medkit.core.operation_desc import OperationDescription
-from medkit.core.pipeline import Pipeline, PipelineStep, DescribableOperation
+from medkit.core.pipeline import Pipeline, PipelineStep
 from medkit.core.prov_builder import ProvBuilder
 
 
@@ -73,18 +73,9 @@ class DocPipeline:
 
     @property
     def description(self) -> OperationDescription:
-        steps_config = [
-            dict(
-                operation=s.operation.description
-                if isinstance(s.operation, DescribableOperation)
-                else None,
-                input_keys=s.input_keys,
-                output_keys=s.output_keys,
-            )
-            for s in self.steps
-        ]
+        steps = [s.to_dict() for s in self.steps]
         config = dict(
-            steps=steps_config,
+            steps=steps,
             labels_by_input_key=self.labels_by_input_key,
             output_keys=self.output_keys,
         )

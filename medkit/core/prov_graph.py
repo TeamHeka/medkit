@@ -3,7 +3,7 @@ from __future__ import annotations
 __all__ = ["ProvGraph", "ProvNode"]
 
 import dataclasses
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 
 @dataclasses.dataclass
@@ -12,6 +12,13 @@ class ProvNode:
     operation_id: Optional[str]
     source_ids: List[str]
     derived_ids: List[str] = dataclasses.field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            data_item_id=self.data_item_id,
+            operation_id=self.operation_id,
+            source_ids=self.source_ids,
+        )
 
 
 class ProvGraph:
@@ -146,3 +153,10 @@ class ProvGraph:
                     )
         for sub_graph in self._sub_graphs_by_op_id.values():
             sub_graph.check_sanity()
+
+    def to_dict(self) -> Dict[str, Any]:
+        nodes = [n.to_dict() for n in self._nodes_by_id.values()]
+        sub_graphs_by_op_id = {
+            id: s.to_dict() for id, s in self._sub_graphs_by_op_id.items()
+        }
+        return dict(nodes=nodes, sub_graphs_by_op_id=sub_graphs_by_op_id)

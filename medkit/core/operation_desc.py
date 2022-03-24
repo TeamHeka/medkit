@@ -23,3 +23,6 @@ class OperationDescription:
     name: str
     id: str
     config: Dict[str, Any] = dataclasses.field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(name=self.name, id=self.id, config=self.config)
