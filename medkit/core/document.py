@@ -76,6 +76,9 @@ class Document(Generic[AnnotationType]):
     def get_operations(self) -> List[OperationDescription]:
         return list(self.operations.values())
 
+    def get_operation_by_id(self, op_id) -> Optional[OperationDescription]:
+        return self.operations.get(op_id)
+
 
 class Collection:
     """Collection of documents"""
