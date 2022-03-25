@@ -4,27 +4,25 @@ __all__ = [
     "PipelineCompatibleOperation",
     "DescribableOperation",
     "ProvCompatibleOperation",
-    "IdentifiableDataItemWithAttrs",
 ]
 
 import dataclasses
 from typing import (
     Any,
     Dict,
-    Generic,
     List,
     Optional,
     Protocol,
     Tuple,
-    TypeVar,
     Union,
     cast,
     runtime_checkable,
 )
 
+from medkit.core.data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs
 from medkit.core.id import generate_id
 from medkit.core.operation_desc import OperationDescription
-from medkit.core.prov_builder import ProvBuilder, IdentifiableDataItem
+from medkit.core.prov_builder import ProvBuilder
 
 
 @runtime_checkable
@@ -59,16 +57,6 @@ class ProvCompatibleOperation(Protocol):
 @runtime_checkable
 class DescribableOperation(Protocol):
     description: OperationDescription
-
-
-IdentifiableDataItemType = TypeVar(
-    "IdentifiableDataItemType", bound=IdentifiableDataItem
-)
-
-
-@runtime_checkable
-class IdentifiableDataItemWithAttrs(Protocol, Generic[IdentifiableDataItemType]):
-    attrs: List[IdentifiableDataItemType]
 
 
 @dataclasses.dataclass

@@ -1,12 +1,9 @@
-__all__ = ["Store", "IdentifiableDataItem", "DictStore"]
+__all__ = ["Store", "DictStore"]
 
 from typing import Dict, Protocol, runtime_checkable
 
+from medkit.core.data_item import IdentifiableDataItem
 from medkit.core.operation_desc import OperationDescription
-
-
-class IdentifiableDataItem(Protocol):
-    id: str
 
 
 @runtime_checkable

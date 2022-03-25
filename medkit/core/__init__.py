@@ -4,6 +4,8 @@ __all__ = [
     "Attribute",
     "InputConverter",
     "OutputConverter",
+    "IdentifiableDataItem",
+    "IdentifiableDataItemWithAttrs",
     "DocPipeline",
     "Collection",
     "Document",
@@ -14,18 +16,17 @@ __all__ = [
     "PipelineCompatibleOperation",
     "DescribableOperation",
     "ProvCompatibleOperation",
-    "IdentifiableDataItemWithAttrs",
     "ProvBuilder",
     "ProvGraph",
     "ProvNode",
     "Store",
     "DictStore",
-    "IdentifiableDataItem",
 ]
 
 from . import text
 from .annotation import Annotation, Attribute
 from .conversion import InputConverter, OutputConverter
+from .data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs
 from .doc_pipeline import DocPipeline
 from .document import Collection, Document
 from .id import generate_id
@@ -36,8 +37,7 @@ from .pipeline import (
     PipelineCompatibleOperation,
     DescribableOperation,
     ProvCompatibleOperation,
-    IdentifiableDataItemWithAttrs,
 )
 from .prov_builder import ProvBuilder
 from .prov_graph import ProvGraph, ProvNode
-from .store import Store, DictStore, IdentifiableDataItem
+from .store import Store, DictStore

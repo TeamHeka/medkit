@@ -5,9 +5,10 @@ __all__ = ["ProvBuilder"]
 import collections
 from typing import List, Optional
 
+from medkit.core.data_item import IdentifiableDataItem
 from medkit.core.operation_desc import OperationDescription
 from medkit.core.prov_graph import ProvGraph, ProvNode
-from medkit.core.store import Store, DictStore, IdentifiableDataItem
+from medkit.core.store import Store, DictStore
 
 
 class ProvBuilder:
