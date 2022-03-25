@@ -1,24 +1,29 @@
 __all__ = ["save_prov_to_dot"]
 
 from typing import Callable, TextIO, Optional
-import warnings
 
-from medkit.core import Document, Annotation, OperationDescription, ProvGraph, ProvNode
+from medkit.core import (
+    OperationDescription,
+    ProvStore,
+    ProvGraph,
+    ProvNode,
+    IdentifiableDataItem,
+)
 
 
 def save_prov_to_dot(
     prov_graph: ProvGraph,
-    doc: Document,
+    prov_store: ProvStore,
     file: TextIO,
-    ann_formatter: Callable[[Annotation], str],
+    data_item_formatter: Callable[[IdentifiableDataItem], str],
     op_formatter: Callable[[OperationDescription], str],
     max_sub_graph_depth: Optional[int] = None,
 ):
     """Generate a graphviz-compatible .dot file from a ProvGraph for visualization"""
     writer = _DotWriter(
-        doc,
+        prov_store,
         file,
-        ann_formatter,
+        data_item_formatter,
         op_formatter,
         max_sub_graph_depth,
     )
@@ -28,15 +33,17 @@ def save_prov_to_dot(
 class _DotWriter:
     def __init__(
         self,
-        doc: Document,
+        store: ProvStore,
         file: TextIO,
-        ann_formatter: Callable[[Annotation], str],
+        data_item_formatter: Callable[[IdentifiableDataItem], str],
         op_formatter: Callable[[OperationDescription], str],
         max_sub_graph_depth: Optional[int],
     ):
-        self._doc: Document = doc
+        self._store: ProvStore = store
         self._file: TextIO = file
-        self._ann_formatter: Callable[[Annotation], str] = ann_formatter
+        self._data_item_formatter: Callable[
+            [IdentifiableDataItem], str
+        ] = data_item_formatter
         self._op_formatter: Callable[[OperationDescription], str] = op_formatter
         self._max_sub_graph_depth: Optional[int] = max_sub_graph_depth
 
@@ -65,22 +72,17 @@ class _DotWriter:
             self._file.write("\n\n}")
 
     def _write_node(self, node: ProvNode):
-        ann_id = node.data_item_id
-        ann = self._doc.get_annotation_by_id(ann_id)
-        if ann is None:
-            warnings.warn(
-                f"Couldn't find annotation with id {ann_id}, maybe it is an attribute?"
-            )
-            ann_label = "Unknown"
-        else:
-            ann_label = self._ann_formatter(ann)
-        self._file.write(f'"{ann_id}" [label="{ann_label}"];\n')
+        data_item = self._store.get_data_item(node.data_item_id)
+        data_item_label = self._data_item_formatter(data_item)
+        self._file.write(f'"{data_item.id}" [label="{data_item_label}"];\n')
 
         if node.operation_id is not None:
-            op_desc = self._doc.get_operation_by_id(node.operation_id)
+            op_desc = self._store.get_op_desc(node.operation_id)
             op_label = self._op_formatter(op_desc)
         else:
             op_label = "Unknown"
         for source_id in node.source_ids:
-            self._file.write(f'"{source_id}" -> "{ann_id}" [label="{op_label}"];\n')
+            self._file.write(
+                f'"{source_id}" -> "{data_item.id}" [label="{op_label}"];\n'
+            )
         self._file.write("\n\n")
