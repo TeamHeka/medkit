@@ -1,6 +1,6 @@
 __all__ = ["save_prov_to_dot"]
 
-from typing import Callable, TextIO
+from typing import Callable, TextIO, Optional
 import warnings
 
 from medkit.core import Document, Annotation, OperationDescription, ProvGraph, ProvNode
@@ -12,6 +12,7 @@ def save_prov_to_dot(
     file: TextIO,
     ann_formatter: Callable[[Annotation], str],
     op_formatter: Callable[[OperationDescription], str],
+    max_sub_graph_depth: Optional[int] = None,
 ):
     """Generate a graphviz-compatible .dot file from a ProvGraph for visualization"""
     writer = _DotWriter(
@@ -19,6 +20,7 @@ def save_prov_to_dot(
         file,
         ann_formatter,
         op_formatter,
+        max_sub_graph_depth,
     )
     writer.write_graph(prov_graph)
 
@@ -30,17 +32,37 @@ class _DotWriter:
         file: TextIO,
         ann_formatter: Callable[[Annotation], str],
         op_formatter: Callable[[OperationDescription], str],
+        max_sub_graph_depth: Optional[int],
     ):
         self._doc: Document = doc
         self._file: TextIO = file
         self._ann_formatter: Callable[[Annotation], str] = ann_formatter
         self._op_formatter: Callable[[OperationDescription], str] = op_formatter
+        self._max_sub_graph_depth: Optional[int] = max_sub_graph_depth
 
-    def write_graph(self, graph: ProvGraph):
-        self._file.write("digraph {\n\n")
+    def write_graph(self, graph: ProvGraph, current_sub_graph_depth: int = 0):
+        if current_sub_graph_depth == 0:
+            self._file.write("digraph {\n\n")
+
+        write_sub_graph = (
+            self._max_sub_graph_depth is None
+            or current_sub_graph_depth < self._max_sub_graph_depth
+        )
+
         for node in graph.get_nodes():
-            self._write_node(node)
-        self._file.write("\n\n}")
+            if (
+                not write_sub_graph
+                or node.operation_id is None
+                or not graph.has_sub_graph(node.operation_id)
+            ):
+                self._write_node(node)
+
+        if write_sub_graph:
+            for sub_graph in graph.get_sub_graphs():
+                self.write_graph(sub_graph, current_sub_graph_depth + 1)
+
+        if current_sub_graph_depth == 0:
+            self._file.write("\n\n}")
 
     def _write_node(self, node: ProvNode):
         ann_id = node.data_item_id
