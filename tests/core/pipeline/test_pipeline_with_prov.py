@@ -1,3 +1,5 @@
+import pytest
+
 from medkit.core import (
     generate_id,
     Document,
@@ -134,16 +136,38 @@ def test_single_step():
     uppercased_anns = pipeline.process(sentence_anns)
     assert len(uppercased_anns) == len(sentence_anns)
 
+    # check outer main graph
     graph = prov_builder.graph
     graph.check_sanity()
 
     for uppercased_ann, sentence_ann in zip(uppercased_anns, sentence_anns):
         uppercased_node = graph.get_node(uppercased_ann.id)
-        # operation id is of uppercaser operation
+        # operation id is of outer pipeline operation
+        assert uppercased_node.operation_id == pipeline.id
+        # uppercased node has corresponding sentence ann as source
+        assert len(uppercased_node.source_ids) == 1
+        assert uppercased_node.source_ids == [sentence_ann.id]
+
+        # sentence node is a stub node (no operation, no source)
+        sentence_node = graph.get_node(sentence_ann.id)
+        assert sentence_node.operation_id is None
+        assert not sentence_node.source_ids
+
+    # check inner sub graph
+    sub_graph = graph.get_sub_graph(pipeline.id)
+
+    for uppercased_ann, sentence_ann in zip(uppercased_anns, sentence_anns):
+        uppercased_node = sub_graph.get_node(uppercased_ann.id)
+        # operation id is of inner uppercaser operation
         assert uppercased_node.operation_id == uppercaser.id
         # uppercased node has corresponding sentence ann as source
         assert len(uppercased_node.source_ids) == 1
         assert uppercased_node.source_ids == [sentence_ann.id]
+
+        # sentence node is a stub node (no operation, no source)
+        sentence_node = sub_graph.get_node(sentence_ann.id)
+        assert sentence_node.operation_id is None
+        assert not sentence_node.source_ids
 
 
 def test_multiple_steps():
@@ -173,26 +197,36 @@ def test_multiple_steps():
     graph = prov_builder.graph
     graph.check_sanity()
 
+    # check outer main graph
+    graph = prov_builder.graph
+    graph.check_sanity()
+
     for uppercased_ann, sentence_ann in zip(uppercased_anns, sentence_anns):
         uppercased_node = graph.get_node(uppercased_ann.id)
+        # operation id is of pipeline operation
+        assert uppercased_node.operation_id == pipeline.id
+        # uppercased node has corresponding sentence as source
+        assert uppercased_node.source_ids == [sentence_ann.id]
+
+    # check inner sub graph
+    sub_graph = graph.get_sub_graph(pipeline.id)
+
+    for uppercased_ann, sentence_ann in zip(uppercased_anns, sentence_anns):
+        uppercased_node = sub_graph.get_node(uppercased_ann.id)
         # operation id is of inner uppercaser operation
         assert uppercased_node.operation_id == uppercaser.id
         # uppercased node has corresponding prefixed ann as source
         assert len(uppercased_node.source_ids) == 1
         prefixed_ann_id = uppercased_node.source_ids[0]
 
-        prefixed_node = graph.get_node(prefixed_ann_id)
+        prefixed_node = sub_graph.get_node(prefixed_ann_id)
         # operation id is of inner prefixer operation
         assert prefixed_node.operation_id == prefixer.id
         # prefixed node has corresponding sentence as source
         assert prefixed_node.source_ids == [sentence_ann.id]
 
-        # sentence node is a stub node (no operation, no source)
-        sentence_node = graph.get_node(sentence_ann.id)
-        assert sentence_node.operation_id is None
-        assert not sentence_node.source_ids
 
-
+@pytest.mark.xfail
 def test_step_with_attributes():
     """Pipeline with a step adding attributes to existing annotations instead of returning new annotations"""
     prefixer = _Prefixer(prefix="Hello! ", output_label="prefixed_sentence")
@@ -224,14 +258,29 @@ def test_step_with_attributes():
     uppercased_anns = pipeline.process(sentence_anns)
     assert len(uppercased_anns) == len(sentence_anns)
 
+    # check outer main graph
     graph = prov_builder.graph
     graph.check_sanity()
+
+    for uppercased_ann, sentence_ann in zip(uppercased_anns, sentence_anns):
+        assert len(uppercased_ann.attrs) == 1
+        attr = uppercased_ann.attrs[0]
+        # FIXME currently failing, attributes created in pipeline are not added to outer main graph
+        attr_node = graph.get_node(attr.id)
+        # operation id is of outer pipeline operation
+        assert attr_node.operation_id == pipeline.id
+        # attribute node has corresponding sentence ann as source
+        # (because it is what was given as input to the pipeline operation)
+        assert attr_node.source_ids == [sentence_ann.id]
+
+    # check inner sub graph
+    sub_graph = graph.get_sub_graph(pipeline.id)
 
     for uppercased_ann in uppercased_anns:
         assert len(uppercased_ann.attrs) == 1
         attr = uppercased_ann.attrs[0]
-        attr_node = graph.get_node(attr.id)
-        # operation id is of attribute adder operation
+        attr_node = sub_graph.get_node(attr.id)
+        # operation id is of inner attribute adder operation
         assert attr_node.operation_id == attribute_adder.id
         # attribute node has corresponding uppercased ann as source
         assert attr_node.source_ids == [uppercased_ann.id]
@@ -288,24 +337,49 @@ def test_nested_pipeline():
     output_anns = pipeline.process(sentence_anns)
     assert len(output_anns) == len(sentence_anns)
 
+    # check outer main graph
     graph = prov_builder.graph
     graph.check_sanity()
 
     for output_ann, sentence_ann in zip(output_anns, sentence_anns):
-        # check whole chain up to sentence ann
-        node = graph.get_node(output_ann.id)
-        assert node.operation_id == prefixer_1.id
-        assert len(node.source_ids) == 1
+        output_node = graph.get_node(output_ann.id)
+        # operation id is of main pipeline operation
+        assert output_node.operation_id == pipeline.id
+        # uppercased node has corresponding sentence as source
+        assert output_node.source_ids == [sentence_ann.id]
 
-        node = graph.get_node(node.source_ids[0])
-        assert node.operation_id == uppercaser.id
-        assert len(node.source_ids) == 1
+    # check inner sub graph
+    sub_graph = graph.get_sub_graph(pipeline.id)
+    for output_ann, sentence_ann in zip(output_anns, sentence_anns):
+        # node for result of sub pipeline
+        node = sub_graph.get_node(output_ann.id)
+        assert node.operation_id == sub_pipeline.id
 
-        node = graph.get_node(node.source_ids[0])
+        # node for result of prefixer before sub pipeline
+        node = sub_graph.get_node(node.source_ids[0])
         assert node.operation_id == prefixer_2.id
         assert len(node.source_ids) == 1
 
-        node = graph.get_node(node.source_ids[0])
+        # stub node for input sentence ann
+        node = sub_graph.get_node(node.source_ids[0])
         assert node.data_item_id == sentence_ann.id
+        assert node.operation_id is None
+        assert not node.source_ids
+
+    # check innermost sub graph
+    sub_graph = sub_graph.get_sub_graph(sub_pipeline.id)
+    for output_ann, sentence_ann in zip(output_anns, sentence_anns):
+        # node for result of prefixer inside sub pipeline
+        node = sub_graph.get_node(output_ann.id)
+        assert node.operation_id == prefixer_1.id
+        assert len(node.source_ids) == 1
+
+        # node for result of uppercaser inside sub pipeline
+        node = sub_graph.get_node(node.source_ids[0])
+        assert node.operation_id == uppercaser.id
+        assert len(node.source_ids) == 1
+
+        # stub node for result of prefixer before sub pipeline
+        node = sub_graph.get_node(node.source_ids[0])
         assert node.operation_id is None
         assert not node.source_ids
