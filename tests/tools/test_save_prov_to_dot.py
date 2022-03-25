@@ -1,14 +1,18 @@
-from medkit.core import generate_id, ProvBuilder, OperationDescription
+from medkit.core import generate_id, ProvBuilder, OperationDescription, Attribute
 from medkit.core.text import Segment, Entity, Span
 from medkit.tools.save_prov_to_dot import save_prov_to_dot
 
 
-def _get_segment_and_entity():
+def _get_segment_and_entity(with_attr=False):
     sentence_segment = Segment(
         label="sentence", text="This is a sentence.", spans=[Span(0, 19)]
     )
     syntagma_segment = Segment(label="syntagma", text="a sentence", spans=[Span(8, 18)])
     entity = Entity(label="word", spans=[Span(10, 18)], text="sentence")
+    if with_attr:
+        attr = Attribute(label="negated", value=False)
+        entity.attrs.append(attr)
+
     return sentence_segment, syntagma_segment, entity
 
 
@@ -20,6 +24,16 @@ def _build_prov(prov_builder, sentence_segment, syntagma_segment, entity):
 
     matcher_desc = OperationDescription(name="EntityMatcher", id=generate_id())
     prov_builder.add_prov(entity, matcher_desc, source_data_items=[syntagma_segment])
+
+    if entity.attrs:
+        attr = entity.attrs[0]
+        # add attribute to entity
+        neg_detector_desc = OperationDescription(
+            name="NegationDetector", id=generate_id()
+        )
+        prov_builder.add_prov(
+            attr, neg_detector_desc, source_data_items=[syntagma_segment]
+        )
 
 
 def test_basic(tmp_path):
@@ -56,6 +70,34 @@ def test_basic(tmp_path):
     )
     assert (
         f'"{syntagma_segment.id}" -> "{entity.id}" [label="EntityMatcher"];\n'
+        in dot_lines
+    )
+
+
+def test_attrs(tmp_path):
+    """Basic usage"""
+    # build provenance
+    sentence_segment, syntagma_segment, entity = _get_segment_and_entity(with_attr=True)
+    prov_builder = ProvBuilder()
+    _build_prov(prov_builder, sentence_segment, syntagma_segment, entity)
+
+    # export to dot
+    path_to_dot = tmp_path / "prov.dot"
+    with open(path_to_dot, mode="w") as file:
+        save_prov_to_dot(
+            prov_builder.graph,
+            prov_builder.store,
+            file,
+            data_item_formatter=lambda a: f"{a.label}",
+            op_formatter=lambda o: o.name,
+        )
+    with open(path_to_dot) as file:
+        dot_lines = file.readlines()
+
+    # check attribute link in dot entries
+    assert (
+        f'"{entity.id}" -> "{entity.attrs[0].id}" [style=dashed, color=grey,'
+        ' label="attr", fontcolor=grey];\n'
         in dot_lines
     )
 

@@ -8,6 +8,7 @@ from medkit.core import (
     ProvGraph,
     ProvNode,
     IdentifiableDataItem,
+    IdentifiableDataItemWithAttrs,
 )
 
 
@@ -18,6 +19,7 @@ def save_prov_to_dot(
     data_item_formatter: Callable[[IdentifiableDataItem], str],
     op_formatter: Callable[[OperationDescription], str],
     max_sub_graph_depth: Optional[int] = None,
+    show_attr_links: bool = True,
 ):
     """Generate a graphviz-compatible .dot file from a ProvGraph for visualization"""
     writer = _DotWriter(
@@ -26,6 +28,7 @@ def save_prov_to_dot(
         data_item_formatter,
         op_formatter,
         max_sub_graph_depth,
+        show_attr_links,
     )
     writer.write_graph(prov_graph)
 
@@ -38,6 +41,7 @@ class _DotWriter:
         data_item_formatter: Callable[[IdentifiableDataItem], str],
         op_formatter: Callable[[OperationDescription], str],
         max_sub_graph_depth: Optional[int],
+        show_attr_links: bool = True,
     ):
         self._store: ProvStore = store
         self._file: TextIO = file
@@ -46,6 +50,7 @@ class _DotWriter:
         ] = data_item_formatter
         self._op_formatter: Callable[[OperationDescription], str] = op_formatter
         self._max_sub_graph_depth: Optional[int] = max_sub_graph_depth
+        self._show_attr_links: bool = show_attr_links
 
     def write_graph(self, graph: ProvGraph, current_sub_graph_depth: int = 0):
         if current_sub_graph_depth == 0:
@@ -86,3 +91,12 @@ class _DotWriter:
                 f'"{source_id}" -> "{data_item.id}" [label="{op_label}"];\n'
             )
         self._file.write("\n\n")
+
+        if self._show_attr_links and isinstance(
+            data_item, IdentifiableDataItemWithAttrs
+        ):
+            for attr in data_item.attrs:
+                self._file.write(
+                    f'"{data_item.id}" -> "{attr.id}" [style=dashed, color=grey,'
+                    ' label="attr", fontcolor=grey];\n'
+                )
