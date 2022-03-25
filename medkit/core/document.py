@@ -2,13 +2,10 @@ from __future__ import annotations
 
 __all__ = ["Collection", "Document"]
 
-from typing import Any, Dict, Generic, List, Optional, TypeVar, TYPE_CHECKING
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 from medkit.core.id import generate_id
 from medkit.core.annotation import Annotation
-
-if TYPE_CHECKING:
-    from medkit.core.operation import OperationDescription
 
 AnnotationType = TypeVar("AnnotationType", bound=Annotation)
 
@@ -29,7 +26,6 @@ class Document(Generic[AnnotationType]):
         self.id: str = doc_id
         self.annotations: Dict[str, AnnotationType] = {}
         self.annotation_ids_by_label: Dict[str, List[str]] = {}
-        self.operations: Dict[str, OperationDescription] = {}
         self.metadata: Dict[str, Any] = metadata  # TODO: what is metadata format ?
 
     def add_annotation(self, annotation: AnnotationType):
@@ -69,15 +65,6 @@ class Document(Generic[AnnotationType]):
         return [
             self.annotations[id] for id in self.annotation_ids_by_label.get(label, [])
         ]
-
-    def add_operation(self, operation_desc: OperationDescription):
-        self.operations[operation_desc.id] = operation_desc
-
-    def get_operations(self) -> List[OperationDescription]:
-        return list(self.operations.values())
-
-    def get_operation_by_id(self, op_id) -> Optional[OperationDescription]:
-        return self.operations.get(op_id)
 
 
 class Collection:
