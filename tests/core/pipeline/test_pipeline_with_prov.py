@@ -1,5 +1,3 @@
-import pytest
-
 from medkit.core import (
     generate_id,
     Document,
@@ -226,7 +224,6 @@ def test_multiple_steps():
         assert prefixed_node.source_ids == [sentence_ann.id]
 
 
-@pytest.mark.xfail
 def test_step_with_attributes():
     """Pipeline with a step adding attributes to existing annotations instead of returning new annotations"""
     prefixer = _Prefixer(prefix="Hello! ", output_label="prefixed_sentence")
@@ -265,7 +262,6 @@ def test_step_with_attributes():
     for uppercased_ann, sentence_ann in zip(uppercased_anns, sentence_anns):
         assert len(uppercased_ann.attrs) == 1
         attr = uppercased_ann.attrs[0]
-        # FIXME currently failing, attributes created in pipeline are not added to outer main graph
         attr_node = graph.get_node(attr.id)
         # operation id is of outer pipeline operation
         assert attr_node.operation_id == pipeline.id
