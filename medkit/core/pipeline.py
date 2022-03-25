@@ -3,18 +3,30 @@ __all__ = [
     "PipelineStep",
     "DescribableOperation",
     "ProvCompatibleOperation",
+    "IdentifiableDataItemWithAttrs",
 ]
 
 import dataclasses
-from typing import Dict, List, Optional, Protocol, Tuple, Union, runtime_checkable
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Protocol,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+    runtime_checkable,
+)
 
-from medkit.core.annotation import Annotation
 from medkit.core.id import generate_id
 from medkit.core.operation import (
     OperationDescription,
     ProcessingOperation,
 )
-from medkit.core.prov_builder import ProvBuilder
+from medkit.core.prov_builder import ProvBuilder, IdentifiableDataItem
 
 
 @runtime_checkable
@@ -26,6 +38,16 @@ class ProvCompatibleOperation(Protocol):
 @runtime_checkable
 class DescribableOperation(Protocol):
     description: OperationDescription
+
+
+IdentifiableDataItemType = TypeVar(
+    "IdentifiableDataItemType", bound=IdentifiableDataItem
+)
+
+
+@runtime_checkable
+class IdentifiableDataItemWithAttrs(Protocol, Generic[IdentifiableDataItemType]):
+    attrs: List[IdentifiableDataItemType]
 
 
 @dataclasses.dataclass
@@ -130,89 +152,94 @@ class Pipeline(ProcessingOperation):
             step.operation.set_prov_builder(self._sub_prov_builder)
 
     def process(
-        self, *all_input_anns: List[Annotation]
-    ) -> Union[None, List[Annotation], Tuple[List[Annotation], ...]]:
-        if len(all_input_anns) != len(self.input_keys):
+        self, *all_input_data: List[Any]
+    ) -> Union[None, List[Any], Tuple[List[Any], ...]]:
+        if len(all_input_data) != len(self.input_keys):
             raise RuntimeError(
-                f"Number of input ({len(all_input_anns)}) does not match number of"
+                f"Number of input ({len(all_input_data)}) does not match number of"
                 f" input keys ({len(self.input_keys)})"
             )
 
-        anns_by_key = dict(zip(self.input_keys, all_input_anns))
+        data_by_key = dict(zip(self.input_keys, all_input_data))
         for step in self.steps:
-            self._perform_step(step, anns_by_key)
+            self._perform_step(step, data_by_key)
 
-        all_output_anns = tuple(anns_by_key[key] for key in self.output_keys)
+        all_output_data = tuple(data_by_key[key] for key in self.output_keys)
 
         if self._prov_builder is not None:
-            self._add_provenance(all_output_anns)
+            self._add_provenance(all_output_data)
 
-        if len(all_output_anns) == 0:
+        if len(all_output_data) == 0:
             # no output
-            return all_output_anns
-        elif len(all_output_anns) == 1:
+            return all_output_data
+        elif len(all_output_data) == 1:
             # unwrap out of tuple if only 1 output
-            return all_output_anns[0]
+            return all_output_data[0]
         else:
-            return all_output_anns
+            return all_output_data
 
-    def _perform_step(self, step: PipelineStep, anns_by_key: Dict[str, Annotation]):
-        # find annotations to feed to operation
-        all_input_anns = []
+    def _perform_step(self, step: PipelineStep, data_by_key: Dict[str, Any]):
+        # find data to feed to operation
+        all_input_data = []
         for input_key in step.input_keys:
-            input_anns = anns_by_key.get(input_key)
-            if input_anns is None:
-                message = f"No annotations found for input key {input_key}"
+            input_data = data_by_key.get(input_key)
+            if input_data is None:
+                message = f"No data found for input key {input_key}"
                 if any(input_key in s.output_keys for s in self.steps):
                     message += (
                         "Did you add the steps in the correct order in the pipeline?"
                     )
                 raise RuntimeError(message)
-            all_input_anns.append(input_anns)
+            all_input_data.append(input_data)
 
         # call operation
-        all_output_anns = step.operation.process(*all_input_anns)
+        all_output_data = step.operation.process(*all_input_data)
 
         # wrap output in tuple if necessary
         # (operations performing in-place modifications
         # have no output and return None,
         # operations with single output may return a
         # single list instead of a tuple of lists)
-        if all_output_anns is None:
-            all_output_anns = tuple()
-        elif not isinstance(all_output_anns, tuple):
-            all_output_anns = (all_output_anns,)
+        if all_output_data is None:
+            all_output_data = tuple()
+        elif not isinstance(all_output_data, tuple):
+            all_output_data = (all_output_data,)
 
-        if len(all_output_anns) != len(step.output_keys):
+        if len(all_output_data) != len(step.output_keys):
             raise RuntimeError(
-                f"Number of outputs ({len(all_output_anns)}) does not match number of"
+                f"Number of outputs ({len(all_output_data)}) does not match number of"
                 f" output keys ({len(step.output_keys)})"
             )
 
-        # store output annotations
-        for output_key, output_anns in zip(step.output_keys, all_output_anns):
-            if output_key not in anns_by_key:
-                anns_by_key[output_key] = output_anns
+        # store output data
+        for output_key, output_data in zip(step.output_keys, all_output_data):
+            if output_key not in data_by_key:
+                data_by_key[output_key] = output_data
             else:
-                anns_by_key[output_key] += output_anns
+                data_by_key[output_key] += output_data
 
-    def _add_provenance(self, all_output_anns: Tuple[List[Annotation], ...]):
+    def _add_provenance(self, all_output_data: Tuple[List[Any], ...]):
         assert self._prov_builder is not None and self._sub_prov_builder is not None
 
-        # flatten all output anns to have a list of data items generated by this pipeline
-        anns = [ann for output_anns in all_output_anns for ann in output_anns]
+        # flatten all output data to have a list of data items generated by this pipeline
+        data_items = [
+            data_item for output_data in all_output_data for data_item in output_data
+        ]
+        # data items must have ids to be provenance-compatible
+        data_items = cast(List[IdentifiableDataItem], data_items)
 
         # ugly hack for attributes generated by pipeline
-        # they are not in all_output_anns because they are not returned by the operation
-        # but directly added to input annotations, but we still want to consider
+        # they are not in all_output_data because they are not returned by the operation
+        # but directly added to input data items (annotations), but we still want to consider
         # them as an output of the pipeline in terms of provenance
         sub_graph = self._sub_prov_builder.graph
         # find all attributes that were generated by this pipeline,
         # ie that have a none in the pipeline sub_graph
         attrs = [
             attr
-            for ann in anns
-            for attr in ann.attrs
+            for data_item in data_items
+            if isinstance(data_item, IdentifiableDataItemWithAttrs)
+            for attr in data_item.attrs
             if (
                 sub_graph.has_node(attr.id)
                 # ignore stub nodes with no operation
@@ -222,7 +249,7 @@ class Pipeline(ProcessingOperation):
         ]
 
         # add them to the list of data items generated by this pipeline
-        data_items = anns + attrs
+        data_items += attrs
         self._prov_builder.add_prov_from_sub_graph(
             data_items, self.description, self._sub_prov_builder
         )

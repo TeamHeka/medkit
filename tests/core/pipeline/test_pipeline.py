@@ -2,20 +2,24 @@ import re
 
 import pytest
 
-from medkit.core import (
-    Annotation,
-    Attribute,
-    ProcessingOperation,
-)
+from medkit.core import ProcessingOperation
 from medkit.core.pipeline import Pipeline, PipelineStep
 
 
-class _TextAnnotation(Annotation):
-    """Mock text annotation"""
+class _Segment:
+    """Mock text segment"""
 
-    def __init__(self, label, text):
-        super().__init__(label=label)
+    def __init__(self, text):
         self.text = text
+        self.attrs = []
+
+
+class _Attribute:
+    """Mock attribute"""
+
+    def __init__(self, label, value):
+        self.label = label
+        self.value = value
 
 
 _SENTENCES = [
@@ -25,118 +29,94 @@ _SENTENCES = [
 ]
 
 
-def _get_sentence_anns():
-    return [_TextAnnotation(label="sentence", text=text) for text in _SENTENCES]
+def _get_sentence_segments():
+    return [_Segment(text) for text in _SENTENCES]
 
 
 class _Uppercaser(ProcessingOperation):
-    """Mock processing operation uppercasing annotations"""
+    """Mock processing operation uppercasing segments"""
 
-    def __init__(self, output_label):
-        self.output_label = output_label
-
-    def process(self, anns):
-        uppercase_anns = []
-        for ann in anns:
-            uppercase_ann = _TextAnnotation(
-                label=self.output_label,
-                text=ann.text.upper(),
-            )
-            uppercase_anns.append(uppercase_ann)
-        return uppercase_anns
+    def process(self, segments):
+        uppercase_segments = []
+        for segment in segments:
+            uppercase_segment = _Segment(segment.text.upper())
+            uppercase_segments.append(uppercase_segment)
+        return uppercase_segments
 
 
 class _Prefixer(ProcessingOperation):
-    """Mock processing operation prefixing annotations"""
+    """Mock processing operation prefixing segments"""
 
-    def __init__(self, output_label, prefix):
-        self.output_label = output_label
+    def __init__(self, prefix):
         self.prefix = prefix
 
-    def process(self, anns):
-        prefixed_anns = []
-        for ann in anns:
-            prefixed_ann = _TextAnnotation(
-                label=self.output_label,
-                text=self.prefix + ann.text,
-            )
-            prefixed_anns.append(prefixed_ann)
-        return prefixed_anns
+    def process(self, segments):
+        prefixed_segments = []
+        for segment in segments:
+            prefixed_segment = _Segment(self.prefix + segment.text)
+            prefixed_segments.append(prefixed_segment)
+        return prefixed_segments
 
 
 class _Splitter(ProcessingOperation):
-    """Mock processing operation splitting annotations"""
+    """Mock processing operation splitting segments"""
 
-    def __init__(self, output_label):
-        self._output_label = output_label
-
-    def process(self, anns):
-        left_anns = []
-        right_anns = []
-        for ann in anns:
-            half = len(ann.text) // 2
-            left_ann = _TextAnnotation(label=self._output_label, text=ann.text[:half])
-            left_anns.append(left_ann)
-            right_ann = _TextAnnotation(label=self._output_label, text=ann.text[half:])
-            right_anns.append(right_ann)
-        return left_anns, right_anns
+    def process(self, segments):
+        left_segments = []
+        right_segments = []
+        for segment in segments:
+            half = len(segment.text) // 2
+            left_segment = _Segment(segment.text[:half])
+            left_segments.append(left_segment)
+            right_segment = _Segment(segment.text[half:])
+            right_segments.append(right_segment)
+        return left_segments, right_segments
 
 
 class _Merger(ProcessingOperation):
-    """Mock processing operation merging annotations"""
+    """Mock processing operation merging segments"""
 
-    def __init__(self, output_label):
-        self.output_label = output_label
-
-    def process(self, left_anns, right_anns):
-        merged_anns = []
-        for left_ann, right_ann in zip(left_anns, right_anns):
-            merged_ann = _TextAnnotation(
-                label=self.output_label,
-                text=left_ann.text + right_ann.text,
-            )
-            merged_anns.append(merged_ann)
-        return merged_anns
+    def process(self, left_segments, right_segments):
+        merged_segments = []
+        for left_segment, right_segment in zip(left_segments, right_segments):
+            merged_segment = _Segment(left_segment.text + right_segment.text)
+            merged_segments.append(merged_segment)
+        return merged_segments
 
 
 class _KeywordMatcher(ProcessingOperation):
     """Mock processing operation finding exact keyword matches"""
 
-    def __init__(self, output_label, keywords):
-        self.output_label = output_label
+    def __init__(self, keywords):
         self.keywords = keywords
 
-    def process(self, anns):
+    def process(self, segments):
         entities = []
-        for ann in anns:
+        for segment in segments:
             for keyword in self.keywords:
-                match = re.search(keyword, ann.text)
+                match = re.search(keyword, segment.text)
                 if match is None:
                     continue
-                entity = _TextAnnotation(
-                    label=self.output_label,
-                    text=match.group(),
-                )
+                entity = _Segment(match.group())
                 entities.append(entity)
         return entities
 
 
 class _AttributeAdder(ProcessingOperation):
-    """Mock processing operation adding attributes to existing annotations"""
+    """Mock processing operation adding attributes to existing segments"""
 
-    def __init__(self, output_label):
-        self.output_label = output_label
+    def __init__(self, label):
+        self.label = label
 
-    def process(self, anns):
-        for ann in anns:
-            ann.attrs.append(Attribute(label=self.output_label, value=True))
+    def process(self, segments):
+        for segment in segments:
+            segment.attrs.append(_Attribute(label=self.label, value=True))
 
 
 def test_single_step():
     """Minimalist pipeline with only one step"""
-    uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step = PipelineStep(
-        operation=uppercaser,
+        operation=_Uppercaser(),
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
@@ -145,26 +125,24 @@ def test_single_step():
         steps=[step], input_keys=["SENTENCE"], output_keys=["UPPERCASE"]
     )
 
-    sentence_anns = _get_sentence_anns()
-    uppercased_anns = pipeline.process(sentence_anns)
+    sentence_segs = _get_sentence_segments()
+    uppercased_segs = pipeline.process(sentence_segs)
 
-    # operation was properly called to generate new annotations
-    assert [a.text.upper() for a in sentence_anns] == [a.text for a in uppercased_anns]
+    # operation was properly called to generate new data item
+    assert [a.text.upper() for a in sentence_segs] == [a.text for a in uppercased_segs]
 
 
 def test_multiple_steps():
     """Simple pipeline with 2 consecutive steps"""
-    uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
-        operation=uppercaser,
+        operation=_Uppercaser(),
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
 
     prefix = "Hello! "
-    prefixer = _Prefixer(output_label="prefixed_uppercased_sentence", prefix=prefix)
     step_2 = PipelineStep(
-        operation=prefixer,
+        operation=_Prefixer(prefix=prefix),
         input_keys=["UPPERCASE"],
         output_keys=["PREFIX"],
     )
@@ -173,36 +151,35 @@ def test_multiple_steps():
         steps=[step_1, step_2], input_keys=["SENTENCE"], output_keys=["PREFIX"]
     )
 
-    sentence_anns = _get_sentence_anns()
-    prefixed_uppercased_anns = pipeline.process(sentence_anns)
+    sentence_segs = _get_sentence_segments()
+    prefixed_uppercased_segs = pipeline.process(sentence_segs)
 
-    # operations were properly called and in the correct order to generate new annotations
-    expected_texts = [prefix + a.text.upper() for a in sentence_anns]
-    assert [a.text for a in prefixed_uppercased_anns] == expected_texts
+    # operations were properly called and in the correct order to generate new data items
+    expected_texts = [prefix + a.text.upper() for a in sentence_segs]
+    assert [a.text for a in prefixed_uppercased_segs] == expected_texts
 
 
 def test_multiple_steps_with_same_output_key():
     """Pipeline with 2 step using the same output key, and another step
     using it as input"""
     prefix_1 = "Hello! "
-    prefixer_1 = _Prefixer(output_label="prefixed_sentence", prefix=prefix_1)
+    _prefixer_1 = _Prefixer(prefix_1)
     step_1 = PipelineStep(
-        operation=prefixer_1,
+        operation=_prefixer_1,
         input_keys=["SENTENCE"],
         output_keys=["PREFIX"],
     )
 
     prefix_2 = "Hi! "
-    prefixer_2 = _Prefixer(output_label="prefixed_sentence", prefix=prefix_2)
+    _prefixer_2 = _Prefixer(prefix_2)
     step_2 = PipelineStep(
-        operation=prefixer_2,
+        operation=_prefixer_2,
         input_keys=["SENTENCE"],
         output_keys=["PREFIX"],
     )
 
-    uppercaser = _Uppercaser(output_label="uppercased_prefixed_sentence")
     step_3 = PipelineStep(
-        operation=uppercaser,
+        operation=_Uppercaser(),
         input_keys=["PREFIX"],
         output_keys=["UPPERCASE"],
     )
@@ -213,42 +190,37 @@ def test_multiple_steps_with_same_output_key():
         output_keys=["UPPERCASE"],
     )
 
-    sentence_anns = _get_sentence_anns()
-    uppercased_anns = pipeline.process(sentence_anns)
+    sentence_segs = _get_sentence_segments()
+    uppercased_segs = pipeline.process(sentence_segs)
 
     # operations were properly called in the correct order
-    expected_texts = [(prefix_1 + a.text).upper() for a in sentence_anns] + [
-        (prefix_2 + a.text).upper() for a in sentence_anns
+    expected_texts = [(prefix_1 + a.text).upper() for a in sentence_segs] + [
+        (prefix_2 + a.text).upper() for a in sentence_segs
     ]
-    assert [a.text for a in uppercased_anns] == expected_texts
+    assert [a.text for a in uppercased_segs] == expected_texts
 
 
 def test_multiple_steps_with_same_input_key():
     """Pipeline with 2 step using the same input key,
     which is also the output key of a previous step"""
-    uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
-        operation=uppercaser,
+        operation=_Uppercaser(),
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
 
     prefix_1 = "Hello! "
-    prefixer_2 = _Prefixer(
-        output_label="prefixed_uppercased_sentence_1", prefix=prefix_1
-    )
+    _prefixer_2 = _Prefixer(prefix_1)
     step_2 = PipelineStep(
-        operation=prefixer_2,
+        operation=_prefixer_2,
         input_keys=["UPPERCASE"],
         output_keys=["PREFIX_1"],
     )
 
     prefix_2 = "Hello! "
-    prefixer_2 = _Prefixer(
-        output_label="prefixed_uppercased_sentence_2", prefix=prefix_2
-    )
+    _prefixer_2 = _Prefixer(prefix_2)
     step_3 = PipelineStep(
-        operation=prefixer_2,
+        operation=_prefixer_2,
         input_keys=["UPPERCASE"],
         output_keys=["PREFIX_2"],
     )
@@ -259,38 +231,35 @@ def test_multiple_steps_with_same_input_key():
         output_keys=["PREFIX_1", "PREFIX_2"],
     )
 
-    sentence_anns = _get_sentence_anns()
-    prefixed_uppercased_anns_1, prefixed_uppercased_anns_2 = pipeline.process(
-        sentence_anns
+    sentence_segs = _get_sentence_segments()
+    prefixed_uppercased_segs_1, prefixed_uppercased_segs_2 = pipeline.process(
+        sentence_segs
     )
 
     # operations were properly called in the correct order
-    expected_texts_1 = [prefix_1 + a.text.upper() for a in sentence_anns]
-    assert [a.text for a in prefixed_uppercased_anns_1] == expected_texts_1
-    expected_texts_2 = [prefix_2 + a.text.upper() for a in sentence_anns]
-    assert [a.text for a in prefixed_uppercased_anns_2] == expected_texts_2
+    expected_texts_1 = [prefix_1 + a.text.upper() for a in sentence_segs]
+    assert [a.text for a in prefixed_uppercased_segs_1] == expected_texts_1
+    expected_texts_2 = [prefix_2 + a.text.upper() for a in sentence_segs]
+    assert [a.text for a in prefixed_uppercased_segs_2] == expected_texts_2
 
 
 def test_step_with_multiple_outputs():
     """Pipeline with a step having more than 1 output"""
-    splitter = _Splitter(output_label="split_sentence")
     step_1 = PipelineStep(
-        operation=splitter,
+        operation=_Splitter(),
         input_keys=["SENTENCE"],
         output_keys=["SPLIT_LEFT", "SPLIT_RIGHT"],
     )
 
-    uppercaser = _Uppercaser(output_label="uppercased_left_sentence")
     step_2 = PipelineStep(
-        operation=uppercaser,
+        operation=_Uppercaser(),
         input_keys=["SPLIT_LEFT"],
         output_keys=["UPPERCASE"],
     )
 
     prefix = "Hello! "
-    prefixer = _Prefixer(output_label="prefixed_right_sentence", prefix=prefix)
     step_3 = PipelineStep(
-        operation=prefixer,
+        operation=_Prefixer(prefix=prefix),
         input_keys=["SPLIT_RIGHT"],
         output_keys=["PREFIX"],
     )
@@ -301,36 +270,33 @@ def test_step_with_multiple_outputs():
         output_keys=["UPPERCASE", "PREFIX"],
     )
 
-    sentence_anns = _get_sentence_anns()
-    uppercased_left_anns, prefixed_right_anns = pipeline.process(sentence_anns)
+    sentence_segs = _get_sentence_segments()
+    uppercased_left_segs, prefixed_right_segs = pipeline.process(sentence_segs)
 
     # operations were properly called in the correct order
-    expected_texts = [a.text[: len(a.text) // 2].upper() for a in sentence_anns]
-    assert [a.text for a in uppercased_left_anns] == expected_texts
-    expected_texts = [prefix + a.text[len(a.text) // 2 :] for a in sentence_anns]
-    assert [a.text for a in prefixed_right_anns] == expected_texts
+    expected_texts = [a.text[: len(a.text) // 2].upper() for a in sentence_segs]
+    assert [a.text for a in uppercased_left_segs] == expected_texts
+    expected_texts = [prefix + a.text[len(a.text) // 2 :] for a in sentence_segs]
+    assert [a.text for a in prefixed_right_segs] == expected_texts
 
 
 def test_step_with_multiple_inputs():
     """Pipeline with a step having more than 1 input"""
-    uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
-        operation=uppercaser,
+        operation=_Uppercaser(),
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
 
     prefix = "Hello! "
-    prefixer = _Prefixer(output_label="prefixed_sentence", prefix=prefix)
     step_2 = PipelineStep(
-        operation=prefixer,
+        operation=_Prefixer(prefix=prefix),
         input_keys=["SENTENCE"],
         output_keys=["PREFIX"],
     )
 
-    merger = _Merger(output_label="merged_sentence")
     step_3 = PipelineStep(
-        operation=merger,
+        operation=_Merger(),
         input_keys=["UPPERCASE", "PREFIX"],
         output_keys=["MERGE"],
     )
@@ -339,51 +305,46 @@ def test_step_with_multiple_inputs():
         steps=[step_1, step_2, step_3], input_keys=["SENTENCE"], output_keys=["MERGE"]
     )
 
-    sentence_anns = _get_sentence_anns()
-    merged_anns = pipeline.process(sentence_anns)
+    sentence_segs = _get_sentence_segments()
+    merged_segs = pipeline.process(sentence_segs)
 
     # operations were properly called in the correct order
-    expected_texts = [a.text.upper() + prefix + a.text for a in sentence_anns]
-    assert [a.text for a in merged_anns] == expected_texts
+    expected_texts = [a.text.upper() + prefix + a.text for a in sentence_segs]
+    assert [a.text for a in merged_segs] == expected_texts
 
 
 def test_step_with_no_output():
-    """Pipeline with a step having no output, because it modifies the annotations
+    """Pipeline with a step having no output, because it modifies the data items
     it receives by adding attributes to them"""
-    attribute_adder = _AttributeAdder(output_label="validated")
     step_1 = PipelineStep(
-        operation=attribute_adder,
+        operation=_AttributeAdder(label="validated"),
         input_keys=["SENTENCE"],
         output_keys=[],
     )
 
     pipeline = Pipeline(steps=[step_1], input_keys=["SENTENCE"], output_keys=[])
 
-    sentence_anns = _get_sentence_anns()
-    pipeline.process(sentence_anns)
+    sentence_segs = _get_sentence_segments()
+    pipeline.process(sentence_segs)
 
     # make sure attributes were added
-    for ann in sentence_anns:
-        assert len(ann.attrs) == 1
-        attr = ann.attrs[0]
+    for segment in sentence_segs:
+        assert len(segment.attrs) == 1
+        attr = segment.attrs[0]
         assert attr.label == "validated" and attr.value is True
 
 
 def test_step_with_different_output_length():
-    """Simple pipeline with 2 consecutive steps. 1st step returns a number of annotations
-    different from the number of annotations it received as input"""
-    keyword_matcher = _KeywordMatcher(
-        output_label="entities", keywords=["sentence", "another"]
-    )
+    """Simple pipeline with 2 consecutive steps. 1st step returns a number of data items
+    different from the number of data items it received as input"""
     step_1 = PipelineStep(
-        operation=keyword_matcher,
+        operation=_KeywordMatcher(keywords=["sentence", "another"]),
         input_keys=["SENTENCE"],
         output_keys=["KEYWORD_MATCH"],
     )
 
-    uppercaser = _Uppercaser(output_label="uppercased_entities")
     step_2 = PipelineStep(
-        operation=uppercaser,
+        operation=_Uppercaser(),
         input_keys=["KEYWORD_MATCH"],
         output_keys=["UPPERCASE"],
     )
@@ -392,15 +353,15 @@ def test_step_with_different_output_length():
         steps=[step_1, step_2], input_keys=["SENTENCE"], output_keys=["UPPERCASE"]
     )
 
-    sentence_anns = _get_sentence_anns()
-    entities = pipeline.process(sentence_anns)
+    sentence_segs = _get_sentence_segments()
+    entities = pipeline.process(sentence_segs)
     assert len(entities) == 4
 
 
 def test_nested_pipeline():
     """Pipeline with a step that is also a pipeline"""
     # build inner pipeline
-    uppercaser = _Uppercaser(output_label="uppercased_sentence")
+    uppercaser = _Uppercaser()
     sub_step_1 = PipelineStep(
         operation=uppercaser,
         input_keys=["SENTENCE"],
@@ -408,7 +369,7 @@ def test_nested_pipeline():
     )
 
     prefix_1 = "Hi! "
-    prefixer_1 = _Prefixer(output_label="prefixed_uppercased_sentence", prefix=prefix_1)
+    prefixer_1 = _Prefixer(prefix_1)
     sub_step_2 = PipelineStep(
         operation=prefixer_1,
         input_keys=["UPPERCASE"],
@@ -421,7 +382,7 @@ def test_nested_pipeline():
 
     # build main pipeline
     prefix_2 = "Hello! "
-    prefixer_2 = _Prefixer(output_label="prefixed_sentence", prefix=prefix_2)
+    prefixer_2 = _Prefixer(prefix_2)
     step_1 = PipelineStep(
         operation=prefixer_2,
         input_keys=["SENTENCE"],
@@ -440,18 +401,18 @@ def test_nested_pipeline():
         output_keys=["SUB_PIPELINE"],
     )
 
-    sentence_anns = _get_sentence_anns()
-    output_anns = pipeline.process(sentence_anns)
+    sentence_segs = _get_sentence_segments()
+    output_segs = pipeline.process(sentence_segs)
 
     # operations were properly called and in the correct order to generate new annotations
-    expected_texts = [prefix_1 + (prefix_2 + a.text).upper() for a in sentence_anns]
-    assert [a.text for a in output_anns] == expected_texts
+    expected_texts = [prefix_1 + (prefix_2 + a.text).upper() for a in sentence_segs]
+    assert [a.text for a in output_segs] == expected_texts
 
 
 def test_sanity_check():
     """Sanity checks"""
-    uppercaser = _Uppercaser(output_label="uppercased_sentence")
-    prefixer = _Prefixer(output_label="prefixed_uppercased_sentence", prefix="prefix ")
+    uppercaser = _Uppercaser()
+    prefixer = _Prefixer(prefix="prefix ")
 
     steps_1 = [
         PipelineStep(uppercaser, input_keys=["SENTENCE"], output_keys=["UPPERCASE"]),

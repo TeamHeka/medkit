@@ -16,6 +16,7 @@ __all__ = [
     "PipelineStep",
     "DescribableOperation",
     "ProvCompatibleOperation",
+    "IdentifiableDataItemWithAttrs",
     "ProvBuilder",
     "ProvStore",
     "IdentifiableDataItem",
@@ -41,6 +42,7 @@ from .pipeline import (
     PipelineStep,
     DescribableOperation,
     ProvCompatibleOperation,
+    IdentifiableDataItemWithAttrs,
 )
 from .prov_builder import ProvBuilder, ProvStore, IdentifiableDataItem
 from .prov_graph import ProvGraph, ProvNode
