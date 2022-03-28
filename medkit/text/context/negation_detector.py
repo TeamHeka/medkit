@@ -126,9 +126,10 @@ class NegationDetector(RuleBasedAnnotator):
 
         for segment in segments:
             neg_attr = self._detect_negation_in_segment(segment)
-            segment.attrs.append(neg_attr)
+            if neg_attr is not None:
+                segment.attrs.append(neg_attr)
 
-    def _detect_negation_in_segment(self, segment: Segment):
+    def _detect_negation_in_segment(self, segment: Segment) -> Optional[Attribute]:
         # skip empty segment
         if self._non_empty_text_pattern.search(segment.text) is None:
             return
