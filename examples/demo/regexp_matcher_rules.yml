@@ -1,0 +1,34 @@
+# fake set of entity matching rules for demo
+---
+- id: "id_levothyroxine"
+  label: "Levothyroxine"
+  regexp: "levothyroxine"
+  version: "1"
+  unicode_sensitive: False
+  case_sensitive: False
+  normalizations:
+    - kb_name: "umls"
+      kb_version: "202AB"
+      id: "C0027051"
+
+- id: "id_diabete"
+  label: "diabète"
+  regexp: "diabete"
+  version: "1"
+  unicode_sensitive: False
+  case_sensitive: False
+  normalizations:
+    - kb_name: "umls"
+      kb_version: "202AB"
+      id: "C0027052"
+
+- id: "id_hypothyroidie"
+  label: "hypothyroïdie"
+  regexp: "hypothyroidie"
+  version: "1"
+  unicode_sensitive: False
+  case_sensitive: False
+  normalizations:
+    - kb_name: "umls"
+      kb_version: "202AB"
+      id: "C0027053"
