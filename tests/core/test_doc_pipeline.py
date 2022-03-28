@@ -44,7 +44,7 @@ class _Uppercaser:
     def description(self):
         return OperationDescription(id=self.id, name="Uppercaser")
 
-    def process(self, anns):
+    def run(self, anns):
         uppercase_anns = []
         for ann in anns:
             uppercase_ann = _TextAnnotation(
@@ -67,7 +67,7 @@ class _Prefixer:
     def description(self):
         return OperationDescription(id=self.id, name="Prefixer")
 
-    def process(self, anns):
+    def run(self, anns):
         prefixed_anns = []
         for ann in anns:
             prefixed_ann = _TextAnnotation(
@@ -89,7 +89,7 @@ class _AttributeAdder:
     def description(self):
         return OperationDescription(id=self.id, name="AttributeAdder")
 
-    def process(self, anns):
+    def run(self, anns):
         for ann in anns:
             ann.attrs.append(Attribute(label=self.output_label, value=True))
 
@@ -110,7 +110,7 @@ def test_single_step():
     )
 
     doc = _get_doc()
-    pipeline.process([doc])
+    pipeline.run([doc])
 
     sentence_anns = doc.get_annotations_by_label("sentence")
 
@@ -145,7 +145,7 @@ def test_multiple_steps():
     )
 
     doc = _get_doc()
-    pipeline.process([doc])
+    pipeline.run([doc])
 
     sentence_anns = doc.get_annotations_by_label("sentence")
 
@@ -175,7 +175,7 @@ def test_no_output():
     )
 
     doc = _get_doc()
-    pipeline.process([doc])
+    pipeline.run([doc])
 
     sentence_anns = doc.get_annotations_by_label("sentence")
     for ann in sentence_anns:
@@ -208,7 +208,7 @@ def test_multiple_outputs():
     )
 
     doc = _get_doc()
-    pipeline.process([doc])
+    pipeline.run([doc])
 
     sentence_anns = doc.get_annotations_by_label("sentence")
     uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
@@ -259,7 +259,7 @@ def test_labels_for_input_key():
         output_keys=["UPPERCASE", "PREFIX"],
     )
 
-    pipeline.process([doc])
+    pipeline.run([doc])
     sentence_anns = doc.get_annotations_by_label("sentence")
     alt_sentence_anns = doc.get_annotations_by_label("alt_sentence")
     uppercased_sentence_anns = doc.get_annotations_by_label("uppercased_sentence")
@@ -302,7 +302,7 @@ def test_nested_pipeline():
     pipeline = Pipeline(steps=[step], input_keys=["DOC"], output_keys=[])
 
     doc = _get_doc()
-    pipeline.process([doc])
+    pipeline.run([doc])
     sentence_anns = doc.get_annotations_by_label("sentence")
     # new annotations were added to the document
     uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")

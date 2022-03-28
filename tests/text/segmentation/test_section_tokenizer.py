@@ -46,11 +46,11 @@ def _get_clean_text_segment(filepath):
 
 
 @pytest.mark.parametrize("filepath,expected_sections", TEST_CONFIG)
-def test_process(filepath, expected_sections):
+def test_run(filepath, expected_sections):
     clean_text_segment = _get_clean_text_segment(filepath)
 
     section_tokenizer = SectionTokenizer.get_example()
-    sections = section_tokenizer.process([clean_text_segment])
+    sections = section_tokenizer.run([clean_text_segment])
 
     assert len(sections) == len(expected_sections)
     for i, (spans, attr_value) in enumerate(expected_sections):
@@ -58,7 +58,7 @@ def test_process(filepath, expected_sections):
         assert sections[i].metadata["name"] == attr_value
 
 
-def test_process_with_rules():
+def test_run_with_rules():
     filepath = TEST_CONFIG[0][0]
     clean_text_segment = _get_clean_text_segment(filepath)
 
@@ -80,7 +80,7 @@ def test_process_with_rules():
     section_tokenizer = SectionTokenizer(
         section_dict=section_dict, section_rules=section_rules
     )
-    sections = section_tokenizer.process([clean_text_segment])
+    sections = section_tokenizer.run([clean_text_segment])
 
     assert len(sections) == 2
     sections_antecedent = [
@@ -105,7 +105,7 @@ def test_prov():
     tokenizer = SectionTokenizer(section_dict)
     prov_builder = ProvBuilder()
     tokenizer.set_prov_builder(prov_builder)
-    sections = tokenizer.process([clean_text_segment])
+    sections = tokenizer.run([clean_text_segment])
     graph = prov_builder.graph
 
     section_1 = sections[0]

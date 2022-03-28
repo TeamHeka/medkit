@@ -27,7 +27,7 @@ from medkit.core.prov_builder import ProvBuilder
 
 @runtime_checkable
 class PipelineCompatibleOperation(Protocol):
-    def process(
+    def run(
         self, **all_input_data: List[Any]
     ) -> Union[None, List[Any], Tuple[List[Any], ...]]:
         """Params
@@ -112,10 +112,10 @@ class Pipeline:
             so make sure to add first the steps generating data used by other steps.
 
         input_keys:
-            List of keys corresponding to the inputs passed to `process()`
+            List of keys corresponding to the inputs passed to `run()`
 
         output_keys:
-            List of keys corresponding to the outputs returned by `process()`
+            List of keys corresponding to the outputs returned by `run()`
         """
         if id is None:
             id = generate_id()
@@ -160,7 +160,7 @@ class Pipeline:
                 )
             step.operation.set_prov_builder(self._sub_prov_builder)
 
-    def process(
+    def run(
         self, *all_input_data: List[Any]
     ) -> Union[None, List[Any], Tuple[List[Any], ...]]:
         if len(all_input_data) != len(self.input_keys):
@@ -202,7 +202,7 @@ class Pipeline:
             all_input_data.append(input_data)
 
         # call operation
-        all_output_data = step.operation.process(*all_input_data)
+        all_output_data = step.operation.run(*all_input_data)
 
         # wrap output in tuple if necessary
         # (operations performing in-place modifications

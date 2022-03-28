@@ -95,7 +95,7 @@ class DocPipeline:
     def set_prov_builder(self, prov_builder: ProvBuilder):
         self._pipeline.set_prov_builder(prov_builder)
 
-    def process(self, docs: List[Document]):
+    def run(self, docs: List[Document]):
         """Run the pipeline on a list of documents, adding
         the output annotations to each document
 
@@ -119,7 +119,7 @@ class DocPipeline:
                 else:
                     all_input_anns[input_key] += doc.get_annotations_by_label(label)
 
-        all_output_anns = self._pipeline.process(*all_input_anns.values())
+        all_output_anns = self._pipeline.run(*all_input_anns.values())
 
         # wrap output in tuple if necessary
         # (operations performing in-place modifications

@@ -64,7 +64,7 @@ def _get_clean_text_segment(text):
 def test_default_rules(text, sentence_tokenizer, expected_sentences):
     clean_text_segment = _get_clean_text_segment(text)
 
-    sentences = sentence_tokenizer.process([clean_text_segment])
+    sentences = sentence_tokenizer.run([clean_text_segment])
     assert len(sentences) == len(expected_sentences)
     for i, (text, spans) in enumerate(expected_sentences):
         assert sentences[i].text == text
@@ -79,7 +79,7 @@ def test_prov():
     tokenizer = RushSentenceTokenizer()
     prov_builder = ProvBuilder()
     tokenizer.set_prov_builder(prov_builder)
-    sentences = tokenizer.process([clean_text_segment])
+    sentences = tokenizer.run([clean_text_segment])
     graph = prov_builder.graph
 
     sentence_1 = sentences[0]

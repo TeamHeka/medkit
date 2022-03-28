@@ -46,7 +46,7 @@ class _Uppercaser:
     def set_prov_builder(self, prov_builder):
         self._prov_builder = prov_builder
 
-    def process(self, segments):
+    def run(self, segments):
         uppercase_segments = []
         for segment in segments:
             uppercase_segment = _Segment(segment.text.upper())
@@ -72,7 +72,7 @@ class _Prefixer:
     def set_prov_builder(self, prov_builder):
         self._prov_builder = prov_builder
 
-    def process(self, segments):
+    def run(self, segments):
         prefixed_segments = []
         for segment in segments:
             prefixed_segment = _Segment(self.prefix + segment.text)
@@ -98,7 +98,7 @@ class _AttributeAdder:
     def set_prov_builder(self, prov_builder):
         self._prov_builder = prov_builder
 
-    def process(self, segments):
+    def run(self, segments):
         for segment in segments:
             attr = _Attribute(label=self.label, value=True)
             segment.attrs.append(attr)
@@ -122,7 +122,7 @@ def test_single_step():
     prov_builder = ProvBuilder()
     pipeline.set_prov_builder(prov_builder)
     sentence_segs = _get_sentence_segments()
-    uppercased_segs = pipeline.process(sentence_segs)
+    uppercased_segs = pipeline.run(sentence_segs)
     assert len(uppercased_segs) == len(sentence_segs)
 
     # check outer main graph
@@ -178,7 +178,7 @@ def test_multiple_steps():
     prov_builder = ProvBuilder()
     pipeline.set_prov_builder(prov_builder)
     sentence_segs = _get_sentence_segments()
-    uppercased_segs = pipeline.process(sentence_segs)
+    uppercased_segs = pipeline.run(sentence_segs)
     assert len(uppercased_segs) == len(sentence_segs)
 
     graph = prov_builder.graph
@@ -239,7 +239,7 @@ def test_step_with_attributes():
     prov_builder = ProvBuilder()
     pipeline.set_prov_builder(prov_builder)
     sentence_segs = _get_sentence_segments()
-    uppercased_segs = pipeline.process(sentence_segs)
+    uppercased_segs = pipeline.run(sentence_segs)
     assert len(uppercased_segs) == len(sentence_segs)
 
     # check outer main graph
@@ -315,7 +315,7 @@ def test_nested_pipeline():
     prov_builder = ProvBuilder()
     pipeline.set_prov_builder(prov_builder)
     sentence_segs = _get_sentence_segments()
-    output_segs = pipeline.process(sentence_segs)
+    output_segs = pipeline.run(sentence_segs)
     assert len(output_segs) == len(sentence_segs)
 
     # check outer main graph

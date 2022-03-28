@@ -163,7 +163,7 @@ class RegexpMatcher:
     def set_prov_builder(self, prov_builder: ProvBuilder):
         self._prov_builder = prov_builder
 
-    def process(self, segments: List[Segment]) -> List[Entity]:
+    def run(self, segments: List[Segment]) -> List[Entity]:
         """
         Return entities (with optional normalization attributes) matched in `segments`
 

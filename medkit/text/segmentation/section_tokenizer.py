@@ -81,7 +81,7 @@ class SectionTokenizer:
     def set_prov_builder(self, prov_builder: ProvBuilder):
         self._prov_builder = prov_builder
 
-    def process(self, segments: List[Segment]) -> List[Segment]:
+    def run(self, segments: List[Segment]) -> List[Segment]:
         """
         Return sections detected in `segments`.
 

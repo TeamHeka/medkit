@@ -13,7 +13,7 @@ class _PrefixerWrapper:
         self.prefixer.prov_builder = self.sub_prov_builder
         self.description = OperationDescription(id=self.id, name="PrefixerWrapper")
 
-    def process(self, input_items):
+    def run(self, input_items):
         output_items = self.prefixer.prefix(input_items)
 
         self.prov_builder.add_prov_from_sub_graph(
@@ -28,7 +28,7 @@ def test_single_operation():
     builder = ProvBuilder()
     wrapper = _PrefixerWrapper(builder)
     input_items = get_text_items(2)
-    output_items = wrapper.process(input_items)
+    output_items = wrapper.run(input_items)
 
     # check outer main graph
     graph = builder.graph
@@ -88,7 +88,7 @@ class _DoublePrefixerWrapper:
             id=self.id, name="DoublePrefixerWrapper"
         )
 
-    def process(self, input_items):
+    def run(self, input_items):
         intermediate_items = self.prefixer_1.prefix(input_items)
         output_items = self.prefixer_2.prefix(intermediate_items)
 
@@ -105,7 +105,7 @@ def test_intermediate_operation():
     builder = ProvBuilder()
     wrapper = _DoublePrefixerWrapper(builder)
     input_items = get_text_items(2)
-    output_items = wrapper.process(input_items)
+    output_items = wrapper.run(input_items)
 
     # check outer main graph
     graph = builder.graph
@@ -165,7 +165,7 @@ class _PrefixerMergerWrapper:
             id=self.id, name="PrefixerMergerWrapper"
         )
 
-    def process(self, input_items):
+    def run(self, input_items):
         intermediate_items = self.prefixer.prefix(input_items)
         output_item = self.merger.merge(intermediate_items)
 
@@ -181,7 +181,7 @@ def test_multi_input_operation():
     builder = ProvBuilder()
     wrapper = _PrefixerMergerWrapper(builder)
     input_items = get_text_items(2)
-    output_item = wrapper.process(input_items)
+    output_item = wrapper.run(input_items)
 
     # check outer main graph
     graph = builder.graph
@@ -226,7 +226,7 @@ class _SplitterPrefixerWrapper:
             id=self.id, name="SplitterPrefixerMWrapper"
         )
 
-    def process(self, input_items):
+    def run(self, input_items):
         intermediate_items = self.splitter.split(input_items)
         output_items = self.prefixer.prefix(intermediate_items)
 
@@ -242,7 +242,7 @@ def test_multi_output_operation():
     builder = ProvBuilder()
     wrapper = _SplitterPrefixerWrapper(builder)
     input_items = get_text_items(2)
-    output_items = wrapper.process(input_items)
+    output_items = wrapper.run(input_items)
 
     # check outer main graph
     graph = builder.graph
@@ -295,7 +295,7 @@ class _BranchedPrefixerWrapper:
             id=self.id, name="BrancherPrefixerWrapper"
         )
 
-    def process(self, input_items):
+    def run(self, input_items):
         prefixed_items = self.prefixer_1.prefix(input_items)
         double_prefixed_items = self.prefixer_2.prefix(prefixed_items)
 
@@ -314,7 +314,7 @@ def test_operation_reusing_output():
     builder = ProvBuilder()
     wrapper = _BranchedPrefixerWrapper(builder)
     input_items = get_text_items(2)
-    prefixed_items, double_prefixed_items = wrapper.process(input_items)
+    prefixed_items, double_prefixed_items = wrapper.run(input_items)
 
     # check outer main graph
     graph = builder.graph
@@ -366,9 +366,9 @@ def test_consecutive_calls():
     builder = ProvBuilder()
     wrapper = _DoublePrefixerWrapper(builder)
     input_items_1 = get_text_items(2)
-    output_items_1 = wrapper.process(input_items_1)
+    output_items_1 = wrapper.run(input_items_1)
     input_items_2 = get_text_items(2)
-    output_items_2 = wrapper.process(input_items_2)
+    output_items_2 = wrapper.run(input_items_2)
     input_items = input_items_1 + input_items_2
     output_items = output_items_1 + output_items_2
 

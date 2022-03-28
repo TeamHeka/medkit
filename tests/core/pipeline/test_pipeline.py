@@ -35,7 +35,7 @@ def _get_sentence_segments():
 class _Uppercaser:
     """Mock processing operation uppercasing segments"""
 
-    def process(self, segments):
+    def run(self, segments):
         uppercase_segments = []
         for segment in segments:
             uppercase_segment = _Segment(segment.text.upper())
@@ -49,7 +49,7 @@ class _Prefixer:
     def __init__(self, prefix):
         self.prefix = prefix
 
-    def process(self, segments):
+    def run(self, segments):
         prefixed_segments = []
         for segment in segments:
             prefixed_segment = _Segment(self.prefix + segment.text)
@@ -60,7 +60,7 @@ class _Prefixer:
 class _Splitter:
     """Mock processing operation splitting segments"""
 
-    def process(self, segments):
+    def run(self, segments):
         left_segments = []
         right_segments = []
         for segment in segments:
@@ -75,7 +75,7 @@ class _Splitter:
 class _Merger:
     """Mock processing operation merging segments"""
 
-    def process(self, left_segments, right_segments):
+    def run(self, left_segments, right_segments):
         merged_segments = []
         for left_segment, right_segment in zip(left_segments, right_segments):
             merged_segment = _Segment(left_segment.text + right_segment.text)
@@ -89,7 +89,7 @@ class _KeywordMatcher:
     def __init__(self, keywords):
         self.keywords = keywords
 
-    def process(self, segments):
+    def run(self, segments):
         entities = []
         for segment in segments:
             for keyword in self.keywords:
@@ -107,7 +107,7 @@ class _AttributeAdder:
     def __init__(self, label):
         self.label = label
 
-    def process(self, segments):
+    def run(self, segments):
         for segment in segments:
             segment.attrs.append(_Attribute(label=self.label, value=True))
 
@@ -125,7 +125,7 @@ def test_single_step():
     )
 
     sentence_segs = _get_sentence_segments()
-    uppercased_segs = pipeline.process(sentence_segs)
+    uppercased_segs = pipeline.run(sentence_segs)
 
     # operation was properly called to generate new data item
     assert [a.text.upper() for a in sentence_segs] == [a.text for a in uppercased_segs]
@@ -151,7 +151,7 @@ def test_multiple_steps():
     )
 
     sentence_segs = _get_sentence_segments()
-    prefixed_uppercased_segs = pipeline.process(sentence_segs)
+    prefixed_uppercased_segs = pipeline.run(sentence_segs)
 
     # operations were properly called and in the correct order to generate new data items
     expected_texts = [prefix + a.text.upper() for a in sentence_segs]
@@ -190,7 +190,7 @@ def test_multiple_steps_with_same_output_key():
     )
 
     sentence_segs = _get_sentence_segments()
-    uppercased_segs = pipeline.process(sentence_segs)
+    uppercased_segs = pipeline.run(sentence_segs)
 
     # operations were properly called in the correct order
     expected_texts = [(prefix_1 + a.text).upper() for a in sentence_segs] + [
@@ -231,9 +231,7 @@ def test_multiple_steps_with_same_input_key():
     )
 
     sentence_segs = _get_sentence_segments()
-    prefixed_uppercased_segs_1, prefixed_uppercased_segs_2 = pipeline.process(
-        sentence_segs
-    )
+    prefixed_uppercased_segs_1, prefixed_uppercased_segs_2 = pipeline.run(sentence_segs)
 
     # operations were properly called in the correct order
     expected_texts_1 = [prefix_1 + a.text.upper() for a in sentence_segs]
@@ -270,7 +268,7 @@ def test_step_with_multiple_outputs():
     )
 
     sentence_segs = _get_sentence_segments()
-    uppercased_left_segs, prefixed_right_segs = pipeline.process(sentence_segs)
+    uppercased_left_segs, prefixed_right_segs = pipeline.run(sentence_segs)
 
     # operations were properly called in the correct order
     expected_texts = [a.text[: len(a.text) // 2].upper() for a in sentence_segs]
@@ -305,7 +303,7 @@ def test_step_with_multiple_inputs():
     )
 
     sentence_segs = _get_sentence_segments()
-    merged_segs = pipeline.process(sentence_segs)
+    merged_segs = pipeline.run(sentence_segs)
 
     # operations were properly called in the correct order
     expected_texts = [a.text.upper() + prefix + a.text for a in sentence_segs]
@@ -324,7 +322,7 @@ def test_step_with_no_output():
     pipeline = Pipeline(steps=[step_1], input_keys=["SENTENCE"], output_keys=[])
 
     sentence_segs = _get_sentence_segments()
-    pipeline.process(sentence_segs)
+    pipeline.run(sentence_segs)
 
     # make sure attributes were added
     for segment in sentence_segs:
@@ -353,7 +351,7 @@ def test_step_with_different_output_length():
     )
 
     sentence_segs = _get_sentence_segments()
-    entities = pipeline.process(sentence_segs)
+    entities = pipeline.run(sentence_segs)
     assert len(entities) == 4
 
 
@@ -401,7 +399,7 @@ def test_nested_pipeline():
     )
 
     sentence_segs = _get_sentence_segments()
-    output_segs = pipeline.process(sentence_segs)
+    output_segs = pipeline.run(sentence_segs)
 
     # operations were properly called and in the correct order to generate new annotations
     expected_texts = [prefix_1 + (prefix_2 + a.text).upper() for a in sentence_segs]

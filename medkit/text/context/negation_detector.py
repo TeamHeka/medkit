@@ -127,7 +127,7 @@ class NegationDetector:
     def set_prov_builder(self, prov_builder: ProvBuilder):
         self._prov_builder = prov_builder
 
-    def process(self, segments: List[Segment]):
+    def run(self, segments: List[Segment]):
         """Add a negation attribute to each segment with a True/False value.
 
         Parameters

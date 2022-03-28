@@ -51,9 +51,9 @@ TEST_CONFIG = [
 @pytest.mark.parametrize(
     "sentence_tokenizer,expected_sentences", TEST_CONFIG, ids=["default", "keep_punct"]
 )
-def test_process(sentence_tokenizer, expected_sentences):
+def test_run(sentence_tokenizer, expected_sentences):
     clean_text_segment = _get_clean_text_segment()
-    sentences = sentence_tokenizer.process([clean_text_segment])
+    sentences = sentence_tokenizer.run([clean_text_segment])
 
     assert len(sentences) == 7
     for i, (text, spans) in enumerate(expected_sentences):
@@ -69,7 +69,7 @@ def test_prov():
     tokenizer = SentenceTokenizer()
     prov_builder = ProvBuilder()
     tokenizer.set_prov_builder(prov_builder)
-    sentences = tokenizer.process([clean_text_segment])
+    sentences = tokenizer.run([clean_text_segment])
     graph = prov_builder.graph
 
     sentence_1 = sentences[0]

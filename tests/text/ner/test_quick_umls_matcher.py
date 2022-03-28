@@ -87,7 +87,7 @@ def test_single_match():
     sentence = _get_sentence_segment("The patient has asthma.")
 
     umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
-    entities = umls_matcher.process([sentence])
+    entities = umls_matcher.run([sentence])
 
     # entity
     assert len(entities) == 1
@@ -110,7 +110,7 @@ def test_multiple_matches():
     sentence = _get_sentence_segment("The patient has asthma and type 1 diabetes.")
 
     umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
-    entities = umls_matcher.process([sentence])
+    entities = umls_matcher.run([sentence])
 
     assert len(entities) == 2
 
@@ -139,7 +139,7 @@ def test_language():
     sentence = _get_sentence_segment("Le patient fait de l'Asthme.")
 
     umls_matcher = QuickUMLSMatcher(version="2021AB", language="FRE")
-    entities = umls_matcher.process([sentence])
+    entities = umls_matcher.run([sentence])
 
     # entity
     entity = _find_entity(entities, "Asthme")
@@ -158,14 +158,14 @@ def test_lowercase():
     # no match without lowercase flag because concept is only
     # available with leading uppercase in french
     umls_matcher = QuickUMLSMatcher(version="2021AB", language="FRE")
-    entities = umls_matcher.process([sentence])
+    entities = umls_matcher.run([sentence])
     assert _find_entity(entities, "asthme") is None
 
     # with lowercase flag, entity is found
     umls_matcher_lowercase = QuickUMLSMatcher(
         language="FRE", version="2021AB", lowercase=True
     )
-    entities = umls_matcher_lowercase.process([sentence])
+    entities = umls_matcher_lowercase.run([sentence])
     entity = _find_entity(entities, "asthme")
     assert entity is not None
     assert entity.text == "asthme"
@@ -175,7 +175,7 @@ def test_ambiguous_match():
     sentence = _get_sentence_segment("The patient has diabetes.")
 
     umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
-    entities = umls_matcher.process([sentence])
+    entities = umls_matcher.run([sentence])
 
     # "diabetes" is a term of several CUIs but only 1 entity with
     # 1 normalization attribute is created
@@ -190,7 +190,7 @@ def test_attrs_to_copy():
 
     # attribute not copied
     umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
-    entities = umls_matcher.process([sentence])
+    entities = umls_matcher.run([sentence])
     entity = _find_entity(entities, "asthma")
     assert not any(a.label == "negation" for a in entity.attrs)
 
@@ -200,7 +200,7 @@ def test_attrs_to_copy():
         language="ENG",
         attrs_to_copy=["negation"],
     )
-    entities = umls_matcher.process([sentence])
+    entities = umls_matcher.run([sentence])
     entity = _find_entity(entities, "asthma")
     non_norm_attrs = [a for a in entity.attrs if a.label != "umls"]
     assert len(non_norm_attrs) == 1
@@ -215,7 +215,7 @@ def test_prov():
 
     prov_builder = ProvBuilder()
     umls_matcher.set_prov_builder(prov_builder)
-    entities = umls_matcher.process([sentence])
+    entities = umls_matcher.run([sentence])
     graph = prov_builder.graph
 
     entity = _find_entity(entities, "asthma")

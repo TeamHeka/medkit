@@ -34,7 +34,7 @@ def test_single_match():
         version="1",
     )
     matcher = RegexpMatcher(rules=[rule])
-    entities = matcher.process([sentence])
+    entities = matcher.run([sentence])
 
     assert len(entities) == 1
     entity = _find_entity(entities, "Diabetes")
@@ -61,7 +61,7 @@ def test_multiple_matches():
         version="1",
     )
     matcher = RegexpMatcher(rules=[rule_1, rule_2])
-    entities = matcher.process([sentence])
+    entities = matcher.run([sentence])
 
     assert len(entities) == 2
 
@@ -91,7 +91,7 @@ def test_normalization():
         normalizations=[RegexpMatcherNormalization("umls", "2020AB", "C0011849")],
     )
     matcher = RegexpMatcher(rules=[rule])
-    entities = matcher.process([sentence])
+    entities = matcher.run([sentence])
 
     entity = _find_entity(entities, "Diabetes")
     assert entity is not None
@@ -113,7 +113,7 @@ def test_exclusion_regex():
         version="1",
     )
     matcher = RegexpMatcher(rules=[rule])
-    entities = matcher.process([sentence])
+    entities = matcher.run([sentence])
 
     assert _find_entity(entities, "Diabetes") is None
 
@@ -128,7 +128,7 @@ def test_case_sensitivity_off():
         version="1",
     )
     matcher = RegexpMatcher(rules=[rule])
-    entities = matcher.process([sentence])
+    entities = matcher.run([sentence])
 
     assert _find_entity(entities, "Diabetes") is not None
 
@@ -144,7 +144,7 @@ def test_case_sensitivity_on():
         case_sensitive=True,
     )
     matcher = RegexpMatcher(rules=[rule])
-    entities = matcher.process([sentence])
+    entities = matcher.run([sentence])
 
     assert _find_entity(entities, "Diabetes") is None
 
@@ -161,7 +161,7 @@ def test_case_sensitivity_exclusion_on():
         version="1",
     )
     matcher = RegexpMatcher(rules=[rule])
-    entities = matcher.process([sentence])
+    entities = matcher.run([sentence])
 
     assert _find_entity(entities, "Diabetes") is not None
 
@@ -177,7 +177,7 @@ def test_unicode_sensitive_off():
         unicode_sensitive=False,
     )
     matcher = RegexpMatcher(rules=[rule])
-    entities = matcher.process([sentence])
+    entities = matcher.run([sentence])
 
     assert _find_entity(entities, "Diabetes") is not None
 
@@ -193,7 +193,7 @@ def test_unicode_sensitive_on():
         unicode_sensitive=True,
     )
     matcher = RegexpMatcher(rules=[rule])
-    entities = matcher.process([sentence])
+    entities = matcher.run([sentence])
 
     assert _find_entity(entities, "Diabetes") is None
 
@@ -211,7 +211,7 @@ def test_attrs_to_copy():
 
     # attribute not copied
     matcher = RegexpMatcher(rules=[rule])
-    entities = matcher.process([sentence])
+    entities = matcher.run([sentence])
     entity = _find_entity(entities, "Diabetes")
     assert not entity.attrs
 
@@ -220,7 +220,7 @@ def test_attrs_to_copy():
         rules=[rule],
         attrs_to_copy=["negation"],
     )
-    entities = matcher.process([sentence])
+    entities = matcher.run([sentence])
     entity = _find_entity(entities, "Diabetes")
     assert len(entity.attrs) == 1
     attr = entity.attrs[0]
@@ -232,7 +232,7 @@ def test_default_rules():
 
     # make sure default rules can be loaded and executed
     matcher = RegexpMatcher()
-    _ = matcher.process([sentence])
+    _ = matcher.run([sentence])
 
 
 def test_prov():
@@ -249,7 +249,7 @@ def test_prov():
 
     prov_builder = ProvBuilder()
     matcher.set_prov_builder(prov_builder)
-    entities = matcher.process([sentence])
+    entities = matcher.run([sentence])
     graph = prov_builder.graph
 
     entity = _find_entity(entities, "Diabetes")
