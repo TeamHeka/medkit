@@ -125,6 +125,8 @@ class RegexpMatcher(RuleBasedAnnotator):
         if attrs_to_copy is None:
             attrs_to_copy = []
 
+        assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
+
         self.rules = rules
         self.attrs_to_copy = attrs_to_copy
 
