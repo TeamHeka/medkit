@@ -1,19 +1,62 @@
+from medkit.core.text import TextDocument, Span
 from medkit.io.brat import BratInputConverter
 
 
 def test_load():
     brat_converter = BratInputConverter()
     assert brat_converter.description.name == "BratInputConverter"
-    collection = brat_converter.load(
-        dir_path="tests/data/brat/BratConverter", text_extension=".txt"
-    )
-    assert len(collection.documents) == 1
+    collection = brat_converter.load(dir_path="tests/data/brat/")
+    assert len(collection.documents) == 2
+
     doc = collection.documents[0]
     assert brat_converter.description.id in doc.operations.keys()
-    assert doc.text.startswith("The")
-    assert "disease" in doc.entities.keys()
-    T4 = doc.entities["disease"][1]
-    entity = doc.get_annotation_by_id(T4)
-    assert entity.text == "Hypothyroidism"
-    assert len(entity.attrs) == 1
-    assert entity.attrs[0].label == "antecedent"
+
+    assert "path_to_text" in doc.metadata
+    assert "path_to_ann" in doc.metadata
+
+    path_to_text = doc.metadata["path_to_text"]
+    with open(path_to_text) as file:
+        text = file.read()
+    assert doc.text == text
+
+    # all expected annotations should be present
+    anns = doc.get_annotations()
+    assert len(anns) == 10  # 9 annotations in .ann + RAW_TEXT annotation
+    assert len(doc.entities.get("medication", [])) == 2
+    assert len(doc.entities.get("disease", [])) == 2
+    assert len(doc.entities.get("vitamin", [])) == 3
+    # FIXME relations are not handled by TextDocument for now
+    assert len(doc.relations.get("treats", [])) == 0
+
+    # check entity
+    entity_id_1 = doc.entities["disease"][1]
+    entity_1 = doc.get_annotation_by_id(entity_id_1)
+    assert entity_1.label == "disease"
+    assert entity_1.text == "Hypothyroidism"
+    assert entity_1.spans == [Span(147, 161)]
+    assert entity_1.metadata.get("brat_id") == "T4"
+    assert entity_1.origin.operation_id == brat_converter.description.id
+
+    # check attribute
+    assert len(entity_1.attrs) == 1
+    attr = entity_1.attrs[0]
+    assert attr.label == "antecedent"
+    assert attr.value is None
+    assert attr.metadata.get("brat_id") == "A3"
+    assert attr.origin.operation_id == brat_converter.description.id
+
+    # check multi-span entity
+    entity_id_2 = doc.entities["vitamin"][1]
+    entity_2 = doc.get_annotation_by_id(entity_id_2)
+    assert entity_2.spans == [Span(251, 260), Span(263, 264)]
+
+    # TODO relations
+
+
+def test_load_no_anns():
+    brat_converter = BratInputConverter()
+    collection = brat_converter.load(dir_path="tests/data/text")
+    for doc in collection.documents:
+        assert doc.text is not None
+        anns = doc.get_annotations()
+        assert len(anns) == 1 and anns[0].label == TextDocument.RAW_TEXT_LABEL

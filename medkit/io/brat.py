@@ -1,6 +1,8 @@
 __all__ = ["BratInputConverter"]
 
-import pathlib
+from pathlib import Path
+from typing import Optional, Union, ValuesView
+import warnings
 
 from smart_open import open
 
@@ -11,7 +13,7 @@ from medkit.core import (
     InputConverter,
     OperationDescription,
 )
-from medkit.core.text import TextDocument, Entity, Relation
+from medkit.core.text import TextDocument, Entity, Relation, Span
 import medkit.io._brat_utils as brat_utils
 
 
@@ -22,106 +24,133 @@ class BratInputConverter(InputConverter):
     def description(self) -> OperationDescription:
         return self._description
 
-    def __init__(self, config=None):
+    def __init__(self, id: Optional[str] = None):
         self._description = OperationDescription(
-            name=self.__class__.__name__, config=config
+            id=id, name=self.__class__.__name__, config=None
         )
 
-    def load(self, dir_path: str, text_extension: str) -> Collection:
+    def load(
+        self, dir_path: Union[str, Path], ann_ext: str = ".ann", text_ext: str = ".txt"
+    ) -> Collection:
         """
-        Load the documents and the brat annotations into internal collection of
-        documents
+        Create a Collection of TextDocuments from a folder containting text files
+        and associated brat annotations files.
 
         Parameters
         ----------
-        dir_path: str
-            The path to the directory containing the text documents and the annotation
+        dir_path:
+            The path to the directory containing the text files and the annotation
             files (.ann)
-        text_extension: str
-            The extension of the text document (e.g., .txt)
+        ann_ext:
+            The extension of the brat annotation file (e.g. .ann)
+        text_ext:
+            The extension of the text file (e.g. .txt)
 
         Returns
         -------
         Collection
-            The collection of documents (TextDocument)
-
+            The collection of TextDocuments
         """
         documents = list()
-        dir_path = pathlib.Path(dir_path)
+        dir_path = Path(dir_path)
 
-        for text_path in dir_path.glob("*%s" % text_extension):
-            ann_filename = text_path.stem + ".ann"
-            ann_path = dir_path / ann_filename
-            if ann_path.exists():
-                documents.append(self._load_file(str(text_path), str(ann_path)))
+        # find all base paths with at least a corresponding text or ann file
+        base_paths = set()
+        for ann_path in sorted(dir_path.glob("*" + ann_ext)):
+            base_paths.add(dir_path / ann_path.stem)
+        for text_path in sorted(dir_path.glob("*" + text_ext)):
+            base_paths.add(dir_path / text_path.stem)
+
+        # load doc for each base_path
+        for base_path in sorted(base_paths):
+            text_path = base_path.with_suffix(text_ext)
+            if not text_path.exists():
+                text_path = None
+            ann_path = base_path.with_suffix(ann_ext)
+            if not ann_path.exists():
+                ann_path = None
+            doc = self._load_doc(ann_path=ann_path, text_path=text_path)
+            documents.append(doc)
+
+        if not documents:
+            warnings.warn(f"Didn't load any document from dir {dir_path}")
+
         return Collection(documents)
 
-    def _load_file(self, text_path: str, ann_path: str) -> TextDocument:
+    def _load_doc(
+        self, ann_path: Optional[Path] = None, text_path: Optional[Path] = None
+    ) -> TextDocument:
         """
-        Internal method for loading an annotation file (.ann).
+        Create a TextDocument from text file and its associated annotation file (.ann)
 
         Parameters
         ----------
-        text_path: str
+        text_path:
             The path to the text document file.
-        ann_path: str
+        ann_path:
             The path to the brat annotation file.
 
         Returns
         -------
         TextDocument
-            The internal Text Document
-
+            The document containing the text and the annotations
         """
-        with open(text_path, encoding="utf-8") as text_file:
-            text = text_file.read()
-        filename = pathlib.Path(text_path).name
-        metadata = {"name": filename}
-        internal_doc = TextDocument(text=text, metadata=metadata)
-        internal_doc.add_operation(self.description)
+        assert ann_path is not None or text_path is not None
+
+        metadata = dict()
+        if text_path is not None:
+            metadata.update(path_to_text=text_path)
+            with open(text_path, encoding="utf-8") as text_file:
+                text = text_file.read()
+        else:
+            text = None
+
+        if ann_path is not None:
+            metadata.update(path_to_ann=ann_path)
+            anns = self._load_anns(ann_path)
+        else:
+            anns = []
+
+        doc = TextDocument(text=text, metadata=metadata)
+        doc.add_operation(self.description)
+        for ann in anns:
+            doc.add_annotation(ann)
+
+        return doc
+
+    def _load_anns(self, ann_path: Path) -> ValuesView[Union[Entity, Relation]]:
         brat_doc = brat_utils.parse_file(ann_path)
+        anns_by_brat_id = dict()
+
         # First convert entities, then relations, finally attributes
         # because new annotation id is needed
-        brat_ann = dict()
         for brat_entity in brat_doc.entities.values():
-            internal_entity = self._convert_brat_entity(brat_entity)
-            internal_doc.add_annotation(internal_entity)
-            brat_ann[brat_entity.id] = internal_entity
+            entity = Entity(
+                origin=Origin(operation_id=self.description.id),
+                label=brat_entity.type,
+                spans=[Span(*brat_span) for brat_span in brat_entity.span],
+                text=brat_entity.text,
+                metadata=dict(brat_id=brat_entity.id),
+            )
+            anns_by_brat_id[brat_entity.id] = entity
+
         for brat_relation in brat_doc.relations.values():
-            internal_relation = self._convert_brat_relation(brat_relation, brat_ann)
-            internal_doc.add_annotation(internal_relation)
-            brat_ann[brat_relation.id] = internal_relation
+            relation = Relation(
+                origin=Origin(operation_id=self.description.id),
+                label=brat_relation.type,
+                source_id=anns_by_brat_id[brat_relation.subj].id,
+                target_id=anns_by_brat_id[brat_relation.obj].id,
+                metadata=dict(brat_id=brat_relation.id),
+            )
+            anns_by_brat_id[brat_relation.id] = relation
+
         for brat_attribute in brat_doc.attributes.values():
-            internal_attribute = self._convert_brat_attribute(brat_attribute)
-            brat_ann[brat_attribute.target].attrs.append(internal_attribute)
-        return internal_doc
+            attribute = Attribute(
+                origin=Origin(operation_id=self.description.id),
+                label=brat_attribute.type,
+                value=brat_attribute.value,
+                metadata=dict(brat_id=brat_attribute.id),
+            )
+            anns_by_brat_id[brat_attribute.target].attrs.append(attribute)
 
-    def _convert_brat_entity(self, brat_entity: brat_utils.Entity) -> Entity:
-        return Entity(
-            origin=Origin(operation_id=self.description.id),
-            label=brat_entity.type,
-            spans=brat_entity.span,
-            text=brat_entity.text,
-            metadata={"brat_id": brat_entity.id},
-        )
-
-    def _convert_brat_relation(
-        self, brat_relation: brat_utils.Relation, brat_ann: dict
-    ) -> Relation:
-        return Relation(
-            origin=Origin(operation_id=self.description.id),
-            label=brat_relation.type,
-            source_id=brat_ann[brat_relation.subj].id,
-            target_id=brat_ann[brat_relation.obj].id,
-            metadata={"brat_id": brat_relation.id},
-        )
-
-    def _convert_brat_attribute(
-        self, brat_attribute: brat_utils.Attribute
-    ) -> Attribute:
-        return Attribute(
-            origin=Origin(operation_id=self.description.id),
-            label=brat_attribute.type,
-            value=brat_attribute.value,
-            metadata={"brat_id": brat_attribute.id},
-        )
+        return anns_by_brat_id.values()

@@ -1,7 +1,8 @@
 import logging
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from pathlib import Path
+from typing import Dict, List, Tuple, Union
 
 from smart_open import open
 
@@ -114,7 +115,7 @@ class Document:
         return augmented_entities
 
 
-def parse_file(ann_path: str, detect_groups: bool = False) -> Document:
+def parse_file(ann_path: Union[str, Path], detect_groups: bool = False) -> Document:
     """
     Read an annotation file to get the Entities, Relations and Attributes in it.
     All other lines are ignored.
