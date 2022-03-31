@@ -14,10 +14,10 @@ if TYPE_CHECKING:
 
 class Document(abc.ABC):
     def __init__(self, doc_id: str = None, metadata=None):
-        if doc_id:
-            self.id = doc_id
-        else:
-            self.id = generate_id()
+        if doc_id is None:
+            doc_id = generate_id()
+
+        self.id = doc_id
         self.annotations: Dict[str, Annotation] = {}
         self.annotation_ids_by_label: Dict[str, List[str]] = {}
         self.operations: Dict[str, OperationDescription] = {}

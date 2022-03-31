@@ -34,13 +34,12 @@ class Annotation(abc.ABC):
         metadata: dict
             The dictionary containing the annotation metadata
         """
-        if ann_id:
-            self.id = ann_id
-        else:
-            self.id = generate_id()
+        if ann_id is None:
+            ann_id = generate_id()
         if attrs is None:
             attrs = []
 
+        self.id = ann_id
         self.origin = origin
         self.label = label
         self.attrs: List[Attribute] = attrs

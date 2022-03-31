@@ -59,11 +59,12 @@ class RushSentenceTokenizer(RuleBasedAnnotator):
             Identifier of the tokenizer
         """
 
-        self.output_label = output_label
         if path_to_rules is None:
             path_to_rules = _PATH_TO_DEFAULT_RULES
-        self._rush = RuSH(str(path_to_rules))
+
+        self.output_label = output_label
         self.keep_newlines = keep_newlines
+        self._rush = RuSH(str(path_to_rules))
 
         config = dict(
             output_label=output_label,

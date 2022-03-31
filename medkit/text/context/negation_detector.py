@@ -77,11 +77,12 @@ class NegationDetector(RuleBasedAnnotator):
         proc_id:
             Identifier of the detector
         """
-        self.output_label = output_label
-
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
+
         assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
+
+        self.output_label = output_label
         self.rules = rules
 
         # pre-compile patterns
