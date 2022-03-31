@@ -34,13 +34,12 @@ class Annotation(abc.ABC):
         metadata: dict
             The dictionary containing the annotation metadata
         """
-        if ann_id:
-            self.id = ann_id
-        else:
-            self.id = generate_id()
+        if ann_id is None:
+            ann_id = generate_id()
         if attrs is None:
             attrs = []
 
+        self.id = ann_id
         self.origin = origin
         self.label = label
         self.attrs: List[Attribute] = attrs
@@ -79,7 +78,7 @@ class Attribute:
         metadata: Dict[str, Any], Optional
             The metadata of the attribute
         """
-        if attr_id:
+        if attr_id is None:
             attr_id = generate_id()
 
         self.id = attr_id
@@ -95,7 +94,6 @@ class Attribute:
             raise ValueError(f"Metadata key {key} is already used")
         self.metadata[key] = value
 
-    @abc.abstractmethod
     def __repr__(self):
         return (
             f"{self.__class__.__qualname__} : id={self.id!r}, label={self.label!r},"

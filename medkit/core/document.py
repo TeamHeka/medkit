@@ -9,15 +9,15 @@ from medkit.core.id import generate_id
 
 if TYPE_CHECKING:
     from medkit.core.annotation import Annotation
-    from medkit.core.processing import OperationDescription
+    from medkit.core.operation import OperationDescription
 
 
 class Document(abc.ABC):
     def __init__(self, doc_id: str = None, metadata=None):
-        if doc_id:
-            self.id = doc_id
-        else:
-            self.id = generate_id()
+        if doc_id is None:
+            doc_id = generate_id()
+
+        self.id = doc_id
         self.annotations: Dict[str, Annotation] = {}
         self.annotation_ids_by_label: Dict[str, List[str]] = {}
         self.operations: Dict[str, OperationDescription] = {}
@@ -64,6 +64,9 @@ class Document(abc.ABC):
 
     def add_operation(self, operation_desc: OperationDescription):
         self.operations[operation_desc.id] = operation_desc
+
+    def get_operations(self) -> List[OperationDescription]:
+        return list(self.operations.values())
 
 
 class Collection:

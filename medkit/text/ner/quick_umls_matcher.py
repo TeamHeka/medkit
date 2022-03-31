@@ -170,6 +170,8 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
         """
+        if attrs_to_copy is None:
+            attrs_to_copy = []
 
         self.version = version
         path_to_install = self._get_path_to_install(
@@ -188,8 +190,6 @@ class QuickUMLSMatcher(RuleBasedAnnotator):
             and self._matcher.to_lowercase_flag == lowercase
             and self._matcher.normalize_unicode_flag == normalize_unicode
         ), "Inconsistent QuickUMLS install flags"
-        if attrs_to_copy is None:
-            attrs_to_copy = []
         self.attrs_to_copy = attrs_to_copy
 
         config = dict(
