@@ -2,30 +2,42 @@ __all__ = [
     "text",
     "Annotation",
     "Attribute",
-    "Origin",
+    "InputConverter",
+    "OutputConverter",
+    "IdentifiableDataItem",
+    "IdentifiableDataItemWithAttrs",
+    "DocPipeline",
     "Collection",
     "Document",
     "generate_id",
-    "Operation",
     "OperationDescription",
-    "ProcessingOperation",
-    "RuleBasedAnnotator",
-    "InputConverter",
-    "OutputConverter",
     "Pipeline",
     "PipelineStep",
+    "PipelineCompatibleOperation",
+    "DescribableOperation",
+    "ProvCompatibleOperation",
+    "ProvBuilder",
+    "ProvGraph",
+    "ProvNode",
+    "Store",
+    "DictStore",
 ]
 
 from . import text
-from .annotation import Annotation, Attribute, Origin
+from .annotation import Annotation, Attribute
+from .conversion import InputConverter, OutputConverter
+from .data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs
+from .doc_pipeline import DocPipeline
 from .document import Collection, Document
 from .id import generate_id
-from .operation import (
-    Operation,
-    OperationDescription,
-    ProcessingOperation,
-    RuleBasedAnnotator,
-    InputConverter,
-    OutputConverter,
+from .operation_desc import OperationDescription
+from .pipeline import (
+    Pipeline,
+    PipelineStep,
+    PipelineCompatibleOperation,
+    DescribableOperation,
+    ProvCompatibleOperation,
 )
-from .pipeline import Pipeline, PipelineStep
+from .prov_builder import ProvBuilder
+from .prov_graph import ProvGraph, ProvNode
+from .store import Store, DictStore

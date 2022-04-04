@@ -2,35 +2,46 @@ from __future__ import annotations
 
 __all__ = ["Collection", "Document"]
 
-import abc
-from typing import Dict, List, TYPE_CHECKING
+from typing import Any, Dict, Generic, List, Optional, Set, TypeVar, cast
 
 from medkit.core.id import generate_id
+from medkit.core.annotation import Annotation
+from medkit.core.store import Store, DictStore
 
-if TYPE_CHECKING:
-    from medkit.core.annotation import Annotation
-    from medkit.core.operation import OperationDescription
+AnnotationType = TypeVar("AnnotationType", bound=Annotation)
 
 
-class Document(abc.ABC):
-    def __init__(self, doc_id: str = None, metadata=None):
+class Document(Generic[AnnotationType]):
+    """Document holding annotations
+
+    Annotations must be subclasses of `Annotation`."""
+
+    def __init__(
+        self,
+        doc_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        store: Optional[Store] = None,
+    ):
         if doc_id is None:
             doc_id = generate_id()
+        if metadata is None:
+            metadata = {}
+        if store is None:
+            store = DictStore()
 
-        self.id = doc_id
-        self.annotations: Dict[str, Annotation] = {}
+        self.id: str = doc_id
+        self.store: Store = store
+        self.annotation_ids: Set[str] = set()
         self.annotation_ids_by_label: Dict[str, List[str]] = {}
-        self.operations: Dict[str, OperationDescription] = {}
-        self.metadata = metadata  # TODO: what is metadata format ?
+        self.metadata: Dict[str, Any] = metadata  # TODO: what is metadata format ?
 
-    @abc.abstractmethod
-    def add_annotation(self, annotation: Annotation):
+    def add_annotation(self, annotation: AnnotationType):
         """
         Add the annotation to this document
 
         Parameters
         ----------
-        annotation : Annotation
+        annotation:
             Annotation to add.
 
         Raises
@@ -39,34 +50,44 @@ class Document(abc.ABC):
             If `annotation.id` is already in Document.annotations.
         """
         id = annotation.id
-        if id in self.annotations:
+        if id in self.annotation_ids:
             raise ValueError(
                 f"Impossible to add this annotation.The id {id} already"
                 " exists in the document"
             )
-        self.annotations[id] = annotation
+
+        self.annotation_ids.add(id)
+        self.store.store_data_item(annotation)
 
         label = annotation.label
         if label not in self.annotation_ids_by_label:
             self.annotation_ids_by_label[label] = []
         self.annotation_ids_by_label[label].append(id)
 
-    def get_annotation_by_id(self, annotation_id):
-        return self.annotations.get(annotation_id)
+    def get_annotation_by_id(self, annotation_id) -> Optional[AnnotationType]:
+        if annotation_id not in self.annotation_ids:
+            return None
+        else:
+            ann = self.store.get_data_item(annotation_id)
+            return cast(AnnotationType, ann)
 
-    def get_annotations(self):
-        return list(self.annotations.values())
+    def get_annotations(self) -> List[AnnotationType]:
+        anns = [self.store.get_data_item(id) for id in self.annotation_ids]
+        return cast(List[AnnotationType], anns)
 
-    def get_annotations_by_label(self, label):
-        return [
-            self.annotations[id] for id in self.annotation_ids_by_label.get(label, [])
+    def get_annotations_by_label(self, label) -> List[AnnotationType]:
+        anns = [
+            self.store.get_data_item(id)
+            for id in self.annotation_ids_by_label.get(label, [])
         ]
+        return cast(List[AnnotationType], anns)
 
-    def add_operation(self, operation_desc: OperationDescription):
-        self.operations[operation_desc.id] = operation_desc
-
-    def get_operations(self) -> List[OperationDescription]:
-        return list(self.operations.values())
+    def to_dict(self) -> Dict[str, Any]:
+        annotations = [
+            cast(AnnotationType, self.store.get_data_item(id)).to_dict()
+            for id in self.annotation_ids
+        ]
+        return dict(id=self.id, annotations=annotations, metadata=self.metadata)
 
 
 class Collection:
@@ -74,3 +95,7 @@ class Collection:
 
     def __init__(self, documents: List[Document]):
         self.documents = documents
+
+    def to_dict(self) -> Dict[str, Any]:
+        documents = [d.to_dict() for d in self.documents]
+        return dict(documents=documents)

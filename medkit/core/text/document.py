@@ -3,23 +3,29 @@ from __future__ import annotations
 __all__ = ["TextDocument"]
 
 import random
-from typing import TYPE_CHECKING
+from typing import Any, Dict, List, Optional
 import uuid
 
-from medkit.core.annotation import Origin
 from medkit.core.document import Document
-from medkit.core.text.annotation import Segment, Entity, Relation
+from medkit.core.store import Store
+from medkit.core.text.annotation import TextAnnotation, Segment, Entity, Relation
 from medkit.core.text.span import Span
 
-if TYPE_CHECKING:
-    from medkit.core.annotation import Annotation
 
+class TextDocument(Document[TextAnnotation]):
+    """Document holding text annotations
 
-class TextDocument(Document):
+    Annotations must be subclasses of `TextAnnotation`."""
 
     RAW_TEXT_LABEL = "RAW_TEXT"
 
-    def __init__(self, doc_id: str = None, text: str = None, metadata=None):
+    def __init__(
+        self,
+        doc_id: Optional[str] = None,
+        text: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        store: Optional[Store] = None,
+    ):
         """
         Initializes the text document
 
@@ -34,19 +40,20 @@ class TextDocument(Document):
             Document text
         metadata: dict  # TODO
             Document metadata
-
+        store:
+            Store to use for annotations
         """
-        super().__init__(doc_id, metadata)
-        self.text = text
-        self.segments = dict()  # Key: label
-        self.entities = dict()  # Key: label
-        self.relations = dict()  # Key: TODO : determine the key
+        super().__init__(doc_id=doc_id, metadata=metadata, store=store)
+        self.text: Optional[str] = text
+        self.segments: Dict[str, List[str]] = dict()  # Key: label
+        self.entities: Dict[str, List[str]] = dict()  # Key: label
+        self.relations: Dict[str, List[str]] = dict()  # Key: TODO : determine the key
 
         if self.text is not None:
             raw_text_ann = self._gen_raw_text_annotation()
             self.add_annotation(raw_text_ann)
 
-    def add_annotation(self, annotation: Annotation):
+    def add_annotation(self, annotation: TextAnnotation):
         """
         Add the annotation to this document
 
@@ -60,7 +67,7 @@ class TextDocument(Document):
 
         Parameters
         ----------
-        annotation : Annotation
+        annotation:
             Annotation to add.
 
         Raises
@@ -87,16 +94,20 @@ class TextDocument(Document):
         elif isinstance(annotation, Relation):
             pass  # TODO: complete when key is determined
 
-    def _gen_raw_text_annotation(self):
+    def _gen_raw_text_annotation(self) -> Segment:
         # generate deterministic uuid based on document id
         # so that the annotation id is the same if the doc id is the same
         rng = random.Random(self.id)
         id = str(uuid.UUID(int=rng.getrandbits(128)))
 
         return Segment(
-            origin=Origin(),
             label=self.RAW_TEXT_LABEL,
             spans=[Span(0, len(self.text))],
             text=self.text,
             ann_id=id,
         )
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data.update(text=self.text)
+        return data

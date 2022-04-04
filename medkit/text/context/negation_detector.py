@@ -8,7 +8,12 @@ from typing import List, Optional
 import unidecode
 import yaml
 
-from medkit.core import Origin, Attribute, OperationDescription, RuleBasedAnnotator
+from medkit.core import (
+    Attribute,
+    OperationDescription,
+    ProvBuilder,
+    generate_id,
+)
 from medkit.core.text import Segment
 
 
@@ -51,7 +56,7 @@ class NegationDetectorRule:
         )
 
 
-class NegationDetector(RuleBasedAnnotator):
+class NegationDetector:
     """Annotator creating negation Attributes with True/False values
 
     Because negation attributes will be attached to whole annotations,
@@ -77,11 +82,14 @@ class NegationDetector(RuleBasedAnnotator):
         proc_id:
             Identifier of the detector
         """
+        if proc_id is None:
+            proc_id = generate_id()
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
 
         assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
 
+        self.id: str = proc_id
         self.output_label = output_label
         self.rules = rules
 
@@ -107,16 +115,19 @@ class NegationDetector(RuleBasedAnnotator):
             not r.unicode_sensitive for r in rules
         )
 
-        config = dict(output_label=output_label, rules=rules)
-        self._description = OperationDescription(
-            id=proc_id, name=self.__class__.__name__, config=config
-        )
+        self._prov_builder: Optional[ProvBuilder] = None
 
     @property
     def description(self) -> OperationDescription:
-        return self._description
+        config = dict(output_label=self.output_label, rules=self.rules)
+        return OperationDescription(
+            id=self.id, name=self.__class__.__name__, config=config
+        )
 
-    def process(self, segments: List[Segment]):
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
+
+    def run(self, segments: List[Segment]):
         """Add a negation attribute to each segment with a True/False value.
 
         Parameters
@@ -154,14 +165,16 @@ class NegationDetector(RuleBasedAnnotator):
                     break
 
         neg_attr = Attribute(
-            origin=Origin(
-                operation_id=self.description.id,
-                ann_ids=[segment.id],
-            ),
             label=self.output_label,
             value=is_negated,
             metadata=dict(rule_id=rule.id) if is_negated else None,
         )
+
+        if self._prov_builder is not None:
+            self._prov_builder.add_prov(
+                neg_attr, self.description, source_data_items=[segment]
+            )
+
         return neg_attr
 
     @staticmethod

@@ -1,34 +1,47 @@
 from __future__ import annotations
 
-__all__ = ["Segment", "Entity", "Relation"]
+__all__ = ["TextAnnotation", "Segment", "Entity", "Relation"]
 
-from typing import Optional, List, TYPE_CHECKING
+import abc
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from medkit.core.annotation import Annotation, Attribute
 from medkit.core.text import span_utils
+from medkit.core.text.span import AnySpanType
 
 if TYPE_CHECKING:
     from medkit.core.text.document import TextDocument
 
 
-class Segment(Annotation):
+class TextAnnotation(Annotation):
+    """Base abstract class for all text annotations"""
+
+    @abc.abstractmethod
     def __init__(
         self,
-        origin,
-        label,
-        spans,
-        text,
+        label: str,
         attrs: Optional[List[Attribute]] = None,
-        ann_id=None,
-        metadata=None,
+        ann_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
+        return super().__init__(label, attrs, ann_id, metadata)
+
+
+class Segment(TextAnnotation):
+    def __init__(
+        self,
+        label: str,
+        spans: List[AnySpanType],
+        text: str,
+        attrs: Optional[List[Attribute]] = None,
+        ann_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize a medkit segment
 
         Parameters
         ----------
-        origin: Origin
-            Description of how this annotation was generated
         label: str
             The label for this annotation (e.g., SENTENCE)
         spans: List[Span]
@@ -42,11 +55,15 @@ class Segment(Annotation):
         metadata: dict[str, Any], Optional
             The metadata of the annotation
         """
-        super().__init__(
-            ann_id=ann_id, origin=origin, label=label, attrs=attrs, metadata=metadata
-        )
-        self.spans = spans
-        self.text = text
+        super().__init__(ann_id=ann_id, label=label, attrs=attrs, metadata=metadata)
+        self.spans: List[AnySpanType] = spans
+        self.text: str = text
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        spans = [s.to_dict() for s in self.spans]
+        data.update(spans=spans, text=self.text)
+        return data
 
     def get_snippet(self, doc: TextDocument, max_extend_length: int) -> str:
         """Return a portion of the original text contaning the annotation
@@ -80,21 +97,18 @@ class Segment(Annotation):
 class Entity(Segment):
     def __init__(
         self,
-        origin,
-        label,
-        spans,
-        text,
+        label: str,
+        spans: List[AnySpanType],
+        text: str,
         attrs: Optional[List[Attribute]] = None,
-        entity_id=None,
-        metadata=None,
+        entity_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize a medkit text entity
 
         Parameters
         ----------
-        origin: Origin
-            Description of how this entity annotation was generated
         label: str
             The entity label
         spans: List[Span]
@@ -108,27 +122,31 @@ class Entity(Segment):
         metadata: dict[str, Any], Optional
             The metadata of the entity
         """
-        super().__init__(origin, label, spans, text, attrs, entity_id, metadata)
+        super().__init__(
+            label=label,
+            spans=spans,
+            text=text,
+            attrs=attrs,
+            ann_id=entity_id,
+            metadata=metadata,
+        )
 
 
-class Relation(Annotation):
+class Relation(TextAnnotation):
     def __init__(
         self,
-        origin,
-        label,
-        source_id,
-        target_id,
+        label: str,
+        source_id: str,
+        target_id: str,
         attrs: Optional[List[Attribute]] = None,
-        rel_id=None,
-        metadata=None,
+        rel_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """
         Initialize the medkit relation
 
         Parameters
         ----------
-        origin: Origin
-            Description of how this relation annotation was generated
         label: str
             The relation label
         source_id: str
@@ -142,11 +160,14 @@ class Relation(Annotation):
         metadata: Dict[str, Any], Optional
             The metadata of the relation
         """
-        super().__init__(
-            ann_id=rel_id, origin=origin, label=label, attrs=attrs, metadata=metadata
-        )
-        self.source_id = source_id
-        self.target_id = target_id
+        super().__init__(ann_id=rel_id, label=label, attrs=attrs, metadata=metadata)
+        self.source_id: str = source_id
+        self.target_id: str = target_id
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data.update(source_id=self.source_id, target_id=self.target_id)
+        return data
 
     def __repr__(self):
         annotation = super().__repr__()

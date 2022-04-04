@@ -9,9 +9,11 @@ from smart_open import open
 from medkit.core import (
     Collection,
     Attribute,
-    Origin,
     InputConverter,
+    Store,
     OperationDescription,
+    ProvBuilder,
+    generate_id,
 )
 from medkit.core.text import TextDocument, Entity, Relation, Span
 import medkit.io._brat_utils as brat_utils
@@ -20,14 +22,21 @@ import medkit.io._brat_utils as brat_utils
 class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
 
+    def __init__(self, store: Optional[Store] = None, id: Optional[str] = None):
+        if id is None:
+            id = generate_id()
+
+        self.id: str = id
+        self.store: Optional[Store] = store
+
+        self._prov_builder: Optional[ProvBuilder] = None
+
     @property
     def description(self) -> OperationDescription:
-        return self._description
+        return OperationDescription(id=self.id, name=self.__class__.__name__)
 
-    def __init__(self, id: Optional[str] = None):
-        self._description = OperationDescription(
-            id=id, name=self.__class__.__name__, config=None
-        )
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
 
     def load(
         self, dir_path: Union[str, Path], ann_ext: str = ".ann", text_ext: str = ".txt"
@@ -111,8 +120,7 @@ class BratInputConverter(InputConverter):
         else:
             anns = []
 
-        doc = TextDocument(text=text, metadata=metadata)
-        doc.add_operation(self.description)
+        doc = TextDocument(text=text, metadata=metadata, store=self.store)
         for ann in anns:
             doc.add_annotation(ann)
 
@@ -126,31 +134,40 @@ class BratInputConverter(InputConverter):
         # because new annotation id is needed
         for brat_entity in brat_doc.entities.values():
             entity = Entity(
-                origin=Origin(operation_id=self.description.id),
                 label=brat_entity.type,
                 spans=[Span(*brat_span) for brat_span in brat_entity.span],
                 text=brat_entity.text,
                 metadata=dict(brat_id=brat_entity.id),
             )
             anns_by_brat_id[brat_entity.id] = entity
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    entity, self.description, source_data_items=[]
+                )
 
         for brat_relation in brat_doc.relations.values():
             relation = Relation(
-                origin=Origin(operation_id=self.description.id),
                 label=brat_relation.type,
                 source_id=anns_by_brat_id[brat_relation.subj].id,
                 target_id=anns_by_brat_id[brat_relation.obj].id,
                 metadata=dict(brat_id=brat_relation.id),
             )
             anns_by_brat_id[brat_relation.id] = relation
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    relation, self.description, source_data_items=[]
+                )
 
         for brat_attribute in brat_doc.attributes.values():
             attribute = Attribute(
-                origin=Origin(operation_id=self.description.id),
                 label=brat_attribute.type,
                 value=brat_attribute.value,
                 metadata=dict(brat_id=brat_attribute.id),
             )
             anns_by_brat_id[brat_attribute.target].attrs.append(attribute)
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    attribute, self.description, source_data_items=[]
+                )
 
         return anns_by_brat_id.values()

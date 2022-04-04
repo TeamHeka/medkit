@@ -13,9 +13,9 @@ import yaml
 
 from medkit.core import (
     Attribute,
-    Origin,
     OperationDescription,
-    RuleBasedAnnotator,
+    ProvBuilder,
+    generate_id,
 )
 from medkit.core.text import Entity, Segment, span_utils
 
@@ -96,7 +96,7 @@ class RegexpMatcherNormalization:
 _PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.yml"
 
 
-class RegexpMatcher(RuleBasedAnnotator):
+class RegexpMatcher:
     """Entity annotator relying on regexp-based rules"""
 
     def __init__(
@@ -120,6 +120,8 @@ class RegexpMatcher(RuleBasedAnnotator):
         proc_id:
             Identifier of the tokenizer
         """
+        if proc_id is None:
+            proc_id = generate_id()
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
         if attrs_to_copy is None:
@@ -127,6 +129,7 @@ class RegexpMatcher(RuleBasedAnnotator):
 
         assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
 
+        self.id: str = proc_id
         self.rules = rules
         self.attrs_to_copy = attrs_to_copy
 
@@ -148,16 +151,19 @@ class RegexpMatcher(RuleBasedAnnotator):
             not r.unicode_sensitive for r in rules
         )
 
-        config = dict(rules=rules, attrs_to_copy=attrs_to_copy)
-        self._description = OperationDescription(
-            id=proc_id, name=self.__class__.__name__, config=config
-        )
+        self._prov_builder: Optional[ProvBuilder] = None
 
     @property
     def description(self) -> OperationDescription:
-        return self._description
+        config = dict(rules=self.rules, attrs_to_copy=self.attrs_to_copy)
+        return OperationDescription(
+            id=self.id, name=self.__class__.__name__, config=config
+        )
 
-    def process(self, segments: List[Segment]) -> List[Entity]:
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
+
+    def run(self, segments: List[Segment]) -> List[Entity]:
         """
         Return entities (with optional normalization attributes) matched in `segments`
 
@@ -224,25 +230,32 @@ class RegexpMatcher(RuleBasedAnnotator):
             # TODO should we have a NormalizationAttribute class
             # with specific fields (name, id, version) ?
 
-            for norm in rule.normalizations:
-                norm_attr = Attribute(
-                    origin=Origin(
-                        operation_id=self.description.id, ann_ids=[segment.id]
-                    ),
+            norm_attrs = [
+                Attribute(
                     label=norm.kb_name,
                     value=norm.id,
                     metadata=dict(version=norm.kb_version),
                 )
-                attrs.append(norm_attr)
+                for norm in rule.normalizations
+            ]
+            attrs += norm_attrs
 
             entity = Entity(
                 label=rule.label,
                 text=text,
                 spans=spans,
                 attrs=attrs,
-                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
                 metadata=metadata,
             )
+
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    entity, self.description, source_data_items=[segment]
+                )
+                for norm_attr in norm_attrs:
+                    self._prov_builder.add_prov(
+                        norm_attr, self.description, source_data_items=[segment]
+                    )
 
             yield entity
 

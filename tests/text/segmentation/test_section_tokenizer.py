@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import Origin
+from medkit.core import ProvBuilder
 from medkit.core.text import Span, Segment
 from medkit.text.segmentation.section_tokenizer import (
     SectionTokenizer,
@@ -39,7 +39,6 @@ TEST_CONFIG = [
 def _get_clean_text_segment(filepath):
     text = data_utils.get_text(filepath)
     return Segment(
-        origin=Origin(),
         label="clean_text",
         spans=[Span(0, len(text))],
         text=text,
@@ -47,11 +46,11 @@ def _get_clean_text_segment(filepath):
 
 
 @pytest.mark.parametrize("filepath,expected_sections", TEST_CONFIG)
-def test_process(filepath, expected_sections):
+def test_run(filepath, expected_sections):
     clean_text_segment = _get_clean_text_segment(filepath)
 
     section_tokenizer = SectionTokenizer.get_example()
-    sections = section_tokenizer.process([clean_text_segment])
+    sections = section_tokenizer.run([clean_text_segment])
 
     assert len(sections) == len(expected_sections)
     for i, (spans, attr_value) in enumerate(expected_sections):
@@ -59,7 +58,7 @@ def test_process(filepath, expected_sections):
         assert sections[i].metadata["name"] == attr_value
 
 
-def test_process_with_rules():
+def test_run_with_rules():
     filepath = TEST_CONFIG[0][0]
     clean_text_segment = _get_clean_text_segment(filepath)
 
@@ -81,7 +80,7 @@ def test_process_with_rules():
     section_tokenizer = SectionTokenizer(
         section_dict=section_dict, section_rules=section_rules
     )
-    sections = section_tokenizer.process([clean_text_segment])
+    sections = section_tokenizer.run([clean_text_segment])
 
     assert len(sections) == 2
     sections_antecedent = [
@@ -96,3 +95,27 @@ def test_process_with_rules():
         if section.metadata["name"] == "exam_after_antecedent"
     ]
     assert len(section_examen) == 1
+
+
+def test_prov():
+    filepath = TEST_CONFIG[0][0]
+    clean_text_segment = _get_clean_text_segment(filepath)
+
+    section_dict = {"antecedent": ["Antécédents médicaux"], "examen": ["Examen :"]}
+    tokenizer = SectionTokenizer(section_dict)
+    prov_builder = ProvBuilder()
+    tokenizer.set_prov_builder(prov_builder)
+    sections = tokenizer.run([clean_text_segment])
+    graph = prov_builder.graph
+
+    section_1 = sections[0]
+    node_1 = graph.get_node(section_1.id)
+    assert node_1.data_item_id == section_1.id
+    assert node_1.operation_id == tokenizer.id
+    assert node_1.source_ids == [clean_text_segment.id]
+
+    section_2 = sections[1]
+    node_2 = graph.get_node(section_2.id)
+    assert node_2.data_item_id == section_2.id
+    assert node_2.operation_id == tokenizer.id
+    assert node_2.source_ids == [clean_text_segment.id]

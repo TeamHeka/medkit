@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-__all__ = ["Annotation", "Attribute", "Origin"]
+__all__ = ["Annotation", "Attribute"]
 
 import abc
-import dataclasses
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from medkit.core.id import generate_id
 
@@ -12,19 +11,16 @@ from medkit.core.id import generate_id
 class Annotation(abc.ABC):
     def __init__(
         self,
-        origin: Origin,
         label: str,
         attrs: Optional[List[Attribute]] = None,
-        ann_id: str = None,
-        metadata: Dict = None,
+        ann_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """
         Provide common initialization for annotation instances
 
         Parameters
         ----------
-        origin: Origin
-            Description of how this annotation was generated
         label: str
             The annotation label
         attrs:
@@ -38,21 +34,23 @@ class Annotation(abc.ABC):
             ann_id = generate_id()
         if attrs is None:
             attrs = []
+        if metadata is None:
+            metadata = {}
 
-        self.id = ann_id
-        self.origin = origin
-        self.label = label
+        self.id: str = ann_id
+        self.label: str = label
         self.attrs: List[Attribute] = attrs
-        self.metadata = metadata
+        self.metadata: Dict[str, Any] = metadata
 
-    def add_metadata(self, key, value):
-        if self.metadata is None:
-            self.metadata = {}
+    def add_metadata(self, key: str, value: Any):
         if key in self.metadata.keys():
             raise ValueError(f"Metadata key {key} is already used")
         self.metadata[key] = value
 
-    @abc.abstractmethod
+    def to_dict(self) -> Dict[str, Any]:
+        attrs = [a.to_dict() for a in self.attrs]
+        return dict(id=self.id, label=self.label, attrs=attrs, metadata=self.metadata)
+
     def __repr__(self):
         return (
             f"{self.__class__.__qualname__} : id={self.id!r}, label={self.label!r},"
@@ -61,14 +59,18 @@ class Annotation(abc.ABC):
 
 
 class Attribute:
-    def __init__(self, origin, label, value=None, attr_id=None, metadata=None):
+    def __init__(
+        self,
+        label: str,
+        value: Optional[Any] = None,
+        attr_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ):
         """
         Initialize a medkit attribute, to be added to an annotation
 
         Parameters
         ----------
-        origin: Origin
-            Description of how this attribute annotation was generated
         label: str
             The attribute label
         value: str, Optional
@@ -80,44 +82,24 @@ class Attribute:
         """
         if attr_id is None:
             attr_id = generate_id()
+        if metadata is None:
+            metadata = {}
 
-        self.id = attr_id
-        self.origin = origin
-        self.label = label
-        self.metadata = metadata
-        self.value = value
+        self.id: str = attr_id
+        self.label: str = label
+        self.value: Optional[Any] = value
+        self.metadata: Dict[str, Any] = metadata
 
-    def add_metadata(self, key, value):
-        if self.metadata is None:
-            self.metadata = {}
+    def add_metadata(self, key: str, value: Any):
         if key in self.metadata.keys():
             raise ValueError(f"Metadata key {key} is already used")
         self.metadata[key] = value
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(id=self.id, label=self.label, metadata=self.metadata)
 
     def __repr__(self):
         return (
             f"{self.__class__.__qualname__} : id={self.id!r}, label={self.label!r},"
             f" value={self.value}"
         )
-
-
-@dataclasses.dataclass(frozen=True)
-class Origin:
-    """Description of how an annotation was generated
-
-    Parameters
-    ----------
-    operation_id:
-        Identifier of the `OperationDescription` describing
-        the processing module that generated the annotation.
-        Should never be None except for RAW_TEXT annotation.
-
-    ann_ids:
-        Identifier of the source annotations that were used
-        to generate the annotation. Typically there will
-        only be one source annotation but there might be none
-        or several.
-    """
-
-    operation_id: Optional[str] = None
-    ann_ids: List[str] = dataclasses.field(default_factory=list)

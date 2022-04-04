@@ -4,12 +4,16 @@ __all__ = ["SectionModificationRule", "SectionTokenizer"]
 
 import dataclasses
 import pathlib
-from typing import Dict, List, Literal, Tuple
+from typing import Dict, Literal, List, Optional, Tuple
 import yaml
 
 from flashtext import KeywordProcessor
 
-from medkit.core import Origin, OperationDescription, RuleBasedAnnotator
+from medkit.core import (
+    OperationDescription,
+    ProvBuilder,
+    generate_id,
+)
 from medkit.core.text import Segment, span_utils
 
 
@@ -26,19 +30,15 @@ class SectionModificationRule:
     order: Literal["BEFORE", "AFTER"]
 
 
-class SectionTokenizer(RuleBasedAnnotator):
+class SectionTokenizer:
     """Section segmentation annotator based on keyword rules"""
-
-    @property
-    def description(self) -> OperationDescription:
-        return self._description
 
     def __init__(
         self,
         section_dict: Dict[str, List[str]],
         output_label: str = DefaultConfig.output_label,
         section_rules: Tuple[SectionModificationRule] = (),
-        proc_id: str = None,
+        proc_id: Optional[str] = None,
     ):
         """
         Initialize the Section Tokenizer
@@ -54,24 +54,34 @@ class SectionTokenizer(RuleBasedAnnotator):
             List of rules for modifying a section name according its order to the other
             sections.
         """
+        if proc_id is None:
+            proc_id = generate_id()
 
+        self.id: str = proc_id
         self.output_label = output_label
         self.section_dict = section_dict
         self.section_rules = section_rules
         self.keyword_processor = KeywordProcessor(case_sensitive=True)
         self.keyword_processor.add_keywords_from_dict(section_dict)
 
+        self._prov_builder: Optional[ProvBuilder] = None
+
+    @property
+    def description(self) -> OperationDescription:
         config = dict(
-            output_label=output_label,
-            section_dict=section_dict,
-            section_rules=section_rules,
+            output_label=self.output_label,
+            section_dict=self.section_dict,
+            section_rules=self.section_rules,
         )
 
-        self._description = OperationDescription(
-            id=proc_id, name=self.__class__.__name__, config=config
+        return OperationDescription(
+            id=self.id, name=self.__class__.__name__, config=config
         )
 
-    def process(self, segments: List[Segment]) -> List[Segment]:
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
+
+    def run(self, segments: List[Segment]) -> List[Segment]:
         """
         Return sections detected in `segments`.
 
@@ -123,12 +133,17 @@ class SectionTokenizer(RuleBasedAnnotator):
             # add section name in metadata
             metadata = dict(name=name)
             section = Segment(
-                origin=Origin(operation_id=self.description.id, ann_ids=[segment.id]),
                 label=self.output_label,
                 spans=spans,
                 text=text,
                 metadata=metadata,
             )
+
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    section, self.description, source_data_items=[segment]
+                )
+
             yield section
 
     def _get_sections_to_rename(self, match: List[Tuple]):
