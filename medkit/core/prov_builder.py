@@ -67,6 +67,18 @@ class ProvBuilder:
         self.graph.add_sub_graph(op_desc.id, sub_graph)
 
         for data_item in data_items:
+            # ignore data items already known
+            # (can happen with attributes being copied from one annotation to another)
+            if self.graph.has_node(data_item.id):
+                # check operation_id is consistent
+                node = self.graph.get_node(data_item.id)
+                if node.operation_id != op_desc.id:
+                    raise RuntimeError(
+                        "Trying to add provenance for sub graph for data item with id"
+                        " {data_item.id} that already has a node, but with different"
+                        " operation_id"
+                    )
+                continue
             self._add_prov_from_sub_graph_for_data_item(
                 data_item.id, op_desc.id, sub_graph
             )
