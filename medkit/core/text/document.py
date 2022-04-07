@@ -49,9 +49,10 @@ class TextDocument(Document[TextAnnotation]):
         self.entities: Dict[str, List[str]] = dict()  # Key: label
         self.relations: Dict[str, List[str]] = dict()  # Key: TODO : determine the key
 
-        if self.text is not None:
-            raw_text_seg = self._gen_raw_text_segment()
-            self.add_annotation(raw_text_seg)
+        # auto-generated RAW_TEXT segment
+        # not stored with other annotations but injected in calls to get_annotations_by_label()
+        # and get_annotation_by_id()
+        self._raw_text_seg: Optional[Segment] = self._gen_raw_text_segment()
 
     def add_annotation(self, annotation: TextAnnotation):
         """
@@ -75,6 +76,11 @@ class TextDocument(Document[TextAnnotation]):
         ValueError
             If `annotation.id` is already in Document.annotations.
         """
+        if annotation.label == self.RAW_TEXT_LABEL:
+            raise RuntimeError(
+                f"Cannot add annotation with reserved label {self.RAW_TEXT_LABEL}"
+            )
+
         try:
             super().add_annotation(annotation)
         except ValueError as err:
@@ -94,7 +100,22 @@ class TextDocument(Document[TextAnnotation]):
         elif isinstance(annotation, Relation):
             pass  # TODO: complete when key is determined
 
-    def _gen_raw_text_segment(self) -> Segment:
+    def get_annotations_by_label(self, label) -> List[TextAnnotation]:
+        # inject RAW_TEXT segment
+        if self._raw_text_seg is not None and label == self.RAW_TEXT_LABEL:
+            return [self._raw_text_seg]
+        return super().get_annotations_by_label(label)
+
+    def get_annotation_by_id(self, annotation_id) -> Optional[TextAnnotation]:
+        # inject RAW_TEXT segment
+        if self._raw_text_seg is not None and annotation_id == self._raw_text_seg.id:
+            return self._raw_text_seg
+        return super().get_annotation_by_id(annotation_id)
+
+    def _gen_raw_text_segment(self) -> Optional[Segment]:
+        if self.text is None:
+            return None
+
         # generate deterministic uuid based on document id
         # so that the annotation id is the same if the doc id is the same
         rng = random.Random(self.id)
