@@ -50,8 +50,8 @@ class TextDocument(Document[TextAnnotation]):
         self.relations: Dict[str, List[str]] = dict()  # Key: TODO : determine the key
 
         if self.text is not None:
-            raw_text_ann = self._gen_raw_text_annotation()
-            self.add_annotation(raw_text_ann)
+            raw_text_seg = self._gen_raw_text_segment()
+            self.add_annotation(raw_text_seg)
 
     def add_annotation(self, annotation: TextAnnotation):
         """
@@ -94,7 +94,7 @@ class TextDocument(Document[TextAnnotation]):
         elif isinstance(annotation, Relation):
             pass  # TODO: complete when key is determined
 
-    def _gen_raw_text_annotation(self) -> Segment:
+    def _gen_raw_text_segment(self) -> Segment:
         # generate deterministic uuid based on document id
         # so that the annotation id is the same if the doc id is the same
         rng = random.Random(self.id)
