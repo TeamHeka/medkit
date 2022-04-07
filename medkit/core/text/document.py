@@ -54,6 +54,22 @@ class TextDocument(Document[TextAnnotation]):
         # and get_annotation_by_id()
         self._raw_text_seg: Optional[Segment] = self._gen_raw_text_segment()
 
+    def _gen_raw_text_segment(self) -> Optional[Segment]:
+        if self.text is None:
+            return None
+
+        # generate deterministic uuid based on document id
+        # so that the annotation id is the same if the doc id is the same
+        rng = random.Random(self.id)
+        id = str(uuid.UUID(int=rng.getrandbits(128)))
+
+        return Segment(
+            label=self.RAW_TEXT_LABEL,
+            spans=[Span(0, len(self.text))],
+            text=self.text,
+            ann_id=id,
+        )
+
     def add_annotation(self, annotation: TextAnnotation):
         """
         Add the annotation to this document
@@ -111,22 +127,6 @@ class TextDocument(Document[TextAnnotation]):
         if self._raw_text_seg is not None and annotation_id == self._raw_text_seg.id:
             return self._raw_text_seg
         return super().get_annotation_by_id(annotation_id)
-
-    def _gen_raw_text_segment(self) -> Optional[Segment]:
-        if self.text is None:
-            return None
-
-        # generate deterministic uuid based on document id
-        # so that the annotation id is the same if the doc id is the same
-        rng = random.Random(self.id)
-        id = str(uuid.UUID(int=rng.getrandbits(128)))
-
-        return Segment(
-            label=self.RAW_TEXT_LABEL,
-            spans=[Span(0, len(self.text))],
-            text=self.text,
-            ann_id=id,
-        )
 
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
