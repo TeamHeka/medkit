@@ -11,8 +11,8 @@ The Medkit contributing process is as follows:
 - create a branch based on `develop` named with the following convention: `<issue-id>-<short-description>` (without the `#` character).
 - start working by adding commits to this branch. Try to have clear [commit messages](https://cbea.ms/git-commit/). Do not forget to also write tests in the `tests/`directory if applicable (cf [Tests](#tests)).
 - once you are done, check that your code follows our coding standards with `black`and `flake8` (cf [Linting and formatting](#linting-and-formatting)) and that all the tests pass with `pytest` (cf [Tests](#tests))
-- push your local branch on the Gitlab repository and open a [merge request](https://gitlab.inria.fr/heka/medkit/-/merge_requests). TODO: mention automatic CI checks once they are added.
-- wait for the review of the Medkit maintainers. They will make sure it aligns with the project goals and may ask for some changes.
+- push your local branch on the Gitlab repository and open a [merge request](https://gitlab.inria.fr/heka/medkit/-/merge_requests) (MR). Unit tests and linting/formatting checks will automatically be run on the MR and prevent it from being merged if they fail.
+- once all CI checks passed, wait for the review of the Medkit maintainers. They will make sure it aligns with the project goals and may ask for some changes.
 
 Once this reviewing phase is over, the merge request will be integrated into `develop`, either with a merge, a squash & merge or a rebase, depending on the impact of the merge request and the state of its git history. The branch you worked on will then be deleted.
 
@@ -36,10 +36,13 @@ To set up a local dev environment:
 - clone the Medkit repository locally:
   - SSH: `git clone git@gitlab.inria.fr:heka/medkit.git`
   - HTTPS: `git clone https://gitlab.inria.fr/heka/medkit`
+- install the `wheel` package with `pip install wheel` so that dependencies relying on wheels can be installed
 - enter the repository root dir (`cd medkit/`) and install the required dev dependencies: `pip install -r requirements.txt`
 - TODO: describe how to enable pre-commit hooks
 
 To make sure everything is set up properly, you may run the tests by launching the `pytest` command in the repository root dir.
+
+If you want to run the examples stored in the `examples/` directory, you may install the medkit package in editable mode by running `pip install -e .` in the repository root dir.
 
 ## Coding standards
 ### Code conventions
@@ -55,11 +58,13 @@ Note that contrary to PEP8, the maximum line length in Medkit is not 79 characte
 
 ### Linting and formatting
 
-To format the codebase consistently and enforce PEP8 compliance, we use [black](https://github.com/ambv/black) for code formatting and  [flake8](https://github.com/ambv/black) for linting.
+To format the codebase consistently and enforce PEP8 compliance, we use [black](https://github.com/ambv/black) for code formatting and [flake8](https://github.com/ambv/black) for linting.
 
 Running the command `black <path/to/file.py>` will auto-format the file. Running `flake8 <path/to/file.py>` will display potential infractions to PEP8. Editors such as [vscode](https://code.visualstudio.com/) can be configured to do this automatically when editing or saving a file.
 
-TODO mention pre-commit hooks and CI checks.
+Note that every time a merge request is opened or updated, `black` and `flake8` will automatically be run on the codebase and will prevent it from being merged if an error is detected.
+
+TODO mention pre-commit hooks.
 
 ### Coding style
 

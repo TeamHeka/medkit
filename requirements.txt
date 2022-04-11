@@ -1,4 +1,15 @@
+flashtext
+pyaml
+smart_open
+Unidecode
+
+# optional dependencies
+quickumls
+six # needed for quickumls, workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/pull/80
+PyRuSH
+
 # dev dependencies
 black
 flake8
 pytest
+pytest-cov

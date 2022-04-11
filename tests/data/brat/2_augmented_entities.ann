@@ -1,0 +1,10 @@
+T1	label1 30 37	entity1
+T2	label2 120 127	entity2
+T3	label3 140 147	entity3
+T4	And-Group 30 37; 120 127	entity1 entity2
+T5	Or-Group 30 37; 120 127; 140 147	entity1 entity2 entity3
+R1	And Arg1:T4 Arg2:T1
+R2	And Arg1:T4 Arg2:T2
+R3	Or Arg1:T5 Arg2:T4
+R4	Or Arg1:T5 Arg2:T3
+A1	attribute T4
