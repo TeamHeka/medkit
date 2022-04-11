@@ -52,9 +52,9 @@ class TextDocument(Document[TextAnnotation]):
         # auto-generated RAW_TEXT segment
         # not stored with other annotations but injected in calls to get_annotations_by_label()
         # and get_annotation_by_id()
-        self._raw_text_seg: Optional[Segment] = self._gen_raw_text_segment()
+        self._raw_text_seg: Optional[Segment] = self._generate_raw_text_segment()
 
-    def _gen_raw_text_segment(self) -> Optional[Segment]:
+    def _generate_raw_text_segment(self) -> Optional[Segment]:
         if self.text is None:
             return None
 
