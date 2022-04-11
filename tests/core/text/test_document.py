@@ -46,9 +46,9 @@ def test_get_annotations_by_label(init_data):
     assert doc.get_annotations_by_label(ent1.label) == [ent1, ent3]
 
 
-def test_raw_text_annotation():
+def test_raw_text_segment():
     text = "This is the raw text."
-    # raw text ann automatically generated when text is provided
+    # raw text segment automatically generated when text is provided
     doc = TextDocument(text=text)
     anns = doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)
     assert len(anns) == 1
@@ -56,13 +56,17 @@ def test_raw_text_annotation():
     assert ann.label == TextDocument.RAW_TEXT_LABEL
     assert ann.text == doc.text
     assert type(ann) == Segment
+    # reachable by id
+    assert doc.get_annotation_by_id(ann.id) is ann
+    # not stored with other annotations
+    assert len(doc.get_annotations()) == 0
 
-    # no raw text ann if no text provided
+    # no raw text segment if no text provided
     doc = TextDocument()
     anns = doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)
     assert len(anns) == 0
 
-    # docs with same ids should have raw text anns with same id
+    # docs with same ids should have raw text segments with same id
     doc_id = generate_id()
     doc_1 = TextDocument(doc_id=doc_id, text=text)
     ann_1 = doc_1.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)[0]

@@ -1,5 +1,5 @@
 from medkit.core import ProvBuilder
-from medkit.core.text import TextDocument, Span
+from medkit.core.text import Span
 from medkit.io.brat import BratInputConverter
 
 
@@ -21,7 +21,7 @@ def test_load():
 
     # all expected annotations should be present
     anns = doc.get_annotations()
-    assert len(anns) == 10  # 9 annotations in .ann + RAW_TEXT annotation
+    assert len(anns) == 9
     assert len(doc.entities.get("medication", [])) == 2
     assert len(doc.entities.get("disease", [])) == 2
     assert len(doc.entities.get("vitamin", [])) == 3
@@ -56,8 +56,7 @@ def test_load_no_anns():
     collection = brat_converter.load(dir_path="tests/data/text")
     for doc in collection.documents:
         assert doc.text is not None
-        anns = doc.get_annotations()
-        assert len(anns) == 1 and anns[0].label == TextDocument.RAW_TEXT_LABEL
+        assert len(doc.get_annotations()) == 0
 
 
 def test_prov():
