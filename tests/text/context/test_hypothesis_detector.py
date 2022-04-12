@@ -1,5 +1,9 @@
+from pathlib import Path
+
 from medkit.core.text import Segment, Span
 from medkit.text.context.hypothesis_detector import HypothesisDetector
+
+_PATH_TO_VERBS = Path(__file__).parent / "hypothesis_verbs.yml"
 
 
 def _get_syntagma_segments(syntagma_texts):
@@ -11,6 +15,37 @@ def _get_syntagma_segments(syntagma_texts):
         )
         for text in syntagma_texts
     ]
+
+
+def test_verbs():
+    verbs = HypothesisDetector.load_verbs(_PATH_TO_VERBS)
+    detector = HypothesisDetector(
+        output_label="hypothesis",
+        verbs=verbs,
+        modes_and_tenses=[("indicatif", "futur"), ("conditionel", "présent")],
+    )
+
+    hyp_syntagma_texts = [
+        "Il serait malade",
+        "Il sera malade",
+        "Il aurait le covid",
+    ]
+    hyp_syntagmas = _get_syntagma_segments(hyp_syntagma_texts)
+    detector.run(hyp_syntagmas)
+
+    for syntagma in hyp_syntagmas:
+        attr = syntagma.attrs[0]
+        assert attr.label == "hypothesis"
+        assert attr.value is True
+
+    certain_syntagmas_texts = ["Il est malade", "Il a le covid"]
+    certain_syntagmas = _get_syntagma_segments(certain_syntagmas_texts)
+    detector.run(certain_syntagmas)
+
+    for syntagma in certain_syntagmas:
+        attr = syntagma.attrs[0]
+        assert attr.label == "hypothesis"
+        assert attr.value is False
 
 
 # fmt: off
