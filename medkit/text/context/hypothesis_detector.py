@@ -62,14 +62,18 @@ class HypothesisDetector:
         self.id: str = proc_id
         self.output_label: str = output_label
         self.verbs: List[Dict[str, Dict[str, List[str]]]] = verbs
-        self.hypothesis_modes_and_tense: List[Tuple[str, str]] = modes_and_tenses
+        self.modes_and_tenses: List[Tuple[str, str]] = modes_and_tenses
 
-        self._verbs_hypo = {
-            verb_form
-            for verb_form_by_mode_and_tense in verbs
-            for mode, tense in modes_and_tenses
-            for verb_form in verb_form_by_mode_and_tense[mode][tense]
-        }
+        # build and pre-compile exclusion pattern for each verb
+        self._verb_patterns = []
+        for verb_form_by_mode_and_tense in verbs:
+            verb_regexps = []
+            for mode, tense in modes_and_tenses:
+                for verb_form in verb_form_by_mode_and_tense[mode][tense]:
+                    verb_regexp = r"\b" + verb_form.replace(" ", r"\s+") + r"\b"
+                    verb_regexps.append(verb_regexp)
+            verb_pattern = re.compile("|".join(verb_regexps), flags=re.IGNORECASE)
+            self._verb_patterns.append(verb_pattern)
 
     def run(self, segments: List[Segment]):
         """Add an hypothesis attribute to each segment with a True/False value
@@ -90,12 +94,10 @@ class HypothesisDetector:
             is_hypothesis = False
         else:
             phrase_low = phrase.lower()
-            sentence_array = re.split(r"[^\w0-9.\']+", phrase_low)
-
-            inter_hypo = list(set(self._verbs_hypo) & set(sentence_array))
-
-            if len(inter_hypo) > 0:
-                is_hypothesis = True
+            for verb_pattern in self._verb_patterns:
+                if verb_pattern.search(phrase_low):
+                    is_hypothesis = True
+                    break
             else:
                 if (
                     (
