@@ -1,8 +1,10 @@
-__all__ = ["HypothesisDetector"]
+__all__ = ["HypothesisDetector", "HypothesisDetectorRule"]
 
+import dataclasses
 from pathlib import Path
 import re
 from typing import Dict, List, Optional, Tuple
+import unidecode
 
 import yaml
 
@@ -10,7 +12,44 @@ from medkit.core import generate_id, Attribute
 from medkit.core.text import Segment
 
 
+_PATH_TO_DEFAULT_RULES = Path(__file__).parent / "hypothesis_detector_default_rules.yml"
 _PATH_TO_DEFAULT_VERBS = Path(__file__).parent / "hypothesis_detector_default_verbs.yml"
+
+
+@dataclasses.dataclass
+class HypothesisDetectorRule:
+    """Regexp-based rule to use with `HypothesisDetector`
+
+    Attributes
+    ----------
+    regexp:
+        The regexp pattern used to match a hypothesis
+    exclusion_regexps:
+        Optional exclusion patterns
+    id:
+        Unique identifier of the rule to store in the metadata of the entities
+    case_sensitive:
+        Wether to ignore case when running `regexp and `exclusion_regexs`
+    unicode_sensitive:
+        Wether to replace all non-ASCII chars by the closest ASCII chars
+        on input text before runing `regexp and `exclusion_regexs`.
+        If True, then `regexp and `exclusion_regexs` shouldn't contain
+        non-ASCII chars because they would never be matched.
+    """
+
+    regexp: str
+    exclusion_regexps: List[str] = dataclasses.field(default_factory=list)
+    id: Optional[str] = None
+    case_sensitive: bool = False
+    unicode_sensitive: bool = False
+
+    def __post_init__(self):
+        assert self.unicode_sensitive or (
+            self.regexp.isascii() and all(r.isascii() for r in self.exclusion_regexps)
+        ), (
+            "HypothesisDetectorRule regexps shouldn't contain non-ASCII chars when"
+            " unicode_sensitive is False"
+        )
 
 
 class HypothesisDetector:
@@ -28,6 +67,7 @@ class HypothesisDetector:
     def __init__(
         self,
         output_label: str = "hypothesis",
+        rules: Optional[List[HypothesisDetectorRule]] = None,
         verbs: Optional[List[Dict[str, Dict[str, List[str]]]]] = None,
         modes_and_tenses: Optional[List[Tuple[str, str]]] = None,
         proc_id: Optional[str] = None,
@@ -38,6 +78,9 @@ class HypothesisDetector:
         ----------
         output_label:
             The label of the created attributes
+        rules:
+            The set of rules to use when detecting hypothesis. If none provided,
+            the rules in "hypothesis_detector_default_rules.yml" will be used
         verbs:
             List of conjugated verbs forms, to be used in association with `modes_and_tenses`
             Each verb must be represent by a dict with an entry for each mode,
@@ -51,6 +94,8 @@ class HypothesisDetector:
         """
         if proc_id is None:
             proc_id = generate_id()
+        if rules is None:
+            rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
         if verbs is None:
             verbs = self.load_verbs(_PATH_TO_DEFAULT_VERBS)
         if modes_and_tenses is None:
@@ -61,6 +106,7 @@ class HypothesisDetector:
 
         self.id: str = proc_id
         self.output_label: str = output_label
+        self.rules: List[HypothesisDetectorRule] = rules
         self.verbs: List[Dict[str, Dict[str, List[str]]]] = verbs
         self.modes_and_tenses: List[Tuple[str, str]] = modes_and_tenses
 
@@ -74,6 +120,28 @@ class HypothesisDetector:
                     verb_regexps.append(verb_regexp)
             verb_pattern = re.compile("|".join(verb_regexps), flags=re.IGNORECASE)
             self._verb_patterns.append(verb_pattern)
+
+        # pre-compile rule patterns
+        self._non_empty_text_pattern = re.compile(r"[a-z]", flags=re.IGNORECASE)
+        self._patterns_by_rule_id = {
+            rule.id: re.compile(
+                rule.regexp, flags=0 if rule.case_sensitive else re.IGNORECASE
+            )
+            for rule in self.rules
+        }
+        self._exclusion_patterns_by_rule_id = {
+            rule.id: re.compile(
+                "|".join(
+                    f"(?:{r})" for r in rule.exclusion_regexps
+                ),  # join all exclusions in one pattern
+                flags=0 if rule.case_sensitive else re.IGNORECASE,
+            )
+            for rule in self.rules
+            if rule.exclusion_regexps
+        }
+        self._has_non_unicode_sensitive_rule = any(
+            not r.unicode_sensitive for r in rules
+        )
 
     def run(self, segments: List[Segment]):
         """Add an hypothesis attribute to each segment with a True/False value
@@ -89,45 +157,51 @@ class HypothesisDetector:
             segment.attrs.append(hyp_attr)
 
     def _detect_hypothesis_in_segment(self, segment: Segment) -> Attribute:
-        phrase = segment.text
-        if len(phrase) > 150:
-            is_hypothesis = False
-        else:
-            phrase_low = phrase.lower()
+        is_hypothesis = False
+        metadata = None
+
+        if len(segment.text) <= 150:
+            text_unicode = segment.text
+            if self._has_non_unicode_sensitive_rule:
+                # If there exists one rule which is not unicode-sensitive
+                text_ascii = unidecode.unidecode(text_unicode)
+                # Verify that text length is conserved
+                if len(text_ascii) != len(
+                    text_unicode
+                ):  # if text conversion had changed its length
+                    raise ValueError(
+                        "Lengths of unicode text and generated ascii text are"
+                        " different. Please, pre-process input text before running"
+                        f" RegexpMatcher\n\nUnicode:{text_unicode} (length:"
+                        f" {len(text_unicode)})\nAscii: {text_ascii} (length:"
+                        f" {len(text_ascii)})\n"
+                    )
             for verb_pattern in self._verb_patterns:
-                if verb_pattern.search(phrase_low):
+                if verb_pattern.search(text_unicode):
                     is_hypothesis = True
                     break
             else:
-                if (
-                    (
-                        (re.findall(r"\bsi\b", phrase_low) != [])
-                        & (re.findall(r"\bsi\s+oui\b", phrase_low) == [])
-                        & (re.findall(r"\bm[eê]me\s+si\b", phrase_low) == [])
-                    )
-                    | (re.findall(r"\b[àa]\s+condition\s+que\b", phrase_low) != [])
-                    | (re.findall(r"\b[àa]\s+moins\s+que\b", phrase_low) != [])
-                    | (re.findall(r"\bpour\s+peu\s+que\b", phrase_low) != [])
-                    | (re.findall(r"\bsi\s+tant\s+est\s+que\b", phrase_low) != [])
-                    | (re.findall(r"\bpour\s+autant\s+que\b", phrase_low) != [])
-                    | (re.findall(r"\ben\s+admettant\s+que\b", phrase_low) != [])
-                    | (re.findall(r"\b[àa]\s+supposer\s+que\b", phrase_low) != [])
-                    | (re.findall(r"\ben\s+supposant\s+que\b", phrase_low) != [])
-                    | (re.findall(r"\bau\s+cas\s+o[uù]\b", phrase_low) != [])
-                    | (re.findall(r"\b[ée]ventuellement\b", phrase_low) != [])
-                    | (re.findall(r"\bsuspicion\b", phrase_low) != [])
-                    | (
-                        (re.findall(r"\bsuspect[ée]e?s?\b", phrase_low) != [])
-                        & (re.findall(r"\bconfirm[ée]e?s?\b", phrase_low) == [])
-                    )
-                    | (re.findall(r"\benvisag[eé]e?s?r?\b", phrase_low) != [])
-                ):
+                for rule in self.rules:
+                    text = text_unicode if rule.unicode_sensitive else text_ascii
+                    pattern = self._patterns_by_rule_id[rule.id]
+                    if pattern.search(text) is not None:
+                        exclusion_pattern = self._exclusion_patterns_by_rule_id.get(
+                            rule.id
+                        )
+                        if (
+                            exclusion_pattern is None
+                            or exclusion_pattern.search(text) is None
+                        ):
+                            is_hypothesis = True
+                            if rule.id is not None:
+                                metadata = dict(rule_id=rule.id)
+                            break
 
-                    is_hypothesis = True
-                else:
-                    is_hypothesis = False
-
-        hyp_attr = Attribute(label=self.output_label, value=is_hypothesis,)
+        hyp_attr = Attribute(
+            label=self.output_label,
+            value=is_hypothesis,
+            metadata=metadata,
+        )
         return hyp_attr
 
     @staticmethod
@@ -153,3 +227,26 @@ class HypothesisDetector:
         with open(path_to_verbs) as f:
             verbs = yaml.safe_load(f)
         return verbs
+
+    @staticmethod
+    def load_rules(path_to_rules) -> List[HypothesisDetectorRule]:
+        """
+        Load all rules stored in a yml file
+
+        Parameters
+        ----------
+        path_to_rules:
+            Path to a yml file containing a list of mappings
+            with the same structure as `HypothesisDetectorRule`
+
+        Returns
+        -------
+        List[HypothesisDetectorRule]
+            List of all the rules in `path_to_rules`,
+            can be used to init an `HypothesisDetector`
+        """
+
+        with open(path_to_rules, mode="r") as f:
+            rules_data = yaml.safe_load(f)
+        rules = [HypothesisDetectorRule(**d) for d in rules_data]
+        return rules
