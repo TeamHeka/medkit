@@ -28,7 +28,7 @@ class SyntagmaTokenizer:
 
     def __init__(
         self,
-        separators: Tuple[str],
+        separators: Tuple[str, ...],
         output_label: str = DefaultConfig.output_label,
         keep_separator: bool = DefaultConfig.keep_separator,
         proc_id: Optional[str] = None,
@@ -38,7 +38,7 @@ class SyntagmaTokenizer:
 
         Parameters
         ----------
-        separators: Tuple[str]
+        separators: Tuple[str, ...]
             The tuple of regular expressions corresponding to separators.
         output_label: str, Optional
             The output label of the created annotations.
@@ -62,7 +62,11 @@ class SyntagmaTokenizer:
 
     @property
     def description(self) -> OperationDescription:
-        config = dict(separators=self.separators, output_label=self.output_label)
+        config = dict(
+            output_label=self.output_label,
+            separators=self.separators,
+            keep_separator=self.keep_separator,
+        )
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
         )
@@ -82,7 +86,7 @@ class SyntagmaTokenizer:
         Returns
         -------
         List[Segments]:
-            Sentences segments found in `segments`
+            Syntagmas segments found in `segments`
         """
         return [
             syntagma
@@ -128,7 +132,6 @@ class SyntagmaTokenizer:
                 spans=spans,
                 text=text,
             )
-            print(syntagma)
 
             if self._prov_builder is not None:
                 self._prov_builder.add_prov(
@@ -151,7 +154,7 @@ class SyntagmaTokenizer:
     @staticmethod
     def load_syntagma_definition(
         filepath,
-    ) -> Tuple[str]:
+    ) -> Tuple[str, ...]:
         """
         Load the syntagma definition stored in yml file
 
@@ -162,7 +165,7 @@ class SyntagmaTokenizer:
 
         Returns
         -------
-        Tuple[str]:
+        Tuple[str, ...]:
             Tuple containing the separators
         """
 
