@@ -96,7 +96,9 @@ class Attribute:
         self.metadata[key] = value
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(id=self.id, label=self.label, metadata=self.metadata)
+        return dict(
+            id=self.id, label=self.label, value=self.value, metadata=self.metadata
+        )
 
     def __repr__(self):
         return (
