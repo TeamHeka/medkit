@@ -324,13 +324,13 @@ def test_operation_reusing_output():
         double_prefixed_items
     )
 
-    for (input_item, prefixed_item) in zip(input_items, prefixed_items):
+    for input_item, prefixed_item in zip(input_items, prefixed_items):
         prefixed_node = graph.get_node(prefixed_item.id)
         # operation id is of outer wrapper operation
         assert prefixed_node.operation_id == wrapper.id
         # prefixed node has corresponding input item as source
         assert prefixed_node.source_ids == [input_item.id]
-    for (input_item, double_prefixed_item) in zip(input_items, prefixed_items):
+    for input_item, double_prefixed_item in zip(input_items, prefixed_items):
         double_prefixed_node = graph.get_node(double_prefixed_item.id)
         # operation id is of outer wrapper operation
         assert double_prefixed_node.operation_id == wrapper.id
@@ -344,14 +344,14 @@ def test_operation_reusing_output():
         double_prefixed_items
     )
 
-    for (input_item, prefixed_item) in zip(input_items, prefixed_items):
+    for input_item, prefixed_item in zip(input_items, prefixed_items):
         prefixed_node = sub_graph.get_node(prefixed_item.id)
         # operation id is of inner 1st prefixer
         assert prefixed_node.operation_id == wrapper.prefixer_1.id
         # prefixed node has corresponding input item as source
         assert prefixed_node.source_ids == [input_item.id]
 
-    for (prefixed_item, double_prefixed_item) in zip(
+    for prefixed_item, double_prefixed_item in zip(
         prefixed_items, double_prefixed_items
     ):
         double_prefixed_node = sub_graph.get_node(double_prefixed_item.id)
