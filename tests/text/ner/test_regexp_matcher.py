@@ -1,3 +1,5 @@
+import pytest
+
 from medkit.core import Attribute, ProvBuilder
 from medkit.core.text import Segment, Span
 from medkit.text.ner.regexp_matcher import (
@@ -180,6 +182,13 @@ def test_unicode_sensitive_off():
     entities = matcher.run([sentence])
 
     assert _find_entity(entities, "Diabetes") is not None
+
+    sentence_with_ligatures = _get_sentence_segment(
+        "Il a une sœur atteinte de diabète et pensait que sa mère avait peut-être aussi"
+        " le diabète. "
+    )
+    with pytest.raises(ValueError):
+        matcher.run([sentence_with_ligatures])
 
 
 def test_unicode_sensitive_on():

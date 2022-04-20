@@ -4,7 +4,7 @@ __all__ = [
     "RegexpMatcherNormalization",
 ]
 
-import importlib
+import importlib.util
 
 from .regexp_matcher import RegexpMatcher, RegexpMatcherRule, RegexpMatcherNormalization
 

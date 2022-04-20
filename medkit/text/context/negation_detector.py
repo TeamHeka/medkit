@@ -33,10 +33,10 @@ class NegationDetectorRule:
     id:
         Unique identifier of the rule to store in the metadata of the entities
     case_sensitive:
-        Wether to ignore case when running `regexp and `exclusion_regexs`
+        Whether to ignore case when running `regexp and `exclusion_regexs`
     unicode_sensitive:
-        Wether to replace all non-ASCII chars by the closest ASCII chars
-        on input text before runing `regexp and `exclusion_regexs`.
+        Whether to replace all non-ASCII chars by the closest ASCII chars
+        on input text before running `regexp and `exclusion_regexs`.
         If True, then `regexp and `exclusion_regexs` shouldn't contain
         non-ASCII chars because they would never be matched.
     """
@@ -147,11 +147,21 @@ class NegationDetector:
             return
 
         text_unicode = segment.text
-        text_ascii = (
-            unidecode.unidecode(text_unicode)
-            if self._has_non_unicode_sensitive_rule
-            else None
-        )
+        text_ascii = None
+
+        if self._has_non_unicode_sensitive_rule:
+            # If there exists one rule which is not unicode-sensitive
+            text_ascii = unidecode.unidecode(text_unicode)
+            # Verify that text length is conserved
+            if len(text_ascii) != len(
+                text_unicode
+            ):  # if text conversion had changed its length
+                raise ValueError(
+                    "Lengths of unicode text and generated ascii text are different. "
+                    "Please, pre-process input text before running RegexpMatcher\n\n"
+                    f"Unicode:{text_unicode} (length: {len(text_unicode)})\n"
+                    f"Ascii: {text_ascii} (length: {len(text_ascii)})\n"
+                )
 
         # try all rules until we have a match
         is_negated = False
