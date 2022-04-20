@@ -1,3 +1,5 @@
+import pytest
+
 from medkit.core import ProvBuilder
 from medkit.core.text import Segment, Span
 from medkit.text.context.negation_detector import NegationDetector, NegationDetectorRule
@@ -142,6 +144,10 @@ def test_unicode_sensitive_off():
     assert attr_1.value is True
     attr_2 = syntagmas[1].attrs[0]
     assert attr_2.value is True
+
+    syntagmas_with_ligatures = _get_syntagma_segments(["Sœur non covidée"])
+    with pytest.raises(ValueError):
+        detector.run(syntagmas_with_ligatures)
 
 
 def test_unicode_sensitive_on():

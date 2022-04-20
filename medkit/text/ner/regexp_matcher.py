@@ -39,7 +39,10 @@ class RegexpMatcherRule:
         If the regexp has groups, the index of the group to use to extract
         the entity
     case_sensitive:
-        Wether to ignore case when running `regexp and `exclusion_regexp`
+        Whether to ignore case when running `regexp and `exclusion_regexp`
+    unicode_sensitive:
+        If True, regexp rule matches are searched on unicode text.
+        If False, regexp rule matches are searched on closest ASCII text.
     exclusion_regexp:
         An optional exclusion pattern. Note that this exclusion pattern will
         executed on the whole input annotation, so when relying on `exclusion_regexp`
@@ -67,7 +70,7 @@ class RegexpMatcherRule:
             self.regexp.isascii()
             and (self.exclusion_regexp is None or self.exclusion_regexp.isascii())
         ), (
-            "NegationDetectorRule regexps shouldn't contain non-ASCII chars when"
+            "RegexpMatcherRule regexps shouldn't contain non-ASCII chars when"
             " unicode_sensitive is False"
         )
 
@@ -184,11 +187,22 @@ class RegexpMatcher:
         ]
 
     def _find_matches_in_segment(self, segment: Segment) -> Iterator[Entity]:
-        text_ascii = (
-            unidecode.unidecode(segment.text)
-            if self._has_non_unicode_sensitive_rule
-            else None
-        )
+        text_ascii = None
+        text_unicode = segment.text
+
+        if self._has_non_unicode_sensitive_rule:
+            # If there exists one rule which is not unicode-sensitive
+            text_ascii = unidecode.unidecode(segment.text)
+            # Verify that text length is conserved
+            if len(text_ascii) != len(
+                text_unicode
+            ):  # if text conversion had changed its length
+                raise ValueError(
+                    "Lengths of unicode text and generated ascii text are different. "
+                    "Please, pre-process input text before running RegexpMatcher\n\n"
+                    f"Unicode:{text_unicode} (length: {len(text_unicode)})\n"
+                    f"Ascii: {text_ascii} (length: {len(text_ascii)})\n"
+                )
 
         for rule in self.rules:
             yield from self._find_matches_in_segment_for_rule(rule, segment, text_ascii)

@@ -1,7 +1,7 @@
 __all__ = ["SectionTokenizer", "SentenceTokenizer", "SyntagmaTokenizer"]
 
 
-import importlib
+import importlib.util
 
 from .section_tokenizer import SectionTokenizer
 from .sentence_tokenizer import SentenceTokenizer
