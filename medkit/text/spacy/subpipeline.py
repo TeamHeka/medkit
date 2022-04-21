@@ -148,5 +148,6 @@ class SpacyDocPipeline:
                             )
             else:
                 warnings.warn(
-                    f"The document with id {medkit_doc.id} has no text, it is not converted"
+                    f"The document with id {medkit_doc.id} has no text, it is not"
+                    " converted"
                 )

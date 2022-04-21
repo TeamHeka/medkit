@@ -328,10 +328,8 @@ def _segment_to_spacy_span(
             else:
                 first_id = span._.get(f"{attr.label}_")
                 warnings.warn(
-                    (
-                        f"The attribute {attr.label} is already defined in the span,"
-                        f"only {first_id} is transferred."
-                    )
+                    f"The attribute {attr.label} is already defined in the span,"
+                    f"only {first_id} is transferred."
                 )
 
     return span
@@ -371,7 +369,8 @@ def _add_entities_in_spacy_doc(
     )
     if ents_no_transferred:
         warnings.warn(
-            f"Spacy does not allow entity overlapping: '{ents_no_transferred}' were discarded."
+            f"Spacy does not allow entity overlapping: '{ents_no_transferred}' were"
+            " discarded."
         )
     spacy_doc.ents = list(spacy_doc.ents) + ents_filtered
     return spacy_doc
