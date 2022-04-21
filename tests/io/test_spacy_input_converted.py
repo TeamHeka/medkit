@@ -221,10 +221,9 @@ def test_prov(nlp_spacy):
     graph = prov_builder.graph
 
     medkit_doc = collection.documents[0]
-    raw_annotation = medkit_doc.get_annotations_by_label(medkit_doc.RAW_TEXT_LABEL)[0]
     entity_id = medkit_doc.entities["PERSON"][0]
 
     node = graph.get_node(entity_id)
     assert node.data_item_id == entity_id
     assert node.operation_id == spacy_converter.id
-    assert node.source_ids == [raw_annotation.id]
+    assert not node.source_ids
