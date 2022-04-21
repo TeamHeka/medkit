@@ -1,4 +1,5 @@
-__all__ = ["SpacyInputConverter", "SpacyOutputConvert"]
+__all__ = ["SpacyInputConverter", "SpacyOutputConverter"]
+import warnings
 from typing import List, Optional, Union
 
 from medkit.core import Collection, OperationDescription, ProvBuilder, generate_id
@@ -121,7 +122,7 @@ class SpacyInputConverter:
         return Collection(medkit_docs)
 
 
-class SpacyOutputConvert:
+class SpacyOutputConverter:
     """Class in charge of converting a list/Collection of TextDocuments into a
     list of spacy documents"""
 
@@ -189,23 +190,28 @@ class SpacyOutputConvert:
 
         spacy_docs = []
         for medkit_doc in medkit_docs:
-            # get reference annotation from the medkit document
-            raw_text_annotation = medkit_doc.get_annotations_by_label(
-                medkit_doc.RAW_TEXT_LABEL
-            )[0]
-            # create a spacy document from medkit with the selected annotations
-            spacy_doc = build_spacy_doc_from_medkit(
-                nlp=self.nlp,
-                segment=raw_text_annotation,
-                annotations=medkit_doc.get_annotations(),
-                labels_to_transfer=self.labels_to_transfer,
-                attrs_to_transfer=self.attrs_to_transfer,
-            )
-            # each component of nlp spacy is applied
-            if self.apply_nlp_spacy:
-                for _, component in self.nlp.pipeline:
-                    spacy_doc = component(spacy_doc)
+            if medkit_doc.text is not None:
+                # get reference annotation from the medkit document
+                raw_text_annotation = medkit_doc.get_annotations_by_label(
+                    medkit_doc.RAW_TEXT_LABEL
+                )[0]
+                # create a spacy document from medkit with the selected annotations
+                spacy_doc = build_spacy_doc_from_medkit(
+                    nlp=self.nlp,
+                    segment=raw_text_annotation,
+                    annotations=medkit_doc.get_annotations(),
+                    labels_to_transfer=self.labels_to_transfer,
+                    attrs_to_transfer=self.attrs_to_transfer,
+                )
+                # each component of nlp spacy is applied
+                if self.apply_nlp_spacy:
+                    for _, component in self.nlp.pipeline:
+                        spacy_doc = component(spacy_doc)
 
-            spacy_docs.append(spacy_doc)
+                spacy_docs.append(spacy_doc)
+            else:
+                warnings.warn(
+                    f"The document with id {medkit_doc.id} has no text, it is not converted"
+                )
 
         return spacy_docs

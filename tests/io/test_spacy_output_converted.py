@@ -3,7 +3,7 @@ import spacy.cli
 from medkit.core.text import Span as MedkitSpan
 from medkit.core.text.annotation import Attribute, Entity, Segment
 from medkit.core.text.document import TextDocument
-from medkit.io.spacy import SpacyOutputConvert
+from medkit.io.spacy import SpacyOutputConverter
 from spacy.tokens import Doc
 
 
@@ -103,7 +103,7 @@ def test_output_converter_entity_transfer(
     raw_annotation = medkit_doc.get_annotations_by_label(medkit_doc.RAW_TEXT_LABEL)[0]
 
     # testing output converter
-    spacy_output_converter = SpacyOutputConvert(
+    spacy_output_converter = SpacyOutputConverter(
         nlp_spacy,
         apply_nlp_spacy=False,
         labels_to_transfer=labels_ents_to_transfer,
@@ -152,7 +152,7 @@ def test_output_converter_attr_transfer(nlp_spacy):
     raw_annotation = medkit_doc.get_annotations_by_label(medkit_doc.RAW_TEXT_LABEL)[0]
 
     # testing output converter all attrs
-    spacy_output_converter_1 = SpacyOutputConvert(
+    spacy_output_converter_1 = SpacyOutputConverter(
         nlp_spacy,
         apply_nlp_spacy=False,
         labels_to_transfer=None,
@@ -160,14 +160,14 @@ def test_output_converter_attr_transfer(nlp_spacy):
     )
 
     # testing output converter no attrs
-    spacy_output_converter_2 = SpacyOutputConvert(
+    spacy_output_converter_2 = SpacyOutputConverter(
         nlp_spacy,
         apply_nlp_spacy=False,
         labels_to_transfer=None,
         attrs_to_transfer=[],
     )
     # testing output converter only family
-    spacy_output_converter_3 = SpacyOutputConvert(
+    spacy_output_converter_3 = SpacyOutputConverter(
         nlp_spacy,
         apply_nlp_spacy=False,
         labels_to_transfer=None,

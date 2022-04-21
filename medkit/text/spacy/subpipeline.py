@@ -1,7 +1,9 @@
 __all__ = ["SpacyDocPipeline"]
-from typing import List, Optional
+import warnings
+from typing import List, Optional, Union
 
 from medkit.core import OperationDescription, ProvBuilder, generate_id
+from medkit.core.document import Collection
 from medkit.core.text import TextDocument
 from medkit.text.spacy import spacy_utils
 
@@ -80,7 +82,7 @@ class SpacyDocPipeline:
     def set_prov_builder(self, prov_builder: ProvBuilder):
         self._prov_builder = prov_builder
 
-    def run(self, medkit_docs: List[TextDocument]) -> None:
+    def run(self, medkit_docs: Union[List[TextDocument], Collection]) -> None:
         """Run a spacy pipeline on a list of medkit documents.
         Each medkit document is converted to spacy document (Doc object),
         with the selected annotations and attributes. Then, the spacy pipeline
@@ -90,47 +92,61 @@ class SpacyDocPipeline:
         Parameters
         ----------
         medkit_docs:
-            List of TextDocuments on which to run the pipeline
+            List or collection of TextDocuments on which to run the pipeline
         """
+        if isinstance(medkit_docs, Collection):
+            medkit_docs = medkit_docs.documents
+
         for medkit_doc in medkit_docs:
-            # build spacy doc
-            raw_text_annotation = medkit_doc.get_annotations_by_label(
-                medkit_doc.RAW_TEXT_LABEL
-            )[0]
-            spacy_doc = spacy_utils.build_spacy_doc_from_medkit(
-                nlp=self.nlp,
-                segment=raw_text_annotation,
-                annotations=medkit_doc.get_annotations(),
-                labels_to_transfer=self.medkit_labels_to_transfer,
-                attrs_to_transfer=self.medkit_attrs_to_transfer,
-            )
-            # apply nlp spacy
-            for _, component in self.nlp.pipeline:
-                spacy_doc = component(spacy_doc)
 
-            # get new annotations and attributes
-            anns, attrs_by_ann_id = spacy_utils.extract_anns_and_attrs_from_spacy_doc(
-                spacy_doc,
-                doc_segment=raw_text_annotation,
-                labels_ents_to_transfer=self.spacy_labels_ents_to_transfer,
-                name_spans_to_transfer=self.spacy_name_spans_to_transfer,
-                attrs_to_transfer=self.spacy_attrs_to_transfer,
-            )
-            # annotate
-            # add new annotations
-            for ann in anns:
-                medkit_doc.add_annotation(ann)
-                if self._prov_builder is not None:
-                    self._prov_builder.add_prov(
-                        ann, self.description, source_data_items=[raw_text_annotation]
-                    )
+            if medkit_doc.text is not None:
+                # build spacy doc
+                raw_text_annotation = medkit_doc.get_annotations_by_label(
+                    medkit_doc.RAW_TEXT_LABEL
+                )[0]
+                spacy_doc = spacy_utils.build_spacy_doc_from_medkit(
+                    nlp=self.nlp,
+                    segment=raw_text_annotation,
+                    annotations=medkit_doc.get_annotations(),
+                    labels_to_transfer=self.medkit_labels_to_transfer,
+                    attrs_to_transfer=self.medkit_attrs_to_transfer,
+                )
+                # apply nlp spacy
+                for _, component in self.nlp.pipeline:
+                    spacy_doc = component(spacy_doc)
 
-            # add new attributes in each annotation
-            for ann_id, attrs in attrs_by_ann_id.items():
-                ann = medkit_doc.get_annotation_by_id(ann_id)
-                for attr in attrs:
-                    ann.attrs.append(attr)
+                # get new annotations and attributes
+                (
+                    anns,
+                    attrs_by_ann_id,
+                ) = spacy_utils.extract_anns_and_attrs_from_spacy_doc(
+                    spacy_doc,
+                    doc_segment=raw_text_annotation,
+                    labels_ents_to_transfer=self.spacy_labels_ents_to_transfer,
+                    name_spans_to_transfer=self.spacy_name_spans_to_transfer,
+                    attrs_to_transfer=self.spacy_attrs_to_transfer,
+                )
+                # annotate
+                # add new annotations
+                for ann in anns:
+                    medkit_doc.add_annotation(ann)
                     if self._prov_builder is not None:
                         self._prov_builder.add_prov(
-                            attr, self.description, source_data_items=[ann]
+                            ann,
+                            self.description,
+                            source_data_items=[raw_text_annotation],
                         )
+
+                # add new attributes in each annotation
+                for ann_id, attrs in attrs_by_ann_id.items():
+                    ann = medkit_doc.get_annotation_by_id(ann_id)
+                    for attr in attrs:
+                        ann.attrs.append(attr)
+                        if self._prov_builder is not None:
+                            self._prov_builder.add_prov(
+                                attr, self.description, source_data_items=[ann]
+                            )
+            else:
+                warnings.warn(
+                    f"The document with id {medkit_doc.id} has no text, it is not converted"
+                )

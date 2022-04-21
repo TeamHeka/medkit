@@ -16,6 +16,9 @@ from spacy.tokens import Doc, Span
 from spacy.tokens.underscore import Underscore
 from spacy.util import filter_spans
 
+# change to always show warning messages
+warnings.filterwarnings("always", category=UserWarning)
+
 
 def extract_anns_and_attrs_from_spacy_doc(
     spacy_doc: Doc,
@@ -288,6 +291,10 @@ def _simplify_medkit_spans(spans: List[AnySpanType]) -> Tuple[int, int]:
         start = min(spans_norm).start
         end = max(spans_norm).end
         span = MedkitSpan(start, end)
+        warnings.warn(
+            f"These spans {spans} are discontinuous, they were converted"
+            f" into its expanded version, from {start} to {end}."
+        )
     else:
         span = spans_norm[0]
 
@@ -314,8 +321,18 @@ def _segment_to_spacy_span(
     for attr in ann.attrs:
         if attr.label in attrs_to_transfer:
             # set attributes as extensions
-            span._.set(attr.label, True if attr.value is None else attr.value)
-            span._.set(f"{attr.label}_", attr.id)
+            if span._.get(f"{attr.label}_") is None:
+                # the attribute is not defined
+                span._.set(attr.label, True if attr.value is None else attr.value)
+                span._.set(f"{attr.label}_", attr.id)
+            else:
+                first_id = span._.get(f"{attr.label}_")
+                warnings.warn(
+                    (
+                        f"The attribute {attr.label} is already defined in the span,"
+                        f"only {first_id} is transferred."
+                    )
+                )
 
     return span
 
@@ -348,8 +365,14 @@ def _add_entities_in_spacy_doc(
         for ann in annotations
         if isinstance(ann, Entity)
     ]
-
     ents_filtered = filter_spans(ents)
+    ents_no_transferred = ",".join(
+        [f"({ent.text})" for ent in ents if ent not in ents_filtered]
+    )
+    if ents_no_transferred:
+        warnings.warn(
+            f"Spacy does not allow entity overlapping: '{ents_no_transferred}' were discarded."
+        )
     spacy_doc.ents = list(spacy_doc.ents) + ents_filtered
     return spacy_doc
 
