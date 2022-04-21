@@ -1,5 +1,6 @@
 flashtext
 pyaml
+requests
 smart_open
 Unidecode
 
@@ -13,3 +14,4 @@ black
 flake8
 pytest
 pytest-cov
+pytest-mock
