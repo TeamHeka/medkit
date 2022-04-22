@@ -10,6 +10,10 @@ quickumls
 six # needed for quickumls, workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/pull/80
 PyRuSH
 spacy
+sentencepiece # translator
+torch # translator
+transformers # translator
+awesome-align # translator
 
 # dev dependencies
 black
@@ -17,3 +21,4 @@ flake8
 pytest
 pytest-cov
 pytest-mock
+
