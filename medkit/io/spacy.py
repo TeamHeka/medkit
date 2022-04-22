@@ -168,6 +168,18 @@ class SpacyOutputConverter:
         self.attrs_to_transfer = attrs_to_transfer
         self.apply_nlp_spacy = apply_nlp_spacy
 
+    @property
+    def description(self) -> OperationDescription:
+        config = dict(
+            nlp=self.nlp.config["nlp"],
+            labels_to_transfer=self.labels_to_transfer,
+            attrs_to_transfer=self.attrs_to_transfer,
+            apply_nlp_spacy=self.apply_nlp_spacy,
+        )
+        return OperationDescription(
+            id=self.id, name=self.__class__.__name__, config=config
+        )
+
     def convert(self, medkit_docs: Union[List[TextDocument], Collection]) -> List[Doc]:
         """
         Convert a Collection of TextDocuments into a list of spacy Doc objects.
