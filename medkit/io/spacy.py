@@ -5,7 +5,7 @@ from typing import List, Optional, Union
 from medkit.core import Collection, OperationDescription, ProvBuilder, generate_id
 from medkit.core.text import TextDocument
 from medkit.text.spacy import (
-    build_spacy_doc_from_medkit,
+    build_spacy_doc_from_medkit_doc,
     extract_anns_and_attrs_from_spacy_doc,
 )
 
@@ -47,6 +47,7 @@ class SpacyInputConverter:
 
         self.id = proc_id
         self._prov_builder: Optional[ProvBuilder] = None
+        self._rebuild_medkit_anns = True
 
         self.labels_ents_to_transfer = labels_ents_to_transfer
         self.name_spans_to_transfer = name_spans_to_transfer
@@ -91,10 +92,11 @@ class SpacyInputConverter:
             # get anns and attributes from spacy
             anns, attrs_by_ann_id = extract_anns_and_attrs_from_spacy_doc(
                 spacy_doc=spacy_doc,
-                doc_segment=None,
+                medkit_source_ann=None,
                 labels_ents_to_transfer=self.labels_ents_to_transfer,
                 name_spans_to_transfer=self.name_spans_to_transfer,
                 attrs_to_transfer=self.attrs_to_transfer,
+                rebuild_medkit_anns=self._rebuild_medkit_anns,
             )
             # add annotations
             for ann in anns:
@@ -120,6 +122,10 @@ class SpacyInputConverter:
             medkit_docs.append(medkit_doc)
 
         return Collection(medkit_docs)
+
+    @classmethod
+    def from_description(cls, description: OperationDescription):
+        return cls(proc_id=description.id, **description.config)
 
 
 class SpacyOutputConverter:
@@ -162,6 +168,7 @@ class SpacyOutputConverter:
 
         self.id = proc_id
         self._prov_builder: Optional[ProvBuilder] = None
+        self._include_medkit_info = False
 
         self.nlp = nlp
         self.labels_to_transfer = labels_to_transfer
@@ -169,6 +176,7 @@ class SpacyOutputConverter:
         self.apply_nlp_spacy = apply_nlp_spacy
 
     @property
+    # modify NLP
     def description(self) -> OperationDescription:
         config = dict(
             nlp=self.nlp.config["nlp"],
@@ -202,29 +210,29 @@ class SpacyOutputConverter:
 
         spacy_docs = []
         for medkit_doc in medkit_docs:
-            if medkit_doc.text is not None:
-                # get reference annotation from the medkit document
-                raw_text_annotation = medkit_doc.get_annotations_by_label(
-                    medkit_doc.RAW_TEXT_LABEL
-                )[0]
-                # create a spacy document from medkit with the selected annotations
-                spacy_doc = build_spacy_doc_from_medkit(
-                    nlp=self.nlp,
-                    segment=raw_text_annotation,
-                    annotations=medkit_doc.get_annotations(),
-                    labels_to_transfer=self.labels_to_transfer,
-                    attrs_to_transfer=self.attrs_to_transfer,
-                )
-                # each component of nlp spacy is applied
-                if self.apply_nlp_spacy:
-                    for _, component in self.nlp.pipeline:
-                        spacy_doc = component(spacy_doc)
-
-                spacy_docs.append(spacy_doc)
-            else:
+            if medkit_doc.text is None:
                 warnings.warn(
                     f"The document with id {medkit_doc.id} has no text, it is not"
                     " converted"
                 )
+                continue
+
+            # create a spacy document from medkit with the selected annotations
+            spacy_doc = build_spacy_doc_from_medkit_doc(
+                nlp=self.nlp,
+                medkit_doc=medkit_doc,
+                labels_to_transfer=self.labels_to_transfer,
+                attrs_to_transfer=self.attrs_to_transfer,
+                include_medkit_info=self._include_medkit_info,
+            )
+            # each component of nlp spacy is applied
+            if self.apply_nlp_spacy:
+                spacy_doc = self.nlp(spacy_doc)
+
+            spacy_docs.append(spacy_doc)
 
         return spacy_docs
+
+    @classmethod
+    def from_description(cls, description: OperationDescription):
+        return cls(proc_id=description.id, **description.config)

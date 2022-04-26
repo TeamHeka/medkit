@@ -75,12 +75,10 @@ def _create_segment(label, span, text, attrs):
     )
 
 
-def _asssert_spacy_doc(doc, raw_annotation):
+def _asssert_spacy_doc(doc):
     assert isinstance(doc, Doc)
-    assert doc.has_extension("medkit_id")
-    assert doc._.get("medkit_id") == raw_annotation.id
-    assert doc.has_extension("medkit_spans")
-    assert doc._.get("medkit_spans") == raw_annotation.spans
+    assert doc._.get("medkit_id") is None
+    assert doc._.get("medkit_spans") is None
 
 
 TEST_ENTS_TO_SPACY = [
@@ -100,7 +98,6 @@ def test_output_converter_entity_transfer(
 ):
     # get medkit document to test
     medkit_doc = _get_doc()
-    raw_annotation = medkit_doc.get_annotations_by_label(medkit_doc.RAW_TEXT_LABEL)[0]
 
     # testing output converter
     spacy_output_converter = SpacyOutputConverter(
@@ -114,7 +111,7 @@ def test_output_converter_entity_transfer(
     assert len(spacy_docs) == 1
     spacy_doc = spacy_docs[0]
 
-    _asssert_spacy_doc(spacy_doc, raw_annotation)
+    _asssert_spacy_doc(spacy_doc)
 
     assert len(spacy_doc.ents) == expected_nb_ents
     assert not spacy_doc.has_annotation("TAG")
@@ -129,27 +126,20 @@ def test_output_converter_entity_transfer(
     doc_ents = sorted(spacy_doc.ents, key=lambda sp: sp.label)
     ents = sorted(ents, key=lambda sp: sp.label)
 
-    # each entity created has the same id as its entity of origin
+    # each entity created has no medkit id
     assert all(
-        ent_spacy._.get("medkit_id") == ent_medkit.id
-        for ent_spacy, ent_medkit in zip(doc_ents, ents)
-    )
-
-    # each entity created has the same span as its entity of origin
-    assert all(
-        ent_spacy._.get("medkit_spans") == ent_medkit.spans
+        ent_spacy._.get("medkit_id") is None
         for ent_spacy, ent_medkit in zip(doc_ents, ents)
     )
 
 
-def _span_spacy_by_medkit_id(medkit_id, spans):
-    return [sp for sp in spans if sp._.get("medkit_id") == medkit_id]
+def _span_spacy_by_text(spans, text):
+    return [sp for sp in spans if sp.text == text]
 
 
 def test_output_converter_attr_transfer(nlp_spacy):
 
     medkit_doc = _get_doc()
-    raw_annotation = medkit_doc.get_annotations_by_label(medkit_doc.RAW_TEXT_LABEL)[0]
 
     # testing output converter all attrs
     spacy_output_converter_1 = SpacyOutputConverter(
@@ -181,19 +171,16 @@ def test_output_converter_attr_transfer(nlp_spacy):
     ]
     # spacy doc was created and has the same ID as raw_ann
     for spacy_doc in spacy_docs:
-        _asssert_spacy_doc(spacy_doc, raw_annotation)
+        _asssert_spacy_doc(spacy_doc)
         assert spacy_doc.text == medkit_doc.text
         assert len(spacy_doc.ents) == 3
         assert len(spacy_doc.spans) == 1
         assert len(spacy_doc.spans["PEOPLE"]) == 2
 
-    entity_desease = medkit_doc.get_annotations_by_label("disease")[0]
-    segment_people = medkit_doc.get_annotations_by_label("PEOPLE")[0]
-
     for i, spacy_doc in enumerate(spacy_docs):
-        ent_desease = _span_spacy_by_medkit_id(entity_desease.id, spacy_doc.ents)[0]
-        span_people = _span_spacy_by_medkit_id(
-            segment_people.id, spacy_doc.spans["PEOPLE"]
+        ent_desease = _span_spacy_by_text(spacy_doc.ents, "hypertension")[0]
+        span_people = _span_spacy_by_text(
+            spacy_doc.spans["PEOPLE"], "The patient's father"
         )[0]
 
         assert span_people.has_extension("family")
@@ -203,7 +190,7 @@ def test_output_converter_attr_transfer(nlp_spacy):
         if i == 0:
             # all attrs were transferred, so, values are no None
             assert span_people._.get("family")
-            assert span_people._.get("family_") is not None
+            assert span_people._.get("family_") is None
             assert ent_desease._.get("severity") == "high"
         elif i == 1:
             # no attrs were transferred, so, values are None
@@ -213,5 +200,5 @@ def test_output_converter_attr_transfer(nlp_spacy):
         else:
             # only family was transferred, so, value is True
             assert span_people._.get("family")
-            assert span_people._.get("family_") is not None
+            assert span_people._.get("family_") is None
             assert ent_desease._.get("severity") is None
