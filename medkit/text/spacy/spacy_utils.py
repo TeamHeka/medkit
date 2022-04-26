@@ -72,7 +72,8 @@ def extract_anns_and_attrs_from_spacy_doc(
         ):
             msg = (
                 f"The medkit id of the Doc object is {spacy_doc._.get('medkit_id')},"
-                f" the medkit source annotation provided has a different id: {medkit_source_ann.id}."
+                " the medkit source annotation provided has a different id:"
+                f" {medkit_source_ann.id}."
             )
             raise ValueError(msg)
 
@@ -202,7 +203,8 @@ def build_spacy_doc_from_medkit_doc(
         # had a label of interest
         _labels = ",".join(labels_to_transfer)
         warnings.warn(
-            f"No medkit annotations were included because none have '{_labels}' as label."
+            f"No medkit annotations were included because none have '{_labels}' as"
+            " label."
         )
 
     return doc
