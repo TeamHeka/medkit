@@ -1,13 +1,15 @@
 __all__ = [
     "extract_anns_and_attrs_from_spacy_doc",
-    "build_spacy_doc_from_medkit",
-    "get_defined_spacy_attrs",
+    "build_spacy_doc_from_medkit_doc",
+    "build_spacy_doc_from_medkit_segment",
 ]
 import warnings
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
+
 
 from medkit.core import Attribute
 from medkit.core.text import Segment, TextAnnotation, span_utils, Entity
+from medkit.core.text.document import TextDocument
 from medkit.core.text.span import AnySpanType
 from medkit.core.text.span import Span as MedkitSpan
 
@@ -22,10 +24,11 @@ warnings.filterwarnings("always", category=UserWarning)
 
 def extract_anns_and_attrs_from_spacy_doc(
     spacy_doc: Doc,
-    doc_segment: Optional[Segment] = None,
+    medkit_source_ann: Optional[Segment] = None,
     labels_ents_to_transfer: Optional[List[str]] = None,
     name_spans_to_transfer: Optional[List[str]] = None,
     attrs_to_transfer: Optional[List[str]] = None,
+    rebuild_medkit_anns: bool = False,
 ) -> Tuple[List[Segment], Dict[str, List[Attribute]]]:
     """Given a spacy document, identify the new spans and create
     the equivalent segments. For each span present in the document,
@@ -57,33 +60,26 @@ def extract_anns_and_attrs_from_spacy_doc(
     Raises
     ------
     ValueError
-        Raises when the spacy Doc object came from a Segment but
-        that segment was not included as parameter or the segment
-        and the spacy doc do not have the same medkit id
+        Raises when the given medkit source and the spacy doc do not have the same medkit id
     """
 
     # extensions to indicate the medkit origin
     _define_default_extensions()
 
     if spacy_doc._.get("medkit_id") is not None:
-        if doc_segment is None:
-            msg = (
-                "The Doc object comes from a medkit segment, it should be included as"
-                " `doc_segment`."
-            )
-            raise ValueError(msg)
-        elif doc_segment.id != spacy_doc._.get("medkit_id"):
+        if medkit_source_ann is not None and medkit_source_ann.id != spacy_doc._.get(
+            "medkit_id"
+        ):
             msg = (
                 f"The medkit id of the Doc object is {spacy_doc._.get('medkit_id')},"
-                f" the segment provided has a different id: {doc_segment.id}."
+                f" the medkit source annotation provided has a different id: {medkit_source_ann.id}."
             )
             raise ValueError(msg)
 
     # get annotations according to labels_ents_to_transfer and name_spans_to_transfer
-    # TODO: simplify two list in one list of selected labels
     selected_ents = _filter_ents_by_label(spacy_doc, labels_ents_to_transfer)
     selected_spans = _filter_spans_by_label(spacy_doc, name_spans_to_transfer)
-    selected_attrs_spacy = get_defined_spacy_attrs(exclude_medkit_attrs=True)
+    selected_attrs_spacy = _get_defined_spacy_attrs(exclude_medkit_attrs=True)
 
     if attrs_to_transfer is not None:
         # filter attributes by label
@@ -91,71 +87,135 @@ def extract_anns_and_attrs_from_spacy_doc(
             attr for attr in selected_attrs_spacy if attr in attrs_to_transfer
         ]
 
-    annotations = []
-    attributes_by_ann = dict()
+    new_annotations = []
+    new_attributes_by_ann = dict()
 
-    for spacy_entity in selected_ents:
-        medkit_id = spacy_entity._.get("medkit_id")
+    # convert spacy entities
+    for entity_spacy in selected_ents:
+        medkit_id = entity_spacy._.get("medkit_id")
 
-        if medkit_id is None:
-            # spacy_entity does not come from medkit
+        if medkit_id is None or rebuild_medkit_anns:
             # create a new entity annotation
-            label = spacy_entity.label_
-            text, spans = _get_text_and_spans_from_span_spacy(spacy_entity, doc_segment)
+            label = entity_spacy.label_
+            text, spans = _get_text_and_spans_from_span_spacy(
+                span_spacy=entity_spacy, medkit_source_ann=medkit_source_ann
+            )
 
-            entity = Entity(label, spans, text, attrs=[])
+            entity = Entity(label=label, spans=spans, text=text, attrs=[])
             medkit_id = entity.id
-            annotations.append(entity)
+            new_annotations.append(entity)
 
         # for each spacy extension having a value other than None,
         # a medkit Attribute is created
         new_attributes = [
-            Attribute(attr, value=spacy_entity._.get(attr))
+            Attribute(label=attr, value=entity_spacy._.get(attr))
             for attr in selected_attrs_spacy
-            if spacy_entity._.get(attr) is not None
+            if entity_spacy._.get(attr) is not None
         ]
 
         if new_attributes:
-            attributes_by_ann[medkit_id] = new_attributes
+            new_attributes_by_ann[medkit_id] = new_attributes
 
-    for label_to_medkit, spans in selected_spans.items():
-        for spacy_span in spans:
-            medkit_id = spacy_span._.get("medkit_id")
+    # convert spacy span groups
+    for label, spans in selected_spans.items():
+        for span_spacy in spans:
+            medkit_id = span_spacy._.get("medkit_id")
 
-            if medkit_id is None:
-                # spacy_span does not come from medkit
+            if medkit_id is None or rebuild_medkit_anns:
                 # create new segment annotation
-                label = label_to_medkit
                 text, spans = _get_text_and_spans_from_span_spacy(
-                    spacy_span, doc_segment
+                    span_spacy=span_spacy, medkit_source_ann=medkit_source_ann
                 )
-
-                segment = Segment(label, spans, text, attrs=[])
+                segment = Segment(label=label, spans=spans, text=text, attrs=[])
                 medkit_id = segment.id
-                annotations.append(segment)
+                new_annotations.append(segment)
 
             # for each spacy extension having a value other than None,
             # a medkit Attribute is created
             new_attributes = [
-                Attribute(attr, value=spacy_span._.get(attr))
+                Attribute(label=attr, value=span_spacy._.get(attr))
                 for attr in selected_attrs_spacy
-                if spacy_span._.get(attr) is not None
+                if span_spacy._.get(attr) is not None
             ]
 
             if new_attributes:
-                attributes_by_ann[medkit_id] = new_attributes
+                new_attributes_by_ann[medkit_id] = new_attributes
 
-    return annotations, attributes_by_ann
+    return new_annotations, new_attributes_by_ann
 
 
-def build_spacy_doc_from_medkit(
+def build_spacy_doc_from_medkit_doc(
+    nlp: Language,
+    medkit_doc: TextDocument,
+    labels_to_transfer: Optional[List[str]] = None,
+    attrs_to_transfer: Optional[List[str]] = None,
+    include_medkit_info: bool = True,
+) -> Doc:
+    """Create a Spacy Doc from a TextDocument.
+
+    Parameters
+    ----------
+    nlp:
+        Language object with the loaded pipeline from Spacy
+    medkit_doc:
+        TextDocument to convert
+    labels_to_transfer:
+        Labels of annotations to include in the spacy document.
+        If `None` (default) all the annotations will be included.
+    attrs_to_transfer:
+        Labels of attributes to add in the annotations that will be included.
+        If `None` (default) all the attributes will be added as `custom attributes`
+        in each annotation included.
+    include_medkit_info:
+        If True, medkitID and spans are included as extensions in the Doc object
+        to identify the medkit source annotation.
+        If False, no information about IDs or spans is included.
+
+    Returns
+    -------
+    Doc:
+        A Spacy Doc with the selected annotations included.
+    """
+    assert isinstance(nlp, Language), "'nlp' should be a Language instance from Spacy"
+    # extensions to indicate the medkit origin
+    _define_default_extensions()
+
+    # get the raw text segment to transfer
+    raw_text_segment = medkit_doc.get_annotations_by_label(medkit_doc.RAW_TEXT_LABEL)[0]
+    annotations = medkit_doc.get_annotations()
+
+    if labels_to_transfer is not None:
+        # filter annotations by label
+        annotations = [ann for ann in annotations if ann.label in labels_to_transfer]
+
+    # create a spacy doc
+    doc = build_spacy_doc_from_medkit_segment(
+        nlp=nlp,
+        segment=raw_text_segment,
+        annotations=annotations,
+        attrs_to_transfer=attrs_to_transfer,
+        include_medkit_info=include_medkit_info,
+    )
+
+    if labels_to_transfer and annotations == []:
+        # labels_to_transfer were a list but none of the annotations
+        # had a label of interest
+        _labels = ",".join(labels_to_transfer)
+        warnings.warn(
+            f"No medkit annotations were included because none have '{_labels}' as label."
+        )
+
+    return doc
+
+
+def build_spacy_doc_from_medkit_segment(
     nlp: Language,
     segment: Segment,
     annotations: Optional[List[TextAnnotation]] = None,
-    labels_to_transfer: Optional[List[str]] = None,
     attrs_to_transfer: Optional[List[str]] = None,
+    include_medkit_info: bool = True,
 ) -> Doc:
-    """Create a Spacy Doc from a TextDocument.
+    """Create a Spacy Doc from a Segment.
 
     Parameters
     ----------
@@ -165,13 +225,14 @@ def build_spacy_doc_from_medkit(
         Segment to convert, this annotation contains the text to convert
     annotations:
         List of annotations in the segment of interest
-    labels_to_transfer:
-        Labels of annotations to include in the spacy document.
-        If `None` (default) all the annotations will be included.
     attrs_to_transfer:
         Labels of attributes to add in the annotations that will be included.
         If `None` (default) all the attributes will be added as `custom attributes`
         in each annotation included.
+    include_medkit_info:
+        If True, medkitID and spans are included as extensions in the Doc object
+        to identify the medkit source annotation.
+        If False, no information about IDs or spans is included.
 
     Returns
     -------
@@ -185,37 +246,39 @@ def build_spacy_doc_from_medkit(
 
     # create spacy doc
     doc = nlp.make_doc(segment.text)
-    doc._.set("medkit_id", segment.id)
-    doc._.set("medkit_spans", segment.spans)
+    if include_medkit_info:
+        doc._.set("medkit_id", segment.id)
+        doc._.set("medkit_spans", segment.spans)
 
-    selected_annotations = [] if annotations is None else annotations
+    if annotations is None:
+        annotations = []
 
-    if labels_to_transfer is not None:
-        # filter annotations by label
-        selected_annotations = [
-            ann for ann in selected_annotations if ann.label in labels_to_transfer
-        ]
-
-    if selected_annotations:
+    if annotations:
         if attrs_to_transfer is None:
             # get a list of attrs_to_transfer from selected annotations
             attrs_to_transfer = list(
-                set([attr.label for ann in selected_annotations for attr in ann.attrs])
+                set([attr.label for ann in annotations for attr in ann.attrs])
             )
         _define_attrs_extensions(attrs_to_transfer)
 
         # include annotations in the document and set attributes as extensions
-        doc = _add_entities_in_spacy_doc(doc, selected_annotations, attrs_to_transfer)
-        doc = _add_segments_in_spacy_doc(doc, selected_annotations, attrs_to_transfer)
-
-    elif selected_annotations and labels_to_transfer:
-        _labels = ",".join(labels_to_transfer)
-        warnings.warn(f"No medkit annotations were found using '{_labels}' as label.")
+        doc = _add_entities_in_spacy_doc(
+            spacy_doc=doc,
+            annotations=annotations,
+            attrs_to_transfer=attrs_to_transfer,
+            include_medkit_info=include_medkit_info,
+        )
+        doc = _add_segments_in_spacy_doc(
+            spacy_doc=doc,
+            annotations=annotations,
+            attrs_to_transfer=attrs_to_transfer,
+            include_medkit_info=include_medkit_info,
+        )
 
     return doc
 
 
-def get_defined_spacy_attrs(exclude_medkit_attrs: bool = False) -> List[str]:
+def _get_defined_spacy_attrs(exclude_medkit_attrs: bool = False) -> List[str]:
     """Returns the name of the custom attributes
     configured in spacy spans.
 
@@ -257,37 +320,39 @@ def get_defined_spacy_attrs(exclude_medkit_attrs: bool = False) -> List[str]:
     return attrs_spacy
 
 
-def _define_spacy_extension(cls: str, attr: str, default_value: Any):
-    if cls == "span":
-        if not Span.has_extension(attr):
-            Span.set_extension(attr, default=default_value)
-    elif cls == "doc":
-        if not Doc.has_extension(attr):
-            Doc.set_extension(attr, default=default_value)
+def _define_spacy_span_extension(custom_attr: str):
+    if not Span.has_extension(custom_attr):
+        Span.set_extension(custom_attr, default=None)
+
+
+def _define_spacy_doc_extension(custom_attr: str):
+    if not Doc.has_extension(custom_attr):
+        Doc.set_extension(custom_attr, default=None)
 
 
 def _define_default_extensions():
     """Define default attributes to identify origin from medkit"""
-    _define_spacy_extension("doc", "medkit_id", None)
-    _define_spacy_extension("doc", "medkit_spans", None)
-    _define_spacy_extension("span", "medkit_id", None)
-    _define_spacy_extension("span", "medkit_spans", None)
+    _define_spacy_doc_extension("medkit_id")
+    _define_spacy_doc_extension("medkit_spans")
+    _define_spacy_span_extension("medkit_id")
 
 
 def _define_attrs_extensions(attrs_to_transfer: List[str]):
     """Define attributes as span extensions in the Spacy context."""
     for attr in attrs_to_transfer:
         # `attr_` is the ID_medkit of the original attribute
-        _define_spacy_extension("span", attr=f"{attr}_", default_value=None)
-        _define_spacy_extension("span", attr=attr, default_value=None)
+        _define_spacy_span_extension(f"{attr}_")
+        _define_spacy_span_extension(attr)
 
 
 def _simplify_medkit_spans(spans: List[AnySpanType]) -> Tuple[int, int]:
     """Return a single span from a list of spans"""
-    spans_norm = span_utils.normalize_spans(spans)
+
+    spans_norm: List[MedkitSpan] = span_utils.normalize_spans(spans)
+
     if len(spans_norm) > 1:
-        # it is a discontinuous span, expand the span
-        # to obtain a continuous span
+        # Spacy does not allow discontinuous spans
+        # for compatibility, get a continuous span from the list
         start = min(spans_norm).start
         end = max(spans_norm).end
         span = MedkitSpan(start, end)
@@ -302,51 +367,48 @@ def _simplify_medkit_spans(spans: List[AnySpanType]) -> Tuple[int, int]:
 
 
 def _segment_to_spacy_span(
-    spacy_doc: Doc,
-    ann: Segment,
-    attrs_to_transfer: Optional[List[str]] = None,
+    spacy_doc_target: Doc,
+    medkit_segment: Segment,
+    attrs_to_transfer: List[str],
+    include_medkit_info: bool,
 ) -> Span:
     """Create a spacy span given a medkit segment."""
-
     # get a single span
-    start, end = _simplify_medkit_spans(ann.spans)
-
+    start, end = _simplify_medkit_spans(medkit_segment.spans)
     # create a spacy span from characters in the text instead of tokens
-    span = spacy_doc.char_span(start, end, alignment_mode="expand", label=ann.label)
-    span._.set("medkit_id", ann.id)
-    span._.set("medkit_spans", ann.spans)
+    span = spacy_doc_target.char_span(
+        start, end, alignment_mode="expand", label=medkit_segment.label
+    )
+
+    if include_medkit_info:
+        span._.set("medkit_id", medkit_segment.id)
 
     # TBD: In medkit having an attribute, indicates that the attribute exists
     # for the given annotation, so for the moment, we force True as value
-    for attr in ann.attrs:
+    for attr in medkit_segment.attrs:
         if attr.label in attrs_to_transfer:
             # set attributes as extensions
-            if span._.get(f"{attr.label}_") is None:
-                # the attribute is not defined
-                span._.set(attr.label, True if attr.value is None else attr.value)
+            span._.set(attr.label, True if attr.value is None else attr.value)
+            if include_medkit_info:
                 span._.set(f"{attr.label}_", attr.id)
-            else:
-                first_id = span._.get(f"{attr.label}_")
-                warnings.warn(
-                    f"The attribute {attr.label} is already defined in the span,"
-                    f"only {first_id} is transferred."
-                )
 
     return span
 
 
 def _get_text_and_spans_from_span_spacy(
-    span: Span, doc_segment: Optional[Segment]
+    span_spacy: Span, medkit_source_ann: Optional[Segment]
 ) -> Tuple[str, List[AnySpanType]]:
     """Return text and spans depending on the origin of the spacy span"""
 
-    if doc_segment is None:
-        text = span.text
-        spans = [MedkitSpan(span.start_char, span.end_char)]
+    if medkit_source_ann is None:
+        text = span_spacy.text
+        spans = [MedkitSpan(span_spacy.start_char, span_spacy.end_char)]
     else:
         # the origin is a medkit annotation
         text, spans = span_utils.extract(
-            doc_segment.text, doc_segment.spans, [(span.start_char, span.end_char)]
+            medkit_source_ann.text,
+            medkit_source_ann.spans,
+            [(span_spacy.start_char, span_spacy.end_char)],
         )
     return text, spans
 
@@ -354,18 +416,26 @@ def _get_text_and_spans_from_span_spacy(
 def _add_entities_in_spacy_doc(
     spacy_doc: Doc,
     annotations: List[Segment],
-    attrs_to_transfer: Optional[List[str]] = None,
+    attrs_to_transfer: List[str],
+    include_medkit_info: bool,
 ) -> Doc:
     """Convert entities into spacy spans and modifies
     the entities in the Doc object (doc.ents)"""
-    ents = [
-        _segment_to_spacy_span(spacy_doc, ann, attrs_to_transfer)
-        for ann in annotations
-        if isinstance(ann, Entity)
-    ]
-    ents_filtered = filter_spans(ents)
+    entities = []
+    for ann in annotations:
+        if isinstance(ann, Entity):
+            spacy_span = _segment_to_spacy_span(
+                spacy_doc_target=spacy_doc,
+                medkit_segment=ann,
+                attrs_to_transfer=attrs_to_transfer,
+                include_medkit_info=include_medkit_info,
+            )
+            entities.append(spacy_span)
+
+    ents_filtered = filter_spans(entities)
+    # TBD: we could include discarded entities in a span group called 'discarded'
     ents_no_transferred = ",".join(
-        [f"({ent.text})" for ent in ents if ent not in ents_filtered]
+        [f"({ent.text})" for ent in entities if ent not in ents_filtered]
     )
     if ents_no_transferred:
         warnings.warn(
@@ -379,7 +449,8 @@ def _add_entities_in_spacy_doc(
 def _add_segments_in_spacy_doc(
     spacy_doc: Doc,
     annotations: List[Segment],
-    attrs_to_transfer: Optional[List[str]] = None,
+    attrs_to_transfer: List[str],
+    include_medkit_info: bool,
 ) -> Doc:
     """Convert segments into a spacy spans and modifies
     the spans in the Doc object (doc.spans)"""
@@ -387,13 +458,18 @@ def _add_segments_in_spacy_doc(
     for ann in annotations:
         if isinstance(ann, Segment) and not isinstance(ann, Entity):
             # create spacy span
-            span = _segment_to_spacy_span(spacy_doc, ann, attrs_to_transfer)
+            spacy_span = _segment_to_spacy_span(
+                spacy_doc_target=spacy_doc,
+                medkit_segment=ann,
+                attrs_to_transfer=attrs_to_transfer,
+                include_medkit_info=include_medkit_info,
+            )
 
             # add in the spacy doc
             if ann.label not in spacy_doc.spans.keys():
-                spacy_doc.spans[ann.label] = [span]
+                spacy_doc.spans[ann.label] = [spacy_span]
             else:
-                spacy_doc.spans[ann.label].append(span)
+                spacy_doc.spans[ann.label].append(spacy_span)
 
     return spacy_doc
 
@@ -401,7 +477,6 @@ def _add_segments_in_spacy_doc(
 def _filter_ents_by_label(
     spacy_doc: Doc, labels_ents_to_transfer: Optional[List[str]] = None
 ) -> List[Span]:
-    """Return spacy entities that have a label of interest"""
     ents = []
     if labels_ents_to_transfer is None:
         ents = list(spacy_doc.ents)
@@ -418,7 +493,6 @@ def _filter_ents_by_label(
 def _filter_spans_by_label(
     spacy_doc: Doc, name_spans_to_transfer: Optional[List[str]] = None
 ) -> Dict[str, List[Span]]:
-    """Return groups of spacy spans that have a label of interest"""
     spans = dict()
     if name_spans_to_transfer is None:
         spans = dict(spacy_doc.spans)
