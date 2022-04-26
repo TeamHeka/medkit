@@ -56,6 +56,11 @@ doc = docs[0]
 data = doc.to_dict()
 pprint(data, sort_dicts=False)
 
+# print data using pipeline output key
+print("\n---Print data with 'entities' key ---\n")
+entities_data = doc.get_annotations_by_key(key="entities")
+pprint(entities_data)
+
 # save it to yaml
 os.makedirs(output_dir, exist_ok=True)
 with open(output_dir / "doc.yml", mode="w") as f:

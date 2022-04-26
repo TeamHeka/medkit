@@ -24,7 +24,9 @@ class TextAnnotation(Annotation):
         ann_id: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ):
-        return super().__init__(label, attrs, ann_id, metadata)
+        return super().__init__(
+            label=label, attrs=attrs, ann_id=ann_id, metadata=metadata
+        )
 
 
 class Segment(TextAnnotation):

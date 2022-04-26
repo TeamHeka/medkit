@@ -30,6 +30,14 @@ def test_add_annotation(init_data):
     assert doc.get_annotation_by_id(relation.id) == relation
 
 
+def test_get_annotations_by_key(init_data):
+    doc, ent1, ent2, relation, attribute = init_data
+    ent1.add_key(key="superkey")
+    doc.add_annotation(ent1)
+    assert doc.get_annotations_by_key(key="superkey") == [ent1]
+    assert doc.get_annotations_by_key(key="hello") == []
+
+
 def test_get_annotations_by_label(init_data):
     doc, ent1, ent2, relation, attribute = init_data
     doc.add_annotation(ent1)

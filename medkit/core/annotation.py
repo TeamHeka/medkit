@@ -3,7 +3,7 @@ from __future__ import annotations
 __all__ = ["Annotation", "Attribute"]
 
 import abc
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Set, Optional
 
 from medkit.core.id import generate_id
 
@@ -12,6 +12,7 @@ class Annotation(abc.ABC):
     def __init__(
         self,
         label: str,
+        keys: Optional[Set[str]] = None,
         attrs: Optional[List[Attribute]] = None,
         ann_id: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
@@ -23,6 +24,8 @@ class Annotation(abc.ABC):
         ----------
         label: str
             The annotation label
+        keys: Set[str], Optional
+            The set of pipeline output keys which annotation belongs to
         attrs:
             The attributes of the annotation
         ann_id: str, Optional
@@ -39,8 +42,15 @@ class Annotation(abc.ABC):
 
         self.id: str = ann_id
         self.label: str = label
+        self.keys: Set[str] = keys if keys is not None else set()
         self.attrs: List[Attribute] = attrs
         self.metadata: Dict[str, Any] = metadata
+
+    def add_key(self, key: str):
+        self.keys.add(key)
+
+    def keep_keys(self, keys):
+        self.keys.intersection_update(keys)
 
     def add_metadata(self, key: str, value: Any):
         if key in self.metadata.keys():
@@ -49,13 +59,16 @@ class Annotation(abc.ABC):
 
     def to_dict(self) -> Dict[str, Any]:
         attrs = [a.to_dict() for a in self.attrs]
-        return dict(id=self.id, label=self.label, attrs=attrs, metadata=self.metadata)
+        return dict(
+            id=self.id,
+            keys=list(self.keys),
+            label=self.label,
+            attrs=attrs,
+            metadata=self.metadata,
+        )
 
     def __repr__(self):
-        return (
-            f"{self.__class__.__qualname__} : id={self.id!r}, label={self.label!r},"
-            f" nb_attrs={len(self.attrs)}"
-        )
+        return str(self.to_dict())
 
 
 class Attribute:

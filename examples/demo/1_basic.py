@@ -5,6 +5,7 @@ from pprint import pprint
 import yaml
 
 from medkit.core.text import TextDocument
+from medkit.text.preprocessing import UnicodeNormalizer
 from medkit.text.segmentation import SentenceTokenizer
 from medkit.text.ner import RegexpMatcher
 from medkit.text.context import NegationDetector
@@ -21,6 +22,7 @@ for filename in ["1.txt", "2.txt"]:
 
 
 # init and configure operations
+unicode_normalizer = UnicodeNormalizer()
 sentence_tokenizer = SentenceTokenizer()
 negation_detector = NegationDetector(output_label="negation")
 regexp_matcher_rules = RegexpMatcher.load_rules(
@@ -31,6 +33,7 @@ regexp_matcher = RegexpMatcher(rules=regexp_matcher_rules, attrs_to_copy=["negat
 # annotate each doc
 for doc in docs:
     anns = doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)
+    anns = unicode_normalizer.run(anns)
     anns = sentence_tokenizer.run(anns)
     negation_detector.run(anns)
     anns = regexp_matcher.run(anns)
@@ -45,4 +48,4 @@ pprint(data, sort_dicts=False)
 # save it to yaml
 os.makedirs(output_dir, exist_ok=True)
 with open(output_dir / "doc.yml", mode="w") as f:
-    yaml.dump(data, f, sort_keys=False)
+    yaml.dump(data, f, encoding="utf-8", allow_unicode=True, sort_keys=False)
