@@ -6,6 +6,7 @@ import yaml
 
 from medkit.core import Pipeline, PipelineStep
 from medkit.core.text import TextDocument
+from medkit.text.preprocessing import UnicodeNormalizer
 from medkit.text.segmentation import SentenceTokenizer
 from medkit.text.ner import RegexpMatcher
 from medkit.text.context import NegationDetector
@@ -22,6 +23,7 @@ for filename in ["1.txt", "2.txt"]:
 
 
 # init and configure operations
+unicode_normalizer = UnicodeNormalizer()
 sentence_tokenizer = SentenceTokenizer()
 negation_detector = NegationDetector(output_label="negation")
 regexp_matcher_rules = RegexpMatcher.load_rules(
@@ -33,7 +35,10 @@ regexp_matcher = RegexpMatcher(rules=regexp_matcher_rules, attrs_to_copy=["negat
 # build pipeline
 steps = [
     PipelineStep(
-        sentence_tokenizer, input_keys=["full_text"], output_keys=["sentences"]
+        unicode_normalizer, input_keys=["full_text"], output_keys=["norm_text"]
+    ),
+    PipelineStep(
+        sentence_tokenizer, input_keys=["norm_text"], output_keys=["sentences"]
     ),
     PipelineStep(negation_detector, input_keys=["sentences"], output_keys=[]),
     PipelineStep(regexp_matcher, input_keys=["sentences"], output_keys=["entities"]),
@@ -53,7 +58,12 @@ doc = docs[0]
 data = doc.to_dict()
 pprint(data, sort_dicts=False)
 
+# print data using pipeline output key
+print("\n---Print data with 'entities' key ---\n")
+entities_data = doc.get_annotations_by_key(key="entities")
+pprint(entities_data)
+
 # save it to yaml
 os.makedirs(output_dir, exist_ok=True)
 with open(output_dir / "doc.yml", mode="w") as f:
-    yaml.dump(data, f, sort_keys=False)
+    yaml.dump(data, f, encoding="utf-8", allow_unicode=True, sort_keys=False)

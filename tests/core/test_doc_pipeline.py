@@ -308,3 +308,26 @@ def test_nested_pipeline():
     uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
     # operation was properly called to generate new annotations
     assert [a.text.upper() for a in sentence_anns] == [a.text for a in uppercased_anns]
+
+
+def test_key_group():
+    """Doc pipeline with keys group for annotation"""
+    uppercaser = _Uppercaser(output_label="uppercased_sentence")
+    step = PipelineStep(
+        operation=uppercaser,
+        input_keys=["SENTENCE"],
+        output_keys=["UPPERCASE"],
+    )
+
+    pipeline = DocPipeline(
+        [step],
+        labels_by_input_key={"SENTENCE": ["sentence"]},
+        output_keys=["UPPERCASE"],
+    )
+
+    doc = _get_doc()
+    pipeline.run([doc])
+
+    uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
+    for ann in uppercased_anns:
+        assert ann.keys == {"UPPERCASE"}

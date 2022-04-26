@@ -19,6 +19,7 @@ from typing import (
     runtime_checkable,
 )
 
+from medkit.core.annotation import Annotation
 from medkit.core.data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs
 from medkit.core.id import generate_id
 from medkit.core.operation_desc import OperationDescription
@@ -178,6 +179,11 @@ class Pipeline:
 
         all_output_data = tuple(data_by_key[key] for key in self.output_keys)
 
+        # Keep keys only for output key
+        for data_item in [d for data_tuple in all_output_data for d in data_tuple]:
+            if isinstance(data_item, Annotation):
+                data_item.keep_keys(self.output_keys)
+
         if self._prov_builder is not None:
             self._add_provenance(all_output_data)
 
@@ -229,6 +235,9 @@ class Pipeline:
                 data_by_key[output_key] = output_data
             else:
                 data_by_key[output_key] += output_data
+            for data_item in output_data:
+                if isinstance(data_item, Annotation):
+                    data_item.add_key(output_key)
 
     def _add_provenance(self, all_output_data: Tuple[List[Any], ...]):
         assert self._prov_builder is not None and self._sub_prov_builder is not None

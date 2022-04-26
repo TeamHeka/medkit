@@ -33,6 +33,7 @@ class Document(Generic[AnnotationType]):
         self.store: Store = store
         self.annotation_ids: Set[str] = set()
         self.annotation_ids_by_label: Dict[str, List[str]] = {}
+        self.annotation_ids_by_key: Dict[str, List[str]] = {}
         self.metadata: Dict[str, Any] = metadata  # TODO: what is metadata format ?
 
     def add_annotation(self, annotation: AnnotationType):
@@ -64,6 +65,11 @@ class Document(Generic[AnnotationType]):
             self.annotation_ids_by_label[label] = []
         self.annotation_ids_by_label[label].append(id)
 
+        for key in annotation.keys:
+            if key not in self.annotation_ids_by_key:
+                self.annotation_ids_by_key[key] = []
+            self.annotation_ids_by_key[key].append(id)
+
     def get_annotation_by_id(self, annotation_id) -> Optional[AnnotationType]:
         if annotation_id not in self.annotation_ids:
             return None
@@ -73,6 +79,13 @@ class Document(Generic[AnnotationType]):
 
     def get_annotations(self) -> List[AnnotationType]:
         anns = [self.store.get_data_item(id) for id in self.annotation_ids]
+        return cast(List[AnnotationType], anns)
+
+    def get_annotations_by_key(self, key) -> List[AnnotationType]:
+        anns = [
+            self.store.get_data_item(id)
+            for id in self.annotation_ids_by_key.get(key, [])
+        ]
         return cast(List[AnnotationType], anns)
 
     def get_annotations_by_label(self, label) -> List[AnnotationType]:
