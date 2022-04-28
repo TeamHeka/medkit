@@ -6,6 +6,7 @@ from medkit.core.text import Entity
 from medkit.core.text import Span as MedkitSpan
 from medkit.core.text.document import TextDocument
 from medkit.io.spacy import SpacyInputConverter
+from medkit.text.spacy.spacy_utils import _define_attrs_extensions
 from spacy.tokens import Span
 
 
@@ -140,6 +141,65 @@ def test_input_converter_attribute_transfer(
             isinstance(attr.value, class_attr)
             for attr, class_attr in zip(org_entity.attrs, expected_class_attr_org)
         )
+
+
+def test_input_converter_medkit_attribute_transfer(nlp_spacy):
+    # define an extension and a mock_attr_medkit
+    if not Span.has_extension("nb_tokens_in"):
+        Span.set_extension("nb_tokens_in", default=None)
+
+    _define_attrs_extensions(["mock_attr_medkit"])
+
+    # define a spacy input converted to transfer all entities,attrs and spans
+    spacy_converter = SpacyInputConverter(
+        labels_ents_to_transfer=None,
+        name_spans_to_transfer=None,
+        attrs_to_transfer=None,
+    )
+
+    # create a spacy doc containing 3 entities
+    doc = nlp_spacy(TEXT_SPACY)
+    # create span groups in the spacy doc
+    doc.spans["SENTENCES"] = [sent for sent in doc.sents]
+
+    # add default argument
+    for e in doc.ents:
+        e._.set("nb_tokens_in", len([token for token in e]))
+        e._.set("mock_attr_medkit", "medkit_put_this")
+
+    for sp in doc.spans["SENTENCES"]:
+        sp._.set("mock_attr_medkit", "medkit_put_this_span")
+
+    assert list(doc.spans["SENTENCES"])[0]._.get("nb_tokens_in") is None
+
+    # get a medkit doc from a spacy doc
+
+    medkit_docs = spacy_converter.load([doc])
+
+    assert isinstance(medkit_docs, Collection)
+    assert len(medkit_docs.documents) == 1
+    medkit_doc = medkit_docs.documents[0]
+
+    assert isinstance(medkit_doc, TextDocument)
+    assert len(medkit_doc.entities.values()) == 3
+
+    ents = [
+        medkit_doc.get_annotation_by_id(id)
+        for ids in medkit_doc.entities.values()
+        for id in ids
+    ]
+    # verify the number of attrs for each entity
+    assert [len(ent.attrs) for ent in ents] == [2, 2, 2]
+
+    segments = medkit_doc.get_annotations_by_label("SENTENCES")
+    # all sentences were transferred
+    assert len(segments) == 1
+    assert [len(seg.attrs) for seg in segments] == [1]
+
+    noun_entity = medkit_doc.get_annotations_by_label("SENTENCES")[0]
+    assert len(noun_entity.attrs) == 1
+    assert noun_entity.attrs[0].label == "mock_attr_medkit"
+    assert noun_entity.attrs[0].value == "medkit_put_this_span"
 
 
 TEST_SEGMENTS_FROM_SPACY = [

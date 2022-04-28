@@ -58,7 +58,7 @@ class SpacyDocPipeline:
         self.id = proc_id
         self._prov_builder: Optional[ProvBuilder] = None
         self._include_medkit_info = True
-        self._rebuild_medkit_anns = False
+        self._rebuild_medkit_anns_and_attrs = False
 
         self.nlp = nlp
         self.medkit_labels_to_transfer = medkit_labels_to_transfer
@@ -129,7 +129,7 @@ class SpacyDocPipeline:
                 labels_ents_to_transfer=self.spacy_labels_ents_to_transfer,
                 name_spans_to_transfer=self.spacy_name_spans_to_transfer,
                 attrs_to_transfer=self.spacy_attrs_to_transfer,
-                rebuild_medkit_anns=self._rebuild_medkit_anns,
+                rebuild_medkit_anns_and_attrs=self._rebuild_medkit_anns_and_attrs,
             )
             # annotate
             # add new annotations

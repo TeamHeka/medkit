@@ -79,8 +79,6 @@ def _asssert_spacy_doc(doc, raw_annotation):
     assert isinstance(doc, Doc)
     assert doc.has_extension("medkit_id")
     assert doc._.get("medkit_id") == raw_annotation.id
-    assert doc.has_extension("medkit_spans")
-    assert doc._.get("medkit_spans") == raw_annotation.spans
 
 
 # test medkit doc to spacy doc
@@ -115,8 +113,7 @@ def test_medkit_to_spacy_doc_without_anns(nlp_spacy):
         include_medkit_info=False,
     )
 
-    spacy_doc._.get("medkit_id") is None
-    spacy_doc._.get("medkit_spans") is None
+    assert spacy_doc._.get("medkit_id") is None
 
 
 def test_medkit_to_spacy_doc_selected_ents_list(nlp_spacy):
@@ -234,5 +231,4 @@ def test_medkit_segments_to_spacy_docs(nlp_spacy):
     assert len(spacy_docs) == 2
 
     for doc in spacy_docs:
-        doc._.get("medkit_id") is None
-        doc._.get("medkit_spans") is None
+        assert doc._.get("medkit_id") is None

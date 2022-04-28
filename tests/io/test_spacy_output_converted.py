@@ -78,7 +78,6 @@ def _create_segment(label, span, text, attrs):
 def _asssert_spacy_doc(doc):
     assert isinstance(doc, Doc)
     assert doc._.get("medkit_id") is None
-    assert doc._.get("medkit_spans") is None
 
 
 TEST_ENTS_TO_SPACY = [
@@ -190,15 +189,15 @@ def test_output_converter_attr_transfer(nlp_spacy):
         if i == 0:
             # all attrs were transferred, so, values are no None
             assert span_people._.get("family")
-            assert span_people._.get("family_") is None
+            assert span_people._.get("family_medkit_id") is None
             assert ent_desease._.get("severity") == "high"
         elif i == 1:
             # no attrs were transferred, so, values are None
             assert span_people._.get("family") is None
-            assert span_people._.get("family_") is None
+            assert span_people._.get("family_medkit_id") is None
             assert ent_desease._.get("severity") is None
         else:
             # only family was transferred, so, value is True
             assert span_people._.get("family")
-            assert span_people._.get("family_") is None
+            assert span_people._.get("family_medkit_id") is None
             assert ent_desease._.get("severity") is None

@@ -47,7 +47,7 @@ class SpacyInputConverter:
 
         self.id = proc_id
         self._prov_builder: Optional[ProvBuilder] = None
-        self._rebuild_medkit_anns = True
+        self._rebuild_medkit_anns_and_attrs = True
 
         self.labels_ents_to_transfer = labels_ents_to_transfer
         self.name_spans_to_transfer = name_spans_to_transfer
@@ -96,7 +96,7 @@ class SpacyInputConverter:
                 labels_ents_to_transfer=self.labels_ents_to_transfer,
                 name_spans_to_transfer=self.name_spans_to_transfer,
                 attrs_to_transfer=self.attrs_to_transfer,
-                rebuild_medkit_anns=self._rebuild_medkit_anns,
+                rebuild_medkit_anns_and_attrs=self._rebuild_medkit_anns_and_attrs,
             )
             # add annotations
             for ann in anns:
