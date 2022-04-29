@@ -18,17 +18,25 @@ from medkit.core.text import Segment, ModifiedSpan, span_utils
 
 
 class Translator:
-    def __init__(self, output_label: str = "translation", proc_id: str = None):
+    def __init__(
+        self,
+        translation_model: str = "Helsinki-NLP/opus-mt-fr-en",
+        alignment_model: str = "bert-base-multilingual-cased",
+        output_label: str = "translation",
+        proc_id: str = None,
+    ):
         if proc_id is None:
             proc_id = generate_id()
 
         self.id = proc_id
         self.output_label = output_label
+        self.translation_model = translation_model
+        self.alignment_model = alignment_model
 
         self._translation_pipeline = transformers.pipeline(
-            "translation_en_to_fr", model="Helsinki-NLP/opus-mt-fr-en"
+            "translation_en_to_fr", model=self.translation_model
         )
-        self._aligner = _Aligner()
+        self._aligner = _Aligner(alignment_model=self.alignment_model)
 
         self._prov_builder: Optional[ProvBuilder] = None
 
@@ -36,6 +44,8 @@ class Translator:
     def description(self) -> OperationDescription:
         config = dict(
             output_label=self.output_label,
+            translation_model=self.translation_model,
+            alignment_model=self.alignment_model_name,
         )
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
@@ -114,12 +124,11 @@ class Translator:
 
 
 class _Aligner:
-    def __init__(self):
-        self._model = transformers.BertModel.from_pretrained(
-            "bert-base-multilingual-cased"
-        )
+    def __init__(self, alignment_model: str = "bert-base-multilingual-cased"):
+
+        self._model = transformers.BertModel.from_pretrained(alignment_model)
         self._tokenizer = transformers.BertTokenizerFast.from_pretrained(
-            "bert-base-multilingual-cased"
+            alignment_model
         )
 
     def align(self, source_text, target_text):
