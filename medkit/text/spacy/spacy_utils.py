@@ -47,13 +47,18 @@ def extract_anns_and_attrs_from_spacy_doc(
     attrs_to_transfer:
         Labels of attributes to extract from the annotations that will be included.
         If `None` (default) all the attributes will be extracted
+    rebuild_medkit_anns_and_attrs:
+        If True the annotations and attributes with medkit ids will become
+        new annotations/attributes with new ids.
+        If False (default) the annotations and attributes with medkit ids are not
+        rebuilt, only new annotations and attributes are returned
 
     Returns
     -------
     annotations: List[Segment]
         New segments extracted from the spacy Doc object
     attributes_by_ann: Dict[str, List[Attribute]]]
-        New attributes extracted for each annotation, the key is the annotation id
+        New attributes extracted for each annotation, the key is a medkit id
 
     Raises
     ------
