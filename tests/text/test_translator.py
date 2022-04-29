@@ -27,6 +27,24 @@ _TEST_DATA = [
 ]
 
 
+def _get_word_alignments(original_text, translated_segment):
+    word_alignments = []
+    start = 0
+    for span in translated_segment.spans:
+        end = start + span.length
+        translated_sub_text = translated_segment.text[start:end]
+        if isinstance(span, ModifiedSpan):
+            original_sub_text = " ".join(
+                original_text[s.start : s.end] for s in span.replaced_spans
+            )
+        else:
+            original_sub_text = original_text[span.start : span.end]
+        if any(c.isalnum() for c in original_sub_text):
+            word_alignments.append((translated_sub_text, original_sub_text))
+        start = end
+    return word_alignments
+
+
 @pytest.fixture(scope="module")
 def translator():
     return Translator()
@@ -47,21 +65,7 @@ def test_translator(
     translated_segment = translator.run([segment])[0]
     assert translated_segment.text == expected_translated_text
 
-    word_alignments = []
-    start = 0
-    for span in translated_segment.spans:
-        end = start + span.length
-        translated_sub_text = translated_segment.text[start:end]
-        if isinstance(span, ModifiedSpan):
-            original_sub_text = "".join(
-                original_text[s.start : s.end] for s in span.replaced_spans
-            )
-        else:
-            original_sub_text = original_text[span.start : span.end]
-        if any(c.isalnum() for c in original_sub_text):
-            word_alignments.append((translated_sub_text, original_sub_text))
-        start = end
-
+    word_alignments = _get_word_alignments(original_text, translated_segment)
     assert word_alignments == expected_word_alignments
 
     rule = RegexpMatcherRule(
