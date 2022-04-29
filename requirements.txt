@@ -13,7 +13,6 @@ spacy
 sentencepiece # translator
 torch # translator
 transformers # translator
-awesome-align # translator
 
 # dev dependencies
 black
