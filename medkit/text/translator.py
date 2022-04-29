@@ -161,6 +161,12 @@ class _Aligner:
             if target_range not in alignments[source_range]:
                 alignments[source_range].append(target_range)
 
+        # sort target ranges (tokens_alignments is sorted on 1st column (source)
+        # but not necessarily on 2d column (target))
+        # TODO: test this with the awesome-align pretrained model exhibiting this behavior
+        for target_ranges in alignments.values():
+            target_ranges.sort()
+
         alignments = self._fill_alignment_gaps(alignments, source_text, target_text)
 
         return alignments
