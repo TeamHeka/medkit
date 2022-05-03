@@ -442,6 +442,10 @@ def test_normalize_spans():
     spans = [ModifiedSpan(length=10, replaced_spans=[Span(10, 20)]), Span(30, 40)]
     assert normalize_spans(spans) == [Span(10, 20), Span(30, 40)]
 
+    # handle ModifiedSpans with no replaced_spans
+    spans = [ModifiedSpan(length=4, replaced_spans=[])]
+    assert normalize_spans(spans) == []
+
     # merge contiguous
     spans = [ModifiedSpan(length=10, replaced_spans=[Span(10, 30)]), Span(30, 40)]
     assert normalize_spans(spans) == [Span(10, 40)]

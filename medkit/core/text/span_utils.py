@@ -509,6 +509,9 @@ def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
         else:
             all_spans.append(span)
 
+    if not all_spans:
+        return []
+
     # merge contiguous spans
     all_spans_merged = [all_spans[0]]
     for span in all_spans[1:]:
