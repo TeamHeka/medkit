@@ -45,7 +45,7 @@ class Translator:
         config = dict(
             output_label=self.output_label,
             translation_model=self.translation_model,
-            alignment_model=self.alignment_model_name,
+            alignment_model=self.alignment_model,
         )
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
