@@ -177,8 +177,6 @@ class _Aligner:
         for target_ranges in alignments.values():
             target_ranges.sort()
 
-        alignments = self._fill_alignment_gaps(alignments, source_text, target_text)
-
         return alignments
 
     def _encode_text(self, text):
@@ -207,48 +205,3 @@ class _Aligner:
                 prev_word = word
             words_by_token.append(nb_words - 1)
         return words_by_token
-
-    def _fill_alignment_gaps(self, alignments, source_text, target_text):
-        """Create additional alignments in gaps between existing alignments
-        when source and target text is identical in these gaps"""
-        current_char_in_source = 0
-        current_char_in_target = 0
-
-        new_alignments = {}
-
-        for source_range, target_ranges in alignments.items():
-            source_start, source_end = source_range
-            target_start = target_ranges[0][0]
-            assert target_start == min(r[0] for r in target_ranges)
-            target_end = target_ranges[-1][1]
-            assert target_end == max(r[1] for r in target_ranges)
-
-            if current_char_in_source < source_start:
-                source_sub_text_in_gap = source_text[
-                    current_char_in_source:source_start
-                ]
-                target_sub_text_in_gap = target_text[
-                    current_char_in_target:target_start
-                ]
-                if target_sub_text_in_gap == source_sub_text_in_gap:
-                    source_gap_range = (current_char_in_source, source_start)
-                    target_gap_range = (current_char_in_target, target_start)
-                    new_alignments[source_gap_range] = [target_gap_range]
-
-            current_char_in_source = source_end
-            current_char_in_target = target_end
-
-        # handle trail
-        if current_char_in_source < len(source_text) and current_char_in_target < len(
-            target_text
-        ):
-            source_text_trail = source_text[current_char_in_source:]
-            target_text_trail = target_text[current_char_in_target:]
-            if target_text_trail == source_text_trail:
-                source_trail_range = (current_char_in_source, len(source_text))
-                target_trail_range = (current_char_in_target, len(target_text))
-                new_alignments[source_trail_range] = [target_trail_range]
-
-        alignments.update(new_alignments)
-        alignments = dict(sorted(alignments.items()))
-        return alignments
