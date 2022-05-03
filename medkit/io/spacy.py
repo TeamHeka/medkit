@@ -176,10 +176,11 @@ class SpacyOutputConverter:
         self.apply_nlp_spacy = apply_nlp_spacy
 
     @property
-    # modify NLP
     def description(self) -> OperationDescription:
+        # medkit does not support serialisation of nlp objects,
+        # however version information like model name, author etc. is stored
         config = dict(
-            nlp=self.nlp.config["nlp"],
+            nlp=self.nlp.meta,
             labels_to_transfer=self.labels_to_transfer,
             attrs_to_transfer=self.attrs_to_transfer,
             apply_nlp_spacy=self.apply_nlp_spacy,
@@ -232,7 +233,3 @@ class SpacyOutputConverter:
             spacy_docs.append(spacy_doc)
 
         return spacy_docs
-
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)
