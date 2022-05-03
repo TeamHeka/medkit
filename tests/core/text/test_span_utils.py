@@ -14,6 +14,7 @@ from medkit.core.text.span_utils import (
     _move_in_spans,
     normalize_spans,
     concatenate,
+    clean_up_gaps_in_normalized_spans,
 )
 
 
@@ -453,6 +454,29 @@ def test_normalize_spans():
     # sort spans
     spans = [Span(30, 40), ModifiedSpan(length=10, replaced_spans=[Span(10, 30)])]
     assert normalize_spans(spans) == [Span(10, 40)]
+
+
+def test_clean_up_gaps_in_normalized_spans():
+    text = "heart failure"
+    spans = [Span(0, 5), Span(6, 13)]
+    cleaned_up_spans = clean_up_gaps_in_normalized_spans(spans, text)
+    assert cleaned_up_spans == [Span(0, 13)]
+
+    # intermediate chars
+    text = "difficulty to climb stairs"
+    spans = [Span(0, 10), Span(14, 19), Span(21, 27)]
+    cleaned_up_spans = clean_up_gaps_in_normalized_spans(spans, text)
+    assert cleaned_up_spans == [Span(0, 27)]
+
+    # long gaps are preserved
+    text = "difficulty when climbing stairs"
+    spans = [Span(0, 10), Span(16, 24), Span(25, 31)]
+    cleaned_up_spans = clean_up_gaps_in_normalized_spans(spans, text)
+    assert cleaned_up_spans == [Span(0, 10), Span(16, 31)]
+
+    # custom max_gap_length
+    cleaned_up_spans = clean_up_gaps_in_normalized_spans(spans, text, max_gap_length=4)
+    assert cleaned_up_spans == [Span(0, 31)]
 
 
 def test_concatenate():
