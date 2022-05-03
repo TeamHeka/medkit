@@ -172,8 +172,8 @@ class _Aligner:
                 alignments[source_range].append(target_range)
 
         # sort target ranges (tokens_alignments is sorted on 1st column (source)
-        # but not necessarily on 2d column (target))
-        # TODO: test this with the awesome-align pretrained model exhibiting this behavior
+        # but not necessarily on 2d column (target) since later tokens in a source word
+        # might refer to earlier target tokens)
         for target_ranges in alignments.values():
             target_ranges.sort()
 

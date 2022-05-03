@@ -90,3 +90,11 @@ def test_translator_with_matcher(translator):
     spans = sorted(span_utils.normalize_spans(entity.spans))
     matched_original_text = " ".join(segment.text[s.start : s.end] for s in spans)
     assert matched_original_text == "insuffisance cardiaque"
+
+
+def test_ranges_sorting():
+    aligner = _Aligner(alignment_model="aneuraz/awesome-align-with-co")
+    range_alignments = aligner.align(
+        "CHIRURGICAL ANTICEDENTS: surgery", "ANTÉCÉDENT CHIRURGICAUX: chirurgie",
+    )
+    assert all(sorted(r) == r for r in range_alignments.values())
