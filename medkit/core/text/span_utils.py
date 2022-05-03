@@ -482,7 +482,7 @@ def concatenate(
 def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
     """
     Return a transformed of `spans` in which all instances of ModifiedSpan are
-    replaced by the spans they refer to, and in which contiguous spans are merged.
+    replaced by the spans they refer to, spans are sorted and contiguous spans are merged.
 
     Parameters
     ----------
@@ -512,6 +512,7 @@ def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
     if not all_spans:
         return []
 
+    all_spans.sort()
     # merge contiguous spans
     all_spans_merged = [all_spans[0]]
     for span in all_spans[1:]:

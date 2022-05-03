@@ -450,6 +450,10 @@ def test_normalize_spans():
     spans = [ModifiedSpan(length=10, replaced_spans=[Span(10, 30)]), Span(30, 40)]
     assert normalize_spans(spans) == [Span(10, 40)]
 
+    # sort spans
+    spans = [Span(30, 40), ModifiedSpan(length=10, replaced_spans=[Span(10, 30)])]
+    assert normalize_spans(spans) == [Span(10, 40)]
+
 
 def test_concatenate():
     texts = "The first"

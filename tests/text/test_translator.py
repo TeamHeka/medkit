@@ -87,7 +87,7 @@ def test_translator_with_matcher(translator):
     text_alignments = _get_text_alignments(_ORIGINAL_TEXT, translated_segment)
     assert text_alignments == _TEXT_ALIGNMENTS
 
-    spans = sorted(span_utils.normalize_spans(entity.spans))
+    spans = span_utils.normalize_spans(entity.spans)
     matched_original_text = " ".join(segment.text[s.start : s.end] for s in spans)
     assert matched_original_text == "insuffisance cardiaque"
 
