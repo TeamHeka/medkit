@@ -3,7 +3,7 @@ from __future__ import annotations
 __all__ = ["Translator"]
 
 from collections import defaultdict
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import torch
 import transformers
@@ -125,13 +125,14 @@ class Translator:
 
 class _Aligner:
     def __init__(self, alignment_model: str = "bert-base-multilingual-cased"):
-
         self._model = transformers.BertModel.from_pretrained(alignment_model)
         self._tokenizer = transformers.BertTokenizerFast.from_pretrained(
             alignment_model
         )
 
-    def align(self, source_text, target_text):
+    def align(
+        self, source_text: str, target_text: str
+    ) -> Dict[Tuple[int, int], List[Tuple[int, int]]]:
         # preprocess
         source_encoding = self._encode_text(source_text)
         target_encoding = self._encode_text(target_text)
