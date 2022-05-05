@@ -193,13 +193,22 @@ def _replace_big_parentheses(
         txt_in, span_in = span_utils.extract(text, spans, [match.span("txt_inside")])
         txt_af, span_af = span_utils.extract(text, spans, [match.span("txt_after")])
 
-        # insert characters before and after each group
-        txt_in, span_in = span_utils.insert(txt_in, span_in, [len(txt_in)], ["."])
-        txt_af, span_af = span_utils.insert(
-            txt_af, span_af, [0, len(txt_af)], [" ", " ; "]
-        )  # insert a space by default (eq: ' {text_af} ; ')
-        # create the new phrase
-        txt_new, span_new = span_utils.concatenate([txt_af, txt_in], [span_af, span_in])
+        if span_af:
+            # insert characters before and after each group
+            txt_in, span_in = span_utils.insert(txt_in, span_in, [len(txt_in)], ["."])
+            # insert a space by default (eq: ' {text_af} ; ')
+            txt_af, span_af = span_utils.insert(
+                txt_af, span_af, [0, len(txt_af)], [" ", " ; "]
+            )
+            # create the new phrase
+            txt_new, span_new = span_utils.concatenate(
+                [txt_af, txt_in], [span_af, span_in]
+            )
+        else:
+            # there is no text after (), insert ';' before
+            txt_new, span_new = span_utils.insert(
+                txt_in, span_in, [0, len(txt_in)], [" ; ", "."]
+            )
 
         # add the new phrase into the text. Extract text_before and text_after
         # from this match and concatenate all to update texp_tmp and spans
