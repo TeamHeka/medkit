@@ -1,6 +1,7 @@
-__all__ = ["Normalizer", "NormalizerRule", "LIGATURE_RULES"]
+__all__ = ["Normalizer", "NormalizerRule", "LIGATURE_RULES", "EndlinesCleaner"]
 
 from .normalizer import Normalizer, NormalizerRule
+from .endlines_cleaner import EndlinesCleaner
 
 
 LIGATURE_RULES = [

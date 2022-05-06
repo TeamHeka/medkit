@@ -1,23 +1,14 @@
 __all__ = ["EndlinesCleaner"]
 
 import dataclasses
-
-
 from typing import List, Optional
 
-from medkit.core import (
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
+from medkit.core import OperationDescription, ProvBuilder, generate_id
+from medkit.core.text import Segment, utils
 
-from medkit.core.text import utils
-from medkit.core.text import Segment
-
-
-# TBD: default config
+# predefined configuration for french documents
 _FR_CIVIL_TITLES = ["M", "Mme", "Mlle", "Mr", "Pr", "Dr", "Mde"]
-_FR_PREPOSITIONS = [
+_FR_PREPOSITIONS_AFTER = [
     "de",
     "par",
     "le",
@@ -31,6 +22,7 @@ _FR_PREPOSITIONS = [
     "pour",
     "avec",
 ]
+_FR_KEYWORDS_BEFORE = ["pour", "avec", "et"]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -38,6 +30,7 @@ class DefaultConfig:
     output_label = "CLEAN_TEXT"
     keep_endlines = False
     handle_parentheses_eds = True
+    handle_points_eds = True
 
 
 class EndlinesCleaner:
@@ -45,8 +38,8 @@ class EndlinesCleaner:
     Endlines pre-processing annotation module
 
     This module is a non-destructive module allowing to remove and clean selected points
-    and newlines characters. It respects the span modification by creating a new text-bound annotation containing
-    the span modification information from input text.
+    and newlines characters. It respects the span modification by creating a new
+    text-bound annotation containing the span modification information from input text.
 
     """
 
@@ -55,6 +48,7 @@ class EndlinesCleaner:
         output_label: str = DefaultConfig.output_label,
         keep_endlines: bool = DefaultConfig.keep_endlines,
         handle_parentheses_eds: bool = DefaultConfig.handle_parentheses_eds,
+        handle_points_eds: bool = DefaultConfig.handle_points_eds,
         proc_id: str = None,
     ):
         """
@@ -66,20 +60,27 @@ class EndlinesCleaner:
             The output label of the created annotations.
             Default: "CLEAN_TEXT" (cf.DefaultConfig)
         keep_endlines:
-
-
+            If True, modify multiple endlines using `.\\n` as a replacement.
+            If False (default), modify multiple endlines using whitespaces (`.\\s`) as a replacement.
         handle_parentheses_eds:
+            If True (default), modify the text near to parentheses or keywords according to
+            predefined rules for french documents
+            If False, the text near to parentheses or keywords is not modified
+        handle_points_eds:
+            Modify points near to predefined keywords for french documents
+            If True (default), modify the points near to keywords
+            If False, the points near to keywords is not modified
         proc_id
             Identifier of the pre-processing module
         """
         if proc_id is None:
             proc_id = generate_id()
 
-        self.id = proc_id
+        self.id: str = proc_id
         self.output_label = output_label
         self.keep_endlines = keep_endlines
         self.handle_parentheses_eds = handle_parentheses_eds
-
+        self.handle_points_eds = handle_points_eds
         self._prov_builder: Optional[ProvBuilder] = None
 
     @property
@@ -88,6 +89,7 @@ class EndlinesCleaner:
             output_label=self.output_label,
             keep_endlines=self.keep_endlines,
             handle_parentheses_eds=self.handle_parentheses_eds,
+            handle_points_eds=self.handle_points_eds,
         )
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
@@ -118,38 +120,51 @@ class EndlinesCleaner:
         ]
 
     def _clean_segment_text(self, segment: Segment):
-        # handle points characters
-        # replace points after civil titles defined by a list
-        new_text, new_spans = utils.replace_point_after_keywords(
-            text=segment.text,
-            spans=segment.spans,
-            keywords=_FR_CIVIL_TITLES,
-            strict=True,
-        )
-        new_text, new_spans = utils.replace_point_in_uppercase(new_text, new_spans)
-        new_text, new_spans = utils.replace_point_in_numbers(new_text, new_spans)
-        # replace points after prepositions
-        new_text, new_spans = utils.replace_point_after_keywords(
-            text=new_text,
-            spans=new_spans,
-            keywords=_FR_PREPOSITIONS,
-            strict=False,
+        """
+        Clean up a segment non-destructively, remove points between numbers and  upper case letters.
+        Then remove multiple whitespaces or newline characters.
+        Finally, modify parentheses or point after keywords if necessary.
+        """
+        text = segment.text
+        spans = segment.spans
+
+        # modify points characters
+        text, spans = utils.replace_point_in_uppercase(text, spans)
+        text, spans = utils.replace_point_in_numbers(text, spans)
+
+        # modify newline character
+        text, spans = utils.clean_multiple_whitespaces_in_sentence(text, spans)
+        text, spans = utils.clean_newline_character(
+            text=text, spans=spans, keep_endlines=self.keep_endlines
         )
 
-        # handle newline character
-        new_text, new_spans = utils.clean_multiple_whitespaces_in_sentence(
-            new_text, new_spans
-        )
-        new_text, new_spans = utils.clean_newline_character(
-            text=new_text, spans=new_spans, keep_endlines=self.keep_endlines
-        )
-
-        # handle parentheses
+        # modify parentheses using predefined rules for french documents
         if self.handle_parentheses_eds:
-            new_text, new_spans = utils.clean_parentheses_eds(new_text, new_spans)
+            text, spans = utils.clean_parentheses_eds(text, spans)
+
+        if self.handle_points_eds:
+            # replace the character `.` after and before certain keywords
+            # after the title of a person (i.e. M. or Mrs.)
+            text, spans = utils.replace_point_after_keywords(
+                text=text,
+                spans=spans,
+                keywords=_FR_CIVIL_TITLES,
+                strict=True,
+            )
+            # after certain prepositions (`du` . patient)
+            text, spans = utils.replace_point_after_keywords(
+                text=text,
+                spans=spans,
+                keywords=_FR_PREPOSITIONS_AFTER,
+                strict=False,
+            )
+            # before certain prepositions (venue   . `avec`)
+            text, spans = utils.replace_point_before_keywords(
+                text=text, spans=spans, keywords=_FR_KEYWORDS_BEFORE
+            )
 
         # create ann with the clean text
-        clean_text = Segment(label=self.output_label, spans=new_spans, text=new_text)
+        clean_text = Segment(label=self.output_label, spans=spans, text=text)
 
         if self._prov_builder is not None:
             self._prov_builder.add_prov(

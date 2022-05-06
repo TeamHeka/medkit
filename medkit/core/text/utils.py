@@ -114,9 +114,9 @@ def replace_point_after_keywords(
     # Create a list regex using '\b' to indicate that keyword is a word
     keywords_regexp = "|".join([rf"\b{keyword}" for keyword in keywords])
     if strict:
-        pattern = rf"(?:{keywords_regexp})(\.)"  # point after kw
+        pattern = rf"(?:{keywords_regexp})(\.+)"  # point after kw
     else:
-        pattern = rf"(?:{keywords_regexp})(\s*\.)"  # zero or many whitespaces after kw
+        pattern = rf"(?:{keywords_regexp})(\s*\.+)"  # zero or many whitespaces after kw
 
     # The first group has the span of interest
     text, spans = _replace_text(text, spans, pattern, repl=replace_by, group=1)
