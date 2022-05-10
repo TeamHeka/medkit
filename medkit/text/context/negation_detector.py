@@ -75,7 +75,7 @@ class NegationDetector:
         Parameters
         ----------
         output_label:
-            The output label of the created annotations
+            The label of the created attributes
         rules:
             The set of rules to use when detecting negation. If none provided,
             the rules in "negation_detector_default_rules.yml" will be used
