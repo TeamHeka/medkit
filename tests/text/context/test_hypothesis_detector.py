@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from medkit.core import ProvBuilder
 from medkit.core.text import Segment, Span
 from medkit.text.context.hypothesis_detector import (
     HypothesisDetector,
@@ -118,6 +119,24 @@ def test_verbs():
         attr = syntagma.attrs[0]
         assert attr.label == "hypothesis"
         assert attr.value is False
+
+
+def test_prov():
+    syntagmas = _get_syntagma_segments(["If patient has covid"])
+
+    rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
+    detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
+
+    prov_builder = ProvBuilder()
+    detector.set_prov_builder(prov_builder)
+    detector.run(syntagmas)
+    graph = prov_builder.graph
+
+    attr_1 = syntagmas[0].attrs[0]
+    node_1 = graph.get_node(attr_1.id)
+    assert node_1.data_item_id == attr_1.id
+    assert node_1.operation_id == detector.id
+    assert node_1.source_ids == [syntagmas[0].id]
 
 
 # fmt: off

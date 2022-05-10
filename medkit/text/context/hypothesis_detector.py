@@ -8,7 +8,7 @@ import unidecode
 
 import yaml
 
-from medkit.core import generate_id, Attribute
+from medkit.core import generate_id, Attribute, OperationDescription, ProvBuilder
 from medkit.core.text import Segment
 
 
@@ -143,6 +143,23 @@ class HypothesisDetector:
             not r.unicode_sensitive for r in rules
         )
 
+        self._prov_builder: Optional[ProvBuilder] = None
+
+    @property
+    def description(self) -> OperationDescription:
+        config = dict(
+            output_label=self.output_label,
+            rules=self.rules,
+            verbs=self.verbs,
+            modes_and_tenses=self.modes_and_tenses,
+        )
+        return OperationDescription(
+            id=self.id, name=self.__class__.__name__, config=config
+        )
+
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
+
     def run(self, segments: List[Segment]):
         """Add an hypothesis attribute to each segment with a True/False value
 
@@ -202,6 +219,12 @@ class HypothesisDetector:
             value=is_hypothesis,
             metadata=metadata,
         )
+
+        if self._prov_builder is not None:
+            self._prov_builder.add_prov(
+                hyp_attr, self.description, source_data_items=[segment]
+            )
+
         return hyp_attr
 
     @staticmethod
