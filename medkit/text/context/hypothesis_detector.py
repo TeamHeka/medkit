@@ -68,7 +68,7 @@ class HypothesisDetector:
         self,
         output_label: str = "hypothesis",
         rules: Optional[List[HypothesisDetectorRule]] = None,
-        verbs: Optional[List[Dict[str, Dict[str, List[str]]]]] = None,
+        verbs: Optional[Dict[str, Dict[str, Dict[str, List[str]]]]] = None,
         modes_and_tenses: Optional[List[Tuple[str, str]]] = None,
         proc_id: Optional[str] = None,
     ):
@@ -82,10 +82,12 @@ class HypothesisDetector:
             The set of rules to use when detecting hypothesis. If none provided,
             the rules in "hypothesis_detector_default_rules.yml" will be used
         verbs:
-            List of conjugated verbs forms, to be used in association with `modes_and_tenses`
-            Each verb must be represent by a dict with an entry for each mode,
-            and for each mode an entry for each tense holding a list of the
-            conjugated forms.
+            Conjugated verbs forms, to be used in association with `modes_and_tenses`.
+            Conjugated forms of a verb at a specific mode and tense must be provided
+            in nested dicts with the 1st key being the verb's root, the 2d key the mode
+            and the 3d key the tense.
+            For instance verb["aller"]["indicatif]["présent"] would hold the list
+            ["vais", "vas", "va", "allons", aller", "vont"]
         modes_and_tenses:
             List of tuples of all modes and tenses associated with hypothesis.
             Will be used to select conjugated forms in `verbs` that denote hypothesis.
@@ -107,19 +109,19 @@ class HypothesisDetector:
         self.id: str = proc_id
         self.output_label: str = output_label
         self.rules: List[HypothesisDetectorRule] = rules
-        self.verbs: List[Dict[str, Dict[str, List[str]]]] = verbs
+        self.verbs: Dict[str, Dict[str, Dict[str, List[str]]]] = verbs
         self.modes_and_tenses: List[Tuple[str, str]] = modes_and_tenses
 
         # build and pre-compile exclusion pattern for each verb
-        self._verb_patterns = []
-        for verb_form_by_mode_and_tense in verbs:
+        self._patterns_by_verb = {}
+        for verb_root, verb_forms_by_mode_and_tense in verbs.items():
             verb_regexps = []
             for mode, tense in modes_and_tenses:
-                for verb_form in verb_form_by_mode_and_tense[mode][tense]:
+                for verb_form in verb_forms_by_mode_and_tense[mode][tense]:
                     verb_regexp = r"\b" + verb_form.replace(" ", r"\s+") + r"\b"
                     verb_regexps.append(verb_regexp)
             verb_pattern = re.compile("|".join(verb_regexps), flags=re.IGNORECASE)
-            self._verb_patterns.append(verb_pattern)
+            self._patterns_by_verb[verb_root] = verb_pattern
 
         # pre-compile rule patterns
         self._non_empty_text_pattern = re.compile(r"[a-z]", flags=re.IGNORECASE)
@@ -193,8 +195,9 @@ class HypothesisDetector:
                         f" {len(text_unicode)})\nAscii: {text_ascii} (length:"
                         f" {len(text_ascii)})\n"
                     )
-            for verb_pattern in self._verb_patterns:
+            for verb, verb_pattern in self._patterns_by_verb.items():
                 if verb_pattern.search(text_unicode):
+                    metadata = dict(matched_verb=verb)
                     is_hypothesis = True
                     break
             else:
@@ -215,9 +218,7 @@ class HypothesisDetector:
                             break
 
         hyp_attr = Attribute(
-            label=self.output_label,
-            value=is_hypothesis,
-            metadata=metadata,
+            label=self.output_label, value=is_hypothesis, metadata=metadata,
         )
 
         if self._prov_builder is not None:
@@ -228,12 +229,11 @@ class HypothesisDetector:
         return hyp_attr
 
     @staticmethod
-    def load_verbs(path_to_verbs) -> List[Dict[str, Dict[str, List[str]]]]:
+    def load_verbs(path_to_verbs) -> Dict[str, Dict[str, Dict[str, List[str]]]]:
         """
         Load all conjugated verb forms stored in a yml file.
-        Each verb must be represented by a mapping with an entry for each mode,
-        and for each mode an entry for each tense holding a list of the
-        conjugated forms.
+        Conjugated verb forms at a specific mode and tense must be stored in nested mappings
+        with the 1st key being the verb root, the 2d key the mode and the 3d key the tense.
 
         Parameters
         ----------

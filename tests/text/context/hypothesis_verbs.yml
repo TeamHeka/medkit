@@ -1,4 +1,5 @@
-- indicatif:
+être:
+  indicatif:
     "présent":
       - suis
       - es
@@ -21,8 +22,8 @@
       - serions
       - seriez
       - seraient
-
-- indicatif:
+avoir:
+  indicatif:
     "présent":
       - ai
       - as

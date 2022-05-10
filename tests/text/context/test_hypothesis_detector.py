@@ -25,7 +25,7 @@ def test_single_rule():
     syntagmas = _get_syntagma_segments(["If patient has covid", "Patient has covid"])
 
     rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
-    detector = HypothesisDetector(output_label="hypothesis", rules=[rule], verbs=[])
+    detector = HypothesisDetector(output_label="hypothesis", rules=[rule], verbs={})
     detector.run(syntagmas)
 
     # 1st syntagma is hypothesis
@@ -51,7 +51,7 @@ def test_multiple_rules():
     rule_1 = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
     rule_2 = HypothesisDetectorRule(id="id_assuming", regexp=r"\bassuming\b")
     detector = HypothesisDetector(
-        output_label="hypothesis", rules=[rule_1, rule_2], verbs=[]
+        output_label="hypothesis", rules=[rule_1, rule_2], verbs={}
     )
     detector.run(syntagmas)
 
@@ -78,7 +78,7 @@ def test_exclusions():
         regexp=r"\bif\b",
         exclusion_regexps=[r"\beven\s*\bif"],
     )
-    detector = HypothesisDetector(output_label="hypothesis", rules=[rule], verbs=[])
+    detector = HypothesisDetector(output_label="hypothesis", rules=[rule], verbs={})
     detector.run(syntagmas)
 
     # 1st syntagma is hypothesis
@@ -106,26 +106,41 @@ def test_verbs():
     hyp_syntagmas = _get_syntagma_segments(hyp_syntagma_texts)
     detector.run(hyp_syntagmas)
 
-    for syntagma in hyp_syntagmas:
-        attr = syntagma.attrs[0]
-        assert attr.label == "hypothesis"
-        assert attr.value is True
+    # 1st hypothesis syntagma attr
+    attr = hyp_syntagmas[0].attrs[0]
+    assert attr.label == "hypothesis"
+    assert attr.value is True
+    assert attr.metadata["matched_verb"] == "être"
+
+    # 2d hypothesis syntagma attr
+    attr = hyp_syntagmas[1].attrs[0]
+    assert attr.label == "hypothesis"
+    assert attr.value is True
+    assert attr.metadata["matched_verb"] == "être"
+
+    # 3d hypothesis syntagma attr
+    attr = hyp_syntagmas[2].attrs[0]
+    assert attr.label == "hypothesis"
+    assert attr.value is True
+    assert attr.metadata["matched_verb"] == "avoir"
 
     certain_syntagmas_texts = ["Il est malade", "Il a le covid"]
     certain_syntagmas = _get_syntagma_segments(certain_syntagmas_texts)
     detector.run(certain_syntagmas)
 
+    # certain syntagma attrs, not matched because of mode and tense
     for syntagma in certain_syntagmas:
         attr = syntagma.attrs[0]
         assert attr.label == "hypothesis"
         assert attr.value is False
+        assert not attr.metadata
 
 
 def test_prov():
     syntagmas = _get_syntagma_segments(["If patient has covid"])
 
     rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
-    detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
+    detector = HypothesisDetector(output_label="hypothesis", rules=[rule], verbs={})
 
     prov_builder = ProvBuilder()
     detector.set_prov_builder(prov_builder)
@@ -140,30 +155,30 @@ def test_prov():
 
 
 # fmt: off
-# text, is_hypothesis, rule_id
+# text, is_hypothesis, rule_id, matched_verb
 _TEST_DATA = [
     # si *
-    ("Si le patient est diabétique", True, "id_si"),
-    ("Si oui alors le patient est diabétique", False, None),
-    ("Même si le patient est diabétique", False, None),
+    ("Si le patient est diabétique", True, "id_si", None),
+    ("Si oui alors le patient est diabétique", False, None, None),
+    ("Même si le patient est diabétique", False, None, None),
     # all other rules without negation
-    ("A condition que le patient soit diabétique", True, "id_a_condition_que"),
-    ("A moins que le patient soit diabétique", True, "id_a_moins_que"),
-    ("Pour peu que le patient soit diabétique", True, "id_pour_peu_que"),
-    ("si tant est que patient soit diabétique", True, "id_si"),  # FIXME: expected id_si_tant_est_que
-    ("Pour autant que le patient soit diabétique", True, "id_pour_autant_que"),
-    ("En admettant que le patient soit diabétique", True, "id_en_admettant_que"),
-    ("A supposer que le patient est diabétique", True, "id_a_supposer_que"),
-    ("En supposant que  le patient soit diabétique", True, "id_en_supposant_que"),
-    ("Au cas où le patient soit diabétique", True, "id_au_cas_ou"),
+    ("A condition que le patient soit diabétique", True, "id_a_condition_que", None),
+    ("A moins que le patient soit diabétique", True, "id_a_moins_que", None),
+    ("Pour peu que le patient soit diabétique", True, "id_pour_peu_que", None),
+    ("si tant est que patient soit diabétique", True, "id_si", None),  # FIXME: expected id_si_tant_est_que
+    ("Pour autant que le patient soit diabétique", True, "id_pour_autant_que", None),
+    ("En admettant que le patient soit diabétique", True, "id_en_admettant_que", None),
+    ("A supposer que le patient est diabétique", True, "id_a_supposer_que", None),
+    ("En supposant que  le patient soit diabétique", True, "id_en_supposant_que", None),
+    ("Au cas où le patient soit diabétique", True, "id_au_cas_ou", None),
     # TODO suspicion
     # TODO suspectee
-    ("Eventuellement, le patient serait diabétique", True, "id_eventuellement"),
-    ("Le diabète est à envisager", True, "id_envisage"),
+    ("Eventuellement, le patient serait diabétique", True, "id_eventuellement", None),
+    ("Le diabète est à envisager", True, "id_envisage", None),
     # verb, future tense
-    ("on administrera alors de l'insuline au patient", True, None),
+    ("on administrera alors de l'insuline au patient", True, None, "administrer"),
     # verb, conditional mode
-    ("on administrerait alors de l'insuline au patient", True, None),
+    ("on administrerait alors de l'insuline au patient", True, None, "administrer"),
 ]
 # fmt: on
 
@@ -176,7 +191,7 @@ def test_default_rules_and_verbs():
     detector.run(syntagmas)
 
     for i in range(len(_TEST_DATA)):
-        _, is_hypothesis, rule_id = _TEST_DATA[i]
+        _, is_hypothesis, rule_id, matched_verb = _TEST_DATA[i]
         syntagma = syntagmas[i]
         assert len(syntagma.attrs) == 1
         attr = syntagma.attrs[0]
@@ -188,6 +203,8 @@ def test_default_rules_and_verbs():
             ), f"Syntagma '{syntagma.text}' should have been detected as hypothesis"
             if rule_id is not None:
                 assert attr.metadata["rule_id"] == rule_id
+            else:
+                assert attr.metadata["matched_verb"] == matched_verb
         else:
             assert (
                 attr.value is False
