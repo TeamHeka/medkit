@@ -70,6 +70,7 @@ class HypothesisDetector:
         rules: Optional[List[HypothesisDetectorRule]] = None,
         verbs: Optional[Dict[str, Dict[str, Dict[str, List[str]]]]] = None,
         modes_and_tenses: Optional[List[Tuple[str, str]]] = None,
+        max_length: int = 150,
         proc_id: Optional[str] = None,
     ):
         """Instantiate the hypothesis detector
@@ -91,6 +92,9 @@ class HypothesisDetector:
         modes_and_tenses:
             List of tuples of all modes and tenses associated with hypothesis.
             Will be used to select conjugated forms in `verbs` that denote hypothesis.
+        max_length:
+            Maximum number of characters in an hypothesis segment. Segments longer than
+            this will never be considered as hypothesis
         proc_id:
             Identifier of the detector
         """
@@ -111,6 +115,7 @@ class HypothesisDetector:
         self.rules: List[HypothesisDetectorRule] = rules
         self.verbs: Dict[str, Dict[str, Dict[str, List[str]]]] = verbs
         self.modes_and_tenses: List[Tuple[str, str]] = modes_and_tenses
+        self.max_length: int = max_length
 
         # build and pre-compile exclusion pattern for each verb
         self._patterns_by_verb = {}
@@ -179,7 +184,7 @@ class HypothesisDetector:
         is_hypothesis = False
         metadata = None
 
-        if len(segment.text) <= 150:
+        if len(segment.text) <= self.max_length:
             text_unicode = segment.text
             if self._has_non_unicode_sensitive_rule:
                 # If there exists one rule which is not unicode-sensitive

@@ -90,6 +90,26 @@ def test_exclusions():
     assert attr_2.value is False
 
 
+def test_max_length():
+    syntagmas = _get_syntagma_segments(
+        ["If patient has covid", "If patient has covid then he will be treated"]
+    )
+
+    rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
+    detector = HypothesisDetector(
+        output_label="hypothesis", rules=[rule], verbs={}, max_length=30
+    )
+    detector.run(syntagmas)
+
+    # 1st syntagma is hypothesis
+    attr_1 = syntagmas[0].attrs[0]
+    assert attr_1.value is True
+
+    # 2d syntagma isn't hypothesis because it is longer than max_length
+    attr_2 = syntagmas[1].attrs[0]
+    assert attr_2.value is False
+
+
 def test_verbs():
     verbs = HypothesisDetector.load_verbs(_PATH_TO_VERBS)
     detector = HypothesisDetector(
