@@ -191,8 +191,9 @@ _TEST_DATA = [
     ("A supposer que le patient est diabétique", True, "id_a_supposer_que", None),
     ("En supposant que  le patient soit diabétique", True, "id_en_supposant_que", None),
     ("Au cas où le patient soit diabétique", True, "id_au_cas_ou", None),
-    # TODO suspicion
-    # TODO suspectee
+    ("Suspicion de diabète", True, "id_suspicion", None),
+    ("Diabète suspecté", True, "id_suspecte", None),
+    ("Diabète suspecté puis confirmé", False, None, None),
     ("Eventuellement, le patient serait diabétique", True, "id_eventuellement", None),
     ("Le diabète est à envisager", True, "id_envisage", None),
     # verb, future tense
