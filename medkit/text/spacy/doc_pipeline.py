@@ -2,8 +2,7 @@ __all__ = ["SpacyDocPipeline"]
 import warnings
 from typing import List, Optional, Union
 
-from medkit.core import OperationDescription, ProvBuilder, generate_id
-from medkit.core.document import Collection
+from medkit.core import OperationDescription, ProvBuilder, generate_id, Collection
 from medkit.core.text import TextDocument
 from medkit.text.spacy import spacy_utils
 
@@ -16,11 +15,11 @@ class SpacyDocPipeline:
     def __init__(
         self,
         nlp: Language,
-        medkit_labels_to_transfer: Optional[List[str]] = None,
-        medkit_attrs_to_transfer: Optional[List[str]] = None,
-        spacy_labels_ents_to_transfer: Optional[List[str]] = None,
-        spacy_name_spans_to_transfer: Optional[List[str]] = None,
-        spacy_attrs_to_transfer: Optional[List[str]] = None,
+        medkit_labels_anns: Optional[List[str]] = None,
+        medkit_attrs: Optional[List[str]] = None,
+        spacy_entities: Optional[List[str]] = None,
+        spacy_span_groups: Optional[List[str]] = None,
+        spacy_attrs: Optional[List[str]] = None,
         proc_id: Optional[str] = None,
     ):
         """Initialize the pipeline
@@ -29,22 +28,22 @@ class SpacyDocPipeline:
         ----------
         nlp:
             Language object with the loaded pipeline from Spacy
-        medkit_labels_to_transfer:
+        medkit_labels_anns:
             Labels of medkit annotations to include in the spacy document.
             If `None` (default) all the annotations will be included.
-        medkit_attrs_to_transfer:
+        medkit_attrs:
             Labels of medkit attributes to add in the annotations that will be included.
             If `None` (default) all the attributes will be added as `custom attributes`
             in each annotation included.
-        spacy_labels_ents_to_transfer:
+        spacy_entities:
             Labels of new spacy entities (`doc.ents`) to convert into medkit entities.
             If `None` (default) all the new spacy entities will be converted and added into
             its origin medkit document.
-        spacy_name_spans_to_transfer:
+        spacy_span_groups:
             Name of new spacy span groups (`doc.spans`) to convert into medkit segments.
             If `None` (default) new spacy span groups will be converted and added into
             its origin medkit document.
-        spacy_attrs_to_transfer:
+        spacy_attrs:
             Name of span extensions to convert into medkit attributes.
             If `None` (default) all non-None extensions will be added for each annotation with
             a medkit ID.
@@ -57,25 +56,25 @@ class SpacyDocPipeline:
 
         self.id = proc_id
         self._prov_builder: Optional[ProvBuilder] = None
-        self._include_medkit_info = True
-        self._rebuild_medkit_anns_and_attrs = False
 
         self.nlp = nlp
-        self.medkit_labels_to_transfer = medkit_labels_to_transfer
-        self.medkit_attrs_to_transfer = medkit_attrs_to_transfer
-        self.spacy_labels_ents_to_transfer = spacy_labels_ents_to_transfer
-        self.spacy_name_spans_to_transfer = spacy_name_spans_to_transfer
-        self.spacy_attrs_to_transfer = spacy_attrs_to_transfer
+        self.medkit_labels_anns = medkit_labels_anns
+        self.medkit_attrs = medkit_attrs
+        self.spacy_entities = spacy_entities
+        self.spacy_span_groups = spacy_span_groups
+        self.spacy_attrs = spacy_attrs
 
     @property
     def description(self) -> OperationDescription:
+        # medkit does not support serialisation of nlp objects,
+        # however version information like model name, author etc. is stored
         config = dict(
-            nlp=self.nlp.config["nlp"],
-            medkit_labels_to_transfer=self.medkit_labels_to_transfer,
-            medkit_attrs_to_transfer=self.medkit_attrs_to_transfer,
-            spacy_labels_ents_to_transfer=self.spacy_labels_ents_to_transfer,
-            spacy_name_spans_to_transfer=self.spacy_name_spans_to_transfer,
-            spacy_attrs_to_transfer=self.spacy_attrs_to_transfer,
+            nlp_metadata=self.nlp.meta,
+            medkit_labels_anns=self.medkit_labels_anns,
+            medkit_attrs=self.medkit_attrs,
+            spacy_entities=self.spacy_entities,
+            spacy_span_groups=self.spacy_span_groups,
+            spacy_attrs=self.spacy_attrs,
         )
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
@@ -97,7 +96,11 @@ class SpacyDocPipeline:
             List or collection of TextDocuments on which to run the pipeline
         """
         if isinstance(medkit_docs, Collection):
-            medkit_docs = medkit_docs.documents
+            medkit_docs = [
+                medkit_doc
+                for medkit_doc in medkit_docs.documents
+                if isinstance(medkit_doc, TextDocument)
+            ]
 
         for medkit_doc in medkit_docs:
             if medkit_doc.text is None:
@@ -111,9 +114,9 @@ class SpacyDocPipeline:
             spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(
                 nlp=self.nlp,
                 medkit_doc=medkit_doc,
-                labels_to_transfer=self.medkit_labels_to_transfer,
-                attrs_to_transfer=self.medkit_attrs_to_transfer,
-                include_medkit_info=self._include_medkit_info,
+                labels_anns=self.medkit_labels_anns,
+                attrs=self.medkit_attrs,
+                include_medkit_info=True,
             )
             # apply nlp spacy
             spacy_doc = self.nlp(spacy_doc)
@@ -126,10 +129,10 @@ class SpacyDocPipeline:
             anns, attrs_by_ann_id = spacy_utils.extract_anns_and_attrs_from_spacy_doc(
                 spacy_doc=spacy_doc,
                 medkit_source_ann=raw_text_segment,
-                labels_ents_to_transfer=self.spacy_labels_ents_to_transfer,
-                name_spans_to_transfer=self.spacy_name_spans_to_transfer,
-                attrs_to_transfer=self.spacy_attrs_to_transfer,
-                rebuild_medkit_anns_and_attrs=self._rebuild_medkit_anns_and_attrs,
+                entities=self.spacy_entities,
+                span_groups=self.spacy_span_groups,
+                attrs=self.spacy_attrs,
+                rebuild_medkit_anns_and_attrs=False,
             )
             # annotate
             # add new annotations
@@ -148,6 +151,11 @@ class SpacyDocPipeline:
                 for attr in attrs:
                     ann.attrs.append(attr)
                     if self._prov_builder is not None:
+                        # if ann is an existing annotation, in terms
+                        # of provenance, the annotation was used to
+                        # generate the attribute, else, it was regenerate using
+                        # raw_text_segment
+                        source_data_item = raw_text_segment if ann in anns else ann
                         self._prov_builder.add_prov(
-                            attr, self.description, source_data_items=[ann]
+                            attr, self.description, source_data_items=[source_data_item]
                         )

@@ -2,15 +2,15 @@ __all__ = ["SpacyInputConverter", "SpacyOutputConverter"]
 import warnings
 from typing import List, Optional, Union
 
+from spacy import Language
+from spacy.tokens import Doc
+
 from medkit.core import Collection, OperationDescription, ProvBuilder, generate_id
 from medkit.core.text import TextDocument
-from medkit.text.spacy import (
+from medkit.text.spacy.spacy_utils import (
     build_spacy_doc_from_medkit_doc,
     extract_anns_and_attrs_from_spacy_doc,
 )
-
-from spacy import Language
-from spacy.tokens import Doc
 
 
 class SpacyInputConverter:
@@ -18,24 +18,24 @@ class SpacyInputConverter:
 
     def __init__(
         self,
-        labels_ents_to_transfer: Optional[List[str]] = None,
-        name_spans_to_transfer: Optional[List[str]] = None,
-        attrs_to_transfer: Optional[List[str]] = None,
+        entities: Optional[List[str]] = None,
+        span_groups: Optional[List[str]] = None,
+        attrs: Optional[List[str]] = None,
         proc_id: Optional[str] = None,
     ):
         """Initialize the spacy input converter
 
         Parameters
         ----------
-        spacy_labels_ents_to_transfer:
+        entities:
             Labels of spacy entities (`doc.ents`) to convert into medkit entities.
             If `None` (default) all spacy entities will be converted and added into
             its origin medkit document.
-        spacy_name_spans_to_transfer:
+        span_groups:
             Name of groups of spacy spans (`doc.spans`) to convert into medkit segments.
             If `None` (default) all groups of spacy spans will be converted and added into
             the medkit document.
-        spacy_attrs_to_transfer:
+        attrs:
             Name of span extensions to convert into medkit attributes.
             If `None` (default) all non-None extensions will be added for each annotation
         proc_id:
@@ -47,18 +47,17 @@ class SpacyInputConverter:
 
         self.id = proc_id
         self._prov_builder: Optional[ProvBuilder] = None
-        self._rebuild_medkit_anns_and_attrs = True
 
-        self.labels_ents_to_transfer = labels_ents_to_transfer
-        self.name_spans_to_transfer = name_spans_to_transfer
-        self.attrs_to_transfer = attrs_to_transfer
+        self.entities = entities
+        self.span_groups = span_groups
+        self.attrs = attrs
 
     @property
     def description(self) -> OperationDescription:
         config = dict(
-            labels_ents_to_transfer=self.labels_ents_to_transfer,
-            name_spans_to_transfer=self.name_spans_to_transfer,
-            attrs_to_transfer=self.attrs_to_transfer,
+            entities=self.entities,
+            span_groups=self.span_groups,
+            attrs=self.attrs,
         )
 
         return OperationDescription(
@@ -93,10 +92,10 @@ class SpacyInputConverter:
             anns, attrs_by_ann_id = extract_anns_and_attrs_from_spacy_doc(
                 spacy_doc=spacy_doc,
                 medkit_source_ann=None,
-                labels_ents_to_transfer=self.labels_ents_to_transfer,
-                name_spans_to_transfer=self.name_spans_to_transfer,
-                attrs_to_transfer=self.attrs_to_transfer,
-                rebuild_medkit_anns_and_attrs=self._rebuild_medkit_anns_and_attrs,
+                entities=self.entities,
+                span_groups=self.span_groups,
+                attrs=self.attrs,
+                rebuild_medkit_anns_and_attrs=True,
             )
             # add annotations
             for ann in anns:
@@ -136,8 +135,8 @@ class SpacyOutputConverter:
         self,
         nlp: Language,
         apply_nlp_spacy: bool = False,
-        labels_to_transfer: Optional[List[str]] = None,
-        attrs_to_transfer: Optional[List[str]] = None,
+        labels_anns: Optional[List[str]] = None,
+        attrs: Optional[List[str]] = None,
         proc_id: Optional[str] = None,
     ):
         """Initialize the spacy output converter
@@ -152,10 +151,10 @@ class SpacyOutputConverter:
             parameter should be True, in order to add such attributes.
             If False, the `nlp` pipeline is not applied in the spacy document, so the document
             contains only the annotations and attributes transferred by medkit.
-        labels_to_transfer:
+        labels_anns:
             Labels of medkit annotations to include in the spacy document.
             If `None` (default) all the annotations will be included.
-        attrs_to_transfer:
+        attrs:
             Labels of medkit attributes to add in the annotations that will be included.
             If `None` (default) all the attributes will be added as `custom attributes`
             in each annotation included.
@@ -168,11 +167,10 @@ class SpacyOutputConverter:
 
         self.id = proc_id
         self._prov_builder: Optional[ProvBuilder] = None
-        self._include_medkit_info = False
 
         self.nlp = nlp
-        self.labels_to_transfer = labels_to_transfer
-        self.attrs_to_transfer = attrs_to_transfer
+        self.labels_anns = labels_anns
+        self.attrs = attrs
         self.apply_nlp_spacy = apply_nlp_spacy
 
     @property
@@ -180,9 +178,9 @@ class SpacyOutputConverter:
         # medkit does not support serialisation of nlp objects,
         # however version information like model name, author etc. is stored
         config = dict(
-            nlp=self.nlp.meta,
-            labels_to_transfer=self.labels_to_transfer,
-            attrs_to_transfer=self.attrs_to_transfer,
+            nlp_metadata=self.nlp.meta,
+            labels_anns=self.labels_anns,
+            attrs=self.attrs,
             apply_nlp_spacy=self.apply_nlp_spacy,
         )
         return OperationDescription(
@@ -207,7 +205,11 @@ class SpacyOutputConverter:
         """
 
         if isinstance(medkit_docs, Collection):
-            medkit_docs = medkit_docs.documents
+            medkit_docs = [
+                medkit_doc
+                for medkit_doc in medkit_docs.documents
+                if isinstance(medkit_doc, TextDocument)
+            ]
 
         spacy_docs = []
         for medkit_doc in medkit_docs:
@@ -222,9 +224,9 @@ class SpacyOutputConverter:
             spacy_doc = build_spacy_doc_from_medkit_doc(
                 nlp=self.nlp,
                 medkit_doc=medkit_doc,
-                labels_to_transfer=self.labels_to_transfer,
-                attrs_to_transfer=self.attrs_to_transfer,
-                include_medkit_info=self._include_medkit_info,
+                labels_anns=self.labels_anns,
+                attrs=self.attrs,
+                include_medkit_info=False,
             )
             # each component of nlp spacy is applied
             if self.apply_nlp_spacy:
