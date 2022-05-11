@@ -223,7 +223,9 @@ class HypothesisDetector:
                             break
 
         hyp_attr = Attribute(
-            label=self.output_label, value=is_hypothesis, metadata=metadata,
+            label=self.output_label,
+            value=is_hypothesis,
+            metadata=metadata,
         )
 
         if self._prov_builder is not None:
