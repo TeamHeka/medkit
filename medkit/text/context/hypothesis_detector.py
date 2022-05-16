@@ -120,11 +120,11 @@ class HypothesisDetector:
         # build and pre-compile exclusion pattern for each verb
         self._patterns_by_verb = {}
         for verb_root, verb_forms_by_mode_and_tense in verbs.items():
-            verb_regexps = []
+            verb_regexps = set()
             for mode, tense in modes_and_tenses:
                 for verb_form in verb_forms_by_mode_and_tense[mode][tense]:
                     verb_regexp = r"\b" + verb_form.replace(" ", r"\s+") + r"\b"
-                    verb_regexps.append(verb_regexp)
+                    verb_regexps.add(verb_regexp)
             verb_pattern = re.compile("|".join(verb_regexps), flags=re.IGNORECASE)
             self._patterns_by_verb[verb_root] = verb_pattern
 
