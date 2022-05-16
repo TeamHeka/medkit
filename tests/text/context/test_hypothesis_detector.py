@@ -12,11 +12,7 @@ _PATH_TO_VERBS = Path(__file__).parent / "hypothesis_verbs.yml"
 
 def _get_syntagma_segments(syntagma_texts):
     return [
-        Segment(
-            label="syntagma",
-            spans=[Span(0, len(text))],
-            text=text,
-        )
+        Segment(label="syntagma", spans=[Span(0, len(text))], text=text,)
         for text in syntagma_texts
     ]
 
@@ -74,9 +70,7 @@ def test_exclusions():
     )
 
     rule = HypothesisDetectorRule(
-        id="id_if",
-        regexp=r"\bif\b",
-        exclusion_regexps=[r"\beven\s*\bif"],
+        id="id_if", regexp=r"\bif\b", exclusion_regexps=[r"\beven\s*\bif"],
     )
     detector = HypothesisDetector(output_label="hypothesis", rules=[rule], verbs={})
     detector.run(syntagmas)
@@ -115,7 +109,7 @@ def test_verbs():
     detector = HypothesisDetector(
         output_label="hypothesis",
         verbs=verbs,
-        modes_and_tenses=[("indicatif", "futur"), ("conditionel", "présent")],
+        modes_and_tenses=[("indicatif", "futur"), ("conditionnel", "présent")],
     )
 
     hyp_syntagma_texts = [
