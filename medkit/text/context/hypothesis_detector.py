@@ -159,6 +159,7 @@ class HypothesisDetector:
             rules=self.rules,
             verbs=self.verbs,
             modes_and_tenses=self.modes_and_tenses,
+            max_length=self.max_length,
         )
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
