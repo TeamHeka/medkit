@@ -12,12 +12,11 @@ from typing import (
     Dict,
     List,
     Optional,
-    Protocol,
     Tuple,
     Union,
     cast,
-    runtime_checkable,
 )
+from typing_extensions import Protocol, runtime_checkable
 
 from medkit.core.annotation import Annotation
 from medkit.core.data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs

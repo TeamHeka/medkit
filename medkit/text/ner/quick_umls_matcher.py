@@ -1,7 +1,8 @@
 __all__ = ["QuickUMLSMatcher"]
 
 from pathlib import Path
-from typing import Dict, Iterator, List, Literal, NamedTuple, Optional, Union
+from typing import Dict, Iterator, List, NamedTuple, Optional, Union
+from typing_extensions import Literal
 
 from quickumls import QuickUMLS
 import quickumls.constants

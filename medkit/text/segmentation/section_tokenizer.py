@@ -4,7 +4,8 @@ __all__ = ["SectionModificationRule", "SectionTokenizer"]
 
 import dataclasses
 import pathlib
-from typing import Dict, Literal, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
+from typing_extensions import Literal
 import yaml
 
 from flashtext import KeywordProcessor
