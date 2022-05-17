@@ -28,7 +28,11 @@ _TEXT_ALIGNMENTS = [
 
 
 def _get_raw_text_segment(text=_ORIGINAL_TEXT):
-    return Segment(label="raw_text", spans=[Span(0, len(text))], text=text,)
+    return Segment(
+        label="raw_text",
+        spans=[Span(0, len(text))],
+        text=text,
+    )
 
 
 @pytest.fixture(scope="module")
@@ -96,6 +100,7 @@ def test_translator_with_matcher(translator):
 def test_ranges_sorting():
     aligner = _Aligner(alignment_model="aneuraz/awesome-align-with-co")
     range_alignments = aligner.align(
-        "CHIRURGICAL ANTICEDENTS: surgery", "ANTÉCÉDENT CHIRURGICAUX: chirurgie",
+        "CHIRURGICAL ANTICEDENTS: surgery",
+        "ANTÉCÉDENT CHIRURGICAUX: chirurgie",
     )
     assert all(sorted(r) == r for r in range_alignments.values())
