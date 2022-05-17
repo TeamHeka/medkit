@@ -122,7 +122,8 @@ class HypothesisDetector:
 
         if (verbs is None) != (modes_and_tenses is None):
             raise ValueError(
-                "'verbs' and 'modes_and_tenses' must be either both provided or both left empty"
+                "'verbs' and 'modes_and_tenses' must be either both provided or both"
+                " left empty"
             )
 
         self.id: str = proc_id
