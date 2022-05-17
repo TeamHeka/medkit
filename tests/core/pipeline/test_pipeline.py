@@ -322,7 +322,8 @@ def test_step_with_no_output():
     pipeline = Pipeline(steps=[step_1], input_keys=["SENTENCE"], output_keys=[])
 
     sentence_segs = _get_sentence_segments()
-    pipeline.run(sentence_segs)
+    return_value = pipeline.run(sentence_segs)
+    assert return_value is None
 
     # make sure attributes were added
     for segment in sentence_segs:
