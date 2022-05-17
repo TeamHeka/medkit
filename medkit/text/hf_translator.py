@@ -18,25 +18,51 @@ from medkit.core.text import Segment, ModifiedSpan, span_utils
 
 
 class HFTranslator:
+    """Translator based on Hugging Face model
+
+    For segment given in input, a translated segment will be returned.
+    The spans of the translated segment are "aligned" to the original segment. An
+    alignment model is used to find matches between translated words and
+    original words, and for each of these matches a `ModifiedSpan` is created, referencing
+    the original span in the original text.
+
+    Segment given in input should not contain more than one sentence, because only the 1st
+    sentence will be translated and the others will be discarded (this might vary with the model).
+    The formatting will not be preserved.
+    """
+
     def __init__(
         self,
+        output_label: str = "translation",
         translation_model: str = "Helsinki-NLP/opus-mt-fr-en",
         alignment_model: str = "bert-base-multilingual-cased",
-        output_label: str = "translation",
         proc_id: str = None,
     ):
+        """Instantiate the translator
+
+        Parameters
+        ----------
+        output_label:
+            The label of the created annotations
+        translation_model:
+            Name of the translation model on the Hugging Face models hub
+        alignment_model:
+            Name of the alignment model on the Hugging Face models hub
+        proc_id:
+            Identifier of the translator
+        """
         if proc_id is None:
             proc_id = generate_id()
 
-        self.id = proc_id
-        self.output_label = output_label
-        self.translation_model = translation_model
-        self.alignment_model = alignment_model
+        self.id: str = proc_id
+        self.output_label: str = output_label
+        self.translation_model: str = translation_model
+        self.alignment_model: str = alignment_model
 
         self._translation_pipeline = transformers.pipeline(
             "translation_en_to_fr", model=self.translation_model
         )
-        self._aligner = _Aligner(alignment_model=self.alignment_model)
+        self._aligner: _Aligner = _Aligner(alignment_model=self.alignment_model)
 
         self._prov_builder: Optional[ProvBuilder] = None
 
@@ -55,9 +81,23 @@ class HFTranslator:
         self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]) -> List[Segment]:
-        return [self._translate_segment(segment) for segment in segments]
+        """
+        Translate short segments (can't contain multiple sentences)
+
+        Parameters
+        ----------
+        segments:
+            List of segments to translate
+
+        Returns
+        -------
+        List[Segments]:
+            Translated segments (with spans referring to words in original text when possible)
+        """
+        return [self._translate_segment(s) for s in segments]
 
     def _translate_segment(self, segment: Segment) -> Segment:
+        # TODO translate batches of segments instead of one segment at a time?
         translated_text = self._translation_pipeline(segment.text)[0][
             "translation_text"
         ]
@@ -77,8 +117,19 @@ class HFTranslator:
         return translated_segment
 
     def _get_translated_spans(self, translated_text, original_text, original_spans):
+        """Compute spans for translated segments, making translated words reference words
+        in original text through ModifiedSpans when possible"""
+
+        # compute words alignment
         alignment = self._aligner.align(translated_text, original_text)
 
+        # build translated spans, which will contains:
+        # - ModifiedSpans with no replacement_spans, for non-aligned parts of translated text
+        #   (ie gaps between aligned words, plus head and tail)
+        # - ModifiedSpans with replacement_spans pointing to original word(s) for aligned words
+        #   in translated text
+        # - plain Spans pointing to original word(s) for aligned words, when the translated word
+        #   is identical to the original word
         translated_spans = []
         current_char = 0
         for translated_range, original_ranges in alignment.items():
@@ -91,6 +142,7 @@ class HFTranslator:
                     ModifiedSpan(translated_start - current_char, replaced_spans=[])
                 )
 
+            # extract spans corresponding to sub text in original text
             original_sub_text, original_sub_text_spans = span_utils.extract(
                 original_text, original_spans, original_ranges
             )
@@ -131,6 +183,24 @@ class _Aligner:
     def align(
         self, source_text: str, target_text: str
     ) -> Dict[Tuple[int, int], List[Tuple[int, int]]]:
+        """Compute word alignments between two texts in different languages.
+
+        Parameters
+        ----------
+        source_text:
+            The text to align from (typically the translated text)
+        target_text:
+            The text to align to (typically the original text)
+
+        Returns
+        -------
+        Dict[Tuple[int, int], List[Tuple[int, int]]]:
+            The alignments between characters ranges.
+            For each entry in the dict, the key is the character range of a word in `source_text`,
+            and the value is a list of one or more character ranges in `target_text`,
+            corresponding to one or more words (a word in the source text might be aligned to
+            several words in the target text).
+        """
         # preprocess
         source_encoding = self._encode_text(source_text)
         target_encoding = self._encode_text(target_text)
@@ -191,7 +261,7 @@ class _Aligner:
 
     def _get_words_by_token(self, encoding):
         """Return a list containing the word index for each token
-        (allows to map back each token to its corresponding word"""
+        (allows to map back each token to its corresponding word)"""
         nb_words = 0
         words_by_token = []
         prev_word = None
