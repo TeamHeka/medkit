@@ -64,6 +64,8 @@ def test_raw_text_segment():
     assert ann.label == TextDocument.RAW_TEXT_LABEL
     assert ann.text == doc.text
     assert type(ann) == Segment
+    # reachable through attribute
+    assert ann == doc.raw_text_segment
     # reachable by id
     assert doc.get_annotation_by_id(ann.id) is ann
     # not stored with other annotations
