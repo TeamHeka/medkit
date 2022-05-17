@@ -3,7 +3,7 @@ __all__ = ["HypothesisDetector", "HypothesisDetectorRule"]
 import dataclasses
 from pathlib import Path
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Literal, List, Optional, Tuple, TypedDict
 import unidecode
 
 import yaml
@@ -50,6 +50,16 @@ class HypothesisDetectorRule:
             "HypothesisDetectorRule regexps shouldn't contain non-ASCII chars when"
             " unicode_sensitive is False"
         )
+
+
+class _RuleMetadata(TypedDict):
+    type: Literal["rule"]
+    rule_id: str
+
+
+class _VerbMetadata(TypedDict):
+    type: Literal["verb"]
+    matched_verb: str
 
 
 class HypothesisDetector:
@@ -203,7 +213,7 @@ class HypothesisDetector:
                     )
             for verb, verb_pattern in self._patterns_by_verb.items():
                 if verb_pattern.search(text_unicode):
-                    metadata = dict(matched_verb=verb)
+                    metadata = _VerbMetadata(type="verb", matched_verb=verb)
                     is_hypothesis = True
                     break
             else:
@@ -220,7 +230,7 @@ class HypothesisDetector:
                         ):
                             is_hypothesis = True
                             if rule.id is not None:
-                                metadata = dict(rule_id=rule.id)
+                                metadata = _RuleMetadata(type="verb", rule_id=rule.id)
                             break
 
         hyp_attr = Attribute(
