@@ -5,8 +5,8 @@ from medkit.text.hf_translator import HFTranslator, _Aligner
 from medkit.text.ner import RegexpMatcher, RegexpMatcherRule
 
 
-_ORIGINAL_TEXT = "Je souffre d'insuffisance cardiaque depuis 10 ans."
-_TRANSLATED_TEXT = "I've been suffering from heart failure for 10 years."
+_TEXT_FR = "Je souffre d'insuffisance cardiaque depuis 10 ans."
+_TEXT_EN = "I've been suffering from heart failure for 10 years."
 _TEXT_ALIGNMENTS = [
     ("I", "Je"),
     ("'ve been ", None),
@@ -27,7 +27,7 @@ _TEXT_ALIGNMENTS = [
 ]
 
 
-def _get_raw_text_segment(text=_ORIGINAL_TEXT):
+def _get_raw_text_segment(text):
     return Segment(
         label="raw_text",
         spans=[Span(0, len(text))],
@@ -36,14 +36,25 @@ def _get_raw_text_segment(text=_ORIGINAL_TEXT):
 
 
 @pytest.fixture(scope="module")
-def translator():
+def translator_fr_to_en():
     return HFTranslator()
 
 
-def test_translator(translator):
-    segment = _get_raw_text_segment(_ORIGINAL_TEXT)
-    translated_segment = translator.run([segment])[0]
-    assert translated_segment.text == _TRANSLATED_TEXT
+@pytest.fixture(scope="module")
+def translator_en_to_fr():
+    return HFTranslator(translation_model="Helsinki-NLP/opus-mt-en-fr")
+
+
+def test_translator_fr_to_en(translator_fr_to_en):
+    segment = _get_raw_text_segment(_TEXT_FR)
+    translated_segment = translator_fr_to_en.run([segment])[0]
+    assert translated_segment.text == _TEXT_EN
+
+
+def test_translator_en_to_fr(translator_en_to_fr):
+    segment = _get_raw_text_segment(_TEXT_EN)
+    translated_segment = translator_en_to_fr.run([segment])[0]
+    assert translated_segment.text == _TEXT_FR
 
 
 def _get_text_alignments(original_text, translated_segment):
@@ -69,7 +80,7 @@ def _get_text_alignments(original_text, translated_segment):
     return text_alignments
 
 
-def test_translator_with_matcher(translator):
+def test_translator_with_matcher(translator_fr_to_en):
     """Make sure we are able to link an entity matched on translated text back to original text"""
     rule = RegexpMatcherRule(
         regexp="heart failure",
@@ -79,8 +90,8 @@ def test_translator_with_matcher(translator):
     )
     matcher = RegexpMatcher(rules=[rule])
 
-    segment = _get_raw_text_segment(_ORIGINAL_TEXT)
-    translated_segment = translator.run([segment])[0]
+    segment = _get_raw_text_segment(_TEXT_FR)
+    translated_segment = translator_fr_to_en.run([segment])[0]
 
     entities = matcher.run([translated_segment])
     assert len(entities) == 1
@@ -88,11 +99,11 @@ def test_translator_with_matcher(translator):
     assert entity.label == "heart failure"
     assert entity.text == "heart failure"
 
-    text_alignments = _get_text_alignments(_ORIGINAL_TEXT, translated_segment)
+    text_alignments = _get_text_alignments(_TEXT_FR, translated_segment)
     assert text_alignments == _TEXT_ALIGNMENTS
 
     spans = span_utils.normalize_spans(entity.spans)
-    spans = span_utils.clean_up_gaps_in_normalized_spans(spans, _ORIGINAL_TEXT)
+    spans = span_utils.clean_up_gaps_in_normalized_spans(spans, _TEXT_FR)
     matched_original_text = " ".join(segment.text[s.start : s.end] for s in spans)
     assert matched_original_text == "insuffisance cardiaque"
 

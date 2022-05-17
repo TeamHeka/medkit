@@ -59,9 +59,7 @@ class HFTranslator:
         self.translation_model: str = translation_model
         self.alignment_model: str = alignment_model
 
-        self._translation_pipeline = transformers.pipeline(
-            "translation_en_to_fr", model=self.translation_model
-        )
+        self._translation_pipeline = transformers.pipeline(model=self.translation_model )
         self._aligner: _Aligner = _Aligner(alignment_model=self.alignment_model)
 
         self._prov_builder: Optional[ProvBuilder] = None
@@ -106,7 +104,9 @@ class HFTranslator:
         )
 
         translated_segment = Segment(
-            label=self.output_label, spans=translated_spans, text=translated_text,
+            label=self.output_label,
+            spans=translated_spans,
+            text=translated_text,
         )
 
         if self._prov_builder is not None:
