@@ -18,7 +18,7 @@ Once this reviewing phase is over, the merge request will be integrated into `de
 
 ## Development environment
 
-Before everything else, make sure you have the appropriate Python version running on your system (`python3 --version`). Medkit requires Python >= 3.8. Optionally, you may want to create and activate a virtual environment with Python's [built-in venv module](https://docs.python.org/3/library/venv.html) (commands will slightly differ on Windows):
+Before everything else, make sure you have the appropriate Python version running on your system (`python3 --version`). Medkit requires Python >= 3.7. Optionally, you may want to create and activate a virtual environment with Python's [built-in venv module](https://docs.python.org/3/library/venv.html) (commands will slightly differ on Windows):
 
 ```shell
 python3 -m venv <path/to/venv>
@@ -28,7 +28,7 @@ source <path/to/venv>/bin/activate
 or [conda](https://conda.io):
 
 ```shell
-conda create --name medkit python=3.8
+conda create --name medkit python=3.7
 conda activate medkit
 ```
 
