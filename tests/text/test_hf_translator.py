@@ -1,7 +1,7 @@
 import pytest
 
 from medkit.core.text import Segment, Span, ModifiedSpan, span_utils
-from medkit.text.translator import Translator, _Aligner
+from medkit.text.hf_translator import HFTranslator, _Aligner
 from medkit.text.ner import RegexpMatcher, RegexpMatcherRule
 
 
@@ -28,16 +28,12 @@ _TEXT_ALIGNMENTS = [
 
 
 def _get_raw_text_segment(text=_ORIGINAL_TEXT):
-    return Segment(
-        label="raw_text",
-        spans=[Span(0, len(text))],
-        text=text,
-    )
+    return Segment(label="raw_text", spans=[Span(0, len(text))], text=text,)
 
 
 @pytest.fixture(scope="module")
 def translator():
-    return Translator()
+    return HFTranslator()
 
 
 def test_translator(translator):
@@ -100,7 +96,6 @@ def test_translator_with_matcher(translator):
 def test_ranges_sorting():
     aligner = _Aligner(alignment_model="aneuraz/awesome-align-with-co")
     range_alignments = aligner.align(
-        "CHIRURGICAL ANTICEDENTS: surgery",
-        "ANTÉCÉDENT CHIRURGICAUX: chirurgie",
+        "CHIRURGICAL ANTICEDENTS: surgery", "ANTÉCÉDENT CHIRURGICAUX: chirurgie",
     )
     assert all(sorted(r) == r for r in range_alignments.values())

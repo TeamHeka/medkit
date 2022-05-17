@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["Translator"]
+__all__ = ["HFTranslator"]
 
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
@@ -17,7 +17,7 @@ from medkit.core import (
 from medkit.core.text import Segment, ModifiedSpan, span_utils
 
 
-class Translator:
+class HFTranslator:
     def __init__(
         self,
         translation_model: str = "Helsinki-NLP/opus-mt-fr-en",
@@ -66,9 +66,7 @@ class Translator:
         )
 
         translated_segment = Segment(
-            label=self.output_label,
-            spans=translated_spans,
-            text=translated_text,
+            label=self.output_label, spans=translated_spans, text=translated_text,
         )
 
         if self._prov_builder is not None:
