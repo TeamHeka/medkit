@@ -21,7 +21,7 @@ def test_single_rule():
     syntagmas = _get_syntagma_segments(["If patient has covid", "Patient has covid"])
 
     rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
-    detector = HypothesisDetector(output_label="hypothesis", rules=[rule], verbs={})
+    detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
     detector.run(syntagmas)
 
     # 1st syntagma is hypothesis
@@ -46,9 +46,7 @@ def test_multiple_rules():
 
     rule_1 = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
     rule_2 = HypothesisDetectorRule(id="id_assuming", regexp=r"\bassuming\b")
-    detector = HypothesisDetector(
-        output_label="hypothesis", rules=[rule_1, rule_2], verbs={}
-    )
+    detector = HypothesisDetector(output_label="hypothesis", rules=[rule_1, rule_2])
     detector.run(syntagmas)
 
     # 1st syntagma is hypothesis, matched by 1st rule
@@ -72,7 +70,7 @@ def test_exclusions():
     rule = HypothesisDetectorRule(
         id="id_if", regexp=r"\bif\b", exclusion_regexps=[r"\beven\s*\bif"],
     )
-    detector = HypothesisDetector(output_label="hypothesis", rules=[rule], verbs={})
+    detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
     detector.run(syntagmas)
 
     # 1st syntagma is hypothesis
@@ -91,7 +89,7 @@ def test_max_length():
 
     rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
     detector = HypothesisDetector(
-        output_label="hypothesis", rules=[rule], verbs={}, max_length=30
+        output_label="hypothesis", rules=[rule], max_length=30
     )
     detector.run(syntagmas)
 
@@ -154,7 +152,7 @@ def test_prov():
     syntagmas = _get_syntagma_segments(["If patient has covid"])
 
     rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
-    detector = HypothesisDetector(output_label="hypothesis", rules=[rule], verbs={})
+    detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
 
     prov_builder = ProvBuilder()
     detector.set_prov_builder(prov_builder)
@@ -198,11 +196,11 @@ _TEST_DATA = [
 # fmt: on
 
 
-def test_default_rules_and_verbs():
+def test_example_rules_and_verbs():
     syntagma_texts = [d[0] for d in _TEST_DATA]
     syntagmas = _get_syntagma_segments(syntagma_texts)
 
-    detector = HypothesisDetector(output_label="hypothesis")
+    detector = HypothesisDetector.get_example()
     detector.run(syntagmas)
 
     for i in range(len(_TEST_DATA)):

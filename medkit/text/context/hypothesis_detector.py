@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = ["HypothesisDetector", "HypothesisDetectorRule"]
 
 import dataclasses
@@ -12,8 +14,8 @@ from medkit.core import generate_id, Attribute, OperationDescription, ProvBuilde
 from medkit.core.text import Segment
 
 
-_PATH_TO_DEFAULT_RULES = Path(__file__).parent / "hypothesis_detector_default_rules.yml"
-_PATH_TO_DEFAULT_VERBS = Path(__file__).parent / "hypothesis_detector_default_verbs.yml"
+_PATH_TO_EXAMPLE_RULES = Path(__file__).parent / "hypothesis_detector_example_rules.yml"
+_PATH_TO_EXAMPLE_VERBS = Path(__file__).parent / "hypothesis_detector_example_verbs.yml"
 
 
 @dataclasses.dataclass
@@ -99,6 +101,7 @@ class HypothesisDetector:
             and the 3d key the tense.
             For instance verb["aller"]["indicatif]["présent"] would hold the list
             ["vais", "vas", "va", "allons", aller", "vont"]
+            When `verbs` is provided, `modes_and_tenses` must also be provided.
         modes_and_tenses:
             List of tuples of all modes and tenses associated with hypothesis.
             Will be used to select conjugated forms in `verbs` that denote hypothesis.
@@ -111,14 +114,16 @@ class HypothesisDetector:
         if proc_id is None:
             proc_id = generate_id()
         if rules is None:
-            rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
+            rules = []
         if verbs is None:
-            verbs = self.load_verbs(_PATH_TO_DEFAULT_VERBS)
+            verbs = {}
         if modes_and_tenses is None:
-            modes_and_tenses = [
-                ("conditionnel", "présent"),
-                ("indicatif", "futur simple"),
-            ]
+            modes_and_tenses = []
+
+        if (verbs is None) != (modes_and_tenses is None):
+            raise ValueError(
+                "'verbs' and 'modes_and_tenses' must be either both provided or both left empty"
+            )
 
         self.id: str = proc_id
         self.output_label: str = output_label
@@ -291,3 +296,16 @@ class HypothesisDetector:
             rules_data = yaml.safe_load(f)
         rules = [HypothesisDetectorRule(**d) for d in rules_data]
         return rules
+
+    @classmethod
+    def get_example(cls) -> HypothesisDetector:
+        """Instantiate an HypothesisDetector with example rules and verbs,
+        designed for usage with EDS documents
+        """
+        rules = cls.load_rules(_PATH_TO_EXAMPLE_RULES)
+        verbs = cls.load_verbs(_PATH_TO_EXAMPLE_VERBS)
+        modes_and_tenses = [
+            ("conditionnel", "présent"),
+            ("indicatif", "futur simple"),
+        ]
+        return cls(rules=rules, verbs=verbs, modes_and_tenses=modes_and_tenses)
