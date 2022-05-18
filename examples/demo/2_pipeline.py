@@ -47,7 +47,7 @@ pipeline = Pipeline(steps, input_keys=["full_text"], output_keys=["entities"])
 
 # run pipeline on each doc
 for doc in docs:
-    full_text_anns = doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)
+    full_text_anns = [doc.raw_segment]
     entities = pipeline.run(full_text_anns)
     # annotate doc with results
     for entity in entities:
