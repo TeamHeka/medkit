@@ -32,7 +32,7 @@ regexp_matcher = RegexpMatcher(rules=regexp_matcher_rules, attrs_to_copy=["negat
 
 # annotate each doc
 for doc in docs:
-    anns = doc.get_annotations_by_label(TextDocument.RAW_LABEL)
+    anns = [doc.raw_segment]
     anns = unicode_normalizer.run(anns)
     anns = sentence_tokenizer.run(anns)
     negation_detector.run(anns)
