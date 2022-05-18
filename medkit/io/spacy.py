@@ -87,37 +87,9 @@ class SpacyInputConverter:
         for spacy_doc in spacy_docs:
             # create a new medkit document (TextDocument object)
             medkit_doc = TextDocument(text=spacy_doc.text_with_ws)
-
-            # get anns and attributes from spacy
-            anns, attrs_by_ann_id = extract_anns_and_attrs_from_spacy_doc(
-                spacy_doc=spacy_doc,
-                medkit_source_ann=None,
-                entities=self.entities,
-                span_groups=self.span_groups,
-                attrs=self.attrs,
-                rebuild_medkit_anns_and_attrs=True,
-            )
-            # add annotations
+            anns = self._load_anns(spacy_doc)
             for ann in anns:
                 medkit_doc.add_annotation(ann)
-                if self._prov_builder is not None:
-                    # the input converter does not know the source data item
-                    self._prov_builder.add_prov(
-                        ann, self.description, source_data_items=[]
-                    )
-
-            # add new attributes in each annotation
-            for ann_id, attrs in attrs_by_ann_id.items():
-                ann = medkit_doc.get_annotation_by_id(ann_id)
-
-                for attr in attrs:
-                    ann.attrs.append(attr)
-                    if self._prov_builder is not None:
-                        # the input converter does not know the source data item
-                        self._prov_builder.add_prov(
-                            attr, self.description, source_data_items=[]
-                        )
-
             medkit_docs.append(medkit_doc)
 
         return Collection(medkit_docs)
@@ -125,6 +97,33 @@ class SpacyInputConverter:
     @classmethod
     def from_description(cls, description: OperationDescription):
         return cls(proc_id=description.id, **description.config)
+
+    def _load_anns(self, spacy_doc: Doc):
+        annotations, attributes_by_ann = extract_anns_and_attrs_from_spacy_doc(
+            spacy_doc=spacy_doc,
+            medkit_source_ann=None,
+            entities=self.entities,
+            span_groups=self.span_groups,
+            attrs=self.attrs,
+            rebuild_medkit_anns_and_attrs=True,
+        )
+
+        # add annotations
+        for ann in annotations:
+            if self._prov_builder is not None:
+                # the input converter does not know the source data item
+                self._prov_builder.add_prov(ann, self.description, source_data_items=[])
+
+            if ann.id in attributes_by_ann.keys():
+                attrs = attributes_by_ann[ann.id]
+                for attr in attrs:
+                    ann.attrs.append(attr)
+                    if self._prov_builder is not None:
+                        # the input converter does not know the source data item
+                        self._prov_builder.add_prov(
+                            attr, self.description, source_data_items=[]
+                        )
+        return annotations
 
 
 class SpacyOutputConverter:
