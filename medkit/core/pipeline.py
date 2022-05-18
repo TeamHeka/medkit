@@ -189,7 +189,7 @@ class Pipeline:
 
         if len(all_output_data) == 0:
             # no output
-            return all_output_data
+            return None
         elif len(all_output_data) == 1:
             # unwrap out of tuple if only 1 output
             return all_output_data[0]
