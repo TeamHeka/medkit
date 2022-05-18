@@ -1,0 +1,46 @@
+- id: "id_si"
+  regexp: '\bsi\b'
+  exclusion_regexps:
+    - '\bsi\s+oui\b'
+    - '\bmeme\s+si\b'
+
+- id: "id_a_condition_que"
+  regexp: '\ba\s+condition\s+que\b'
+
+- id: "id_a_moins_que"
+  regexp: '\ba\s+moins\s+que\b'
+
+- id: "id_pour_peu_que"
+  regexp: '\bpour\s+peu\s+que\b'
+
+- id: "id_si_tant_est_que"
+  regexp: '\bsi\s+tant\s+est\s+que\b'
+
+- id: "id_pour_autant_que"
+  regexp: '\bpour\s+autant\s+que\b'
+
+- id: "id_en_admettant_que"
+  regexp: '\ben\s+admettant\s+que\b'
+
+- id: "id_a_supposer_que"
+  regexp: '\ba\s+supposer\s+que\b'
+
+- id: "id_en_supposant_que"
+  regexp: '\ben\s+supposant\s+que\b'
+
+- id: "id_au_cas_ou"
+  regexp: '\bau\s+cas\s+ou\b'
+
+- id: "id_eventuellement"
+  regexp: '\beventuellement\b'
+
+- id: "id_suspicion"
+  regexp: '\bsuspicion\b'
+
+- id: "id_suspecte"
+  regexp: '\bsuspectee?s?\b'
+  exclusion_regexps:
+    - '\bconfirmee?s?\b'
+
+- id: "id_envisage"
+  regexp: '\benvisagee?s?r?\b'
