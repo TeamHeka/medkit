@@ -304,12 +304,8 @@ def _add_entities_in_spacy_doc(
     ents_filtered = filter_spans(spacy_entities)
     spacy_doc.ents = list(spacy_doc.ents) + ents_filtered
 
-    discarded_str = ",".join(
-        [
-            ent._.get(_ATTR_MEDKIT_ID)
-            for ent in spacy_entities
-            if ent not in ents_filtered
-        ]
+    discarded_str = "--".join(
+        [ent.text for ent in spacy_entities if ent not in ents_filtered]
     )
     if discarded_str:
         warnings.warn(
@@ -323,7 +319,7 @@ def _add_segments_in_spacy_doc(
     segments: List[Segment],
     attrs: List[str],
     include_medkit_info: bool,
-) -> Doc:
+):
     """Convert segments into a spacy spans and modifies
     the spans in the Doc object (doc.spans)"""
 

@@ -38,7 +38,6 @@ def _custom_component(spacy_doc: Doc) -> Doc:
 
 @pytest.fixture(scope="module")
 def nlp_spacy_modified():
-    # download spacy models to test sents transfer
     nlp = spacy.blank("en")
     nlp.add_pipe("_attribute_adder", last=True)
     # check if component was added in spacy
@@ -48,67 +47,87 @@ def nlp_spacy_modified():
 
 TEXT = "The patient visited the hospital in 2005 for an unknown degree of influenza."
 
-# entities created by medkit
-ENTITIES = [
-    ("disease", (66, 75), "influenza"),
-    ("grade", (48, 62), "unknown degree"),
-]
-
 
 def _get_doc():
     medkit_doc = TextDocument(text=TEXT)
-    for ent in ENTITIES:
-        entity = Entity(
-            label=ent[0],
-            spans=[Span(ent[1][0], ent[1][1])],
-            text=ent[2],
-            attrs=[],
-        )
-        medkit_doc.add_annotation(entity)
+    ent_1 = Entity(label="disease", spans=[Span(66, 75)], text="influenza", attrs=[])
+    ent_2 = Entity(label="grade", spans=[Span(48, 62)], text="unknown degree", attrs=[])
+    medkit_doc.add_annotation(ent_1)
+    medkit_doc.add_annotation(ent_2)
     return medkit_doc
 
 
 def test_default_pipeline(nlp_spacy):
-    spacydoc_pipeline = SpacyDocPipeline(nlp=nlp_spacy)
+    # define a spacydocpipeline
+    # by default params are None, transfer all information
+    spacydoc_pipeline = SpacyDocPipeline(
+        nlp=nlp_spacy,
+        medkit_labels_anns=None,
+        medkit_attrs=None,
+        spacy_attrs=None,
+        spacy_span_groups=None,
+        spacy_entities=None,
+    )
 
-    # add original annotations
+    # get a medkit doc with annotations
     medkit_doc = _get_doc()
+    original_entities = sorted(
+        [
+            medkit_doc.get_annotation_by_id(id)
+            for ids in medkit_doc.entities.values()
+            for id in ids
+        ],
+        key=lambda ann: ann.id,
+    )
     assert len(medkit_doc.get_annotations()) == 2
     assert "DATE" not in medkit_doc.entities.keys()
 
     # run the pipeline
     spacydoc_pipeline.run([medkit_doc])
 
-    entities = [
-        medkit_doc.get_annotation_by_id(id)
-        for ids in medkit_doc.entities.values()
-        for id in ids
-    ]
+    # check entities after the pipeline
+    after_docpipeline_entities = sorted(
+        [
+            medkit_doc.get_annotation_by_id(id)
+            for ids in medkit_doc.entities.values()
+            for id in ids
+        ],
+        key=lambda ann: ann.id,
+    )
 
-    # entities have no attrs
-    assert all(len(ent.attrs) == 0 for ent in entities)
+    # entities have no changes because nlp object does not add attrs or entities
+    assert all(len(ent.attrs) == 0 for ent in after_docpipeline_entities)
+    for org_ent, after_ent in zip(original_entities, after_docpipeline_entities):
+        assert org_ent is after_ent
 
 
 def test_default_with_modified_pipeline(nlp_spacy_modified):
-    # adding a component in spacy
-    nlp = nlp_spacy_modified
+    # use a nlp object that modifies attrs and adds one entity
 
-    # created a docpipeline using the new nlp object
-    spacydoc_pipeline = SpacyDocPipeline(nlp=nlp)
+    # create a docpipeline using the new nlp object
+    # by default params are None, transfer all information
+    spacydoc_pipeline = SpacyDocPipeline(
+        nlp=nlp_spacy_modified,
+        medkit_labels_anns=None,
+        medkit_attrs=None,
+        spacy_attrs=None,
+        spacy_span_groups=None,
+        spacy_entities=None,
+    )
 
-    # create original annotations
+    # get a medkit doc with annotations
     medkit_doc = _get_doc()
     assert len(medkit_doc.get_annotations()) == 2
     assert "DATE" not in medkit_doc.entities.keys()
 
-    entities = [
+    original_entities = [
         medkit_doc.get_annotation_by_id(id)
         for ids in medkit_doc.entities.values()
         for id in ids
     ]
     # original entities have no attrs
-    assert all(len(ent.attrs) == 0 for ent in entities)
-    # id to compare
+    assert all(len(ent.attrs) == 0 for ent in original_entities)
+    # entity to compare after pipeline
     disease_original = medkit_doc.get_annotations_by_label("disease")[0]
 
     # run the pipeline
@@ -116,14 +135,14 @@ def test_default_with_modified_pipeline(nlp_spacy_modified):
 
     # spacy add a new annotation with 'DATE' as label
     assert len(medkit_doc.get_annotations()) == 3
-    entities = [
+    after_docpipeline_entities = [
         medkit_doc.get_annotation_by_id(id)
         for ids in medkit_doc.entities.values()
         for id in ids
     ]
 
     # spacy_doc adds 1 attribute
-    assert all(len(ent.attrs) == 1 for ent in entities)
+    assert all(len(ent.attrs) == 1 for ent in after_docpipeline_entities)
 
     # check new entity
     new_annotation = medkit_doc.get_annotations_by_label("DATE")[0]
@@ -150,6 +169,7 @@ def test_prov(nlp_spacy_modified):
     nlp = nlp_spacy_modified
 
     # created a docpipeline using the new nlp object
+    # by default params are None, transfer all information
     spacydoc_pipeline = SpacyDocPipeline(nlp=nlp)
     prov_builder = ProvBuilder()
     spacydoc_pipeline.set_prov_builder(prov_builder)
@@ -159,7 +179,7 @@ def test_prov(nlp_spacy_modified):
     # run the pipeline
     spacydoc_pipeline.run([medkit_doc])
 
-    raw_annotation = medkit_doc.get_annotations_by_label(medkit_doc.RAW_TEXT_LABEL)[0]
+    raw_segment = medkit_doc.raw_segment
 
     # check new entity
     graph = prov_builder.graph
@@ -168,14 +188,14 @@ def test_prov(nlp_spacy_modified):
     node = graph.get_node(entity_id)
     assert node.data_item_id == entity_id
     assert node.operation_id == spacydoc_pipeline.id
-    assert node.source_ids == [raw_annotation.id]
+    assert node.source_ids == [raw_segment.id]
 
     attribute = entity.attrs[0]
     attr = graph.get_node(attribute.id)
     assert attr.data_item_id == attribute.id
     assert attr.operation_id == spacydoc_pipeline.id
     # it is a new entity, medkit object origin was raw_ann
-    assert attr.source_ids == [raw_annotation.id]
+    assert attr.source_ids == [raw_segment.id]
 
     # check new attr entity
     entity_id = medkit_doc.entities["disease"][0]

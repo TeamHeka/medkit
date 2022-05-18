@@ -42,6 +42,8 @@ def test_input_converter_entity_transfer(
     labels_ents_to_transfer,
     expected_nb_ents,
 ):
+    # create a spacy doc containing 2 entities and two span groups
+    doc = _get_doc_spacy(nlp_spacy)
 
     # define a spacy input converter without spans or attributes
     spacy_converter = SpacyInputConverter(
@@ -49,9 +51,6 @@ def test_input_converter_entity_transfer(
         span_groups=[],
         attrs=[],
     )
-    # create a spacy doc containing 2 entities
-    doc = _get_doc_spacy(nlp_spacy)
-
     # get a medkit doc from a spacy doc
     medkit_docs = spacy_converter.load([doc])
 
@@ -103,27 +102,24 @@ def test_input_converter_attribute_transfer(
     if not SpacySpan.has_extension("is_selected_ent"):
         SpacySpan.set_extension("is_selected_ent", default=None)
 
-    # define a spacy input converter to transfer all entities and selected attrs
+    # create a spacy doc containing 2 entities and two span groups
+    doc = _get_doc_spacy(nlp_spacy)
+
+    # simulates a component spacy that adds one attribute to all entities
+    # to test transfering attributes by name, the fake component adds another
+    # attribute in the DATE entity
+    for e in doc.ents:
+        e._.set("nb_tokens_in", len([token for token in e]))
+        if e.label_ == "DATE":
+            e._.set("is_selected_ent", True)
+
+    # define a spacy input converter to transfer all entities, no spans and selected attrs
     spacy_converter = SpacyInputConverter(
         entities=None,
         span_groups=[],
         attrs=attrs_to_transfer,
     )
-
-    # create a spacy doc containing 2 entities
-    doc = _get_doc_spacy(nlp_spacy)
-
-    # simulates a component spacy that adds an attribute to all entities
-    # add default argument
-    for e in doc.ents:
-        e._.set("nb_tokens_in", len([token for token in e]))
-
-    # in the DATE entity it adds another attribute to test the transfer by attribute name
-    for e in doc.ents:
-        if e.label_ == "DATE":
-            e._.set("is_selected_ent", True)
-
-    # get a medkit doc from a spacy doc
+    # use the input converter to get a spacy doc
     medkit_docs = spacy_converter.load([doc])
 
     assert isinstance(medkit_docs, Collection)
@@ -131,6 +127,7 @@ def test_input_converter_attribute_transfer(
     medkit_doc = medkit_docs.documents[0]
 
     assert isinstance(medkit_doc, TextDocument)
+    assert medkit_doc.text == doc.text
     assert len(medkit_doc.entities) == 2
 
     ents = [
@@ -147,12 +144,31 @@ def test_input_converter_attribute_transfer(
         assert [a.value for a in date_entity.attrs] == expected_values_attr_date
 
 
-def test_input_converter_medkit_attribute_transfer(nlp_spacy):
+def test_input_converter_medkit_attribute_transfer_all_anns(nlp_spacy):
     # define an extension and a mock_attr_medkit
     if not SpacySpan.has_extension("nb_tokens_in"):
         SpacySpan.set_extension("nb_tokens_in", default=None)
 
-    _define_attrs_extensions(["mock_attr_medkit"])
+    label_mock_attr_medkit = "mock_attr_medkit"
+    _define_attrs_extensions([label_mock_attr_medkit])
+
+    # create a spacy doc containing 2 entities
+    doc = _get_doc_spacy(nlp_spacy)
+
+    # simulates a component spacy that adds two attributes to all entities
+    # and one attribute to sentences spans
+    for e in doc.ents:
+        e._.set("nb_tokens_in", len([token for token in e]))
+        # to test transfer of medkit attributes, we add a medkit attribute manually
+        # each medkit attr is tranferred into spacy as two extensions
+        # label_mock_attr_medkit and label_mock_attr_medkit_medkit_id
+        e._.set(label_mock_attr_medkit, "value_for_entities")
+        e._.set(f"{label_mock_attr_medkit}_medkit_id", "12345")
+
+    for sp in doc.spans["SENTENCES"]:
+        # simulates a different medkit attribute value for sentences
+        sp._.set(label_mock_attr_medkit, "value_for_sentences")
+        sp._.set(f"{label_mock_attr_medkit}_medkit_id", "12345")
 
     # define a spacy input converter to transfer all entities,attrs and spans
     spacy_converter = SpacyInputConverter(
@@ -160,23 +176,7 @@ def test_input_converter_medkit_attribute_transfer(nlp_spacy):
         span_groups=None,
         attrs=None,
     )
-
-    # create a spacy doc containing 3 entities
-    doc = _get_doc_spacy(nlp_spacy)
-    # add default argument
-    for e in doc.ents:
-        e._.set("nb_tokens_in", len([token for token in e]))
-        e._.set("mock_attr_medkit", "medkit_put_this")
-        e._.set("mock_attr_medkit_medkit_id", "12345")
-
-    for sp in doc.spans["SENTENCES"]:
-        sp._.set("mock_attr_medkit", "medkit_put_this_span")
-        sp._.set("mock_attr_medkit_medkit_id", "123456")
-
-    assert list(doc.spans["SENTENCES"])[0]._.get("nb_tokens_in") is None
-
-    # get a medkit doc from a spacy doc
-
+    # use the input converter to get a spacy doc
     medkit_docs = spacy_converter.load([doc])
 
     assert isinstance(medkit_docs, Collection)
@@ -184,7 +184,8 @@ def test_input_converter_medkit_attribute_transfer(nlp_spacy):
     medkit_doc = medkit_docs.documents[0]
 
     assert isinstance(medkit_doc, TextDocument)
-    assert len(medkit_doc.entities.values()) == 2
+    assert medkit_doc.text == doc.text
+    assert len(medkit_doc.entities) == 2
 
     ents = [
         medkit_doc.get_annotation_by_id(id)
@@ -193,16 +194,29 @@ def test_input_converter_medkit_attribute_transfer(nlp_spacy):
     ]
     # verify the number of attrs for each entity
     assert [len(ent.attrs) for ent in ents] == [2, 2]
+    # check value for medkit attr transferred
+    entity_id_0 = medkit_doc.entities.get("PERSON", [])[0]
+    entity_0 = medkit_doc.get_annotation_by_id(entity_id_0)
+    mock_medkit_attr = [
+        attr for attr in entity_0.attrs if attr.label == label_mock_attr_medkit
+    ][0]
+    assert mock_medkit_attr.value == "value_for_entities"
 
-    segments = medkit_doc.get_annotations_by_label("SENTENCES")
-    # all sentences were transferred
-    assert len(segments) == 1
-    assert [len(seg.attrs) for seg in segments] == [1]
+    # verify segments
+    segments = [
+        medkit_doc.get_annotation_by_id(id)
+        for ids in medkit_doc.segments.values()
+        for id in ids
+    ]
+    # three nouns and one sentence
+    assert list(medkit_doc.segments.keys()) == ["NOUN_CHUNKS", "SENTENCES"]
+    assert len(segments) == 4
 
-    noun_entity = medkit_doc.get_annotations_by_label("SENTENCES")[0]
-    assert len(noun_entity.attrs) == 1
-    assert noun_entity.attrs[0].label == "mock_attr_medkit"
-    assert noun_entity.attrs[0].value == "medkit_put_this_span"
+    sentence_id = medkit_doc.segments.get("SENTENCES", [])[0]
+    sentence = medkit_doc.get_annotation_by_id(sentence_id)
+    assert len(sentence.attrs) == 1
+    assert sentence.attrs[0].label == label_mock_attr_medkit
+    assert sentence.attrs[0].value == "value_for_sentences"
 
 
 TEST_SEGMENTS_FROM_SPACY = [
@@ -223,8 +237,11 @@ def test_input_converter_segments_transfer(
     expected_labels_in_segments,
     expected_total_annotations,
 ):
-    # in this test, we use sentences (doc.sents) and noun-chunks (doc.noun_chunks)
+    # in this test, we transfer sentences (doc.sents) and noun-chunks (doc.noun_chunks)
     # to create two span groups. Noun chunks are flat phrases that have a noun as their head.
+
+    # create a spacy doc containing 2 entities and two span groups
+    doc = _get_doc_spacy(nlp_spacy)
 
     # define a spacy input converter to transfer selected spans, no entities nor attributes
     spacy_converter = SpacyInputConverter(
@@ -232,18 +249,15 @@ def test_input_converter_segments_transfer(
         span_groups=name_spans_to_transfer,
         attrs=[],
     )
-
-    # create a spacy doc containing 2 entities
-    doc = _get_doc_spacy(nlp_spacy)
-
     # get a medkit doc from a spacy doc
     medkit_docs = spacy_converter.load([doc])
 
     assert isinstance(medkit_docs, Collection)
     assert len(medkit_docs.documents) == 1
     medkit_doc = medkit_docs.documents[0]
-
+    assert medkit_doc.text == doc.text
     assert isinstance(medkit_doc, TextDocument)
+
     # each span group was transferred using its name as key in segments
     assert sorted(list(medkit_doc.segments.keys())) == sorted(
         expected_labels_in_segments
@@ -263,7 +277,7 @@ def test_input_converter_segments_transfer(
 
 def test_prov(nlp_spacy):
 
-    # create a spacy doc containing 3 entities
+    # create a spacy doc containing 2 entities and two span groups
     doc = _get_doc_spacy(nlp_spacy)
 
     spacy_converter = SpacyInputConverter()
