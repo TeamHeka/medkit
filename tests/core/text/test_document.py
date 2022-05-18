@@ -55,26 +55,25 @@ def test_get_annotations_by_label(init_data):
 
 
 def test_raw_text_segment():
-    text = "This is the raw text."
     # raw text segment automatically generated when text is provided
+    text = "This is the raw text."
     doc = TextDocument(text=text)
-    anns = doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)
-    assert len(anns) == 1
-    ann = anns[0]
-    assert ann.label == TextDocument.RAW_TEXT_LABEL
-    assert ann.text == doc.text
-    assert type(ann) == Segment
-    # reachable through attribute
-    assert ann == doc.raw_text_segment
-    # reachable by id
-    assert doc.get_annotation_by_id(ann.id) is ann
-    # not stored with other annotations
-    assert len(doc.get_annotations()) == 0
+    seg = doc.raw_text_segment
+    assert seg is not None
+    assert seg.label == TextDocument.RAW_TEXT_LABEL
+    assert seg.text == text
+    assert seg.spans == [Span(0, len(text))]
 
-    # no raw text segment if no text provided
+    # also reachable through label and id
+    assert doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL) == [seg]
+    assert doc.get_annotation_by_id(seg.id) is seg
+    # but not included in full annotation list
+    assert seg not in doc.get_annotations()
+
+    # no raw text segment generated if no text provided
     doc = TextDocument()
-    anns = doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)
-    assert len(anns) == 0
+    assert doc.raw_text_segment is None
+    assert not doc.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)
 
     # docs with same ids should have raw text segments with same id
     doc_id = generate_id()
@@ -83,3 +82,13 @@ def test_raw_text_segment():
     doc_2 = TextDocument(doc_id=doc_id, text=text)
     ann_2 = doc_2.get_annotations_by_label(TextDocument.RAW_TEXT_LABEL)[0]
     assert ann_1.id == ann_2.id
+
+    # manually adding annotation with reserved label RAW_TEXT_LABEL is forbidden
+    doc = TextDocument()
+    seg = Segment(
+        label=TextDocument.RAW_TEXT_LABEL, spans=Span(0, len(text)), text=text
+    )
+    with pytest.raises(
+        RuntimeError, match=r"Cannot add annotation with reserved label .*"
+    ):
+        doc.add_annotation(seg)
