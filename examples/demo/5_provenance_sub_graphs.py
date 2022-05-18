@@ -68,7 +68,7 @@ steps = [
 
 pipeline = DocPipeline(
     steps,
-    labels_by_input_key={"full_text": [TextDocument.RAW_TEXT_LABEL]},
+    labels_by_input_key={"full_text": [TextDocument.RAW_LABEL]},
     output_keys=["entities"],
 )
 

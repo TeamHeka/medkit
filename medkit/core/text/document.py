@@ -17,7 +17,7 @@ class TextDocument(Document[TextAnnotation]):
 
     Annotations must be subclasses of `TextAnnotation`."""
 
-    RAW_TEXT_LABEL = "RAW_TEXT"
+    RAW_LABEL = "RAW_TEXT"
 
     def __init__(
         self,
@@ -49,12 +49,12 @@ class TextDocument(Document[TextAnnotation]):
         self.entities: Dict[str, List[str]] = dict()  # Key: label
         self.relations: Dict[str, List[str]] = dict()  # Key: TODO : determine the key
 
-        # auto-generated RAW_TEXT segment
+        # auto-generated raw segment
         # not stored with other annotations but injected in calls to get_annotations_by_label()
         # and get_annotation_by_id()
-        self.raw_text_segment: Optional[Segment] = self._generate_raw_text_segment()
+        self.raw_segment: Optional[Segment] = self._generate_raw_segment()
 
-    def _generate_raw_text_segment(self) -> Optional[Segment]:
+    def _generate_raw_segment(self) -> Optional[Segment]:
         if self.text is None:
             return None
 
@@ -64,7 +64,7 @@ class TextDocument(Document[TextAnnotation]):
         id = str(uuid.UUID(int=rng.getrandbits(128)))
 
         return Segment(
-            label=self.RAW_TEXT_LABEL,
+            label=self.RAW_LABEL,
             spans=[Span(0, len(self.text))],
             text=self.text,
             ann_id=id,
@@ -92,9 +92,9 @@ class TextDocument(Document[TextAnnotation]):
         ValueError
             If `annotation.id` is already in Document.annotations.
         """
-        if annotation.label == self.RAW_TEXT_LABEL:
+        if annotation.label == self.RAW_LABEL:
             raise RuntimeError(
-                f"Cannot add annotation with reserved label {self.RAW_TEXT_LABEL}"
+                f"Cannot add annotation with reserved label {self.RAW_LABEL}"
             )
 
         try:
@@ -117,18 +117,15 @@ class TextDocument(Document[TextAnnotation]):
             pass  # TODO: complete when key is determined
 
     def get_annotations_by_label(self, label) -> List[TextAnnotation]:
-        # inject RAW_TEXT segment
-        if self.raw_text_segment is not None and label == self.RAW_TEXT_LABEL:
-            return [self.raw_text_segment]
+        # inject raw segment
+        if self.raw_segment is not None and label == self.RAW_LABEL:
+            return [self.raw_segment]
         return super().get_annotations_by_label(label)
 
     def get_annotation_by_id(self, annotation_id) -> Optional[TextAnnotation]:
-        # inject RAW_TEXT segment
-        if (
-            self.raw_text_segment is not None
-            and annotation_id == self.raw_text_segment.id
-        ):
-            return self.raw_text_segment
+        # inject raw segment
+        if self.raw_segment is not None and annotation_id == self.raw_segment.id:
+            return self.raw_segment
         return super().get_annotation_by_id(annotation_id)
 
     def to_dict(self) -> Dict[str, Any]:
