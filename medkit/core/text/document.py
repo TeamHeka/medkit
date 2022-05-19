@@ -102,17 +102,16 @@ class TextDocument(Document[TextAnnotation]):
         except ValueError as err:
             raise err
 
-        if isinstance(annotation, Segment):
-            if annotation.label not in self.segments.keys():
-                self.segments[annotation.label] = [annotation.id]
-            else:
-                self.segments[annotation.label].append(annotation.id)
-
         if isinstance(annotation, Entity):
             if annotation.label not in self.entities.keys():
                 self.entities[annotation.label] = [annotation.id]
             else:
                 self.entities[annotation.label].append(annotation.id)
+        elif isinstance(annotation, Segment):
+            if annotation.label not in self.segments.keys():
+                self.segments[annotation.label] = [annotation.id]
+            else:
+                self.segments[annotation.label].append(annotation.id)
         elif isinstance(annotation, Relation):
             pass  # TODO: complete when key is determined
 
