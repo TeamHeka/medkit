@@ -184,7 +184,7 @@ def build_spacy_doc_from_medkit_doc(
     _define_default_extensions()
 
     # get the raw text segment to transfer
-    raw_text_segment = medkit_doc.get_annotations_by_label(medkit_doc.RAW_TEXT_LABEL)[0]
+    raw_segment = medkit_doc.raw_segment
     annotations = medkit_doc.get_annotations()
 
     if labels_anns is not None:
@@ -202,7 +202,7 @@ def build_spacy_doc_from_medkit_doc(
     # create a spacy doc
     doc = build_spacy_doc_from_medkit_segment(
         nlp=nlp,
-        segment=raw_text_segment,
+        segment=raw_segment,
         annotations=annotations,
         attrs=attrs,
         include_medkit_info=include_medkit_info,

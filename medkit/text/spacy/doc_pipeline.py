@@ -2,11 +2,11 @@ __all__ = ["SpacyDocPipeline"]
 import warnings
 from typing import List, Optional, Union
 
-from medkit.core import OperationDescription, ProvBuilder, generate_id, Collection
+from spacy import Language
+
+from medkit.core import Collection, OperationDescription, ProvBuilder, generate_id
 from medkit.core.text import TextDocument
 from medkit.text.spacy import spacy_utils
-
-from spacy import Language
 
 
 class SpacyDocPipeline:
@@ -122,13 +122,11 @@ class SpacyDocPipeline:
             spacy_doc = self.nlp(spacy_doc)
 
             # get new annotations and attributes
-            raw_text_segment = medkit_doc.get_annotations_by_label(
-                medkit_doc.RAW_TEXT_LABEL
-            )[0]
+            raw_segment = medkit_doc.raw_segment
 
             anns, attrs_by_ann_id = spacy_utils.extract_anns_and_attrs_from_spacy_doc(
                 spacy_doc=spacy_doc,
-                medkit_source_ann=raw_text_segment,
+                medkit_source_ann=raw_segment,
                 entities=self.spacy_entities,
                 span_groups=self.spacy_span_groups,
                 attrs=self.spacy_attrs,
@@ -142,7 +140,7 @@ class SpacyDocPipeline:
                     self._prov_builder.add_prov(
                         ann,
                         self.description,
-                        source_data_items=[raw_text_segment],
+                        source_data_items=[raw_segment],
                     )
 
             # add new attributes in each annotation
@@ -155,7 +153,7 @@ class SpacyDocPipeline:
                         # of provenance, the annotation was used to
                         # generate the attribute, else, it was regenerate using
                         # raw_text_segment
-                        source_data_item = raw_text_segment if ann in anns else ann
+                        source_data_item = raw_segment if ann in anns else ann
                         self._prov_builder.add_prov(
                             attr, self.description, source_data_items=[source_data_item]
                         )
