@@ -1,6 +1,7 @@
 __all__ = ["IdentifiableDataItem", "IdentifiableDataItemWithAttrs"]
 
-from typing import Generic, List, Protocol, TypeVar, runtime_checkable
+from typing import Generic, List, TypeVar
+from typing_extensions import Protocol, runtime_checkable
 
 
 class IdentifiableDataItem(Protocol):

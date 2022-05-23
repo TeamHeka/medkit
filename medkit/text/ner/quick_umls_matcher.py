@@ -1,7 +1,8 @@
 __all__ = ["QuickUMLSMatcher"]
 
 from pathlib import Path
-from typing import Dict, Iterator, List, Literal, NamedTuple, Optional, Union
+from typing import Dict, Iterator, List, NamedTuple, Optional, Union
+from typing_extensions import Literal
 
 from quickumls import QuickUMLS
 import quickumls.constants
@@ -118,9 +119,10 @@ class QuickUMLSMatcher:
         path = cls._install_paths.get(install)
         if path is None:
             raise Exception(
-                "Couldn't find any Quick- UMLS install "
-                f"for {version=}, {language=}, {lowercase=}, {normalize_unicode=}.\n"
-                f"Registered installs: {cls._install_paths}"
+                f"Couldn't find any Quick- UMLS install for version={version},"
+                f" language={language}, lowercase={lowercase},"
+                f" normalize_unicode={normalize_unicode}.\nRegistered installs:"
+                f" {cls._install_paths}"
             )
         return path
 

@@ -18,31 +18,20 @@ Once this reviewing phase is over, the merge request will be integrated into `de
 
 ## Development environment
 
-Before everything else, make sure you have the appropriate Python version running on your system (`python3 --version`). Medkit requires Python >= 3.8. Optionally, you may want to create and activate a virtual environment with Python's [built-in venv module](https://docs.python.org/3/library/venv.html) (commands will slightly differ on Windows):
-
-```shell
-python3 -m venv <path/to/venv>
-source <path/to/venv>/bin/activate
-```
-
-or [conda](https://conda.io):
-
-```shell
-conda create --name medkit python=3.8
-conda activate medkit
-```
-
-To set up a local dev environment:
+To prepare your local dev environment:
 - clone the Medkit repository locally:
   - SSH: `git clone git@gitlab.inria.fr:heka/medkit.git`
   - HTTPS: `git clone https://gitlab.inria.fr/heka/medkit`
-- install the `wheel` package with `pip install wheel` so that dependencies relying on wheels can be installed
-- enter the repository root dir (`cd medkit/`) and install the required dev dependencies: `pip install -r requirements.txt`
+
+  and enter the repository root dir (`cd medkit/`)
+- set up your virtual environment with [conda](https://conda.io). Medkit requires Python >= 3.7. In order to create the virtual env, install the dependencies and activate the env, run:
+  ```shell
+  conda env create -f environment.yml
+  conda activate medkit
+  ```
 - TODO: describe how to enable pre-commit hooks
 
-To make sure everything is set up properly, you may run the tests by launching the `pytest` command in the repository root dir.
-
-If you want to run the examples stored in the `examples/` directory, you may install the medkit package in editable mode by running `pip install -e .` in the repository root dir.
+To make sure everything is set up properly, you may run the tests by launching the `pytest` command in the repository root dir, or the examples stored in the `examples/` directory.
 
 ## Coding standards
 ### Code conventions

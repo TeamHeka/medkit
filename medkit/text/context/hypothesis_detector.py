@@ -5,7 +5,8 @@ __all__ = ["HypothesisDetector", "HypothesisDetectorRule"]
 import dataclasses
 from pathlib import Path
 import re
-from typing import Dict, Literal, List, Optional, Tuple, TypedDict
+from typing import Dict, List, Optional, Tuple
+from typing_extensions import Literal, TypedDict
 import unidecode
 
 import yaml

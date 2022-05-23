@@ -2,6 +2,7 @@ flashtext
 pyaml
 requests
 smart_open
+typing-extensions
 Unidecode
 
 # optional dependencies
