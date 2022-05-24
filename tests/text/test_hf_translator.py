@@ -109,7 +109,7 @@ def test_translator_with_matcher(translator_fr_to_en):
 
 
 def test_ranges_sorting():
-    aligner = _Aligner(alignment_model="aneuraz/awesome-align-with-co")
+    aligner = _Aligner(model="aneuraz/awesome-align-with-co")
     range_alignments = aligner.align(
         "CHIRURGICAL ANTICEDENTS: surgery",
         "ANTÉCÉDENT CHIRURGICAUX: chirurgie",

@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Tuple
 
 import torch
 import transformers
+from transformers import TranslationPipeline, BertModel, BertTokenizerFast
 
 from medkit.core import (
     OperationDescription,
@@ -18,11 +19,11 @@ from medkit.core.text import Segment, ModifiedSpan, span_utils
 
 
 class HFTranslator:
-    """Translator based on Hugging Face model
+    """Translator based on a Hugging Face transformers model
 
     For segment given in input, a translated segment will be returned.
-    The spans of the translated segment are "aligned" to the original segment. An
-    alignment model is used to find matches between translated words and
+    The spans of the translated segment are "aligned" to the original segment.
+    An alignment model is used to find matches between translated words and
     original words, and for each of these matches a `ModifiedSpan` is created, referencing
     the original span in the original text.
 
@@ -36,6 +37,8 @@ class HFTranslator:
         output_label: str = "translation",
         translation_model: str = "Helsinki-NLP/opus-mt-fr-en",
         alignment_model: str = "bert-base-multilingual-cased",
+        alignment_layer: int = 8,
+        alignment_threshold: float = 1e-3,
         proc_id: str = None,
     ):
         """Instantiate the translator
@@ -45,9 +48,17 @@ class HFTranslator:
         output_label:
             The label of the created annotations
         translation_model:
-            Name of the translation model on the Hugging Face models hub
+            Name of the translation model on the Hugging Face models hub. Must be a model compatible
+            with the TranslationPipeline transformers class.
         alignment_model:
-            Name of the alignment model on the Hugging Face models hub
+            Name of the alignment model on the Hugging Face models hub. Must be a multilingual BERT model
+            compatible with the BertModel transformers class.
+        alignment_layer:
+            Index of the layer in the alignment model that contains the token embeddings
+            (the original and translated embedding will be. compared)
+        alignment_threshold:
+            Threshold value used to decide if embeddings are similar enough to be aligned
+
         proc_id:
             Identifier of the translator
         """
@@ -58,9 +69,17 @@ class HFTranslator:
         self.output_label: str = output_label
         self.translation_model: str = translation_model
         self.alignment_model: str = alignment_model
+        self.alignment_layer: int = alignment_layer
+        self.alignment_threshold: float = alignment_threshold
 
-        self._translation_pipeline = transformers.pipeline(model=self.translation_model)
-        self._aligner: _Aligner = _Aligner(alignment_model=self.alignment_model)
+        self._translation_pipeline: TranslationPipeline = transformers.pipeline(
+            model=self.translation_model
+        )
+        self._aligner: _Aligner = _Aligner(
+            model=self.alignment_model,
+            layer_index=self.alignment_layer,
+            threshold=self.alignment_threshold,
+        )
 
         self._prov_builder: Optional[ProvBuilder] = None
 
@@ -90,7 +109,8 @@ class HFTranslator:
         Returns
         -------
         List[Segments]:
-            Translated segments (with spans referring to words in original text when possible)
+            Translated segments (with spans referring to words in original text, for translated
+            words that have been aligned to original words)
         """
         return [self._translate_segment(s) for s in segments]
 
@@ -174,11 +194,16 @@ class HFTranslator:
 
 
 class _Aligner:
-    def __init__(self, alignment_model: str = "bert-base-multilingual-cased"):
-        self._model = transformers.BertModel.from_pretrained(alignment_model)
-        self._tokenizer = transformers.BertTokenizerFast.from_pretrained(
-            alignment_model
-        )
+    def __init__(
+        self,
+        model: str = "bert-base-multilingual-cased",
+        layer_index: int = 8,
+        threshold: float = 1e-3,
+    ):
+        self._model = BertModel.from_pretrained(model)
+        self._layer_index = layer_index
+        self._threshold: float = threshold
+        self._tokenizer = BertTokenizerFast.from_pretrained(model)
 
     def align(
         self, source_text: str, target_text: str
@@ -208,28 +233,27 @@ class _Aligner:
         words_by_token_target = self._get_words_by_token(target_encoding)
 
         # align tokens
-        align_layer = 8
-        threshold = 1e-3
         self._model.eval()
         with torch.no_grad():
+            # extract source embeddings
             in_source = source_encoding["input_ids"]
             out_source = self._model(in_source, output_hidden_states=True)
-            out_source = out_source[2][align_layer][0, 1:-1]
+            out_source = out_source[2][self._layer_index][0, 1:-1]
+            # extract target embeddings
             in_target = target_encoding["input_ids"]
             out_target = self._model(in_target, output_hidden_states=True)
-            out_target = out_target[2][align_layer][0, 1:-1]
-
+            out_target = out_target[2][self._layer_index][0, 1:-1]
+            # compute similarity between embeddings forward and backwards
             dot_prod = torch.matmul(out_source, out_target.transpose(-1, -2))
-
             softmax_source_target = torch.nn.Softmax(dim=-1)(dot_prod)
             softmax_target_source = torch.nn.Softmax(dim=-2)(dot_prod)
-
-            softmax_inter = (softmax_source_target > threshold) * (
-                softmax_target_source > threshold
+            # flag as aligned where similarities are greater than threshold
+            softmax_inter = (softmax_source_target > self._threshold) * (
+                softmax_target_source > self._threshold
             )
-        tokens_alignments = torch.nonzero(softmax_inter, as_tuple=False)
+            tokens_alignments = torch.nonzero(softmax_inter, as_tuple=False)
 
-        # align word spans
+        # align word spans (build word alignments from token alignments, and take word spans)
         alignments = defaultdict(list)
         for source_token, target_token in tokens_alignments:
             source_word = words_by_token_source[source_token]
@@ -240,8 +264,7 @@ class _Aligner:
                 alignments[source_range].append(target_range)
 
         # sort target ranges (tokens_alignments is sorted on 1st column (source)
-        # but not necessarily on 2d column (target) since later tokens in a source word
-        # might refer to earlier target tokens)
+        # but not necessarily on 2d column (target), ie. it is not monotonic)
         for target_ranges in alignments.values():
             target_ranges.sort()
 
