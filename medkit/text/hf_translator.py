@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = ["HFTranslator"]
 
 from collections import defaultdict
+import dataclasses
 from typing import Dict, List, Optional, Tuple
 
 import torch
@@ -16,6 +17,15 @@ from medkit.core import (
 )
 
 from medkit.core.text import Segment, ModifiedSpan, span_utils
+
+
+@dataclasses.dataclass(frozen=True)
+class DefaultConfig:
+    output_label: str = "translation"
+    translation_model: str = "Helsinki-NLP/opus-mt-fr-en"
+    alignment_model: str = "bert-base-multilingual-cased"
+    alignment_layer: int = 8
+    alignment_threshold: float = 1e-3
 
 
 class HFTranslator:
@@ -34,11 +44,11 @@ class HFTranslator:
 
     def __init__(
         self,
-        output_label: str = "translation",
-        translation_model: str = "Helsinki-NLP/opus-mt-fr-en",
-        alignment_model: str = "bert-base-multilingual-cased",
-        alignment_layer: int = 8,
-        alignment_threshold: float = 1e-3,
+        output_label: str = DefaultConfig.output_label,
+        translation_model: str = DefaultConfig.translation_model,
+        alignment_model: str = DefaultConfig.alignment_model,
+        alignment_layer: int = DefaultConfig.alignment_layer,
+        alignment_threshold: float = DefaultConfig.alignment_threshold,
         proc_id: str = None,
     ):
         """Instantiate the translator
