@@ -75,17 +75,17 @@ class HFTranslator:
         if proc_id is None:
             proc_id = generate_id()
 
-        self.id: str = proc_id
-        self.output_label: str = output_label
-        self.translation_model: str = translation_model
-        self.alignment_model: str = alignment_model
-        self.alignment_layer: int = alignment_layer
-        self.alignment_threshold: float = alignment_threshold
+        self.id = proc_id
+        self.output_label = output_label
+        self.translation_model = translation_model
+        self.alignment_model = alignment_model
+        self.alignment_layer = alignment_layer
+        self.alignment_threshold = alignment_threshold
 
-        self._translation_pipeline: TranslationPipeline = transformers.pipeline(
+        self._translation_pipeline = transformers.pipeline(
             model=self.translation_model, pipeline_class=TranslationPipeline
         )
-        self._aligner: _Aligner = _Aligner(
+        self._aligner = _Aligner(
             model=self.alignment_model,
             layer_index=self.alignment_layer,
             threshold=self.alignment_threshold,
