@@ -549,7 +549,7 @@ def clean_up_gaps_in_normalized_spans(
     Example:
     >>> text = "heart failure"
     >>> spans = [Span(0, 5), Span(6, 13)]
-    >>> spans = fill_gaps_in_normalized_spans(spans, text)
+    >>> spans = clean_up_gaps_in_normalized_spans(spans, text)
     >>> print(spans)
     >>> spans = [Span(0, 13)]
     """
