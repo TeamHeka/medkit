@@ -73,7 +73,7 @@ class HFTranslator:
         self.alignment_threshold: float = alignment_threshold
 
         self._translation_pipeline: TranslationPipeline = transformers.pipeline(
-            model=self.translation_model
+            model=self.translation_model, pipeline_class=TranslationPipeline
         )
         self._aligner: _Aligner = _Aligner(
             model=self.alignment_model,

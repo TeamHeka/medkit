@@ -58,7 +58,7 @@ def test_translator_en_to_fr(translator_en_to_fr):
 
 
 def _get_text_alignments(original_text, translated_segment):
-    """Return a list of tuple associated each word in the translated text
+    """Return a list of tuple associating each word in the translated text
     to its corresponding word in the original text (if any).
     This is to visualize alignment in an easier way than with spans"""
     text_alignments = []
