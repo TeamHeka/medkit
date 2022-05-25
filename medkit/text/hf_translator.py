@@ -26,6 +26,7 @@ class DefaultConfig:
     alignment_model: str = "bert-base-multilingual-cased"
     alignment_layer: int = 8
     alignment_threshold: float = 1e-3
+    device: int = -1  # -1 corresponds to the cpu else device number
 
 
 class HFTranslator:
@@ -49,6 +50,7 @@ class HFTranslator:
         alignment_model: str = DefaultConfig.alignment_model,
         alignment_layer: int = DefaultConfig.alignment_layer,
         alignment_threshold: float = DefaultConfig.alignment_threshold,
+        device: int = DefaultConfig.device,
         proc_id: str = None,
     ):
         """Instantiate the translator
@@ -68,6 +70,9 @@ class HFTranslator:
             (the original and translated embedding will be. compared)
         alignment_threshold:
             Threshold value used to decide if embeddings are similar enough to be aligned
+        device:
+            device to use for pytorch models: -1 for 'cpu' and device number for for gpu.
+            e.g. 0 for 'cuda:0'
 
         proc_id:
             Identifier of the translator
@@ -81,14 +86,18 @@ class HFTranslator:
         self.alignment_model = alignment_model
         self.alignment_layer = alignment_layer
         self.alignment_threshold = alignment_threshold
+        self.device = device
 
         self._translation_pipeline = transformers.pipeline(
-            model=self.translation_model, pipeline_class=TranslationPipeline
+            model=self.translation_model,
+            pipeline_class=TranslationPipeline,
+            device=self.device,
         )
         self._aligner = _Aligner(
             model=self.alignment_model,
             layer_index=self.alignment_layer,
             threshold=self.alignment_threshold,
+            device=self.device,
         )
 
         self._prov_builder: Optional[ProvBuilder] = None
@@ -209,8 +218,10 @@ class _Aligner:
         model: str = "bert-base-multilingual-cased",
         layer_index: int = 8,
         threshold: float = 1e-3,
+        device: int = -1,
     ):
-        self._model = BertModel.from_pretrained(model)
+        self._device = torch.device("cpu" if device < 0 else f"cuda:{device}")
+        self._model = BertModel.from_pretrained(model).to(self._device)
         self._layer_index = layer_index
         self._threshold: float = threshold
         self._tokenizer = BertTokenizerFast.from_pretrained(model)
@@ -246,11 +257,11 @@ class _Aligner:
         self._model.eval()
         with torch.no_grad():
             # extract source embeddings
-            in_source = source_encoding["input_ids"]
+            in_source = source_encoding["input_ids"].to(self._device)
             out_source = self._model(in_source, output_hidden_states=True)
             out_source = out_source[2][self._layer_index][0, 1:-1]
             # extract target embeddings
-            in_target = target_encoding["input_ids"]
+            in_target = target_encoding["input_ids"].to(self._device)
             out_target = self._model(in_target, output_hidden_states=True)
             out_target = out_target[2][self._layer_index][0, 1:-1]
             # compute similarity between embeddings forward and backwards
