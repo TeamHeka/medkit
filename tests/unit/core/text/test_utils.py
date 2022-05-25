@@ -274,13 +274,14 @@ def test_point_between_characters():
     text, spans = replace_point_before_keywords(text, spans, keywords=["pour", "avec"])
     assert (
         text
-        == "We found a point before the keyword:  pour  and before  avec, we should"
+        == "We found a point before the keyword: pour  and before avec, we should"
         " remove them."
     )
+    print(spans)
     assert spans == [
-        Span(start=0, end=37),
-        ModifiedSpan(length=1, replaced_spans=[Span(start=37, end=40)]),
-        Span(start=40, end=57),
-        ModifiedSpan(length=1, replaced_spans=[Span(start=57, end=58)]),
+        Span(start=0, end=36),
+        ModifiedSpan(length=1, replaced_spans=[Span(start=36, end=40)]),
+        Span(start=40, end=56),
+        ModifiedSpan(length=1, replaced_spans=[Span(start=56, end=58)]),
         Span(start=58, end=86),
     ]
