@@ -108,10 +108,34 @@ def test_translator_with_matcher(translator_fr_to_en):
     assert matched_original_text == "insuffisance cardiaque"
 
 
+def test_batch(translator_fr_to_en):
+    # generate batch of different texts by changing number of years in ref sentence,
+    segments = []
+    for i in range(20):
+        text = _TEXT_FR.replace("10", str(i + 1))
+        segment = _get_raw_text_segment(text)
+        segments.append(segment)
+
+    # append a longer text at the end
+    text = _TEXT_FR[-1] + ", " + _TEXT_FR[-1]
+    segment = _get_raw_text_segment(text)
+    segments.append(segment)
+
+    # translate batch of texts
+    translated_segments = translator_fr_to_en.run(segments)
+    assert len(translated_segments) == len(segments)
+    # check that result is identical to translating one by one
+    for segment, translated_segment in zip(segments, translated_segments):
+        expected_translated_segment = translator_fr_to_en.run([segment])[0]
+        assert translated_segment.text == expected_translated_segment.text
+        assert translated_segment.spans == expected_translated_segment.spans
+
+
 def test_ranges_sorting():
+    "Alignment ranges are properly sorted even with model outputing non-monotonic token alignment"
     aligner = _Aligner(model="aneuraz/awesome-align-with-co")
-    range_alignments = aligner.align(
-        "CHIRURGICAL ANTICEDENTS: surgery",
-        "ANTÉCÉDENT CHIRURGICAUX: chirurgie",
-    )
-    assert all(sorted(r) == r for r in range_alignments.values())
+    range_alignment = aligner.align(
+        source_texts=["CHIRURGICAL ANTICEDENTS: surgery"],
+        target_texts=["ANTÉCÉDENT CHIRURGICAUX: chirurgie"],
+    )[0]
+    assert all(sorted(r) == r for r in range_alignment.values())

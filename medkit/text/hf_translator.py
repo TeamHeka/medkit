@@ -4,7 +4,7 @@ __all__ = ["HFTranslator"]
 
 from collections import defaultdict
 import dataclasses
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Iterator, List, Optional, Tuple
 
 import torch
 import transformers
@@ -140,36 +140,42 @@ class HFTranslator:
             Translated segments (with spans referring to words in original text, for translated
             words that have been aligned to original words)
         """
-        return [self._translate_segment(s) for s in segments]
+        return [s for s in self._translate_segments(segments)]
 
-    def _translate_segment(self, segment: Segment) -> Segment:
-        # TODO translate batches of segments instead of one segment at a time?
-        translated_text = self._translation_pipeline(segment.text)[0][
-            "translation_text"
+    def _translate_segments(self, segments: List[Segment]) -> Iterator[Segment]:
+        original_texts = [s.text for s in segments]
+        translated_texts = [
+            d["translation_text"] for d in self._translation_pipeline(original_texts)
         ]
-        translated_spans = self._get_translated_spans(
-            translated_text, segment.text, segment.spans
-        )
 
-        translated_segment = Segment(
-            label=self.output_label,
-            spans=translated_spans,
-            text=translated_text,
-        )
+        # compute words alignments
+        alignments = self._aligner.align(translated_texts, original_texts)
 
-        if self._prov_builder is not None:
-            self._prov_builder.add_prov(
-                translated_segment, self.description, source_data_items=[segment]
+        for segment, translated_text, alignment in zip(
+            segments, translated_texts, alignments
+        ):
+            translated_spans = self._get_translated_spans(
+                alignment, translated_text, segment.text, segment.spans
             )
 
-        return translated_segment
+            translated_segment = Segment(
+                label=self.output_label,
+                spans=translated_spans,
+                text=translated_text,
+            )
 
-    def _get_translated_spans(self, translated_text, original_text, original_spans):
+            if self._prov_builder is not None:
+                self._prov_builder.add_prov(
+                    translated_segment, self.description, source_data_items=[segment]
+                )
+
+            yield translated_segment
+
+    def _get_translated_spans(
+        self, alignment, translated_text, original_text, original_spans
+    ):
         """Compute spans for translated segments, making translated words reference words
         in original text through ModifiedSpans when possible"""
-
-        # compute words alignment
-        alignment = self._aligner.align(translated_text, original_text)
 
         # build translated spans, which will contains:
         # - ModifiedSpans with no replacement_spans, for non-aligned parts of translated text
@@ -221,6 +227,22 @@ class HFTranslator:
         return cls(proc_id=description.id, **description.config)
 
 
+"""Alignment data structure
+Each entry in key is the character range of a word in the source text,
+the value being a list of one or more character ranges of corresponding words in the target text.
+Ex:
+>>> source_text = "Mon prénom est Lucas"
+>>> target_text = "My first name is Lucas"
+>>> alignment = {
+    (0, 3): [(0, 2)],  # Mon => My
+    (4, 10): [(3, 8), (9, 13)], # prénom => first, name
+    (11, 14): [(14, 16)],  # est => is
+    (15, 20): [(17, 22)], # Lucas = Lucas
+}
+"""
+_AlignmentDict = Dict[Tuple[int, int], List[Tuple[int, int]]]
+
+
 class _Aligner:
     def __init__(
         self,
@@ -236,42 +258,46 @@ class _Aligner:
         self._tokenizer = BertTokenizerFast.from_pretrained(model)
 
     def align(
-        self, source_text: str, target_text: str
-    ) -> Dict[Tuple[int, int], List[Tuple[int, int]]]:
-        """Compute word alignments between two texts in different languages.
+        self, source_texts: List[str], target_texts: List[str]
+    ) -> List[_AlignmentDict]:
+        """Compute word alignments between two lists of texts in different languages.
 
         Parameters
         ----------
-        source_text:
-            The text to align from (typically the translated text)
-        target_text:
-            The text to align to (typically the original text)
+        source_texts:
+            The texts to align from (typically the translated texts)
+        target_texts:
+            The texts to align to (typically the original texts)
 
         Returns
         -------
-        Dict[Tuple[int, int], List[Tuple[int, int]]]:
-            The alignments between characters ranges.
-            For each entry in the dict, the key is the character range of a word in `source_text`,
-            and the value is a list of one or more character ranges in `target_text`,
-            corresponding to one or more words (a word in the source text might be aligned to
-            several words in the target text).
+        List[_AlignmentDict]:
+            List of alignments dicts between characters ranges (cf description of _AlignmentDict)
         """
-        # preprocess
-        source_encoding = self._encode_text(source_text)
-        target_encoding = self._encode_text(target_text)
+        assert len(source_texts) == len(
+            target_texts
+        ), "Must have same number of source and target texts"
 
-        # align tokens
+        # preprocess
+        source_encoding = self._encode_text(source_texts)
+        target_encoding = self._encode_text(target_texts)
+
+        # extract source and target embeddings for full batch
         self._model.eval()
         with torch.no_grad():
-            # extract source embeddings
-            in_source = source_encoding["input_ids"].to(self._device)
-            out_source = self._model(in_source, output_hidden_states=True)
-            out_source = out_source[2][self._layer_index][0]
-            # extract target embeddings
-            in_target = target_encoding["input_ids"].to(self._device)
-            out_target = self._model(in_target, output_hidden_states=True)
-            out_target = out_target[2][self._layer_index][0]
-            # compute similarity between embeddings forward and backwards
+            batch_in_source = source_encoding["input_ids"].to(self._device)
+            batch_out_source = self._model(batch_in_source, output_hidden_states=True)
+            batch_out_source = batch_out_source[2][self._layer_index]
+            batch_in_target = target_encoding["input_ids"].to(self._device)
+            batch_out_target = self._model(batch_in_target, output_hidden_states=True)
+            batch_out_target = batch_out_target[2][self._layer_index]
+
+        # compute alignment for each pair of texts in batch
+        word_alignments = []
+        for batch_index in range(len(source_texts)):
+            # align tokens by computing similarity between embeddings forward and backwards
+            out_source = batch_out_source[batch_index]
+            out_target = batch_out_target[batch_index]
             dot_prod = torch.matmul(out_source, out_target.transpose(-1, -2))
             softmax_source_target = torch.nn.Softmax(dim=-1)(dot_prod)
             softmax_target_source = torch.nn.Softmax(dim=-2)(dot_prod)
@@ -279,37 +305,57 @@ class _Aligner:
             softmax_inter = (softmax_source_target > self._threshold) * (
                 softmax_target_source > self._threshold
             )
-            tokens_alignments = torch.nonzero(softmax_inter, as_tuple=False)
+            token_alignment = torch.nonzero(softmax_inter, as_tuple=False)
 
-        # align word spans (build word alignments from token alignments, and take word spans)
-        source_word_ids = source_encoding.word_ids()
-        target_word_ids = target_encoding.word_ids()
-        alignments = defaultdict(list)
-        for source_token, target_token in tokens_alignments:
-            source_word = source_word_ids[source_token]
-            target_word = target_word_ids[target_token]
-            if source_word is None or target_word is None:
-                continue
-            source_range = tuple(source_encoding.word_to_chars(source_word))
-            target_range = tuple(target_encoding.word_to_chars(target_word))
-            if target_range not in alignments[source_range]:
-                alignments[source_range].append(target_range)
+            # align word spans (build word alignments from token alignments, and take word spans)
+            word_alignment = self._token_alignment_to_word_alignment(
+                token_alignment, source_encoding, target_encoding, batch_index
+            )
+            word_alignments.append(word_alignment)
 
-        # sort target ranges (tokens_alignments is sorted on 1st column (source)
-        # but not necessarily on 2d column (target), ie. it is not monotonic)
-        for target_ranges in alignments.values():
-            target_ranges.sort()
-
-        return alignments
+        return word_alignments
 
     def _encode_text(self, text):
         """Return a BatchEncoder instance
         (useful for converting token back to words and CharSpans,
         but requires a TokenizerFast)"""
-        encoding = self._tokenizer(
+        encodings = self._tokenizer(
             text,
             return_tensors="pt",
             truncation=True,
+            padding=True,
             max_length=self._tokenizer.model_max_length,
         )
-        return encoding
+        return encodings
+
+    def _token_alignment_to_word_alignment(
+        self, token_alignment, source_encoding, target_encoding, batch_index
+    ) -> _AlignmentDict:
+        """Convert BERT token alignments computed from the model to word alignments,
+        (using characters ranges of aligned words)"""
+        source_word_ids = source_encoding.word_ids(batch_index)
+        target_word_ids = target_encoding.word_ids(batch_index)
+
+        # align word spans (build word alignments from token alignments, and take word spans)
+        word_alignment = defaultdict(list)
+        for source_token, target_token in token_alignment:
+            source_word = source_word_ids[source_token]
+            target_word = target_word_ids[target_token]
+            if source_word is None or target_word is None:
+                continue
+
+            source_range = tuple(
+                source_encoding.word_to_chars(batch_index, source_word)
+            )
+            target_range = tuple(
+                target_encoding.word_to_chars(batch_index, target_word)
+            )
+            if target_range not in word_alignment[source_range]:
+                word_alignment[source_range].append(target_range)
+
+        # sort target ranges (token_alignment is sorted on 1st column (source)
+        # but not necessarily on 2d column (target), ie. it is not monotonic)
+        for target_ranges in word_alignment.values():
+            target_ranges.sort()
+
+        return word_alignment
