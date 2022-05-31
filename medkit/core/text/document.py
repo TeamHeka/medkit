@@ -113,7 +113,10 @@ class TextDocument(Document[TextAnnotation]):
             else:
                 self.segments[annotation.label].append(annotation.id)
         elif isinstance(annotation, Relation):
-            pass  # TODO: complete when key is determined
+            if annotation.label not in self.relations.keys():
+                self.relations[annotation.label] = [annotation.id]
+            else:
+                self.relations[annotation.label].append(annotation.id)
 
     def get_annotations_by_label(self, label) -> List[TextAnnotation]:
         # inject raw segment
