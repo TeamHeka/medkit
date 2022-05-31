@@ -40,7 +40,8 @@ class HFTranslator:
 
     Segment given in input should not contain more than one sentence, because only the 1st
     sentence will be translated and the others will be discarded (this might vary with the model).
-    The formatting will not be preserved.
+    The formatting will not be preserved. Note that the translation and alignment models have a
+    maximum token length (typically 512) so there is a hard limit on the length of each segment anyway.
     """
 
     def __init__(
