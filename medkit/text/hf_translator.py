@@ -259,8 +259,6 @@ class _Aligner:
         # preprocess
         source_encoding = self._encode_text(source_text)
         target_encoding = self._encode_text(target_text)
-        words_by_token_source = self._get_words_by_token(source_encoding)
-        words_by_token_target = self._get_words_by_token(target_encoding)
 
         # align tokens
         self._model.eval()
@@ -268,11 +266,11 @@ class _Aligner:
             # extract source embeddings
             in_source = source_encoding["input_ids"].to(self._device)
             out_source = self._model(in_source, output_hidden_states=True)
-            out_source = out_source[2][self._layer_index][0, 1:-1]
+            out_source = out_source[2][self._layer_index][0]
             # extract target embeddings
             in_target = target_encoding["input_ids"].to(self._device)
             out_target = self._model(in_target, output_hidden_states=True)
-            out_target = out_target[2][self._layer_index][0, 1:-1]
+            out_target = out_target[2][self._layer_index][0]
             # compute similarity between embeddings forward and backwards
             dot_prod = torch.matmul(out_source, out_target.transpose(-1, -2))
             softmax_source_target = torch.nn.Softmax(dim=-1)(dot_prod)
@@ -284,11 +282,15 @@ class _Aligner:
             tokens_alignments = torch.nonzero(softmax_inter, as_tuple=False)
 
         # align word spans (build word alignments from token alignments, and take word spans)
+        source_word_ids = source_encoding.word_ids()
+        target_word_ids = target_encoding.word_ids()
         alignments = defaultdict(list)
         for source_token, target_token in tokens_alignments:
-            source_word = words_by_token_source[source_token]
+            source_word = source_word_ids[source_token]
+            target_word = target_word_ids[target_token]
+            if source_word is None or target_word is None:
+                continue
             source_range = tuple(source_encoding.word_to_chars(source_word))
-            target_word = words_by_token_target[target_token]
             target_range = tuple(target_encoding.word_to_chars(target_word))
             if target_range not in alignments[source_range]:
                 alignments[source_range].append(target_range)
@@ -311,18 +313,3 @@ class _Aligner:
             max_length=self._tokenizer.model_max_length,
         )
         return encoding
-
-    def _get_words_by_token(self, encoding):
-        """Return a list containing the word index for each token
-        (allows to map back each token to its corresponding word)"""
-        nb_words = 0
-        words_by_token = []
-        prev_word = None
-        for word in encoding.word_ids():
-            if word is None:
-                continue
-            if word != prev_word:
-                nb_words += 1
-                prev_word = word
-            words_by_token.append(nb_words - 1)
-        return words_by_token
