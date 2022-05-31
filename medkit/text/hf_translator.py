@@ -89,7 +89,15 @@ class HFTranslator:
         self.alignment_threshold = alignment_threshold
         self.device = device
 
+        task = transformers.pipelines.get_task(self.translation_model)
+        if not task.startswith("translation"):
+            raise ValueError(
+                f"Model {self.translation_model} is not associated to a translation"
+                " task and cannot be use with HFTranslator"
+            )
+
         self._translation_pipeline = transformers.pipeline(
+            task=task,
             model=self.translation_model,
             pipeline_class=TranslationPipeline,
             device=self.device,
