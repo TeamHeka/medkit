@@ -15,7 +15,7 @@ from medkit.text.spacy import spacy_utils
 @dataclass
 class DefaultConfig:
     name_spacy_model = "fr_core_news_sm"
-    output_label = "SYNTACTIC_REL"
+    output_label = "has_syntactic_rel"
 
 
 class SyntacticRelationExtractor:
@@ -113,8 +113,7 @@ class SyntacticRelationExtractor:
                 left_child_tokens_of_e2 = [token.i for token in e2.lefts]
 
                 if e2.start in right_child_tokens_of_e1:
-                    # a relation left to right exist
-                    # e1 is the head of the relation
+                    # a relation left to right exist, e1 is the head of the relation
                     relation = self._create_relation(
                         head=e1,
                         target=e2,
@@ -123,8 +122,7 @@ class SyntacticRelationExtractor:
                     relations.append(relation)
 
                 elif e1.start in left_child_tokens_of_e2:
-                    # a relation right to left exist
-                    # e2 is the head of the relation
+                    # a relation right to left exist, e2 is the head of the relation
                     relation = self._create_relation(
                         head=e2,
                         target=e1,
@@ -162,10 +160,19 @@ class SyntacticRelationExtractor:
         """
 
         try:
+            attribute_medkit_id = spacy_utils._ATTR_MEDKIT_ID
+            source_id = head._.get(attribute_medkit_id)
+            target_id = target._.get(attribute_medkit_id)
+
+            if source_id is None or target_id is None:
+                raise ValueError(
+                    f"The {attribute_medkit_id} was not found in spacy entities"
+                )
+
             relation = Relation(
+                source_id=source_id,
+                target_id=target_id,
                 label=self.output_label,
-                source_id=head._.get(spacy_utils._ATTR_MEDKIT_ID),
-                target_id=target._.get(spacy_utils._ATTR_MEDKIT_ID),
                 metadata=metadata,
             )
 
