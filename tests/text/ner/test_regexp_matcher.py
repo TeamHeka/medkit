@@ -1,4 +1,4 @@
-import pytest
+import logging
 
 from medkit.core import Attribute, ProvBuilder
 from medkit.core.text import Segment, Span
@@ -168,7 +168,7 @@ def test_case_sensitivity_exclusion_on():
     assert _find_entity(entities, "Diabetes") is not None
 
 
-def test_unicode_sensitive_off():
+def test_unicode_sensitive_off(caplog):
     sentence = _get_sentence_segment("Le patient fait du diabète")
 
     rule = RegexpMatcherRule(
@@ -187,8 +187,9 @@ def test_unicode_sensitive_off():
         "Il a une sœur atteinte de diabète et pensait que sa mère avait peut-être aussi"
         " le diabète. "
     )
-    with pytest.raises(ValueError):
+    with caplog.at_level(logging.WARNING, logger="medkit.text.ner.regexp_matcher"):
         matcher.run([sentence_with_ligatures])
+        assert len(caplog.messages) == 1
 
 
 def test_unicode_sensitive_on():
