@@ -1,5 +1,6 @@
 from medkit.core import ProvBuilder
 from medkit.core.text import Span
+from medkit.core.text.document import TextDocument
 from medkit.io.brat import BratInputConverter
 
 
@@ -9,7 +10,7 @@ def test_load():
     collection = brat_converter.load(dir_path="tests/data/brat/")
     assert len(collection.documents) == 2
 
-    doc = collection.documents[0]
+    doc: TextDocument = collection.documents[0]
 
     assert "path_to_text" in doc.metadata
     assert "path_to_ann" in doc.metadata
@@ -25,16 +26,20 @@ def test_load():
     assert len(doc.entities.get("medication", [])) == 2
     assert len(doc.entities.get("disease", [])) == 2
     assert len(doc.entities.get("vitamin", [])) == 3
-    # FIXME relations are not handled by TextDocument for now
-    assert len(doc.relations.get("treats", [])) == 0
+    # relations are now handled by TextDocument
+    assert len(doc.relations.get("treats", [])) == 2
 
-    # check entity
+    # check entity T4 disease
     entity_id_1 = doc.entities["disease"][1]
     entity_1 = doc.get_annotation_by_id(entity_id_1)
     assert entity_1.label == "disease"
     assert entity_1.text == "Hypothyroidism"
     assert entity_1.spans == [Span(147, 161)]
     assert entity_1.metadata.get("brat_id") == "T4"
+    # check relation in entity
+    assert len(entity_1.relations) == 1
+    relation_id_2 = doc.relations["treats"][1]
+    assert relation_id_2 in entity_1.relations
 
     # check attribute
     assert len(entity_1.attrs) == 1
@@ -47,8 +52,22 @@ def test_load():
     entity_id_2 = doc.entities["vitamin"][1]
     entity_2 = doc.get_annotation_by_id(entity_id_2)
     assert entity_2.spans == [Span(251, 260), Span(263, 264)]
+    assert relation_id_2 not in entity_2.relations
 
-    # TODO relations
+
+def test_relations():
+    brat_converter = BratInputConverter()
+    doc: TextDocument = brat_converter.load(dir_path="tests/data/brat/").documents[0]
+    relation_ids = doc.relations.get("treats", [])
+    assert len(relation_ids) == 2
+
+    relation_1 = doc.get_annotation_by_id(relation_ids[0])
+    assert relation_1.source_id == doc.entities["medication"][0]
+    assert relation_1.target_id == doc.entities["disease"][0]
+
+    relation_2 = doc.get_annotation_by_id(relation_ids[1])
+    assert relation_2.source_id == doc.entities["medication"][1]
+    assert relation_2.target_id == doc.entities["disease"][1]
 
 
 def test_load_no_anns():

@@ -117,6 +117,8 @@ class TextDocument(Document[TextAnnotation]):
                 self.relations[annotation.label] = [annotation.id]
             else:
                 self.relations[annotation.label].append(annotation.id)
+            entities_ids = [annotation.source_id, annotation.target_id]
+            self._add_relation_in_entities(annotation.id, entities_ids)
 
     def get_annotations_by_label(self, label) -> List[TextAnnotation]:
         # inject raw segment
@@ -134,3 +136,10 @@ class TextDocument(Document[TextAnnotation]):
         data = super().to_dict()
         data.update(text=self.text)
         return data
+
+    def _add_relation_in_entities(self, relation_id: str, entities_ids: List[str]):
+        # TBD: adding the relation in entities should be done by default
+        # every time a relation is added to the document ?
+        for entity_id in entities_ids:
+            entity_ann: Entity = self.get_annotation_by_id(entity_id)
+            entity_ann.relations.append(relation_id)
