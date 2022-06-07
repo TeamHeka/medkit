@@ -10,11 +10,7 @@ import torch
 import transformers
 from transformers import TranslationPipeline, BertModel, BertTokenizerFast
 
-from medkit.core import (
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
+from medkit.core import OperationDescription, ProvBuilder, generate_id
 
 from medkit.core.text import Segment, ModifiedSpan, span_utils
 
