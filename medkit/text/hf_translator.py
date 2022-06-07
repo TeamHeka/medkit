@@ -50,12 +50,11 @@ class HFTranslator:
         device: int = DefaultConfig.device,
         proc_id: str = None,
     ):
-        """Instantiate the translator
-
+        """
         Parameters
         ----------
         output_label:
-            The label of the created annotations
+            Label of the translated segments
         translation_model:
             Name of the translation model on the Hugging Face models hub. Must be a model compatible
             with the TranslationPipeline transformers class.
@@ -68,9 +67,8 @@ class HFTranslator:
         alignment_threshold:
             Threshold value used to decide if embeddings are similar enough to be aligned
         device:
-            device to use for pytorch models: -1 for 'cpu' and device number for for gpu.
-            e.g. 0 for 'cuda:0'
-
+            Device to use for pytorch models. Follows the Hugging Face convention (-1 for "cpu"
+            and device number for gpu, for instance 0 for "cuda:0")
         proc_id:
             Identifier of the translator
         """
