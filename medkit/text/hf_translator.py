@@ -111,6 +111,8 @@ class HFTranslator:
             output_label=self.output_label,
             translation_model=self.translation_model,
             alignment_model=self.alignment_model,
+            alignment_layer=self.alignment_layer,
+            alignment_threshold=self.alignment_threshold,
         )
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
