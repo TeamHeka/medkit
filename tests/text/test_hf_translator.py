@@ -36,7 +36,7 @@ def _get_raw_text_segment(text):
 
 
 @pytest.fixture(scope="module")
-def translator_fr_to_en():
+def translator():
     return HFTranslator()
 
 
@@ -45,9 +45,9 @@ def translator_en_to_fr():
     return HFTranslator(translation_model="Helsinki-NLP/opus-mt-en-fr")
 
 
-def test_translator_fr_to_en(translator_fr_to_en):
+def test_translator_fr_to_en(translator):
     segment = _get_raw_text_segment(_TEXT_FR)
-    translated_segment = translator_fr_to_en.run([segment])[0]
+    translated_segment = translator.run([segment])[0]
     assert translated_segment.text == _TEXT_EN
 
 
@@ -80,7 +80,7 @@ def _get_text_alignments(original_text, translated_segment):
     return text_alignments
 
 
-def test_translator_with_matcher(translator_fr_to_en):
+def test_translator_with_matcher(translator):
     """Make sure we are able to link an entity matched on translated text back to original text"""
     rule = RegexpMatcherRule(
         regexp="heart failure",
@@ -91,7 +91,7 @@ def test_translator_with_matcher(translator_fr_to_en):
     matcher = RegexpMatcher(rules=[rule])
 
     segment = _get_raw_text_segment(_TEXT_FR)
-    translated_segment = translator_fr_to_en.run([segment])[0]
+    translated_segment = translator.run([segment])[0]
 
     entities = matcher.run([translated_segment])
     assert len(entities) == 1
@@ -108,7 +108,7 @@ def test_translator_with_matcher(translator_fr_to_en):
     assert matched_original_text == "insuffisance cardiaque"
 
 
-def test_batch(translator_fr_to_en):
+def test_batch(translator):
     # generate batch of different texts by changing number of years in ref sentence,
     segments = []
     for i in range(20):
@@ -122,11 +122,11 @@ def test_batch(translator_fr_to_en):
     segments.append(segment)
 
     # translate batch of texts
-    translated_segments = translator_fr_to_en.run(segments)
+    translated_segments = translator.run(segments)
     assert len(translated_segments) == len(segments)
     # check that result is identical to translating one by one
     for segment, translated_segment in zip(segments, translated_segments):
-        expected_translated_segment = translator_fr_to_en.run([segment])[0]
+        expected_translated_segment = translator.run([segment])[0]
         assert translated_segment.text == expected_translated_segment.text
         assert translated_segment.spans == expected_translated_segment.spans
 
