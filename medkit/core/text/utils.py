@@ -48,7 +48,7 @@ def clean_newline_character(
     text, spans = replace_multiple_newline_after_sentence(text, spans)
     text, spans = replace_newline_inside_sentence(text, spans)
     text, spans = _replace_text(
-        text, spans, pattern="\n", repl=".\n" if keep_endlines else ". "
+        text, spans, pattern="\n+", repl=".\n" if keep_endlines else ". "
     )
     return text, spans
 
@@ -125,7 +125,7 @@ def replace_point_after_keywords(
 def replace_multiple_newline_after_sentence(
     text: str, spans: List[AnySpanType]
 ) -> Tuple[str, List[AnySpanType]]:
-    """Replace all (non-alphanumeric) characters between a newline
+    """Replace multiple space characters between a newline
     character `\\n` and a capital letter or a number with a single newline character.
 
     Parameters
@@ -140,7 +140,7 @@ def replace_multiple_newline_after_sentence(
         The cleaned text and the list of spans updated
 
     """
-    pattern = rf"(?P<blanks>\r?\n\W*)[{_NUMERIC_CHARS}{_UPPERCASE_CHARS}]"
+    pattern = rf"(?P<blanks>\r?\n[\t\r\n\t\s]*)[{_NUMERIC_CHARS}{_UPPERCASE_CHARS}]"
     replace_by = "\n"
     text, spans = _replace_text(text, spans, pattern, repl=replace_by, group="blanks")
     return text, spans
