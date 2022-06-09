@@ -31,3 +31,16 @@ of the `medkit.audio.preprocessing` module.
 .. automodule:: medkit.audio.preprocessing.resampler
     :members:
 ```
+
+## Segmentation operations
+
+This section lists audio segmentation operations. They are part of the
+`medkit.audio.segmentation` module.
+
+
+### WebRTC voice detector
+
+```{eval-rst}
+.. automodule:: medkit.audio.segmentation.webrtc_voice_detector
+    :members:
+```

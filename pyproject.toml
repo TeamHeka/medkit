@@ -43,6 +43,7 @@ sentencepiece = {version = "*", optional = true}
 spacy = {version = "^3.4", optional = true}
 torch = {version ="^1.0", optional = true}
 transformers = {version = "^4.21", optional = true}
+webrtcvad = {version = "^2.0", optional = true}
 
 #docs
 jupyter-book = {version = "^0.13", optional = true}
@@ -90,6 +91,7 @@ umls-coder-normalizer = [
     "torch",
     "transformers",
 ]
+webrtc-voice-detector = ["webrtcvad"]
 
 optional = [
     "feather-format",
@@ -103,6 +105,7 @@ optional = [
     "spacy",
     "torch",
     "transformers",
+    "webrtcvad",
 ]
 
 # Waiting for --all-extras (https://github.com/python-poetry/poetry/pull/5452)
