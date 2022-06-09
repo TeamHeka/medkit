@@ -7,6 +7,13 @@ This page lists all components related to audio processing.
 This section lists audio preprocessing operations. They are part
 of the `medkit.audio.preprocessing` module.
 
+### Downmixer
+
+```{eval-rst}
+.. automodule:: medkit.audio.preprocessing.downmixer
+    :members:
+```
+
 ### Power normalizer
 
 ```{eval-rst}

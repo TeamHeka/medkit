@@ -1,7 +1,8 @@
-__all__ = ["PowerNormalizer"]
+__all__ = ["Downmixer", "PowerNormalizer"]
 
 import importlib.util
 
+from .downmixer import Downmixer
 from .power_normalizer import PowerNormalizer
 
 _resampy_is_available = importlib.util.find_spec("resampy") is not None
