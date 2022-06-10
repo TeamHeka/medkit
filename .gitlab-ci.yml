@@ -18,12 +18,11 @@ before_script:
   - conda activate medkit
 
 stages:
-  - Static Analysis
-  - Unit Tests
-  - Publish
+  - test
+  - publish
 
 linting:
-  stage: Static Analysis
+  stage: test
   script:
     - echo "Executing linting..."
     - flake8 .
@@ -33,11 +32,11 @@ linting:
       when: never
     - when: always
 
-pytest:
-  stage: Unit Tests
+unit_tests:
+  stage: test
   script:
     - echo "Executing unit tests..."
-    - coverage run -m pytest -v --junit-xml=report.xml
+    - coverage run -m pytest -v --junit-xml=report.xml tests/unit
     - coverage report
     - coverage xml
   coverage: '/^TOTAL.+?(\d+\%)$/'
@@ -51,8 +50,18 @@ pytest:
       when: never
     - when: always
 
-publish:
-  stage: Publish
+# TODO: activate weekly job to verify non-regression ?
+large_tests:
+  stage: test
+  script:
+    - echo "Executing large tests..."
+    - pytest -v tests/large
+  interruptible: true
+  rules:
+    - when: never
+
+release:
+  stage: publish
   script:
     - pip install build
     - pip install twine
