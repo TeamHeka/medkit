@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 from medkit.core.text import TextDocument
-from medkit.text.preprocessing import UnicodeNormalizer, Normalizer, NormalizerRule
+from medkit.text.preprocessing import Normalizer, NormalizerRule
 from medkit.text.segmentation import SentenceTokenizer
 from medkit.text.ner import RegexpMatcher
 from medkit.text.context import NegationDetector
