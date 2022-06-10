@@ -33,6 +33,14 @@ To prepare your local dev environment:
 
 To make sure everything is set up properly, you may run the tests by launching the `pytest` command in the repository root dir, or the examples stored in the `examples/` directory.
 
+```
+# For small/unit tests
+pytest -v tests/unit
+
+# For large tests
+pytest - v tests/large
+```
+
 ## Coding standards
 ### Code conventions
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["Normalizer"]
+__all__ = ["Normalizer", "NormalizerRule"]
 
 import re
 from typing import List, Optional, NamedTuple

@@ -5,14 +5,14 @@ from medkit.core.text import Segment, Span
 from medkit.text.context.negation_detector import NegationDetector, NegationDetectorRule
 
 
-def _get_syntagma_segments(syntama_texts):
+def _get_syntagma_segments(syntagma_texts):
     return [
         Segment(
             label="syntagma",
             spans=[Span(0, len(text))],
             text=text,
         )
-        for text in syntama_texts
+        for text in syntagma_texts
     ]
 
 
