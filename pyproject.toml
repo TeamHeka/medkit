@@ -19,6 +19,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.7.1, <4.0"
 flashtext = "*"
+numpy = "*"
 pyaml = "*"
 requests = "*"
 smart-open = "*"
