@@ -17,4 +17,5 @@ parts:
   - file: api/core_text.rst
   - file: api/text.rst
   - file: api/core_audio.rst
+  - file: api/audio.rst
   - file: api/io.rst

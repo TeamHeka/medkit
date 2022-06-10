@@ -36,6 +36,7 @@ pandas = [
 ]
 PyRuSH = {version = "^1.0", optional = true}
 quickumls = {version = "^1.4", optional = true}
+resampy = {version = "^0.4", optional = true}
 sacremoses = {version = "*", optional = true}
 sentencepiece = {version = "*", optional = true}
 spacy = {version = "^3.4", optional = true}
@@ -79,6 +80,7 @@ quick-umls = [
     "packaging",  # needed to check quickumls version
     "quickumls",
 ]
+resampler = ["resampy"]
 rush-sentence-tokenizer = ["PyRush"]
 spacy = ["spacy"]
 umls-coder-normalizer = [
@@ -94,6 +96,7 @@ optional = [
     "pandas",
     "PyRush",
     "quickumls",
+    "resampy",
     "sacremoses",
     "sentencepiece",
     "spacy",
