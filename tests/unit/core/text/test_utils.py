@@ -245,6 +245,29 @@ def test_clean_parentheses_eds():
     ]
 
 
+def test_no_text_after_parenthesis():
+    text = (
+        "Les bilans réalisés (biologique, métabolique en particulier à la recherche de"
+        " GAMT et X fragile)."
+    )
+    spans = [Span(start=0, end=97)]
+
+    text, spans = clean_parentheses_eds(text, spans)
+    assert (
+        text
+        == "Les bilans réalisés ; biologique, métabolique "
+        "en particulier à la recherche de GAMT et X fragile."
+    )
+    assert spans == [
+        Span(start=0, end=19),  # text before parentheses
+        ModifiedSpan(length=3, replaced_spans=[]),  # insert ' ; '
+        Span(start=21, end=95),  # text inside big parentheses
+        ModifiedSpan(
+            length=1, replaced_spans=[]
+        ),  # insert '.' (no text after parenthseses)
+    ]
+
+
 def test_point_between_characters():
     text = "We found a point ING.DRG between."
     spans = [Span(0, 33)]
