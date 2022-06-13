@@ -6,6 +6,7 @@ __all__ = [
     "move",
     "normalize_spans",
     "concatenate",
+    "clean_up_gaps_in_normalized_spans",
 ]
 
 from typing import List, Tuple, Union
@@ -482,7 +483,7 @@ def concatenate(
 def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
     """
     Return a transformed of `spans` in which all instances of ModifiedSpan are
-    replaced by the spans they refer to, and in which contiguous spans are merged.
+    replaced by the spans they refer to, spans are sorted and contiguous spans are merged.
 
     Parameters
     ----------
@@ -512,6 +513,7 @@ def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
     if not all_spans:
         return []
 
+    all_spans.sort()
     # merge contiguous spans
     all_spans_merged = [all_spans[0]]
     for span in all_spans[1:]:
@@ -523,3 +525,42 @@ def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
             all_spans_merged.append(span)
 
     return all_spans_merged
+
+
+def clean_up_gaps_in_normalized_spans(
+    spans: List[Span], text: str, max_gap_length: int = 3
+):
+    """Remove small gaps in normalized spans.
+
+    This is useful for converting non-contiguous entity spans with small gaps containing
+    only whitespace or a few meaningless characters (due to clean-up preprocessing
+    or translation) into one unique bigger span. Gaps having less than `max_gap_length`
+    will be removed by merging the spans before and after the gap.
+
+    Parameters:
+    -----------
+    spans:
+        The normalized spans in which to remove gaps
+    text:
+        The text associated with `spans`
+    max_gap_length:
+        Max number of characters in gaps, after stripping leading and trailing whitespace.
+
+    Example:
+    >>> text = "heart failure"
+    >>> spans = [Span(0, 5), Span(6, 13)]
+    >>> spans = clean_up_gaps_in_normalized_spans(spans, text)
+    >>> print(spans)
+    >>> spans = [Span(0, 13)]
+    """
+    spans_merged = [spans[0]]
+    for span in spans[1:]:
+        prev_span = spans_merged[-1]
+        gap_text = text[prev_span.end : span.start]
+        if len(gap_text.strip()) <= max_gap_length:
+            merged_span = Span(prev_span.start, span.end)
+            spans_merged[-1] = merged_span
+        else:
+            spans_merged.append(span)
+
+    return spans_merged

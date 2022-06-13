@@ -5,7 +5,11 @@ smart_open
 typing-extensions
 Unidecode
 
-# optional dependencies
+# hf-translator
+torch
+transformers[sentencepiece]
+
+# other optional dependencies
 quickumls
 six # needed for quickumls, workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/pull/80
 PyRuSH
@@ -17,3 +21,4 @@ flake8
 pytest
 pytest-cov
 pytest-mock
+
