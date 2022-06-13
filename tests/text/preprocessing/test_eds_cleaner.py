@@ -2,7 +2,7 @@ import pytest
 from medkit.core.prov_builder import ProvBuilder
 
 from medkit.core.text import Span, ModifiedSpan, Segment
-from medkit.text.preprocessing.endlines_cleaner import EndlinesCleaner
+from medkit.text.preprocessing.eds_cleaner import EDSCleaner
 
 TEST_DEFAULT_CONFIG = [
     (
@@ -84,7 +84,7 @@ def _get_raw_segment(text):
 def test_default_cleaner(text, expected_text, expected_spans):
     # default config: this configuration allows to obtain the
     # same results as in the original version of the endlines function
-    cleaner = EndlinesCleaner(
+    cleaner = EDSCleaner(
         keep_endlines=False, handle_parentheses_eds=True, handle_points_eds=True
     )
     raw_segment = _get_raw_segment(text)
@@ -95,7 +95,7 @@ def test_default_cleaner(text, expected_text, expected_spans):
 
 TEST_PARAMS_CONFIG = [
     (
-        EndlinesCleaner(keep_endlines=True),
+        EDSCleaner(keep_endlines=True),
         "Le patient\n\n\n       reviens. Nom patient"
         " probleme.\n\nTraitement :\n\n\n à dose curative dès cet appel.",
         "Le patient reviens. Nom patient probleme..\nTraitement : à dose"
@@ -111,7 +111,7 @@ TEST_PARAMS_CONFIG = [
         ],
     ),
     (
-        EndlinesCleaner(keep_endlines=False),
+        EDSCleaner(keep_endlines=False),
         "Le patient\n\n\n       reviens. Nom patient"
         " probleme.\n\nTraitement :\n\n\n à dose curative dès cet appel.",
         "Le patient reviens. Nom patient probleme.. Traitement : à dose curative dès"
@@ -127,7 +127,7 @@ TEST_PARAMS_CONFIG = [
         ],
     ),
     (
-        EndlinesCleaner(handle_parentheses_eds=False),
+        EDSCleaner(handle_parentheses_eds=False),
         "Traitement : (N.B. : absence de notion de la prescription d'une HBPM)\n\n\n à"
         " dose curative dès cet appel.",
         "Traitement : (N B. : absence de notion de la prescription d'une HBPM) à dose"
@@ -141,7 +141,7 @@ TEST_PARAMS_CONFIG = [
         ],
     ),
     (
-        EndlinesCleaner(handle_points_eds=False),
+        EDSCleaner(handle_points_eds=False),
         "Nom patient : la Mme. Marie Du  \n\npont, date le     .24 avril .    pour un"
         " probleme",
         "Nom patient : la Mme. Marie Du pont, date le     .24 avril .    pour un"
@@ -175,7 +175,7 @@ def test_cleaner_params(cleaner, text, expected_text, expected_spans):
 def test_prov():
     raw_segment = _get_raw_segment("Traitement :\n\n\n à dose curative dès cet appel.")
 
-    cleaner = EndlinesCleaner()
+    cleaner = EDSCleaner()
     prov_builder = ProvBuilder()
     cleaner.set_prov_builder(prov_builder)
     clean_segments = cleaner.run([raw_segment])

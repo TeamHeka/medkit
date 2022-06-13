@@ -1,4 +1,4 @@
-__all__ = ["EndlinesCleaner"]
+__all__ = ["EDSCleaner"]
 
 import dataclasses
 from typing import List, Optional
@@ -33,9 +33,9 @@ class DefaultConfig:
     handle_points_eds = True
 
 
-class EndlinesCleaner:
+class EDSCleaner:
     """
-    Endlines pre-processing annotation module
+    EDS pre-processing annotation module
 
     This module is a non-destructive module allowing to remove and clean selected points
     and newlines characters. It respects the span modification by creating a new
@@ -110,7 +110,7 @@ class EndlinesCleaner:
 
         Returns
         -------
-        List[Segments]:
+        List[Segment]:
             List of cleaned segments.
         """
         return [
