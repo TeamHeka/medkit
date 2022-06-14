@@ -149,22 +149,21 @@ class HypothesisDetector(ContextOperation):
 
         # pre-compile rule patterns
         self._non_empty_text_pattern = re.compile(r"[a-z]", flags=re.IGNORECASE)
-        self._patterns_by_rule_id = {
-            rule.id: re.compile(
-                rule.regexp, flags=0 if rule.case_sensitive else re.IGNORECASE
-            )
+        self._patterns = [
+            re.compile(rule.regexp, flags=0 if rule.case_sensitive else re.IGNORECASE)
             for rule in self.rules
-        }
-        self._exclusion_patterns_by_rule_id = {
-            rule.id: re.compile(
+        ]
+        self._exclusion_patterns = [
+            re.compile(
                 "|".join(
                     f"(?:{r})" for r in rule.exclusion_regexps
                 ),  # join all exclusions in one pattern
                 flags=0 if rule.case_sensitive else re.IGNORECASE,
             )
-            for rule in self.rules
             if rule.exclusion_regexps
-        }
+            else None
+            for rule in self.rules
+        ]
         self._has_non_unicode_sensitive_rule = any(
             not r.unicode_sensitive for r in rules
         )
@@ -213,13 +212,11 @@ class HypothesisDetector(ContextOperation):
                     is_hypothesis = True
                     break
             else:
-                for rule in self.rules:
+                for rule, pattern, exclusion_pattern in zip(
+                    self.rules, self._patterns, self._exclusion_patterns
+                ):
                     text = text_unicode if rule.unicode_sensitive else text_ascii
-                    pattern = self._patterns_by_rule_id[rule.id]
                     if pattern.search(text) is not None:
-                        exclusion_pattern = self._exclusion_patterns_by_rule_id.get(
-                            rule.id
-                        )
                         if (
                             exclusion_pattern is None
                             or exclusion_pattern.search(text) is None

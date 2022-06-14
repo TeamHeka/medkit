@@ -66,6 +66,19 @@ def test_multiple_rules():
     assert attr_2.metadata["rule_id"] == "id_assuming"
 
 
+def test_multiple_rules_no_id():
+    syntagmas = _get_syntagma_segments(
+        ["If patient has covid", "Assuming patient has covid"]
+    )
+    rule_1 = HypothesisDetectorRule(regexp=r"\bif\b")
+    rule_2 = HypothesisDetectorRule(regexp=r"\bassuming\b")
+    detector = HypothesisDetector(output_label="hypothesis", rules=[rule_1, rule_2])
+    detector.run(syntagmas)
+
+    assert len(syntagmas[0].attrs) == 1
+    assert len(syntagmas[1].attrs) == 1
+
+
 def test_exclusions():
     syntagmas = _get_syntagma_segments(
         ["If patient has covid", "Even if patient has covid"]
