@@ -85,9 +85,7 @@ def test_exclusions():
     )
 
     rule = HypothesisDetectorRule(
-        id="id_if",
-        regexp=r"\bif\b",
-        exclusion_regexps=[r"\beven\s*\bif"],
+        regexp=r"\bif\b", exclusion_regexps=[r"\beven\s*\bif"]
     )
     detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
     detector.run(syntagmas)
@@ -106,7 +104,7 @@ def test_max_length():
         ["If patient has covid", "If patient has covid then he will be treated"]
     )
 
-    rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
+    rule = HypothesisDetectorRule(regexp=r"\bif\b")
     detector = HypothesisDetector(
         output_label="hypothesis", rules=[rule], max_length=30
     )
@@ -170,7 +168,7 @@ def test_verbs():
 def test_prov():
     syntagmas = _get_syntagma_segments(["If patient has covid"])
 
-    rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
+    rule = HypothesisDetectorRule(regexp=r"\bif\b")
     detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
 
     prov_builder = ProvBuilder()
