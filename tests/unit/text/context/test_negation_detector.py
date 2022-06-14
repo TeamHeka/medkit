@@ -96,7 +96,7 @@ def test_exclusions():
 def test_case_sensitive_off():
     syntagmas = _get_syntagma_segments(["No sign of covid", "no sign of covid"])
 
-    rule = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b", case_sensitive=False)
+    rule = NegationDetectorRule(regexp=r"^no\b", case_sensitive=False)
     detector = NegationDetector(output_label="negation", rules=[rule])
     detector.run(syntagmas)
 
@@ -110,7 +110,7 @@ def test_case_sensitive_off():
 def test_case_sensitive_on():
     syntagmas = _get_syntagma_segments(["No sign of covid", "no sign of covid"])
 
-    rule = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b", case_sensitive=True)
+    rule = NegationDetectorRule(regexp=r"^no\b", case_sensitive=True)
     detector = NegationDetector(output_label="negation", rules=[rule])
     detector.run(syntagmas)
 
@@ -145,9 +145,7 @@ def test_case_sensitive_exclusions():
 def test_unicode_sensitive_off(caplog):
     syntagmas = _get_syntagma_segments(["Elimine: covid", "Éliminé: covid"])
 
-    rule = NegationDetectorRule(
-        id="id_neg_no", regexp=r"elimine: ", unicode_sensitive=False
-    )
+    rule = NegationDetectorRule(regexp=r"elimine: ", unicode_sensitive=False)
     detector = NegationDetector(output_label="negation", rules=[rule])
     detector.run(syntagmas)
 
@@ -168,9 +166,7 @@ def test_unicode_sensitive_off(caplog):
 def test_unicode_sensitive_on():
     syntagmas = _get_syntagma_segments(["Elimine: covid", "Éliminé: covid"])
 
-    rule = NegationDetectorRule(
-        id="id_neg_no", regexp=r"éliminé: ", unicode_sensitive=True
-    )
+    rule = NegationDetectorRule(regexp=r"éliminé: ", unicode_sensitive=True)
     detector = NegationDetector(output_label="negation", rules=[rule])
     detector.run(syntagmas)
 
@@ -184,7 +180,7 @@ def test_unicode_sensitive_on():
 def test_prov():
     syntagmas = _get_syntagma_segments(["No sign of covid"])
 
-    rule = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b")
+    rule = NegationDetectorRule(regexp=r"^no\b")
     detector = NegationDetector(output_label="negation", rules=[rule])
 
     prov_builder = ProvBuilder()
