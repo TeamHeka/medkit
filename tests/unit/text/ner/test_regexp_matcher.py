@@ -77,6 +77,17 @@ def test_multiple_rules():
     assert entity_2.metadata["version"] == "1"
 
 
+def test_multiple_rules_no_id():
+    sentence = _get_sentence_segment()
+
+    rule_1 = RegexpMatcherRule(label="Diabetes", regexp="diabetes")
+    rule_2 = RegexpMatcherRule(label="Asthma", regexp="asthma")
+    matcher = RegexpMatcher(rules=[rule_1, rule_2])
+    entities = matcher.run([sentence])
+
+    assert len(entities) == 2
+
+
 def test_normalization():
     sentence = _get_sentence_segment()
 

@@ -57,8 +57,8 @@ class RegexpMatcherRule:
 
     regexp: str
     label: str
-    id: str
-    version: str
+    id: Optional[str] = None
+    version: Optional[str] = None
     index_extract: int = 0
     case_sensitive: bool = False
     unicode_sensitive: bool = False
@@ -143,25 +143,22 @@ class RegexpMatcher(NEROperation):
         if attrs_to_copy is None:
             attrs_to_copy = []
 
-        assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
-
         self.rules = rules
         self.attrs_to_copy = attrs_to_copy
 
         # pre-compile patterns
-        self._patterns_by_rule_id = {
-            rule.id: re.compile(
-                rule.regexp, flags=0 if rule.case_sensitive else re.IGNORECASE
-            )
+        self._patterns = [
+            re.compile(rule.regexp, flags=0 if rule.case_sensitive else re.IGNORECASE)
             for rule in self.rules
-        }
-        self._exclusion_patterns_by_rule_id = {
-            rule.id: re.compile(
+        ]
+        self._exclusion_patterns = [
+            re.compile(
                 rule.exclusion_regexp, flags=0 if rule.case_sensitive else re.IGNORECASE
             )
-            for rule in self.rules
             if rule.exclusion_regexp is not None
-        }
+            else None
+            for rule in self.rules
+        ]
         self._has_non_unicode_sensitive_rule = any(
             not r.unicode_sensitive for r in rules
         )
@@ -206,23 +203,30 @@ class RegexpMatcher(NEROperation):
                 # Fallback on unicode text
                 text_ascii = text_unicode
 
-        for rule in self.rules:
-            yield from self._find_matches_in_segment_for_rule(rule, segment, text_ascii)
+        for rule, pattern, exclusion_pattern in zip(
+            self.rules, self._patterns, self._exclusion_patterns
+        ):
+            yield from self._find_matches_in_segment_for_rule(
+                rule, pattern, exclusion_pattern, segment, text_ascii
+            )
 
     def _find_matches_in_segment_for_rule(
-        self, rule: RegexpMatcherRule, segment: Segment, text_ascii: Optional[str]
+        self,
+        rule: RegexpMatcherRule,
+        pattern: re.Pattern,
+        exclusion_pattern: re.Pattern,
+        segment: Segment,
+        text_ascii: Optional[str],
     ) -> Iterator[Entity]:
         flags = 0 if rule.case_sensitive else re.IGNORECASE
         text_to_match = segment.text if rule.unicode_sensitive else text_ascii
 
-        pattern = self._patterns_by_rule_id[rule.id]
         for match in pattern.finditer(text_to_match, flags):
-            # note that we apply exclusion_regexp to the whole segment,
+            # note that we apply exclusion_pattern to the whole segment,
             # so we might have a match in a part of the text unrelated to the current
             # match
             # we could check if we have any exclude match overlapping with
             # the current match but that wouldn't work for all cases
-            exclusion_pattern = self._exclusion_patterns_by_rule_id.get(rule.id)
             if (
                 exclusion_pattern is not None
                 and exclusion_pattern.search(text_to_match, flags) is not None
