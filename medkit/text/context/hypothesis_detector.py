@@ -180,9 +180,14 @@ class HypothesisDetector(ContextOperation):
 
         for segment in segments:
             hyp_attr = self._detect_hypothesis_in_segment(segment)
-            segment.attrs.append(hyp_attr)
+            if hyp_attr is not None:
+                segment.attrs.append(hyp_attr)
 
-    def _detect_hypothesis_in_segment(self, segment: Segment) -> Attribute:
+    def _detect_hypothesis_in_segment(self, segment: Segment) -> Optional[Attribute]:
+        # skip empty segment
+        if self._non_empty_text_pattern.search(segment.text) is None:
+            return None
+
         is_hypothesis = False
         metadata = None
 
