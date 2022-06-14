@@ -138,7 +138,7 @@ class NegationDetector(ContextOperation):
     def _detect_negation_in_segment(self, segment: Segment) -> Optional[Attribute]:
         # skip empty segment
         if self._non_empty_text_pattern.search(segment.text) is None:
-            return
+            return None
 
         text_unicode = segment.text
         text_ascii = None
