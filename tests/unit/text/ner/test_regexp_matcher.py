@@ -92,10 +92,8 @@ def test_normalization():
     sentence = _get_sentence_segment()
 
     rule = RegexpMatcherRule(
-        id="id_regexp_diabetes",
         label="Diabetes",
         regexp="diabetes",
-        version="1",
         normalizations=[RegexpMatcherNormalization("umls", "2020AB", "C0011849")],
     )
     matcher = RegexpMatcher(rules=[rule])
@@ -114,11 +112,7 @@ def test_exclusion_regex():
     sentence = _get_sentence_segment()
 
     rule = RegexpMatcherRule(
-        id="id_regexp_diabetes",
-        label="Diabetes",
-        regexp="diabetes",
-        exclusion_regexp="type 1 diabetes",
-        version="1",
+        label="Diabetes", regexp="diabetes", exclusion_regexp="type 1 diabetes"
     )
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
@@ -129,12 +123,7 @@ def test_exclusion_regex():
 def test_case_sensitivity_off():
     sentence = _get_sentence_segment()
 
-    rule = RegexpMatcherRule(
-        id="id_regexp_diabetes",
-        label="Diabetes",
-        regexp="DIABETES",
-        version="1",
-    )
+    rule = RegexpMatcherRule(label="Diabetes", regexp="DIABETES")
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 
@@ -146,13 +135,7 @@ def test_case_sensitivity_off():
 def test_case_sensitivity_on():
     sentence = _get_sentence_segment()
 
-    rule = RegexpMatcherRule(
-        id="id_regexp_diabetes",
-        label="Diabetes",
-        regexp="DIABETES",
-        version="1",
-        case_sensitive=True,
-    )
+    rule = RegexpMatcherRule(label="Diabetes", regexp="DIABETES", case_sensitive=True)
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 
@@ -163,12 +146,10 @@ def test_case_sensitivity_exclusion_on():
     sentence = _get_sentence_segment()
 
     rule = RegexpMatcherRule(
-        id="id_regexp_diabetes",
         label="Diabetes",
         regexp="diabetes",
         exclusion_regexp="TYPE 1 DIABETES",
         case_sensitive=True,
-        version="1",
     )
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
@@ -182,11 +163,7 @@ def test_unicode_sensitive_off(caplog):
     sentence = _get_sentence_segment("Le patient fait du diabète")
 
     rule = RegexpMatcherRule(
-        id="id_regexp_diabetes",
-        label="Diabetes",
-        regexp="diabete",
-        version="1",
-        unicode_sensitive=False,
+        label="Diabetes", regexp="diabete", unicode_sensitive=False
     )
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
@@ -207,13 +184,7 @@ def test_unicode_sensitive_off(caplog):
 def test_unicode_sensitive_on():
     sentence = _get_sentence_segment("Le patient fait du diabète")
 
-    rule = RegexpMatcherRule(
-        id="id_regexp_diabetes",
-        label="Diabetes",
-        regexp="diabete",
-        version="1",
-        unicode_sensitive=True,
-    )
+    rule = RegexpMatcherRule(label="Diabetes", regexp="diabete", unicode_sensitive=True)
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 
@@ -227,12 +198,7 @@ def test_attrs_to_copy():
     # uncopied attribute
     sentence.attrs.append(Attribute(label="hypothesis", value=True))
 
-    rule = RegexpMatcherRule(
-        id="id_regexp_diabetes",
-        label="Diabetes",
-        regexp="diabetes",
-        version="1",
-    )
+    rule = RegexpMatcherRule(label="Diabetes", regexp="diabetes")
 
     matcher = RegexpMatcher(
         rules=[rule],
@@ -257,12 +223,9 @@ def test_default_rules():
 def test_prov():
     sentence = _get_sentence_segment()
 
+    normalization = RegexpMatcherNormalization("umls", "2020AB", "C0011849")
     rule = RegexpMatcherRule(
-        id="id_regexp_diabetes",
-        label="Diabetes",
-        regexp="diabetes",
-        version="1",
-        normalizations=[RegexpMatcherNormalization("umls", "2020AB", "C0011849")],
+        label="Diabetes", regexp="diabetes", normalizations=[normalization]
     )
     matcher = RegexpMatcher(rules=[rule])
 
