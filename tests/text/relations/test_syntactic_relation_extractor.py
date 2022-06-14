@@ -11,8 +11,9 @@ def setup():
     # download french spacy model
     if not spacy.util.is_package("fr_core_news_sm"):
         spacy.cli.download("fr_core_news_sm")
-
-    yield
+    # model without parser
+    if not spacy.util.is_package("xx_sent_ud_sm"):
+        spacy.cli.download("xx_sent_ud_sm")
 
 
 def _get_medkit_doc():
@@ -100,8 +101,13 @@ def test_include_right_to_left_relations(include_right_to_left_relations):
         assert not maladie_ent.relations
 
 
-def test_exception_model_not_found():
-    with pytest.raises(OSError, match="Model for language was not found."):
+def test_exceptions_model_not_compatible():
+    with pytest.raises(OSError, match="[E941]"):
         SyntacticRelationExtractor(
             name_spacy_model="en",
+        )
+
+    with pytest.raises(ValueError, match="does not add syntax attributes"):
+        SyntacticRelationExtractor(
+            name_spacy_model="xx_sent_ud_sm",
         )

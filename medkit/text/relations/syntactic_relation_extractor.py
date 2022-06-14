@@ -4,8 +4,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 import spacy
-from spacy.tokens import Doc
-from spacy.tokens import Span as SpacySpan
+from spacy.tokens import Doc, Span as SpacySpan
 
 from medkit.core import OperationDescription, ProvBuilder, generate_id
 from medkit.core.text import Relation, TextDocument
@@ -36,7 +35,7 @@ class SyntacticRelationExtractor:
         Parameters
         ----------
         name_spacy_model: str
-            Name or path of a spacy pipeline to load, it should be include a
+            Name or path of a spacy pipeline to load, it should include a
             syntactic dependency parser. To obtain consistent results,
             the spacy model should have the same language as the documents
             in which relations should be found.
@@ -60,9 +59,10 @@ class SyntacticRelationExtractor:
         self._prov_builder: Optional[ProvBuilder] = None
         self.label_entities = label_entities
         self.relation_label = relation_label
-        self.nlp = self._load_model_spacy(name_spacy_model)
-        self.name_spacy_model = name_spacy_model
         self.include_right_to_left_relations = include_right_to_left_relations
+
+        self._nlp = self._load_model_spacy(name_spacy_model)
+        self.name_spacy_model = name_spacy_model
 
     @property
     def description(self) -> OperationDescription:
@@ -79,30 +79,29 @@ class SyntacticRelationExtractor:
     def set_prov_builder(self, prov_builder: ProvBuilder):
         self._prov_builder = prov_builder
 
-    def _load_model_spacy(self, name_spacy_model: str):
-        try:
-            nlp = spacy.load(name_spacy_model, exclude=["tagger", "ner", "lemmatizer"])
-            return nlp
-        except OSError:
-            msg = (
-                "Model for language was not found. Please "
-                'run "python -m spacy download {}" before running this annotator '
-            ).format(name_spacy_model)
-            raise OSError(msg)
+    @staticmethod
+    def _load_model_spacy(name_spacy_model: str):
+        """Load a nlp object and verify compatibility"""
+        nlp = spacy.load(name_spacy_model)
+        if not nlp("X").has_annotation("DEP"):
+            raise ValueError(
+                f"Model `{name_spacy_model}` does not add syntax attributes"
+                " in a document and cannot be use with SyntacticRelationExtractor."
+            )
+        return nlp
 
     def run(self, documents: List[TextDocument]):
-
         for medkit_doc in documents:
             # build spacy doc
             spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(
-                nlp=self.nlp,
+                nlp=self._nlp,
                 medkit_doc=medkit_doc,
                 labels_anns=self.label_entities,
                 attrs=[],
                 include_medkit_info=True,
             )
             # apply nlp spacy to include dependence tag
-            spacy_doc = self.nlp(spacy_doc)
+            spacy_doc = self._nlp(spacy_doc)
             relations = self._find_syntactic_relations(spacy_doc)
             self._add_relations_to_document(medkit_doc, relations)
 
@@ -122,19 +121,12 @@ class SyntacticRelationExtractor:
             The Relation object representing the spacy relation
         """
         relations = []
-
-        # spacy doc has not been parsed
-        if not spacy_doc.has_annotation("DEP"):
-            return relations
-
         for sentence in spacy_doc.sents:
             ents = sentence.ents
             # find a binary relation between e1 and e2
             for idx, e1 in enumerate(ents[:-1]):
                 e2 = ents[idx + 1]
                 right_child_tokens_of_e1 = [token.i for token in e1.rights]
-                left_child_tokens_of_e2 = [token.i for token in e2.lefts]
-
                 if any(token.i in right_child_tokens_of_e1 for token in e2):
                     # a relation left to right exist, e1 is the source of the relation
                     relation = self._create_relation(
@@ -144,18 +136,18 @@ class SyntacticRelationExtractor:
                     )
                     relations.append(relation)
 
-                elif (
-                    any(token.i in left_child_tokens_of_e2 for token in e1)
-                    and self.include_right_to_left_relations
-                ):
-                    # a relation right to left exist, e2 is the source of the relation
-                    relation = self._create_relation(
-                        source=e2,
-                        target=e1,
-                        metadata=dict(dep_tag=e1.root.dep_, dependency="right_to_left"),
-                    )
-
-                    relations.append(relation)
+                if self.include_right_to_left_relations:
+                    left_child_tokens_of_e2 = [token.i for token in e2.lefts]
+                    if any(token.i in left_child_tokens_of_e2 for token in e1):
+                        # a relation right to left exist, e2 is the source of the relation
+                        relation = self._create_relation(
+                            source=e2,
+                            target=e1,
+                            metadata=dict(
+                                dep_tag=e1.root.dep_, dependency="right_to_left"
+                            ),
+                        )
+                        relations.append(relation)
 
         return relations
 
