@@ -19,7 +19,7 @@ def _get_sentence_segment(text=_TEXT):
     )
 
 
-def test_single_match():
+def test_single_rule():
     sentence = _get_sentence_segment()
 
     rule = RegexpMatcherRule(
@@ -40,7 +40,7 @@ def test_single_match():
     assert entity.metadata["version"] == "1"
 
 
-def test_multiple_matches():
+def test_multiple_rules():
     sentence = _get_sentence_segment()
 
     rule_1 = RegexpMatcherRule(
