@@ -59,6 +59,18 @@ def test_multiple_rules():
     assert attr_2.metadata["rule_id"] == "id_neg_discard"
 
 
+def test_multiple_rules_no_id():
+    syntagmas = _get_syntagma_segments(["No sign of covid", "Diabetes is discarded"])
+
+    rule_1 = NegationDetectorRule(regexp=r"^no\b")
+    rule_2 = NegationDetectorRule(regexp=r"\bdiscard(s|ed)?\b")
+    detector = NegationDetector(output_label="negation", rules=[rule_1, rule_2])
+    detector.run(syntagmas)
+
+    assert len(syntagmas[0].attrs) == 1
+    assert len(syntagmas[1].attrs) == 1
+
+
 def test_exclusions():
     syntagmas = _get_syntagma_segments(
         ["Diabetes is discarded", "Results have not discarded covid"]
