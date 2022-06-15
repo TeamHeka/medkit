@@ -49,6 +49,11 @@ class Normalizer:
             rules = []
         self.rules = rules
 
+        regex_rules = ["(" + rule.pattern_to_replace + ")" for rule in self.rules]
+        regex_rule = r"|".join(regex_rules)
+
+        self._pattern = re.compile(regex_rule)
+
         self._prov_builder: Optional[ProvBuilder] = None
 
     @property
@@ -86,18 +91,16 @@ class Normalizer:
         ]
 
     def _normalize_segment_text(self, segment: Segment):
-        regex_rules = ["(" + rule.pattern_to_replace + ")" for rule in self.rules]
-        regex_rule = r"|".join(regex_rules)
-        pattern = re.compile(regex_rule)
 
         ranges = []
         replacement_texts = []
 
-        for match in pattern.finditer(segment.text):
+        for match in self._pattern.finditer(segment.text):
             ranges.append(match.span())
             for index in range(len(self.rules)):
                 if match.groups()[index] is not None:
                     replacement_texts.append(self.rules[index].new_text)
+                    break
 
         new_text, new_spans = span_utils.replace(
             text=segment.text,

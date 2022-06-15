@@ -40,6 +40,8 @@ class NegationDetectorRule:
         Whether to consider case when running `regexp and `exclusion_regexs`
     unicode_sensitive:
         If True, rule matches are searched on unicode text.
+        So, `regexp and `exclusion_regexs` shall not contain non-ASCII chars because
+        they would never be matched.
         If False, rule matches are searched on closest ASCII text when possible.
         (cf. NegationDetector)
     """

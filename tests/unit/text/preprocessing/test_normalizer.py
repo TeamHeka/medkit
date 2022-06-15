@@ -15,7 +15,7 @@ def test_user_rules():
     text = "À l'aide d'une canule n ° 3,"
     segment = _get_segment_from_text(text)
 
-    rules = [NormalizerRule(*rule) for rule in [(r"n\s*°", "number")]]
+    rules = [NormalizerRule(r"n\s*°", "number")]
     norm_segments = Normalizer(output_label="NORM_TEXT", rules=rules).run([segment])
 
     assert len(norm_segments) == 1

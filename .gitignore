@@ -28,6 +28,10 @@ target/
 profile_default/
 ipython_config.py
 
+# Tests
+.coverage
+report.xml
+
 # Distribution / packaging
 .Python
 build/

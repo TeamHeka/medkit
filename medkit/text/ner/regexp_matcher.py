@@ -46,6 +46,8 @@ class RegexpMatcherRule:
         Whether to ignore case when running `regexp and `exclusion_regexp`
     unicode_sensitive:
         If True, regexp rule matches are searched on unicode text.
+        So, `regexp and `exclusion_regexs` shall not contain non-ASCII chars because
+        they would never be matched.
         If False, regexp rule matches are searched on closest ASCII text when possible.
         (cf. RegexpMatcher)
     exclusion_regexp:
