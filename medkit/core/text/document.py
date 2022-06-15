@@ -47,7 +47,7 @@ class TextDocument(Document[TextAnnotation]):
         self.text: Optional[str] = text
         self.segments: Dict[str, List[str]] = dict()  # Key: label
         self.entities: Dict[str, List[str]] = dict()  # Key: label
-        self.relations: Dict[str, List[str]] = dict()  # Key: TODO : determine the key
+        self.relation_by_source: Dict[str, List[str]] = dict()  # Key: source_id
 
         # auto-generated raw segment
         # not stored with other annotations but injected in calls to get_annotations_by_label()
@@ -80,8 +80,6 @@ class TextDocument(Document[TextAnnotation]):
         entities, relations)
         according to the annotation category (Segment, Entity, Relation).
 
-        Note that entity is also considered as a segment of the text.
-
         Parameters
         ----------
         annotation:
@@ -103,22 +101,19 @@ class TextDocument(Document[TextAnnotation]):
             raise err
 
         if isinstance(annotation, Entity):
-            if annotation.label not in self.entities.keys():
-                self.entities[annotation.label] = [annotation.id]
-            else:
-                self.entities[annotation.label].append(annotation.id)
+            if annotation.label not in self.entities:
+                self.entities[annotation.label] = []
+            self.entities[annotation.label].append(annotation.id)
+
         elif isinstance(annotation, Segment):
-            if annotation.label not in self.segments.keys():
-                self.segments[annotation.label] = [annotation.id]
-            else:
-                self.segments[annotation.label].append(annotation.id)
+            if annotation.label not in self.segments:
+                self.segments[annotation.label] = []
+            self.segments[annotation.label].append(annotation.id)
+
         elif isinstance(annotation, Relation):
-            if annotation.label not in self.relations.keys():
-                self.relations[annotation.label] = [annotation.id]
-            else:
-                self.relations[annotation.label].append(annotation.id)
-            entities_ids = [annotation.source_id, annotation.target_id]
-            self._add_relation_in_entities(annotation.id, entities_ids)
+            if annotation.source_id not in self.relation_by_source:
+                self.relation_by_source[annotation.source_id] = []
+            self.relation_by_source[annotation.source_id].append(annotation.id)
 
     def get_annotations_by_label(self, label) -> List[TextAnnotation]:
         # inject raw segment
@@ -137,9 +132,15 @@ class TextDocument(Document[TextAnnotation]):
         data.update(text=self.text)
         return data
 
-    def _add_relation_in_entities(self, relation_id: str, entities_ids: List[str]):
-        # TBD: adding the relation in entities should be done by default
-        # every time a relation is added to the document ?
-        for entity_id in entities_ids:
-            entity_ann: Entity = self.get_annotation_by_id(entity_id)
-            entity_ann.relations.append(relation_id)
+    def get_relations_by_source_id(self, source_ann_id) -> List[Relation]:
+        relation_ids = self.relation_by_source.get(source_ann_id, [])
+        relations = [self.store.get_data_item(id) for id in relation_ids]
+        return relations
+
+    def get_relations(self) -> List[Relation]:
+        relations = [
+            self.store.get_data_item(ann_id)
+            for ids in self.relation_by_source.values()
+            for ann_id in ids
+        ]
+        return relations
