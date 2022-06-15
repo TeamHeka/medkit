@@ -61,7 +61,13 @@ class SyntacticRelationExtractor:
         self.relation_label = relation_label
         self.include_right_to_left_relations = include_right_to_left_relations
 
-        self._nlp = self._load_model_spacy(name_spacy_model)
+        nlp = spacy.load(name_spacy_model, exclude=["tagger", "ner", "lemmatizer"])
+        if not nlp("X").has_annotation("DEP"):
+            raise ValueError(
+                f"Model `{name_spacy_model}` does not add syntax attributes"
+                " in a document and cannot be use with SyntacticRelationExtractor."
+            )
+        self._nlp = nlp
         self.name_spacy_model = name_spacy_model
 
     @property
@@ -79,18 +85,8 @@ class SyntacticRelationExtractor:
     def set_prov_builder(self, prov_builder: ProvBuilder):
         self._prov_builder = prov_builder
 
-    @staticmethod
-    def _load_model_spacy(name_spacy_model: str):
-        """Load a nlp object and verify compatibility"""
-        nlp = spacy.load(name_spacy_model)
-        if not nlp("X").has_annotation("DEP"):
-            raise ValueError(
-                f"Model `{name_spacy_model}` does not add syntax attributes"
-                " in a document and cannot be use with SyntacticRelationExtractor."
-            )
-        return nlp
-
     def run(self, documents: List[TextDocument]):
+
         for medkit_doc in documents:
             # build spacy doc
             spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(
@@ -173,30 +169,26 @@ class SyntacticRelationExtractor:
 
         Raises
         ------
-        ValueError
-            Raises when the relation can't be parsed
+        RuntimeError
+            Raises when the medkit id attribute is not in the spacy entity (source/target)
         """
 
-        try:
-            attribute_medkit_id = spacy_utils._ATTR_MEDKIT_ID
-            source_id = source._.get(attribute_medkit_id)
-            target_id = target._.get(attribute_medkit_id)
+        attribute_medkit_id = spacy_utils._ATTR_MEDKIT_ID
+        source_id = source._.get(attribute_medkit_id)
+        target_id = target._.get(attribute_medkit_id)
 
-            if source_id is None or target_id is None:
-                raise RuntimeError(
-                    f"The attribute {attribute_medkit_id} was not transferred to spacy"
-                )
-
-            relation = Relation(
-                source_id=source_id,
-                target_id=target_id,
-                label=self.relation_label,
-                metadata=metadata,
+        if source_id is None or target_id is None:
+            raise RuntimeError(
+                f"The attribute {attribute_medkit_id} was not transferred to spacy"
             )
-            return relation
 
-        except Exception as err:
-            raise ValueError(f"Impossible to parse the relation. Reason : {err}")
+        relation = Relation(
+            source_id=source_id,
+            target_id=target_id,
+            label=self.relation_label,
+            metadata=metadata,
+        )
+        return relation
 
     def _add_relations_to_document(
         self, medkit_doc: TextDocument, relations: List[Relation]

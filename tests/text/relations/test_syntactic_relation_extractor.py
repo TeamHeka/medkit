@@ -34,18 +34,18 @@ def _get_medkit_doc():
 
 
 TEST_CONFIG = (
-    (None, 2, [["maladie", "grade"], ["level", "maladie"]]),
-    (["maladie"], 0, [[]]),
-    (["maladie", "level"], 1, [["level", "maladie"]]),
+    (None, [["maladie", "grade"], ["level", "maladie"]]),
+    (["maladie"], []),
+    (["maladie", "level"], [["level", "maladie"]]),
 )
 
 
 @pytest.mark.parametrize(
-    "label_entities,nb_exp_relations,exp_relations_labels",
+    "label_entities,exp_labels_in_relation",
     TEST_CONFIG,
     ids=["between_all_entities", "between_maladie", "between_level_maladie"],
 )
-def test_relation_extractor(label_entities, nb_exp_relations, exp_relations_labels):
+def test_relation_extractor(label_entities, exp_labels_in_relation):
     medkit_doc = _get_medkit_doc()
     relation_extractor = SyntacticRelationExtractor(
         name_spacy_model="fr_core_news_sm",
@@ -55,23 +55,15 @@ def test_relation_extractor(label_entities, nb_exp_relations, exp_relations_labe
     )
     relation_extractor.run([medkit_doc])
 
-    relations = [
-        medkit_doc.get_annotation_by_id(id)
-        for ids in medkit_doc.relations.values()
-        for id in ids
-    ]
-    assert len(relations) == nb_exp_relations
+    relations = medkit_doc.get_relations()
+    assert len(relations) == len(exp_labels_in_relation)
 
-    if nb_exp_relations:
-        for i, relation in enumerate(relations):
-            assert isinstance(relation, Relation)
-            assert relation.label == "syntactic_dep"
-            source_ann = medkit_doc.get_annotation_by_id(relation.source_id)
-            target_ann = medkit_doc.get_annotation_by_id(relation.target_id)
-            assert [source_ann.label, target_ann.label] == exp_relations_labels[i]
-            # check relation is in entity
-            assert relation.id in source_ann.relations
-            assert relation.id in target_ann.relations
+    for i, relation in enumerate(relations):
+        assert isinstance(relation, Relation)
+        assert relation.label == "syntactic_dep"
+        source_ann = medkit_doc.get_annotation_by_id(relation.source_id)
+        target_ann = medkit_doc.get_annotation_by_id(relation.target_id)
+        assert [source_ann.label, target_ann.label] == exp_labels_in_relation[i]
 
 
 @pytest.mark.parametrize(
@@ -90,15 +82,16 @@ def test_include_right_to_left_relations(include_right_to_left_relations):
         include_right_to_left_relations=include_right_to_left_relations,
     )
     relation_extractor.run([medkit_doc])
-    maladie_ent = medkit_doc.get_annotations_by_label("maladie")[1]
-    relation_id = medkit_doc.relations.get("is_dependent", [])
+    level_ent = medkit_doc.get_annotations_by_label("level")[0]
+    relations_level = medkit_doc.get_relations_by_source_id(level_ent.id)
+    relations = medkit_doc.get_relations()
 
     if include_right_to_left_relations:
-        assert relation_id
-        assert relation_id[0] in maladie_ent.relations
+        assert relations_level
+        assert relations_level[0].id == relations[0].id
     else:
-        assert not relation_id
-        assert not maladie_ent.relations
+        assert not relations_level
+        assert not relations
 
 
 def test_exceptions_model_not_compatible():
