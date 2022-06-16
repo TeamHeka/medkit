@@ -209,7 +209,10 @@ def test_unicode_sensitive_on():
 
 def test_attrs_to_copy():
     sentence = _get_sentence_segment()
+    # copied attribute
     sentence.attrs.append(Attribute(label="negation", value=True))
+    # uncopied attribute
+    sentence.attrs.append(Attribute(label="hypothesis", value=True))
 
     rule = RegexpMatcherRule(
         id="id_regexp_diabetes",
@@ -218,19 +221,14 @@ def test_attrs_to_copy():
         version="1",
     )
 
-    # attribute not copied
-    matcher = RegexpMatcher(rules=[rule])
-    entities = matcher.run([sentence])
-    entity = _find_entity(entities, "Diabetes")
-    assert not entity.attrs
-
-    # attribute copied
     matcher = RegexpMatcher(
         rules=[rule],
         attrs_to_copy=["negation"],
     )
     entities = matcher.run([sentence])
     entity = _find_entity(entities, "Diabetes")
+
+    # only negation attribute was copied
     assert len(entity.attrs) == 1
     attr = entity.attrs[0]
     assert attr.label == "negation" and attr.value is True

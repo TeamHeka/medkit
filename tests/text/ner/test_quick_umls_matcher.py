@@ -186,15 +186,11 @@ def test_ambiguous_match():
 
 def test_attrs_to_copy():
     sentence = _get_sentence_segment("The patient has asthma.")
+    # copied attribute
     sentence.attrs.append(Attribute(label="negation", value=True))
+    # uncopied attribute
+    sentence.attrs.append(Attribute(label="hypothesis", value=True))
 
-    # attribute not copied
-    umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
-    entities = umls_matcher.run([sentence])
-    entity = _find_entity(entities, "asthma")
-    assert not any(a.label == "negation" for a in entity.attrs)
-
-    # attribute not copied
     umls_matcher = QuickUMLSMatcher(
         version="2021AB",
         language="ENG",
@@ -202,7 +198,9 @@ def test_attrs_to_copy():
     )
     entities = umls_matcher.run([sentence])
     entity = _find_entity(entities, "asthma")
+
     non_norm_attrs = [a for a in entity.attrs if a.label != "umls"]
+    # only negation attribute was copied
     assert len(non_norm_attrs) == 1
     attr = non_norm_attrs[0]
     assert attr.label == "negation" and attr.value is True
