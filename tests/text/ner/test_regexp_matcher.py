@@ -19,13 +19,6 @@ def _get_sentence_segment(text=_TEXT):
     )
 
 
-def _find_entity(entities, label):
-    try:
-        return next(e for e in entities if e.label == label)
-    except StopIteration:
-        return None
-
-
 def test_single_match():
     sentence = _get_sentence_segment()
 
@@ -39,8 +32,8 @@ def test_single_match():
     entities = matcher.run([sentence])
 
     assert len(entities) == 1
-    entity = _find_entity(entities, "Diabetes")
-    assert entity is not None
+    entity = entities[0]
+    assert entity.label == "Diabetes"
     assert entity.text == "diabetes"
     assert entity.spans == [Span(34, 42)]
     assert entity.metadata["rule_id"] == "id_regexp_diabetes"
@@ -67,15 +60,17 @@ def test_multiple_matches():
 
     assert len(entities) == 2
 
-    entity_1 = _find_entity(entities, "Diabetes")
-    assert entity_1 is not None
+    # 1st entity (diabetes)
+    entity_1 = entities[0]
+    assert entity_1.label == "Diabetes"
     assert entity_1.text == "diabetes"
     assert entity_1.spans == [Span(34, 42)]
     assert entity_1.metadata["rule_id"] == "id_regexp_diabetes"
     assert entity_1.metadata["version"] == "1"
 
-    entity_2 = _find_entity(entities, "Asthma")
-    assert entity_2 is not None
+    # 2d entity (asthma)
+    entity_2 = entities[1]
+    assert entity_2.label == "Asthma"
     assert entity_2.text == "asthma"
     assert entity_2.spans == [Span(16, 22)]
     assert entity_2.metadata["rule_id"] == "id_regexp_asthma"
@@ -95,8 +90,8 @@ def test_normalization():
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 
-    entity = _find_entity(entities, "Diabetes")
-    assert entity is not None
+    entity = entities[0]
+    assert entity.label == "Diabetes"
 
     assert len(entity.attrs) == 1
     attr = entity.attrs[0]
@@ -117,7 +112,7 @@ def test_exclusion_regex():
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 
-    assert _find_entity(entities, "Diabetes") is None
+    assert len(entities) == 0
 
 
 def test_case_sensitivity_off():
@@ -132,7 +127,9 @@ def test_case_sensitivity_off():
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 
-    assert _find_entity(entities, "Diabetes") is not None
+    assert len(entities) == 1
+    entity = entities[0]
+    assert entity.label == "Diabetes"
 
 
 def test_case_sensitivity_on():
@@ -148,7 +145,7 @@ def test_case_sensitivity_on():
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 
-    assert _find_entity(entities, "Diabetes") is None
+    assert len(entities) == 0
 
 
 def test_case_sensitivity_exclusion_on():
@@ -165,7 +162,9 @@ def test_case_sensitivity_exclusion_on():
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 
-    assert _find_entity(entities, "Diabetes") is not None
+    assert len(entities) == 1
+    entity = entities[0]
+    assert entity.label == "Diabetes"
 
 
 def test_unicode_sensitive_off():
@@ -181,7 +180,9 @@ def test_unicode_sensitive_off():
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 
-    assert _find_entity(entities, "Diabetes") is not None
+    assert len(entities) == 1
+    entity = entities[0]
+    assert entity.label == "Diabetes"
 
     sentence_with_ligatures = _get_sentence_segment(
         "Il a une sœur atteinte de diabète et pensait que sa mère avait peut-être aussi"
@@ -204,7 +205,7 @@ def test_unicode_sensitive_on():
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 
-    assert _find_entity(entities, "Diabetes") is None
+    assert len(entities) == 0
 
 
 def test_attrs_to_copy():
@@ -225,8 +226,7 @@ def test_attrs_to_copy():
         rules=[rule],
         attrs_to_copy=["negation"],
     )
-    entities = matcher.run([sentence])
-    entity = _find_entity(entities, "Diabetes")
+    entity = matcher.run([sentence])[0]
 
     # only negation attribute was copied
     assert len(entity.attrs) == 1
@@ -259,7 +259,7 @@ def test_prov():
     entities = matcher.run([sentence])
     graph = prov_builder.graph
 
-    entity = _find_entity(entities, "Diabetes")
+    entity = entities[0]
     entity_node = graph.get_node(entity.id)
     assert entity_node.data_item_id == entity.id
     assert entity_node.operation_id == matcher.id
