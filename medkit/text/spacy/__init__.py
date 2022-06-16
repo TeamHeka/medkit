@@ -1,9 +1,11 @@
-__all__ = [
-    "spacy_utils",
-    "SpacyDocPipeline",
-    "SpacyPipeline",
-]
+__all__ = []
+import importlib.util
 
-from . import spacy_utils
-from .doc_pipeline import SpacyDocPipeline
-from .pipeline import SpacyPipeline
+spec = importlib.util.find_spec("spacy")
+if spec is not None:
+    # fmt: off
+    from . import spacy_utils  # noqa: F401
+    from .doc_pipeline import SpacyDocPipeline  # noqa: F401
+    from .pipeline import SpacyPipeline  # noqa: F401
+    __all__.extend(["spacy_utils", "SpacyDocPipeline", "SpacyPipeline"])
+    # fmt: on
