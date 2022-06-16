@@ -27,7 +27,17 @@ def test_load():
     assert len(doc.entities.get("disease", [])) == 2
     assert len(doc.entities.get("vitamin", [])) == 3
     # relations are now handled by TextDocument
-    assert len(doc.relations.get("treats", [])) == 2
+    assert len(doc.get_relations()) == 2
+
+    # check relation for T1
+    entity_id_t1 = doc.entities["medication"][0]
+    entity_id_t3 = doc.entities["disease"][0]
+    relations_ent_t1 = doc.get_relations_by_source_id(entity_id_t1)
+    assert len(relations_ent_t1) == 1
+
+    assert relations_ent_t1[0].label == "treats"
+    assert relations_ent_t1[0].target_id == entity_id_t3
+    assert entity_id_t3 not in doc.relation_by_source
 
     # check entity T4 disease
     entity_id_1 = doc.entities["disease"][1]
@@ -36,10 +46,6 @@ def test_load():
     assert entity_1.text == "Hypothyroidism"
     assert entity_1.spans == [Span(147, 161)]
     assert entity_1.metadata.get("brat_id") == "T4"
-    # check relation in entity
-    assert len(entity_1.relations) == 1
-    relation_id_2 = doc.relations["treats"][1]
-    assert relation_id_2 in entity_1.relations
 
     # check attribute
     assert len(entity_1.attrs) == 1
@@ -52,22 +58,21 @@ def test_load():
     entity_id_2 = doc.entities["vitamin"][1]
     entity_2 = doc.get_annotation_by_id(entity_id_2)
     assert entity_2.spans == [Span(251, 260), Span(263, 264)]
-    assert relation_id_2 not in entity_2.relations
 
 
 def test_relations():
     brat_converter = BratInputConverter()
     doc: TextDocument = brat_converter.load(dir_path="tests/data/brat/").documents[0]
-    relation_ids = doc.relations.get("treats", [])
-    assert len(relation_ids) == 2
+    relations = doc.get_relations()
+    assert len(relations) == 2
 
-    relation_1 = doc.get_annotation_by_id(relation_ids[0])
-    assert relation_1.source_id == doc.entities["medication"][0]
-    assert relation_1.target_id == doc.entities["disease"][0]
+    assert relations[0].source_id == doc.entities["medication"][0]
+    assert relations[0].target_id == doc.entities["disease"][0]
+    assert relations[0].label == "treats"
 
-    relation_2 = doc.get_annotation_by_id(relation_ids[1])
-    assert relation_2.source_id == doc.entities["medication"][1]
-    assert relation_2.target_id == doc.entities["disease"][1]
+    assert relations[1].source_id == doc.entities["medication"][1]
+    assert relations[1].target_id == doc.entities["disease"][1]
+    assert relations[1].label == "treats"
 
 
 def test_load_no_anns():
