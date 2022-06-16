@@ -34,36 +34,48 @@ def _get_medkit_doc():
 
 
 TEST_CONFIG = (
-    (None, [["maladie", "grade"], ["level", "maladie"]]),
-    (["maladie"], []),
-    (["maladie", "level"], [["level", "maladie"]]),
+    (None, None, None, [["maladie", "grade"], ["level", "maladie"]]),
+    (["maladie"], ["maladie"], None, []),
+    (["maladie", "level"], ["maladie"], ["level"], [["maladie", "level"]]),
+    (["maladie", "level"], ["maladie"], None, [["maladie", "level"]]),
+    (["maladie", "level"], ["level"], None, [["level", "maladie"]]),
 )
 
 
 @pytest.mark.parametrize(
-    "label_entities,exp_labels_in_relation",
+    "entities_labels,entities_source,entities_target,exp_source_target",
     TEST_CONFIG,
-    ids=["between_all_entities", "between_maladie", "between_level_maladie"],
+    ids=[
+        "between_all_entities",
+        "between_maladie",
+        "between_maladie_level_source_target_not_none",
+        "between_maladie_level_source_not_none",
+        "between_level_maladie_source_not_none",
+    ],
 )
-def test_relation_extractor(label_entities, exp_labels_in_relation):
+def test_relation_extractor(
+    entities_labels, entities_source, entities_target, exp_source_target
+):
     medkit_doc = _get_medkit_doc()
     relation_extractor = SyntacticRelationExtractor(
         name_spacy_model="fr_core_news_sm",
-        label_entities=label_entities,
+        entities_labels=entities_labels,
+        entities_source=entities_source,
+        entities_target=entities_target,
         relation_label="syntactic_dep",
         include_right_to_left_relations=True,
     )
     relation_extractor.run([medkit_doc])
 
     relations = medkit_doc.get_relations()
-    assert len(relations) == len(exp_labels_in_relation)
+    assert len(relations) == len(exp_source_target)
 
     for i, relation in enumerate(relations):
         assert isinstance(relation, Relation)
         assert relation.label == "syntactic_dep"
         source_ann = medkit_doc.get_annotation_by_id(relation.source_id)
         target_ann = medkit_doc.get_annotation_by_id(relation.target_id)
-        assert [source_ann.label, target_ann.label] == exp_labels_in_relation[i]
+        assert [source_ann.label, target_ann.label] == exp_source_target[i]
 
 
 @pytest.mark.parametrize(
@@ -77,20 +89,23 @@ def test_include_right_to_left_relations(include_right_to_left_relations):
     medkit_doc = _get_medkit_doc()
     relation_extractor = SyntacticRelationExtractor(
         name_spacy_model="fr_core_news_sm",
-        label_entities=["maladie", "level"],
-        relation_label="is_dependent",
+        entities_labels=["maladie", "level"],
+        entities_source=["maladie"],
+        entities_target=["level"],
+        relation_label="has_level",
         include_right_to_left_relations=include_right_to_left_relations,
     )
     relation_extractor.run([medkit_doc])
-    level_ent = medkit_doc.get_annotations_by_label("level")[0]
-    relations_level = medkit_doc.get_relations_by_source_id(level_ent.id)
+    maladie_ent = medkit_doc.get_annotations_by_label("maladie")[1]
+    relations_maladie = medkit_doc.get_relations_by_source_id(maladie_ent.id)
     relations = medkit_doc.get_relations()
 
     if include_right_to_left_relations:
-        assert relations_level
-        assert relations_level[0].id == relations[0].id
+        assert relations_maladie
+        assert relations_maladie[0].id == relations[0].id
+        assert relations_maladie[0].metadata["dep_direction"] == "right_to_left"
     else:
-        assert not relations_level
+        assert not relations_maladie
         assert not relations
 
 
