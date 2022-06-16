@@ -1,5 +1,5 @@
 from medkit.core.prov_builder import ProvBuilder
-from tests.core.prov_builder._common import Generator, Prefixer, Splitter, Merger
+from tests.unit.core.prov_builder._common import Generator, Prefixer, Splitter, Merger
 
 
 def test_single_item_with_no_source():

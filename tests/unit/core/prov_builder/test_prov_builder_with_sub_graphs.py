@@ -1,7 +1,12 @@
 from medkit.core import generate_id, OperationDescription
 from medkit.core.prov_builder import ProvBuilder
 
-from tests.core.prov_builder._common import get_text_items, Prefixer, Splitter, Merger
+from tests.unit.core.prov_builder._common import (
+    get_text_items,
+    Prefixer,
+    Splitter,
+    Merger,
+)
 
 
 class _PrefixerWrapper:

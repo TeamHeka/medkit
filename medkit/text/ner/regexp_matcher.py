@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = ["RegexpMatcher", "RegexpMatcherRule", "RegexpMatcherNormalization"]
 
 import dataclasses
+import logging
 from pathlib import Path
 import re
 from typing import Any, Iterator, List, Optional
@@ -18,6 +19,9 @@ from medkit.core import (
     generate_id,
 )
 from medkit.core.text import Entity, Segment, span_utils
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -42,7 +46,10 @@ class RegexpMatcherRule:
         Whether to ignore case when running `regexp and `exclusion_regexp`
     unicode_sensitive:
         If True, regexp rule matches are searched on unicode text.
-        If False, regexp rule matches are searched on closest ASCII text.
+        So, `regexp and `exclusion_regexs` shall not contain non-ASCII chars because
+        they would never be matched.
+        If False, regexp rule matches are searched on closest ASCII text when possible.
+        (cf. RegexpMatcher)
     exclusion_regexp:
         An optional exclusion pattern. Note that this exclusion pattern will
         executed on the whole input annotation, so when relying on `exclusion_regexp`
@@ -100,7 +107,15 @@ _PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.y
 
 
 class RegexpMatcher:
-    """Entity annotator relying on regexp-based rules"""
+    """Entity annotator relying on regexp-based rules
+
+    For detecting entities, the module uses rules that may be sensitive to unicode or
+    not. When the rule is not sensitive to unicode, we try to convert unicode chars to
+    the closest ascii chars. However, some characters need to be pre-processed before
+    (e.g., `n°` -> `number`). So, if the text lengths are different, we fall back on
+    initial unicode text for detection even if rule is not unicode-sensitive.
+    In this case, a warning is logged for recommending to pre-process data.
+    """
 
     def __init__(
         self,
@@ -197,12 +212,14 @@ class RegexpMatcher:
             if len(text_ascii) != len(
                 text_unicode
             ):  # if text conversion had changed its length
-                raise ValueError(
+                logger.warning(
                     "Lengths of unicode text and generated ascii text are different. "
                     "Please, pre-process input text before running RegexpMatcher\n\n"
                     f"Unicode:{text_unicode} (length: {len(text_unicode)})\n"
                     f"Ascii: {text_ascii} (length: {len(text_ascii)})\n"
                 )
+                # Fallback on unicode text
+                text_ascii = text_unicode
 
         for rule in self.rules:
             yield from self._find_matches_in_segment_for_rule(rule, segment, text_ascii)

@@ -1,66 +1,58 @@
 from __future__ import annotations
 
-__all__ = ["UnicodeNormalizer"]
+__all__ = ["Normalizer", "NormalizerRule"]
 
-import dataclasses
 import re
+from typing import List, Optional, NamedTuple
 
-import unidecode
-
-from typing import List, Optional
-
-from medkit.core import (
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
-
+from medkit.core import generate_id, OperationDescription, ProvBuilder
 from medkit.core.text import Segment, span_utils
 
-UNICODE_TO_REPLACE = [
-    "\u00C6",  # Æ
-    "\u00E6",  # æ
-    "\u0152",  # Œ
-    "\u0153",  # œ
-]
+
+class NormalizerRule(NamedTuple):
+    pattern_to_replace: str
+    new_text: str
 
 
-@dataclasses.dataclass(frozen=True)
-class DefaultConfig:  # TODO (#44): to remove when input key will be used as label
-    output_label = "NORMALIZED_TEXT"
-
-
-class UnicodeNormalizer:
+class Normalizer:
     """
-    Unicode normalizer pre-processing annotation module
+    Generic normalizer to be used as pre-processing module
 
-    This module is a non-destructive module allowing to convert special unicode
-    character (e.g., œ) to the closest ascii characters.
+    This module is a non-destructive module allowing to replace selected characters
+    with the wanted characters.
     It respects the span modification by creating a new text-bound annotation containing
     the span modification information from input text.
-
-    For the time being, only 'ae' and 'oe' ligatures (upper/lowercase) are supported.
     """
 
     def __init__(
-        self, output_label: str = DefaultConfig.output_label, proc_id: str = None
+        self,
+        output_label: str,
+        rules: List[NormalizerRule] = None,
+        proc_id: str = None,
     ):
         """
-        Instantiate the unicode normalizer.
-
+        TODO: change default output_label
         Parameters
         ----------
         output_label
-            The output label of the created annotations.
-            Default: "NORMALIZED_TEXT" (cf.DefaultConfig)  # TODO: cf. #44
+            The output label of the created annotations
+        rules
+            The list of normalization rules
         proc_id
             Identifier of the pre-processing module
         """
         if proc_id is None:
             proc_id = generate_id()
-
         self.id = proc_id
         self.output_label = output_label
+        if rules is None:
+            rules = []
+        self.rules = rules
+
+        regex_rules = ["(" + rule.pattern_to_replace + ")" for rule in self.rules]
+        regex_rule = r"|".join(regex_rules)
+
+        self._pattern = re.compile(regex_rule)
 
         self._prov_builder: Optional[ProvBuilder] = None
 
@@ -68,6 +60,7 @@ class UnicodeNormalizer:
     def description(self) -> OperationDescription:
         config = dict(
             output_label=self.output_label,
+            rules=self.rules,
         )
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
@@ -79,7 +72,7 @@ class UnicodeNormalizer:
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
         Run the module on a list of segments provided as input
-        and returns a new list of segments.
+        and returns a new list of segments
 
         Parameters
         ----------
@@ -88,8 +81,8 @@ class UnicodeNormalizer:
 
         Returns
         -------
-        List[Segments]:
-            List of normalized segments.
+        List[Segment]
+            List of normalized segments
         """
         return [
             norm_segment
@@ -98,15 +91,16 @@ class UnicodeNormalizer:
         ]
 
     def _normalize_segment_text(self, segment: Segment):
-        regex_rule = "(?P<unicode>" + "|".join(UNICODE_TO_REPLACE) + ")"
-        pattern = re.compile(regex_rule)
 
         ranges = []
         replacement_texts = []
 
-        for match in pattern.finditer(segment.text):
+        for match in self._pattern.finditer(segment.text):
             ranges.append(match.span())
-            replacement_texts.append(unidecode.unidecode(match.group("unicode")))
+            for index in range(len(self.rules)):
+                if match.groups()[index] is not None:
+                    replacement_texts.append(self.rules[index].new_text)
+                    break
 
         new_text, new_spans = span_utils.replace(
             text=segment.text,

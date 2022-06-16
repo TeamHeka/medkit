@@ -1,6 +1,7 @@
 __all__ = ["NegationDetector", "NegationDetectorRule"]
 
 import dataclasses
+import logging
 from pathlib import Path
 import re
 from typing import List, Optional
@@ -16,6 +17,7 @@ from medkit.core import (
 )
 from medkit.core.text import Segment
 
+logger = logging.getLogger(__name__)
 
 _PATH_TO_DEFAULT_RULES = Path(__file__).parent / "negation_detector_default_rules.yml"
 
@@ -24,7 +26,9 @@ _PATH_TO_DEFAULT_RULES = Path(__file__).parent / "negation_detector_default_rule
 class NegationDetectorRule:
     """Regexp-based rule to use with `NegationDetector`
 
-    Attributes
+    Input text may be converted before detecting rule.
+
+    Parameters
     ----------
     regexp:
         The regexp pattern used to match a negation
@@ -33,12 +37,13 @@ class NegationDetectorRule:
     id:
         Unique identifier of the rule to store in the metadata of the entities
     case_sensitive:
-        Whether to ignore case when running `regexp and `exclusion_regexs`
+        Whether to consider case when running `regexp and `exclusion_regexs`
     unicode_sensitive:
-        Whether to replace all non-ASCII chars by the closest ASCII chars
-        on input text before running `regexp and `exclusion_regexs`.
-        If True, then `regexp and `exclusion_regexs` shouldn't contain
-        non-ASCII chars because they would never be matched.
+        If True, rule matches are searched on unicode text.
+        So, `regexp and `exclusion_regexs` shall not contain non-ASCII chars because
+        they would never be matched.
+        If False, rule matches are searched on closest ASCII text when possible.
+        (cf. NegationDetector)
     """
 
     regexp: str
@@ -62,6 +67,13 @@ class NegationDetector:
     Because negation attributes will be attached to whole annotations,
     each input annotation should be "local"-enough rather than
     a big chunk of text (ie a sentence or a syntagma).
+
+    For detecting negation, the module uses rules that may be sensitive to unicode or
+    not. When the rule is not sensitive to unicode, we try to convert unicode chars to
+    the closest ascii chars. However, some characters need to be pre-processed before
+    (e.g., `n°` -> `number`). So, if the text lengths are different, we fall back on
+    initial unicode text for detection even if rule is not unicode-sensitive.
+    In this case, a warning is logged for recommending to pre-process data.
     """
 
     def __init__(
@@ -156,12 +168,14 @@ class NegationDetector:
             if len(text_ascii) != len(
                 text_unicode
             ):  # if text conversion had changed its length
-                raise ValueError(
+                logger.warning(
                     "Lengths of unicode text and generated ascii text are different. "
-                    "Please, pre-process input text before running RegexpMatcher\n\n"
+                    "Please, pre-process input text before running NegationDetector\n\n"
                     f"Unicode:{text_unicode} (length: {len(text_unicode)})\n"
                     f"Ascii: {text_ascii} (length: {len(text_ascii)})\n"
                 )
+                # Fallback on unicode text
+                text_ascii = text_unicode
 
         # try all rules until we have a match
         is_negated = False

@@ -1,18 +1,18 @@
-import pytest
+import logging
 
 from medkit.core import ProvBuilder
 from medkit.core.text import Segment, Span
 from medkit.text.context.negation_detector import NegationDetector, NegationDetectorRule
 
 
-def _get_syntagma_segments(syntama_texts):
+def _get_syntagma_segments(syntagma_texts):
     return [
         Segment(
             label="syntagma",
             spans=[Span(0, len(text))],
             text=text,
         )
-        for text in syntama_texts
+        for text in syntagma_texts
     ]
 
 
@@ -130,7 +130,7 @@ def test_case_sensitive_exclusions():
     assert attr_2.value is True
 
 
-def test_unicode_sensitive_off():
+def test_unicode_sensitive_off(caplog):
     syntagmas = _get_syntagma_segments(["Elimine: covid", "Éliminé: covid"])
 
     rule = NegationDetectorRule(
@@ -146,8 +146,11 @@ def test_unicode_sensitive_off():
     assert attr_2.value is True
 
     syntagmas_with_ligatures = _get_syntagma_segments(["Sœur non covidée"])
-    with pytest.raises(ValueError):
+    with caplog.at_level(
+        logging.WARNING, logger="medkit.text.context.negation_detector"
+    ):
         detector.run(syntagmas_with_ligatures)
+        assert len(caplog.messages) == 1
 
 
 def test_unicode_sensitive_on():
