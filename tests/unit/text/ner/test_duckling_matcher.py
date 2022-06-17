@@ -79,13 +79,6 @@ def _get_sentence_segment(text=_TEXT):
     )
 
 
-def _find_entity(entities, label):
-    try:
-        return next(e for e in entities if e.label == label)
-    except StopIteration:
-        return None
-
-
 def test_single_dim(_mocked_requests):
     sentence = _get_sentence_segment()
 
@@ -99,8 +92,8 @@ def test_single_dim(_mocked_requests):
 
     # entity
     assert len(entities) == 1
-    entity = _find_entity(entities, "time")
-    assert entity is not None
+    entity = entities[0]
+    assert entity.label == "time"
     assert entity.text == "on 01/02/2001"
     assert entity.spans == [Span(25, 38)]
 
@@ -124,28 +117,27 @@ def test_multiple_dims(_mocked_requests):
     entities = matcher.run([sentence])
     assert len(entities) == 2
 
-    # 1st entity
-    entity = _find_entity(entities, "time")
-    assert entity is not None
-    assert entity.text == "on 01/02/2001"
-    assert entity.spans == [Span(25, 38)]
+    # 1st entity (time)
+    entity_1 = entities[0]
+    assert entity_1.label == "time"
+    assert entity_1.text == "on 01/02/2001"
+    assert entity_1.spans == [Span(25, 38)]
 
-    assert len(entity.attrs) == 1
-    attr = entity.attrs[0]
-    assert attr.label == "duckling"
-    assert attr.value == _TIME_VALUE
+    assert len(entity_1.attrs) == 1
+    attr_1 = entity_1.attrs[0]
+    assert attr_1.label == "duckling"
+    assert attr_1.value == _TIME_VALUE
 
-    # 2d entity
-    assert len(entities) == 2
-    entity = _find_entity(entities, "duration")
-    assert entity is not None
-    assert entity.text == "3 days"
-    assert entity.spans == [Span(54, 60)]
+    # 2d entity (duration)
+    entity_2 = entities[1]
+    assert entity_2.label == "duration"
+    assert entity_2.text == "3 days"
+    assert entity_2.spans == [Span(54, 60)]
 
-    assert len(entity.attrs) == 1
-    attr = entity.attrs[0]
-    assert attr.label == "duckling"
-    assert attr.value == _DURATION_VALUE
+    assert len(entity_2.attrs) == 1
+    attr_2 = entity_2.attrs[0]
+    assert attr_2.label == "duckling"
+    assert attr_2.value == _DURATION_VALUE
 
 
 def test_all_dims(_mocked_requests):
@@ -175,9 +167,8 @@ def test_attrs_to_copy(_mocked_requests):
         dims=["time"],
         attrs_to_copy=["negation"],
     )
-    entities = matcher.run([sentence])
+    entity = matcher.run([sentence])[0]
 
-    entity = _find_entity(entities, "time")
     assert len(entity.attrs) == 2
     attr = entity.attrs[0]
     assert attr.label == "negation" and attr.value is True
@@ -192,15 +183,12 @@ def test_prov(_mocked_requests):
         locale="en",
         dims=["time"],
     )
-    entities = matcher.run([sentence])
-
     prov_builder = ProvBuilder()
     matcher.set_prov_builder(prov_builder)
 
-    entities = matcher.run([sentence])
+    entity = matcher.run([sentence])[0]
     graph = prov_builder.graph
 
-    entity = _find_entity(entities, "time")
     entity_node = graph.get_node(entity.id)
     assert entity_node.data_item_id == entity.id
     assert entity_node.operation_id == matcher.id

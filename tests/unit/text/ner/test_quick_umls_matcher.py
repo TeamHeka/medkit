@@ -76,13 +76,6 @@ def _get_sentence_segment(text):
     )
 
 
-def _find_entity(entities, label):
-    try:
-        return next(e for e in entities if e.label == label)
-    except StopIteration:
-        return None
-
-
 def test_single_match():
     sentence = _get_sentence_segment("The patient has asthma.")
 
@@ -91,7 +84,7 @@ def test_single_match():
 
     # entity
     assert len(entities) == 1
-    entity = _find_entity(entities, "asthma")
+    entity = entities[0]
     assert entity is not None
     assert entity.text == "asthma"
     assert entity.spans == [Span(16, 22)]
@@ -114,25 +107,25 @@ def test_multiple_matches():
 
     assert len(entities) == 2
 
-    # 1st entity
-    entity = _find_entity(entities, "asthma")
-    assert entity is not None
-    assert entity.text == "asthma"
-    assert entity.spans == [Span(16, 22)]
+    # 1st entity (diabetes)
+    entity_1 = entities[0]
+    assert entity_1.label == "type 1 diabetes"
+    assert entity_1.text == "type 1 diabetes"
+    assert entity_1.spans == [Span(27, 42)]
 
-    attr = entity.attrs[0]
-    assert attr.label == "umls"
-    assert attr.value == _ASTHMA_CUI
+    attr_1 = entity_1.attrs[0]
+    assert attr_1.label == "umls"
+    assert attr_1.value == _DIABETES_CUI
 
-    # 2d entity
-    entity = _find_entity(entities, "type 1 diabetes")
-    assert entity is not None
-    assert entity.text == "type 1 diabetes"
-    assert entity.spans == [Span(27, 42)]
+    # 2d entity (asthma)
+    entity_2 = entities[1]
+    assert entity_2.label == "asthma"
+    assert entity_2.text == "asthma"
+    assert entity_2.spans == [Span(16, 22)]
 
-    attr = entity.attrs[0]
-    assert attr.label == "umls"
-    assert attr.value == _DIABETES_CUI
+    attr_2 = entity_2.attrs[0]
+    assert attr_2.label == "umls"
+    assert attr_2.value == _ASTHMA_CUI
 
 
 def test_language():
@@ -142,8 +135,8 @@ def test_language():
     entities = umls_matcher.run([sentence])
 
     # entity
-    entity = _find_entity(entities, "Asthme")
-    assert entity is not None
+    entity = entities[0]
+    assert entity.label == "Asthme"
     assert entity.text == "Asthme"
 
     # normalization attribute, same CUI as in english
@@ -159,15 +152,16 @@ def test_lowercase():
     # available with leading uppercase in french
     umls_matcher = QuickUMLSMatcher(version="2021AB", language="FRE")
     entities = umls_matcher.run([sentence])
-    assert _find_entity(entities, "asthme") is None
+    assert len(entities) == 0
 
     # with lowercase flag, entity is found
     umls_matcher_lowercase = QuickUMLSMatcher(
         language="FRE", version="2021AB", lowercase=True
     )
     entities = umls_matcher_lowercase.run([sentence])
-    entity = _find_entity(entities, "asthme")
-    assert entity is not None
+    assert len(entities) == 1
+    entity = entities[0]
+    assert entity.label == "asthme"
     assert entity.text == "asthme"
 
 
@@ -186,23 +180,20 @@ def test_ambiguous_match():
 
 def test_attrs_to_copy():
     sentence = _get_sentence_segment("The patient has asthma.")
+    # copied attribute
     sentence.attrs.append(Attribute(label="negation", value=True))
+    # uncopied attribute
+    sentence.attrs.append(Attribute(label="hypothesis", value=True))
 
-    # attribute not copied
-    umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
-    entities = umls_matcher.run([sentence])
-    entity = _find_entity(entities, "asthma")
-    assert not any(a.label == "negation" for a in entity.attrs)
-
-    # attribute not copied
     umls_matcher = QuickUMLSMatcher(
         version="2021AB",
         language="ENG",
         attrs_to_copy=["negation"],
     )
-    entities = umls_matcher.run([sentence])
-    entity = _find_entity(entities, "asthma")
+    entity = umls_matcher.run([sentence])[0]
+
     non_norm_attrs = [a for a in entity.attrs if a.label != "umls"]
+    # only negation attribute was copied
     assert len(non_norm_attrs) == 1
     attr = non_norm_attrs[0]
     assert attr.label == "negation" and attr.value is True
@@ -218,7 +209,7 @@ def test_prov():
     entities = umls_matcher.run([sentence])
     graph = prov_builder.graph
 
-    entity = _find_entity(entities, "asthma")
+    entity = entities[0]
     entity_node = graph.get_node(entity.id)
     assert entity_node.data_item_id == entity.id
     assert entity_node.operation_id == umls_matcher.id
