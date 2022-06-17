@@ -1,7 +1,6 @@
 import pytest
-
+from _pytest.logging import LogCaptureFixture
 import spacy.cli
-
 from medkit.text.relations import SyntacticRelationExtractor
 from medkit.core.text import TextDocument, Entity, Span, Relation
 
@@ -119,3 +118,43 @@ def test_exceptions_model_not_compatible():
         SyntacticRelationExtractor(
             name_spacy_model="xx_sent_ud_sm",
         )
+
+
+@spacy.Language.component(
+    "entity_without_id",
+)
+def _custom_component(doc):
+    """Mock spacy component adds entity without medkit ID"""
+    if doc.ents:
+        doc.ents = list(doc.ents) + [doc.char_span(11, 19, "ACTE")]
+    return doc
+
+
+def test_entities_without_medkit_id(caplog: LogCaptureFixture):
+    # save custom nlp model in disk
+    nlp = spacy.load("fr_core_news_sm", exclude=["tagger", "ner", "lemmatizer"])
+    nlp.add_pipe("entity_without_id")
+    nlp.to_disk("/tmp/modified_model")
+
+    medkit_doc = _get_medkit_doc()
+    relation_extractor = SyntacticRelationExtractor(
+        name_spacy_model="/tmp/modified_model",
+        entities_labels=None,
+        entities_source=["maladie"],
+        entities_target=None,
+        relation_label="has_level",
+        include_right_to_left_relations=True,
+    )
+    relation_extractor.run([medkit_doc])
+
+    # check warning for one entity
+    for record in caplog.records:
+        assert record.levelname == "WARNING"
+    assert "Can't create a medkit Relation between" in caplog.text
+
+    relations = medkit_doc.get_relations()
+    # should only relation between medkit entities
+    assert len(relations) == 2
+    maladie_ents = medkit_doc.get_annotations_by_label("maladie")
+    assert relations[0].source_id == maladie_ents[0].id
+    assert relations[1].source_id == maladie_ents[1].id

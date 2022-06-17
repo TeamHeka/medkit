@@ -32,7 +32,7 @@ class SyntacticRelationExtractor:
 
     Each TextDocument is converted to a spacy doc with the selected entities.
     By default, all entities are transferred and the source and target of the relations
-    depends on the syntactic dependecy.
+    depends on the syntactic dependency.
     """
 
     def __init__(
@@ -137,14 +137,14 @@ class SyntacticRelationExtractor:
                 attrs=[],
                 include_medkit_info=True,
             )
-            # apply nlp spacy to include dependence tag
+            # apply nlp spacy to include dependency tag
             spacy_doc = self._nlp(spacy_doc)
             relations = self._find_syntactic_relations(spacy_doc)
             self._add_relations_to_document(medkit_doc, relations)
 
     def _find_syntactic_relations(self, spacy_doc: Doc):
         """Find syntactic relations from entities present in the same sentence.
-        For each dependance found, a new relation is created.
+        For each dependency found, a new relation is created.
 
         Parameters
         ----------
@@ -174,7 +174,9 @@ class SyntacticRelationExtractor:
                             dep_tag=e2.root.dep_, dep_direction="left_to_right"
                         ),
                     )
-                    relations.append(relation)
+                    if relation is not None:
+                        relations.append(relation)
+
                 if self.include_right_to_left_relations:
                     left_child_tokens_of_e2 = [token.i for token in e2.lefts]
                     if any(token.i in left_child_tokens_of_e2 for token in e1):
@@ -188,7 +190,8 @@ class SyntacticRelationExtractor:
                                 dep_tag=e1.root.dep_, dep_direction="right_to_left"
                             ),
                         )
-                        relations.append(relation)
+                        if relation is not None:
+                            relations.append(relation)
 
         return relations
 
@@ -203,7 +206,7 @@ class SyntacticRelationExtractor:
 
     def _create_relation(
         self, source: SpacySpan, target: SpacySpan, metadata: Dict[str, str]
-    ) -> Relation:
+    ) -> Optional[Relation]:
         """
         Parse the spacy relation content into a Relation object.
 
@@ -218,13 +221,9 @@ class SyntacticRelationExtractor:
 
         Returns
         -------
-        Relation
+        Optional[Relation]
             The Relation object representing the spacy relation
 
-        Raises
-        ------
-        RuntimeError
-            Raises when the medkit id attribute is not in the spacy entity (source/target)
         """
 
         attribute_medkit_id = spacy_utils._ATTR_MEDKIT_ID
@@ -232,9 +231,12 @@ class SyntacticRelationExtractor:
         target_id = target._.get(attribute_medkit_id)
 
         if source_id is None or target_id is None:
-            raise RuntimeError(
-                f"The attribute {attribute_medkit_id} was not transferred to spacy"
+            logging.warning(
+                f"Can't create a medkit Relation between `{source.text}` and"
+                f" `{target.text}`. Source or target entity has not been detected by"
+                " medkit but spacy pipeline, and it is not supported by this module."
             )
+            return None
 
         relation = Relation(
             source_id=source_id,

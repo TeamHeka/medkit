@@ -37,7 +37,7 @@ def test_load():
 
     assert relations_ent_t1[0].label == "treats"
     assert relations_ent_t1[0].target_id == entity_id_t3
-    assert entity_id_t3 not in doc.relation_by_source
+    assert entity_id_t3 not in doc.relations_by_source
 
     # check entity T4 disease
     entity_id_1 = doc.entities["disease"][1]
