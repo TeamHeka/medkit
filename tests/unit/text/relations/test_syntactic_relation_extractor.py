@@ -1,5 +1,4 @@
 import pytest
-from _pytest.logging import LogCaptureFixture
 import spacy.cli
 from medkit.text.relations import SyntacticRelationExtractor
 from medkit.core.text import TextDocument, Entity, Span, Relation
@@ -62,7 +61,6 @@ def test_relation_extractor(
         entities_source=entities_source,
         entities_target=entities_target,
         relation_label="syntactic_dep",
-        include_right_to_left_relations=True,
     )
     relation_extractor.run([medkit_doc])
 
@@ -75,37 +73,6 @@ def test_relation_extractor(
         source_ann = medkit_doc.get_annotation_by_id(relation.source_id)
         target_ann = medkit_doc.get_annotation_by_id(relation.target_id)
         assert [source_ann.label, target_ann.label] == exp_source_target[i]
-
-
-@pytest.mark.parametrize(
-    "include_right_to_left_relations",
-    [True, False],
-    ids=["with_right_to_left_relations", "without_right_to_left_relations"],
-)
-def test_include_right_to_left_relations(include_right_to_left_relations):
-    # in the phrase : 'la douleur abdominale est sévère' the relation goes from
-    # level (severe) to maladie (douleur abdominale), it is a right-to-left relation
-    medkit_doc = _get_medkit_doc()
-    relation_extractor = SyntacticRelationExtractor(
-        name_spacy_model="fr_core_news_sm",
-        entities_labels=["maladie", "level"],
-        entities_source=["maladie"],
-        entities_target=["level"],
-        relation_label="has_level",
-        include_right_to_left_relations=include_right_to_left_relations,
-    )
-    relation_extractor.run([medkit_doc])
-    maladie_ent = medkit_doc.get_annotations_by_label("maladie")[1]
-    relations_maladie = medkit_doc.get_relations_by_source_id(maladie_ent.id)
-    relations = medkit_doc.get_relations()
-
-    if include_right_to_left_relations:
-        assert relations_maladie
-        assert relations_maladie[0].id == relations[0].id
-        assert relations_maladie[0].metadata["dep_direction"] == "right_to_left"
-    else:
-        assert not relations_maladie
-        assert not relations
 
 
 def test_exceptions_model_not_compatible():
@@ -130,7 +97,7 @@ def _custom_component(doc):
     return doc
 
 
-def test_entities_without_medkit_id(caplog: LogCaptureFixture):
+def test_entities_without_medkit_id(caplog):
     # save custom nlp model in disk
     nlp = spacy.load("fr_core_news_sm", exclude=["tagger", "ner", "lemmatizer"])
     nlp.add_pipe("entity_without_id")
@@ -143,7 +110,6 @@ def test_entities_without_medkit_id(caplog: LogCaptureFixture):
         entities_source=["maladie"],
         entities_target=None,
         relation_label="has_level",
-        include_right_to_left_relations=True,
     )
     relation_extractor.run([medkit_doc])
 

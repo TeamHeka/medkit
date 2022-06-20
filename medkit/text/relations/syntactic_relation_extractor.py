@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 class DefaultConfig:
     name_spacy_model = "fr_core_news_sm"
     relation_label = "has_syntactic_rel"
-    include_right_to_left_relations = True
 
 
 class SyntacticRelationExtractor:
@@ -42,7 +41,6 @@ class SyntacticRelationExtractor:
         entities_labels: Optional[List[str]] = None,
         entities_source: Optional[List[str]] = None,
         entities_target: Optional[List[str]] = None,
-        include_right_to_left_relations: bool = DefaultConfig.include_right_to_left_relations,
         proc_id: Optional[str] = None,
     ):
         """Initialize the syntactic relation extractor
@@ -65,10 +63,6 @@ class SyntacticRelationExtractor:
         entities_target: List[str]
             Labels of medkit entities defined as target of the relation.
             If `None` (default) the target is the syntactic target.
-        include_right_to_left_relations:
-            Include relations that begin at the right-most entity. Since the reading
-            direction is generally from left to right, 'right-to-left' relations
-            may be less accurate depending on the use case.
         proc_id:
             Identifier of the relation extractor
 
@@ -88,7 +82,6 @@ class SyntacticRelationExtractor:
         self.id = proc_id
         self._prov_builder: Optional[ProvBuilder] = None
         self.relation_label = relation_label
-        self.include_right_to_left_relations = include_right_to_left_relations
         self.entities_source = entities_source
         self.entities_target = entities_target
 
@@ -163,6 +156,7 @@ class SyntacticRelationExtractor:
             for idx, e1 in enumerate(ents[:-1]):
                 e2 = ents[idx + 1]
                 right_child_tokens_of_e1 = [token.i for token in e1.rights]
+                left_child_tokens_of_e2 = [token.i for token in e2.lefts]
                 if any(token.i in right_child_tokens_of_e1 for token in e2):
                     # a relation left to right exist, e1 is the syntactic source
                     # of the relation, check if source or target is predefined
@@ -177,21 +171,19 @@ class SyntacticRelationExtractor:
                     if relation is not None:
                         relations.append(relation)
 
-                if self.include_right_to_left_relations:
-                    left_child_tokens_of_e2 = [token.i for token in e2.lefts]
-                    if any(token.i in left_child_tokens_of_e2 for token in e1):
-                        # a relation right to left exist, e2 is the syntactic source
-                        # of the relation, check if source or target is predefined
-                        source, target = self._define_source_target(e2, e1)
-                        relation = self._create_relation(
-                            source=source,
-                            target=target,
-                            metadata=dict(
-                                dep_tag=e1.root.dep_, dep_direction="right_to_left"
-                            ),
-                        )
-                        if relation is not None:
-                            relations.append(relation)
+                if any(token.i in left_child_tokens_of_e2 for token in e1):
+                    # a relation right to left exist, e2 is the syntactic source
+                    # of the relation, check if source or target is predefined
+                    source, target = self._define_source_target(e2, e1)
+                    relation = self._create_relation(
+                        source=source,
+                        target=target,
+                        metadata=dict(
+                            dep_tag=e1.root.dep_, dep_direction="right_to_left"
+                        ),
+                    )
+                    if relation is not None:
+                        relations.append(relation)
 
         return relations
 

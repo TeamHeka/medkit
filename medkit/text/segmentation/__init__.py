@@ -8,8 +8,8 @@ from .sentence_tokenizer import SentenceTokenizer
 from .syntagma_tokenizer import SyntagmaTokenizer
 
 
-spec = importlib.util.find_spec("PyRuSH")
-if spec is not None:
+_pyrush_is_available = importlib.util.find_spec("PyRuSH") is not None
+if _pyrush_is_available:
     # fmt: off
     from .rush_sentence_tokenizer import RushSentenceTokenizer  # noqa: F401
     __all__.append("RushSentenceTokenizer")
