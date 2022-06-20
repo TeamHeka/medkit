@@ -300,7 +300,6 @@ def test_point_between_characters():
         == "We found a point before the keyword: pour  and before avec, we should"
         " remove them."
     )
-    print(spans)
     assert spans == [
         Span(start=0, end=36),
         ModifiedSpan(length=1, replaced_spans=[Span(start=36, end=40)]),
