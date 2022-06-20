@@ -45,11 +45,10 @@ def clean_newline_character(
         The cleaned text and the list of spans updated
 
     """
-
-    text, spans = replace_newline_inside_sentence(text, spans)
     text, spans = replace_multiple_newline_after_sentence(text, spans)
+    text, spans = replace_newline_inside_sentence(text, spans)
     text, spans = _replace_text(
-        text, spans, pattern="\n", repl=".\n" if keep_endlines else ". "
+        text, spans, pattern="\n+", repl=".\n" if keep_endlines else ". "
     )
     return text, spans
 
@@ -87,7 +86,7 @@ def replace_point_after_keywords(
     keywords: List[str],
     strict: bool = False,
     replace_by: str = " ",
-):
+) -> Tuple[str, List[AnySpanType]]:
     """Replace the character `.` after a keyword and update its span.
     Could be used to replace dots that indicate the title of a person (i.e. M. or Mrs.)
     or some dots that appear by mistake after `keywords`
@@ -126,7 +125,7 @@ def replace_point_after_keywords(
 def replace_multiple_newline_after_sentence(
     text: str, spans: List[AnySpanType]
 ) -> Tuple[str, List[AnySpanType]]:
-    """Replace all (non-alphanumeric) characters between a newline
+    """Replace multiple space characters between a newline
     character `\\n` and a capital letter or a number with a single newline character.
 
     Parameters
@@ -141,7 +140,7 @@ def replace_multiple_newline_after_sentence(
         The cleaned text and the list of spans updated
 
     """
-    pattern = rf"(?P<blanks>\r?\n\W*)[{_NUMERIC_CHARS}{_UPPERCASE_CHARS}]"
+    pattern = rf"(?P<blanks>\r?\n[\t\r\n\t\s]*)[{_NUMERIC_CHARS}{_UPPERCASE_CHARS}]"
     replace_by = "\n"
     text, spans = _replace_text(text, spans, pattern, repl=replace_by, group="blanks")
     return text, spans
@@ -193,13 +192,22 @@ def _replace_big_parentheses(
         txt_in, span_in = span_utils.extract(text, spans, [match.span("txt_inside")])
         txt_af, span_af = span_utils.extract(text, spans, [match.span("txt_after")])
 
-        # insert characters before and after each group
-        txt_in, span_in = span_utils.insert(txt_in, span_in, [len(txt_in)], ["."])
-        txt_af, span_af = span_utils.insert(
-            txt_af, span_af, [0, len(txt_af)], [" ", " ; "]
-        )  # insert a space by default (eq: ' {text_af} ; ')
-        # create the new phrase
-        txt_new, span_new = span_utils.concatenate([txt_af, txt_in], [span_af, span_in])
+        if span_af:
+            # insert characters before and after each group
+            txt_in, span_in = span_utils.insert(txt_in, span_in, [len(txt_in)], ["."])
+            # insert a space by default (eq: ' {text_af} ; ')
+            txt_af, span_af = span_utils.insert(
+                txt_af, span_af, [0, len(txt_af)], [" ", " ; "]
+            )
+            # create the new phrase
+            txt_new, span_new = span_utils.concatenate(
+                [txt_af, txt_in], [span_af, span_in]
+            )
+        else:
+            # there is no text after (), insert ';' before
+            txt_new, span_new = span_utils.insert(
+                txt_in, span_in, [0, len(txt_in)], [" ; ", "."]
+            )
 
         # add the new phrase into the text. Extract text_before and text_after
         # from this match and concatenate all to update texp_tmp and spans
@@ -240,7 +248,9 @@ def _replace_text(
     return span_utils.replace(text, spans, ranges, [repl] * len(ranges))
 
 
-def replace_point_in_uppercase(text, spans):
+def replace_point_in_uppercase(
+    text: str, spans: List[AnySpanType]
+) -> Tuple[str, List[AnySpanType]]:
     """Replace the character `.` between uppercase characters
     with a space and update its span."""
     pattern = rf"[{_UPPERCASE_CHARS}](\.)[{_UPPERCASE_CHARS}]"
@@ -248,7 +258,9 @@ def replace_point_in_uppercase(text, spans):
     return text, spans
 
 
-def replace_point_in_numbers(text, spans):
+def replace_point_in_numbers(
+    text: str, spans: List[AnySpanType]
+) -> Tuple[str, List[AnySpanType]]:
     """Replace the character `.` between numbers
     with the character `,` a space and update its span."""
     pattern = rf"[{_NUMERIC_CHARS}](\.)[{_NUMERIC_CHARS}]"
@@ -256,10 +268,12 @@ def replace_point_in_numbers(text, spans):
     return text, spans
 
 
-def replace_point_before_keywords(text, spans, keywords: List[str]):
+def replace_point_before_keywords(
+    text: str, spans: List[AnySpanType], keywords: List[str]
+) -> Tuple[str, List[AnySpanType]]:
     """Replace the character `.` before a keyword
     with a space and update its span."""
     keywords_regexp = "|".join([rf"{keyword}\b" for keyword in keywords])
-    pattern = rf"(\.\s*)(?:{keywords_regexp})"
+    pattern = rf"(\s\.\s*)(?:{keywords_regexp})"
     text, spans = _replace_text(text, spans, pattern, " ", group=1)
     return text, spans
