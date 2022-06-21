@@ -67,23 +67,26 @@ def test_relation_extractor(
     relations = medkit_doc.get_relations()
     assert len(relations) == len(exp_source_target)
 
-    for i, relation in enumerate(relations):
+    for relation, exp_source_targets in zip(relations, exp_source_target):
         assert isinstance(relation, Relation)
         assert relation.label == "syntactic_dep"
         source_ann = medkit_doc.get_annotation_by_id(relation.source_id)
         target_ann = medkit_doc.get_annotation_by_id(relation.target_id)
-        assert [source_ann.label, target_ann.label] == exp_source_target[i]
+        assert [source_ann.label, target_ann.label] == exp_source_targets
 
 
-def test_exceptions_model_not_compatible():
-    with pytest.raises(OSError, match="[E941]"):
-        SyntacticRelationExtractor(
-            name_spacy_model="en",
-        )
-
-    with pytest.raises(ValueError, match="does not add syntax attributes"):
+def test_exceptions_init():
+    with pytest.raises(
+        ValueError,
+        match="does not add syntax attributes to documents and cannot be use",
+    ):
         SyntacticRelationExtractor(
             name_spacy_model="xx_sent_ud_sm",
+        )
+
+    with pytest.raises(ValueError, match="source/target must be in `entities_labels`"):
+        SyntacticRelationExtractor(
+            entities_labels=[], entities_source=["label1"], entities_target=["label2"]
         )
 
 
@@ -97,15 +100,16 @@ def _custom_component(doc):
     return doc
 
 
-def test_entities_without_medkit_id(caplog):
+def test_entities_without_medkit_id(caplog, tmp_path):
     # save custom nlp model in disk
+    model_path = tmp_path / "modified_model"
     nlp = spacy.load("fr_core_news_sm", exclude=["tagger", "ner", "lemmatizer"])
     nlp.add_pipe("entity_without_id")
-    nlp.to_disk("/tmp/modified_model")
+    nlp.to_disk(model_path)
 
     medkit_doc = _get_medkit_doc()
     relation_extractor = SyntacticRelationExtractor(
-        name_spacy_model="/tmp/modified_model",
+        name_spacy_model=model_path,
         entities_labels=None,
         entities_source=["maladie"],
         entities_target=None,
@@ -119,7 +123,7 @@ def test_entities_without_medkit_id(caplog):
     assert "Can't create a medkit Relation between" in caplog.text
 
     relations = medkit_doc.get_relations()
-    # should only relation between medkit entities
+    # it should only add relation between medkit entities
     assert len(relations) == 2
     maladie_ents = medkit_doc.get_annotations_by_label("maladie")
     assert relations[0].source_id == maladie_ents[0].id

@@ -70,6 +70,7 @@ class SyntacticRelationExtractor:
         ------
         ValueError
             If the spacy model defined by `name_spacy_model` does not parse a document
+            or if entities source/target are not in `entities_label`
         """
 
         if proc_id is None:
@@ -82,9 +83,6 @@ class SyntacticRelationExtractor:
         self.id = proc_id
         self._prov_builder: Optional[ProvBuilder] = None
         self.relation_label = relation_label
-        self.entities_source = entities_source
-        self.entities_target = entities_target
-
         nlp = spacy.load(name_spacy_model, exclude=["tagger", "ner", "lemmatizer"])
         if not nlp("X").has_annotation("DEP"):
             raise ValueError(
@@ -94,6 +92,16 @@ class SyntacticRelationExtractor:
         self._nlp = nlp
         self.name_spacy_model = name_spacy_model
         self.entities_labels = entities_labels
+        self.entities_source = entities_source
+        self.entities_target = entities_target
+
+        if self.entities_labels is not None:
+            if not all(
+                source in self.entities_labels for source in self.entities_source
+            ) or not all(
+                target in self.entities_labels for target in self.entities_target
+            ):
+                raise ValueError("Entities source/target must be in `entities_labels`")
 
     @property
     def description(self) -> OperationDescription:
