@@ -8,13 +8,8 @@ import re
 from typing import Iterator, List, Optional, Tuple
 
 import yaml
-from medkit.core import (
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
 
-from medkit.core.text import Segment, span_utils
+from medkit.core.text import Segment, SegmentationOperation, span_utils
 
 
 @dataclasses.dataclass
@@ -23,7 +18,7 @@ class DefaultConfig:
     keep_separator = True
 
 
-class SyntagmaTokenizer:
+class SyntagmaTokenizer(SegmentationOperation):
     """Syntagma segmentation annotator based on provided separators"""
 
     def __init__(
@@ -31,7 +26,7 @@ class SyntagmaTokenizer:
         separators: Tuple[str, ...],
         output_label: str = DefaultConfig.output_label,
         keep_separator: bool = DefaultConfig.keep_separator,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """
         Instantiate the syntagma tokenizer
@@ -47,32 +42,17 @@ class SyntagmaTokenizer:
             If True, the separators are kept in the detected syntagma
             If False, the syntagma text does not include the separator
             Default: True (cf. DefaultConfig)
-        proc_id: str, Optional
+        op_id: str, Optional
             Identifier of the tokenizer
         """
-        if proc_id is None:
-            proc_id = generate_id()
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
 
-        self.id = proc_id
         self.output_label = output_label
         self.separators = separators
         self.keep_separator = keep_separator
-
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(
-            output_label=self.output_label,
-            separators=self.separators,
-            keep_separator=self.keep_separator,
-        )
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -146,10 +126,6 @@ class SyntagmaTokenizer:
         separators = cls.load_syntagma_definition(config_path)
         syntagma_tokenizer = cls(separators=separators, keep_separator=keep_separator)
         return syntagma_tokenizer
-
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)
 
     @staticmethod
     def load_syntagma_definition(

@@ -12,13 +12,8 @@ import unidecode
 import yaml
 
 
-from medkit.core import (
-    Attribute,
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
-from medkit.core.text import Entity, Segment, span_utils
+from medkit.core import Attribute
+from medkit.core.text import Entity, NEROperation, Segment, span_utils
 
 
 logger = logging.getLogger(__name__)
@@ -106,7 +101,7 @@ class RegexpMatcherNormalization:
 _PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.yml"
 
 
-class RegexpMatcher:
+class RegexpMatcher(NEROperation):
     """Entity annotator relying on regexp-based rules
 
     For detecting entities, the module uses rules that may be sensitive to unicode or
@@ -121,7 +116,7 @@ class RegexpMatcher:
         self,
         rules: Optional[List[RegexpMatcherRule]] = None,
         attrs_to_copy: Optional[List[str]] = None,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """
         Instantiate the regexp matcher
@@ -135,11 +130,14 @@ class RegexpMatcher:
             Labels of the attributes that should be copied from the source segment
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
-        proc_id:
+        op_id:
             Identifier of the tokenizer
         """
-        if proc_id is None:
-            proc_id = generate_id()
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
+
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
         if attrs_to_copy is None:
@@ -147,7 +145,6 @@ class RegexpMatcher:
 
         assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
 
-        self.id: str = proc_id
         self.rules = rules
         self.attrs_to_copy = attrs_to_copy
 
@@ -168,18 +165,6 @@ class RegexpMatcher:
         self._has_non_unicode_sensitive_rule = any(
             not r.unicode_sensitive for r in rules
         )
-
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(rules=self.rules, attrs_to_copy=self.attrs_to_copy)
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]) -> List[Entity]:
         """
@@ -289,10 +274,6 @@ class RegexpMatcher:
                     )
 
             yield entity
-
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)
 
     @staticmethod
     def load_rules(path_to_rules) -> List[RegexpMatcherRule]:

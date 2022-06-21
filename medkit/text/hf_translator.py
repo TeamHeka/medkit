@@ -4,13 +4,13 @@ __all__ = ["HFTranslator"]
 
 from collections import defaultdict
 import dataclasses
-from typing import Dict, Iterator, List, Optional, Tuple
+from typing import Dict, Iterator, List, Tuple
 
 import torch
 import transformers
 from transformers import TranslationPipeline, BertModel, BertTokenizerFast
 
-from medkit.core import OperationDescription, ProvBuilder, generate_id
+from medkit.core.operation import Operation
 
 from medkit.core.text import Segment, ModifiedSpan, span_utils
 
@@ -25,7 +25,7 @@ class DefaultConfig:
     device: int = -1  # -1 corresponds to the cpu else device number
 
 
-class HFTranslator:
+class HFTranslator(Operation):
     """Translator based on a Hugging Face transformers model
 
     For segment given in input, a translated segment will be returned.
@@ -48,7 +48,7 @@ class HFTranslator:
         alignment_layer: int = DefaultConfig.alignment_layer,
         alignment_threshold: float = DefaultConfig.alignment_threshold,
         device: int = DefaultConfig.device,
-        proc_id: str = None,
+        op_id: str = None,
     ):
         """
         Parameters
@@ -69,13 +69,14 @@ class HFTranslator:
         device:
             Device to use for pytorch models. Follows the Hugging Face convention (-1 for "cpu"
             and device number for gpu, for instance 0 for "cuda:0")
-        proc_id:
+        op_id:
             Identifier of the translator
         """
-        if proc_id is None:
-            proc_id = generate_id()
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
 
-        self.id = proc_id
         self.output_label = output_label
         self.translation_model = translation_model
         self.alignment_model = alignment_model
@@ -102,24 +103,6 @@ class HFTranslator:
             threshold=self.alignment_threshold,
             device=self.device,
         )
-
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(
-            output_label=self.output_label,
-            translation_model=self.translation_model,
-            alignment_model=self.alignment_model,
-            alignment_layer=self.alignment_layer,
-            alignment_threshold=self.alignment_threshold,
-        )
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -217,10 +200,6 @@ class HFTranslator:
 
         assert sum(s.length for s in translated_spans) == len(translated_text)
         return translated_spans
-
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)
 
 
 """Alignment data structure

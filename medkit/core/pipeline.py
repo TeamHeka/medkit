@@ -28,7 +28,7 @@ from medkit.core.prov_builder import ProvBuilder
 @runtime_checkable
 class PipelineCompatibleOperation(Protocol):
     def run(
-        self, **all_input_data: List[Any]
+        self, *all_input_data: List[Any]
     ) -> Union[None, List[Any], Tuple[List[Any], ...]]:
         """Params
         ------

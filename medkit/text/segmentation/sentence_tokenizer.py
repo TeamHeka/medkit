@@ -6,12 +6,7 @@ import dataclasses
 import re
 from typing import Iterator, List, Optional, Tuple
 
-from medkit.core import (
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
-from medkit.core.text import Segment, span_utils
+from medkit.core.text import Segment, SegmentationOperation, span_utils
 
 
 @dataclasses.dataclass(frozen=True)
@@ -21,7 +16,7 @@ class DefaultConfig:
     keep_punct = False
 
 
-class SentenceTokenizer:
+class SentenceTokenizer(SegmentationOperation):
     """Sentence segmentation annotator based on end punctuation rules"""
 
     def __init__(
@@ -29,7 +24,7 @@ class SentenceTokenizer:
         output_label: str = DefaultConfig.output_label,
         punct_chars: Tuple[str] = DefaultConfig.punct_chars,
         keep_punct: bool = DefaultConfig.keep_punct,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """
         Instantiate the sentence tokenizer
@@ -46,32 +41,17 @@ class SentenceTokenizer:
             If True, the end punctuations are kept in the detected sentence.
             If False, the sentence text does not include the end punctuations
             Default: False (cf. DefaultConfig)
-        proc_id: str, Optional
+        op_id: str, Optional
             Identifier of the tokenizer
         """
-        if proc_id is None:
-            proc_id = generate_id()
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
 
-        self.id: str = proc_id
         self.output_label = output_label
         self.punct_chars = punct_chars
         self.keep_punct = keep_punct
-
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(
-            output_label=self.output_label,
-            punct_chars=self.punct_chars,
-            keep_punct=self.keep_punct,
-        )
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -130,7 +110,3 @@ class SentenceTokenizer:
                 )
 
             yield sentence
-
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)

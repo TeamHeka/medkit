@@ -9,13 +9,8 @@ from typing import List, Optional
 import unidecode
 import yaml
 
-from medkit.core import (
-    Attribute,
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
-from medkit.core.text import Segment
+from medkit.core import Attribute
+from medkit.core.text import ContextOperation, Segment
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +56,7 @@ class NegationDetectorRule:
         )
 
 
-class NegationDetector:
+class NegationDetector(ContextOperation):
     """Annotator creating negation Attributes with True/False values
 
     Because negation attributes will be attached to whole annotations,
@@ -80,7 +75,7 @@ class NegationDetector:
         self,
         output_label: str,
         rules: Optional[List[NegationDetectorRule]] = None,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """Instantiate the negation detector
 
@@ -91,17 +86,19 @@ class NegationDetector:
         rules:
             The set of rules to use when detecting negation. If none provided,
             the rules in "negation_detector_default_rules.yml" will be used
-        proc_id:
+        op_id:
             Identifier of the detector
         """
-        if proc_id is None:
-            proc_id = generate_id()
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
+
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
 
         assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
 
-        self.id: str = proc_id
         self.output_label = output_label
         self.rules = rules
 
@@ -126,18 +123,6 @@ class NegationDetector:
         self._has_non_unicode_sensitive_rule = any(
             not r.unicode_sensitive for r in rules
         )
-
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(output_label=self.output_label, rules=self.rules)
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]):
         """Add a negation attribute to each segment with a True/False value.
