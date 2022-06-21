@@ -9,12 +9,7 @@ from typing import Iterator, List, Optional, Union
 
 from PyRuSH import RuSH
 
-from medkit.core import (
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
-from medkit.core.text import Segment, span_utils
+from medkit.core.text import Segment, SegmentationOperation, span_utils
 
 
 @dataclasses.dataclass(frozen=True)
@@ -29,7 +24,7 @@ _PATH_TO_DEFAULT_RULES = (
 )
 
 
-class RushSentenceTokenizer:
+class RushSentenceTokenizer(SegmentationOperation):
     """Sentence segmentation annotator based on PyRuSH."""
 
     def __init__(
@@ -37,7 +32,7 @@ class RushSentenceTokenizer:
         output_label: str = DefaultConfig.output_label,
         path_to_rules: Union[str, Path] = DefaultConfig.path_to_rules,
         keep_newlines: bool = DefaultConfig.keep_newlines,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """
         Instantiate the RuSH tokenizer
@@ -55,36 +50,21 @@ class RushSentenceTokenizer:
             With the default rules, newline chars are not used to split
             sentences, therefore a sentence maybe contain one or more newline chars.
             If `keep_newlines` is False, newlines will be replaced by spaces.
-        proc_id:
+        op_id:
             Identifier of the tokenizer
         """
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
 
-        if proc_id is None:
-            proc_id = generate_id()
         if path_to_rules is None:
             path_to_rules = _PATH_TO_DEFAULT_RULES
 
-        self.id: str = proc_id
         self.output_label = output_label
         self.path_to_rules = path_to_rules
         self.keep_newlines = keep_newlines
         self._rush = RuSH(str(path_to_rules))
-
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(
-            output_label=self.output_label,
-            path_to_rules=self.path_to_rules,
-            keep_newlines=self.keep_newlines,
-        )
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -132,7 +112,3 @@ class RushSentenceTokenizer:
                 )
 
             yield sentence
-
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)

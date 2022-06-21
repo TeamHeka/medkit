@@ -3,9 +3,9 @@ from __future__ import annotations
 __all__ = ["Normalizer", "NormalizerRule"]
 
 import re
-from typing import List, Optional, NamedTuple
+from typing import List, NamedTuple
 
-from medkit.core import generate_id, OperationDescription, ProvBuilder
+from medkit.core.operation import Operation
 from medkit.core.text import Segment, span_utils
 
 
@@ -14,7 +14,7 @@ class NormalizerRule(NamedTuple):
     new_text: str
 
 
-class Normalizer:
+class Normalizer(Operation):
     """
     Generic normalizer to be used as pre-processing module
 
@@ -28,7 +28,7 @@ class Normalizer:
         self,
         output_label: str,
         rules: List[NormalizerRule] = None,
-        proc_id: str = None,
+        op_id: str = None,
     ):
         """
         TODO: change default output_label
@@ -38,12 +38,14 @@ class Normalizer:
             The output label of the created annotations
         rules
             The list of normalization rules
-        proc_id
+        op_id
             Identifier of the pre-processing module
         """
-        if proc_id is None:
-            proc_id = generate_id()
-        self.id = proc_id
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
+
         self.output_label = output_label
         if rules is None:
             rules = []
@@ -53,21 +55,6 @@ class Normalizer:
         regex_rule = r"|".join(regex_rules)
 
         self._pattern = re.compile(regex_rule)
-
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(
-            output_label=self.output_label,
-            rules=self.rules,
-        )
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -119,7 +106,3 @@ class Normalizer:
             )
 
         yield normalized_text
-
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)

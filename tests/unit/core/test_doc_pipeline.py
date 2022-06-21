@@ -102,15 +102,17 @@ def test_single_step():
         input_keys=["SENTENCE"],
         output_keys=["UPPERCASE"],
     )
-
-    pipeline = DocPipeline(
+    pipeline = Pipeline(
         steps=[step],
-        labels_by_input_key={"SENTENCE": ["sentence"]},
-        output_keys=["UPPERCASE"],
+        input_keys=step.input_keys,
+        output_keys=step.output_keys,
+    )
+    doc_pipeline = DocPipeline(
+        pipeline=pipeline, labels_by_input_key={"SENTENCE": ["sentence"]}
     )
 
     doc = _get_doc()
-    pipeline.run([doc])
+    doc_pipeline.run([doc])
 
     sentence_anns = doc.get_annotations_by_label("sentence")
 
@@ -138,14 +140,17 @@ def test_multiple_steps():
         output_keys=["PREFIX"],
     )
 
-    pipeline = DocPipeline(
+    pipeline = Pipeline(
         steps=[step_1, step_2],
-        labels_by_input_key={"SENTENCE": ["sentence"]},
-        output_keys=["PREFIX"],
+        input_keys=step_1.input_keys,
+        output_keys=step_2.output_keys,
     )
 
+    doc_pipeline = DocPipeline(
+        pipeline=pipeline, labels_by_input_key={"SENTENCE": ["sentence"]}
+    )
     doc = _get_doc()
-    pipeline.run([doc])
+    doc_pipeline.run([doc])
 
     sentence_anns = doc.get_annotations_by_label("sentence")
 
@@ -170,12 +175,13 @@ def test_no_output():
         output_keys=[],
     )
 
-    pipeline = DocPipeline(
-        steps=[step_1], labels_by_input_key={"SENTENCE": ["sentence"]}, output_keys=[]
-    )
+    pipeline = Pipeline(steps=[step_1], input_keys=step_1.input_keys, output_keys=[])
 
+    doc_pipeline = DocPipeline(
+        pipeline=pipeline, labels_by_input_key={"SENTENCE": ["sentence"]}
+    )
     doc = _get_doc()
-    pipeline.run([doc])
+    doc_pipeline.run([doc])
 
     sentence_anns = doc.get_annotations_by_label("sentence")
     for ann in sentence_anns:
@@ -201,14 +207,17 @@ def test_multiple_outputs():
         output_keys=["PREFIX"],
     )
 
-    pipeline = DocPipeline(
+    pipeline = Pipeline(
         steps=[step_1, step_2],
-        labels_by_input_key={"SENTENCE": ["sentence"]},
-        output_keys=["UPPERCASE", "PREFIX"],
+        input_keys=step_1.input_keys,
+        output_keys=step_1.output_keys + step_2.output_keys,
     )
 
+    doc_pipeline = DocPipeline(
+        pipeline=pipeline, labels_by_input_key={"SENTENCE": ["sentence"]}
+    )
     doc = _get_doc()
-    pipeline.run([doc])
+    doc_pipeline.run([doc])
 
     sentence_anns = doc.get_annotations_by_label("sentence")
     uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
@@ -253,13 +262,17 @@ def test_labels_for_input_key():
         "ENTITY": ["entity"],
     }
 
-    pipeline = DocPipeline(
+    pipeline = Pipeline(
         steps=[step_1, step_2],
-        labels_by_input_key=labels_by_input_key,
-        output_keys=["UPPERCASE", "PREFIX"],
+        input_keys=step_1.input_keys + step_2.input_keys,
+        output_keys=step_1.output_keys + step_2.output_keys,
     )
 
-    pipeline.run([doc])
+    doc_pipeline = DocPipeline(
+        pipeline=pipeline,
+        labels_by_input_key=labels_by_input_key,
+    )
+    doc_pipeline.run([doc])
     sentence_anns = doc.get_annotations_by_label("sentence")
     alt_sentence_anns = doc.get_annotations_by_label("alt_sentence")
     uppercased_sentence_anns = doc.get_annotations_by_label("uppercased_sentence")
@@ -286,15 +299,18 @@ def test_nested_pipeline():
         output_keys=["UPPERCASE"],
     )
 
-    sub_pipeline = DocPipeline(
+    sub_pipeline = Pipeline(
         steps=[sub_step],
-        labels_by_input_key={"SENTENCE": ["sentence"]},
-        output_keys=["UPPERCASE"],
+        input_keys=sub_step.input_keys,
+        output_keys=sub_step.output_keys,
+    )
+    doc_sub_pipeline = DocPipeline(
+        pipeline=sub_pipeline, labels_by_input_key={"SENTENCE": ["sentence"]}
     )
 
     # wrap it in main pipeline
     step = PipelineStep(
-        operation=sub_pipeline,
+        operation=doc_sub_pipeline,
         input_keys=["DOC"],
         output_keys=[],
     )
@@ -319,14 +335,17 @@ def test_key_group():
         output_keys=["UPPERCASE"],
     )
 
-    pipeline = DocPipeline(
+    pipeline = Pipeline(
         [step],
-        labels_by_input_key={"SENTENCE": ["sentence"]},
-        output_keys=["UPPERCASE"],
+        input_keys=step.input_keys,
+        output_keys=step.output_keys,
     )
 
+    doc_pipeline = DocPipeline(
+        pipeline=pipeline, labels_by_input_key={"SENTENCE": ["sentence"]}
+    )
     doc = _get_doc()
-    pipeline.run([doc])
+    doc_pipeline.run([doc])
 
     uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
     for ann in uppercased_anns:

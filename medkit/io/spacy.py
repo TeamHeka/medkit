@@ -21,7 +21,7 @@ class SpacyInputConverter:
         entities: Optional[List[str]] = None,
         span_groups: Optional[List[str]] = None,
         attrs: Optional[List[str]] = None,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """Initialize the spacy input converter
 
@@ -38,14 +38,14 @@ class SpacyInputConverter:
         attrs:
             Name of span extensions to convert into medkit attributes.
             If `None` (default) all non-None extensions will be added for each annotation
-        proc_id:
+        op_id:
             Identifier of the converter
         """
 
-        if proc_id is None:
-            proc_id = generate_id()
+        if op_id is None:
+            op_id = generate_id()
 
-        self.id = proc_id
+        self.id = op_id
         self._prov_builder: Optional[ProvBuilder] = None
 
         self.entities = entities
@@ -96,7 +96,7 @@ class SpacyInputConverter:
 
     @classmethod
     def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)
+        return cls(op_id=description.id, **description.config)
 
     def _load_anns(self, spacy_doc: Doc):
         annotations, attributes_by_ann = extract_anns_and_attrs_from_spacy_doc(
@@ -136,7 +136,7 @@ class SpacyOutputConverter:
         apply_nlp_spacy: bool = False,
         labels_anns: Optional[List[str]] = None,
         attrs: Optional[List[str]] = None,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """Initialize the spacy output converter
 
@@ -157,14 +157,14 @@ class SpacyOutputConverter:
             Labels of medkit attributes to add in the annotations that will be included.
             If `None` (default) all the attributes will be added as `custom attributes`
             in each annotation included.
-        proc_id:
+        op_id:
             Identifier of the pipeline
 
         """
-        if proc_id is None:
-            proc_id = generate_id()
+        if op_id is None:
+            op_id = generate_id()
 
-        self.id = proc_id
+        self.id = op_id
         self._prov_builder: Optional[ProvBuilder] = None
 
         self.nlp = nlp

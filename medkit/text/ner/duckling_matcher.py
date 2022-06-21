@@ -4,16 +4,11 @@ import requests
 from typing import Iterator, List, Optional
 import warnings
 
-from medkit.core import (
-    Attribute,
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
-from medkit.core.text import Entity, Segment, span_utils
+from medkit.core import Attribute
+from medkit.core.text import Entity, NEROperation, Segment, span_utils
 
 
-class DucklingMatcher:
+class DucklingMatcher(NEROperation):
     """Entity annotator using Ducking (https://github.com/facebook/duckling).
 
     This annotator can parse several types of information in multiple languages:
@@ -35,7 +30,7 @@ class DucklingMatcher:
         locale: str = "fr_FR",
         dims: Optional[List[str]] = None,
         attrs_to_copy: Optional[List[str]] = None,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """Instantiate the Duckling matcher
 
@@ -56,12 +51,14 @@ class DucklingMatcher:
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
         """
-        if proc_id is None:
-            proc_id = generate_id()
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
+
         if attrs_to_copy is None:
             attrs_to_copy = []
 
-        self.id: str = proc_id
         self.output_label: str = output_label
         self.version: str = version
         self.url: str = url
@@ -69,26 +66,7 @@ class DucklingMatcher:
         self.dims: Optional[List[str]] = dims
         self.attrs_to_copy: List[str] = attrs_to_copy
 
-        self._prov_builder: Optional[ProvBuilder] = None
-
         self._test_connection()
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(
-            output_label=self.output_label,
-            version=self.version,
-            url=self.url,
-            locale=self.locale,
-            dims=self.dims,
-            attrs_to_copy=self.attrs_to_copy,
-        )
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]) -> List[Entity]:
         """Return entities for each match in `segments`
@@ -170,7 +148,3 @@ class DucklingMatcher:
             raise ConnectionError(
                 f"The duckling server did not respond correctly at {self.url}"
             )
-
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)

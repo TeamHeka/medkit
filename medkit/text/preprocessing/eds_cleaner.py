@@ -1,9 +1,9 @@
 __all__ = ["EDSCleaner"]
 
 import dataclasses
-from typing import List, Optional
+from typing import List
 
-from medkit.core import OperationDescription, ProvBuilder, generate_id
+from medkit.core import Operation
 from medkit.core.text import Segment, utils
 
 # predefined configuration for french documents
@@ -33,7 +33,7 @@ class DefaultConfig:
     handle_points_eds = True
 
 
-class EDSCleaner:
+class EDSCleaner(Operation):
     """
     EDS pre-processing annotation module
 
@@ -49,7 +49,7 @@ class EDSCleaner:
         keep_endlines: bool = DefaultConfig.keep_endlines,
         handle_parentheses_eds: bool = DefaultConfig.handle_parentheses_eds,
         handle_points_eds: bool = DefaultConfig.handle_points_eds,
-        proc_id: str = None,
+        op_id: str = None,
     ):
         """
         Instantiate the endlines handler.
@@ -70,33 +70,18 @@ class EDSCleaner:
             Modify points near to predefined keywords for french documents
             If True (default), modify the points near to keywords
             If False, the points near to keywords is not modified
-        proc_id
+        op_id
             Identifier of the pre-processing module
         """
-        if proc_id is None:
-            proc_id = generate_id()
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
 
-        self.id: str = proc_id
         self.output_label = output_label
         self.keep_endlines = keep_endlines
         self.handle_parentheses_eds = handle_parentheses_eds
         self.handle_points_eds = handle_points_eds
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(
-            output_label=self.output_label,
-            keep_endlines=self.keep_endlines,
-            handle_parentheses_eds=self.handle_parentheses_eds,
-            handle_points_eds=self.handle_points_eds,
-        )
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -172,7 +157,3 @@ class EDSCleaner:
             )
 
         yield clean_text
-
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)

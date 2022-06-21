@@ -4,12 +4,12 @@ from typing import List, Optional, Union
 
 from spacy import Language
 
-from medkit.core import Collection, OperationDescription, ProvBuilder, generate_id
+from medkit.core import Collection, DocOperation
 from medkit.core.text import TextDocument
 from medkit.text.spacy import spacy_utils
 
 
-class SpacyDocPipeline:
+class SpacyDocPipeline(DocOperation):
     """DocPipeline to obtain annotations created using spacy"""
 
     def __init__(
@@ -20,7 +20,7 @@ class SpacyDocPipeline:
         spacy_entities: Optional[List[str]] = None,
         spacy_span_groups: Optional[List[str]] = None,
         spacy_attrs: Optional[List[str]] = None,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """Initialize the pipeline
 
@@ -47,15 +47,14 @@ class SpacyDocPipeline:
             Name of span extensions to convert into medkit attributes.
             If `None` (default) all non-None extensions will be added for each annotation with
             a medkit ID.
-        proc_id:
+        op_id:
             Identifier of the pipeline
 
         """
-        if proc_id is None:
-            proc_id = generate_id()
-
-        self.id = proc_id
-        self._prov_builder: Optional[ProvBuilder] = None
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
 
         self.nlp = nlp
         self.medkit_labels_anns = medkit_labels_anns
@@ -63,25 +62,6 @@ class SpacyDocPipeline:
         self.spacy_entities = spacy_entities
         self.spacy_span_groups = spacy_span_groups
         self.spacy_attrs = spacy_attrs
-
-    @property
-    def description(self) -> OperationDescription:
-        # medkit does not support serialisation of nlp objects,
-        # however version information like model name, author etc. is stored
-        config = dict(
-            nlp_metadata=self.nlp.meta,
-            medkit_labels_anns=self.medkit_labels_anns,
-            medkit_attrs=self.medkit_attrs,
-            spacy_entities=self.spacy_entities,
-            spacy_span_groups=self.spacy_span_groups,
-            spacy_attrs=self.spacy_attrs,
-        )
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, medkit_docs: Union[List[TextDocument], Collection]) -> None:
         """Run a spacy pipeline on a list of medkit documents.
