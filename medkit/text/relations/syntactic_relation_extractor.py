@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Union
 import spacy
 from spacy.tokens import Doc, Span as SpacySpan
 
-from medkit.core import OperationDescription, ProvBuilder, generate_id
+from medkit.core.operation import DocOperation
 from medkit.core.text import Relation, TextDocument
 from medkit.text.spacy import spacy_utils
 
@@ -20,7 +20,7 @@ class DefaultConfig:
     relation_label = "has_syntactic_rel"
 
 
-class SyntacticRelationExtractor:
+class SyntacticRelationExtractor(DocOperation):
     """Extractor of syntactic relations between entities in a TextDocument.
     The relation relies on the dependency parser from a spacy pipeline.
 
@@ -41,7 +41,7 @@ class SyntacticRelationExtractor:
         entities_labels: Optional[List[str]] = None,
         entities_source: Optional[List[str]] = None,
         entities_target: Optional[List[str]] = None,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """Initialize the syntactic relation extractor
 
@@ -63,7 +63,7 @@ class SyntacticRelationExtractor:
         entities_target: List[str]
             Labels of medkit entities defined as target of the relation.
             If `None` (default) the target is the syntactic target.
-        proc_id:
+        op_id:
             Identifier of the relation extractor
 
         Raises
@@ -72,17 +72,16 @@ class SyntacticRelationExtractor:
             If the spacy model defined by `name_spacy_model` does not parse a document
             or if entities source/target are not in `entities_label`
         """
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
 
-        if proc_id is None:
-            proc_id = generate_id()
         if entities_source is None:
             entities_source = []
         if entities_target is None:
             entities_target = []
 
-        self.id = proc_id
-        self._prov_builder: Optional[ProvBuilder] = None
-        self.relation_label = relation_label
         nlp = spacy.load(name_spacy_model, exclude=["tagger", "ner", "lemmatizer"])
         if not nlp("X").has_annotation("DEP"):
             raise ValueError(
@@ -94,6 +93,7 @@ class SyntacticRelationExtractor:
         self.entities_labels = entities_labels
         self.entities_source = entities_source
         self.entities_target = entities_target
+        self.relation_label = relation_label
 
         if self.entities_labels is not None:
             if not all(
@@ -102,23 +102,6 @@ class SyntacticRelationExtractor:
                 target in self.entities_labels for target in self.entities_target
             ):
                 raise ValueError("Entities source/target must be in `entities_labels`")
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(
-            name_spacy_model=self.name_spacy_model,
-            entities_source=self.entities_source,
-            entities_labels=self.entities_labels,
-            entities_target=self.entities_target,
-            relation_label=self.relation_label,
-            include_right_to_left_relations=self.include_right_to_left_relations,
-        )
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, documents: List[TextDocument]):
         """Add relations to each document from `documents`
