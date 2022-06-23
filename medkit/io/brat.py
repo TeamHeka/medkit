@@ -1,7 +1,6 @@
 __all__ = ["BratInputConverter"]
-
 from pathlib import Path
-from typing import Optional, Union, ValuesView
+from typing import Optional, Union, ValuesView, List
 import warnings
 
 from smart_open import open
@@ -17,6 +16,10 @@ from medkit.core import (
 )
 from medkit.core.text import TextDocument, Entity, Relation, Span
 import medkit.io._brat_utils as brat_utils
+
+TEXT_EXT = ".txt"
+ANN_EXT = ".ann"
+ANN_CONF_FILE = "annotation.conf"
 
 
 class BratInputConverter(InputConverter):
@@ -39,7 +42,10 @@ class BratInputConverter(InputConverter):
         self._prov_builder = prov_builder
 
     def load(
-        self, dir_path: Union[str, Path], ann_ext: str = ".ann", text_ext: str = ".txt"
+        self,
+        dir_path: Union[str, Path],
+        ann_ext: str = ANN_EXT,
+        text_ext: str = TEXT_EXT,
     ) -> Collection:
         """
         Create a Collection of TextDocuments from a folder containting text files
@@ -171,3 +177,152 @@ class BratInputConverter(InputConverter):
                 )
 
         return anns_by_brat_id.values()
+
+
+class BratOutputConverter:
+    """Class in charge of converting a list/Collection of TextDocuments into a
+    list of brat annotations files"""
+
+    def __init__(
+        self,
+        label_anns: Optional[List[str]] = None,
+        attrs: Optional[List[str]] = None,
+        op_id: Optional[str] = None,
+    ):
+        self.label_anns = label_anns
+        self.attrs = attrs
+        self.op_id: str = op_id
+        self._prov_builder: Optional[ProvBuilder] = None
+
+    @property
+    def description(self) -> OperationDescription:
+        return OperationDescription(id=self.id, name=self.__class__.__name__)
+
+    def set_prov_builder(self, prov_builder: ProvBuilder):
+        self._prov_builder = prov_builder
+
+    def convert(
+        self,
+        medkit_docs: Union[List[TextDocument], Collection],
+        output_path: Union[str, Path],
+    ):
+        """Convert a collection of TextDocuments into a brat collection
+        For each collection or list of documents, a folder is created with
+        the txt and ann files."""
+
+        if isinstance(medkit_docs, Collection):
+            medkit_docs = [
+                medkit_doc
+                for medkit_doc in medkit_docs.documents
+                if isinstance(medkit_doc, TextDocument)
+            ]
+
+        output_path = Path(output_path)
+        if not output_path.exists():
+            output_path.mkdir(parents=True, exist_ok=True)
+
+        for medkit_doc in medkit_docs:
+            doc_id = medkit_doc.id
+
+            if medkit_doc.text is not None:
+                text_path = output_path / f"{doc_id}{TEXT_EXT}"
+                with text_path.open("w", encoding="utf-8") as f:
+                    f.write(medkit_doc.text)
+
+            entities, relations, attrs = self._get_anns_from_medkit_doc(medkit_doc)
+            brat_str = self._create_brat_from_anns(entities, relations, attrs)
+            ann_path = output_path / f"{doc_id}{ANN_EXT}"
+            with ann_path.open("w", encoding="utf-8") as f:
+                f.write(brat_str)
+
+        # WIP: generate annotation_conf file
+        ann_conf = self._generate_ann_conf(entities)
+        conf_path = output_path / ANN_CONF_FILE
+        with conf_path.open("w", encoding="utf-8") as f:
+            f.write(ann_conf)
+
+    def _get_anns_from_medkit_doc(self, medkit_doc: TextDocument):
+        annotations = medkit_doc.get_annotations()
+
+        if self.label_anns is not None:
+            # filter annotations by label
+            annotations = [ann for ann in annotations if ann.label in self.label_anns]
+
+        if self.label_anns and annotations == []:
+            # labels_anns were a list but none of the annotations
+            # had a label of interest
+            labels_str = ",".join(self.label_anns)
+            warnings.warn(
+                "No medkit annotations were included because none have"
+                f" '{labels_str}' as label."
+            )
+
+        if self.attrs is None:
+            # include all atributes
+            attrs = set(attr.label for ann in annotations for attr in ann.attrs)
+
+        entities = []
+        relations = []
+        # TBD: brat has Entity as a text bound annotation,
+        #  should we export segment as entity ?
+        for ann in annotations:
+            if isinstance(ann, Entity):
+                entities.append(ann)
+            elif isinstance(ann, Relation):
+                relations.append(ann)
+
+        return entities, relations, attrs
+
+    def _create_brat_from_anns(
+        self, entities: List[Entity], relations: List[Relation], attrs: List[str]
+    ):
+        brat_annotations = ""
+        nb_segment, nb_relation, nb_atribute = 1, 1, 1
+        brat_id_by_entity_id = dict()
+
+        # First convert segments then relations including its attributes
+        for medkit_entity in entities:
+            brat_id, brat_entity = brat_utils._get_brat_from_segment(
+                nb_segment, medkit_entity
+            )
+            brat_id_by_entity_id[medkit_entity.id] = brat_id
+            brat_annotations += brat_entity
+            nb_segment += 1
+            # include selected attributes
+            for attr in medkit_entity.attrs:
+                if attr.label in attrs:
+                    attrs_brat = brat_utils._get_brat_from_attribute(
+                        nb_atribute, attr, target_brat_id=brat_id
+                    )
+                    nb_atribute += 1
+                    brat_annotations += attrs_brat
+
+        for medkit_relation in relations:
+            brat_id, relation_brat = brat_utils._get_brat_from_relation(
+                nb_relation, medkit_relation, brat_id_by_entity_id
+            )
+            brat_annotations += relation_brat
+            nb_relation += 1
+            # include selected attributes
+            for attr in medkit_relation.attrs:
+                if attr.label in attrs:
+                    attrs_brat = brat_utils._get_brat_from_attribute(
+                        nb_atribute, attr, target_brat_id=brat_id
+                    )
+                    nb_atribute += 1
+                    brat_annotations += attrs_brat
+
+        return brat_annotations
+
+    def _generate_ann_conf(self, entities):
+        """WIP: Generate a annotation configuration file for brat
+        Its divided into [entities],[relations],[events] (not supported in medkit)
+        and [attributes]"""
+        annotation_conf = "[entities]\n\n"
+        entity_section = "\n".join(set(ent.label for ent in entities))
+        annotation_conf += entity_section
+
+        annotation_conf += "[relations]\n\n"
+        annotation_conf += "[attributes]\n\n"
+
+        return annotation_conf

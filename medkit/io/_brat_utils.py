@@ -5,6 +5,10 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Union
 
 from smart_open import open
+from medkit.core.text.annotation import Segment, Relation as MedkitRelation
+from medkit.core import Attribute as MedkitAttribute
+
+from medkit.core.text.span_utils import normalize_spans
 
 GROUPING_ENTITIES = frozenset(["And-Group", "Or-Group"])
 GROUPING_RELATIONS = frozenset(["And", "Or"])
@@ -319,3 +323,46 @@ def _parse_attribute(attribute_id: str, attribute_content: str) -> Attribute:
         attribute_target.strip(),
         attribute_value,
     )
+
+
+def _get_brat_from_segment(nb_segment: int, medkit_segment: Segment):
+    brat_id = f"T{nb_segment}"
+    label = medkit_segment.label
+    text = medkit_segment.text
+
+    spans = normalize_spans(medkit_segment.spans)
+    spans_str = ";".join(f"{span.start} {span.end}" for span in spans)
+
+    brat_line = f"{brat_id}\t{label} {spans_str}\t{text}\n"
+
+    return brat_id, brat_line
+
+
+def _get_brat_from_relation(
+    nb_relation: int,
+    medkit_relation: MedkitRelation,
+    brat_id_by_segment_id: Dict[str, int],
+):
+    brat_id = f"R{nb_relation}"
+    label = medkit_relation.label
+    subj = brat_id_by_segment_id.get(medkit_relation.source_id, None)
+    obj = brat_id_by_segment_id.get(medkit_relation.target_id, None)
+
+    if subj is None or obj is None:
+        raise ValueError(
+            "Imposible to create brat relation, entity target/source was not found."
+        )
+
+    brat_line = f"{brat_id}\t{label} Arg1:{subj} Arg2:{obj}\n"
+    return brat_id, brat_line
+
+
+def _get_brat_from_attribute(
+    nb_atribute: int, attr: MedkitAttribute, target_brat_id: str
+):
+    # medkit attrs to brat attr
+    brat_id = f"A{nb_atribute}"
+    label = attr.label
+    value = "" if attr.value is None else f" {attr.value}"
+    brat_line = f"{brat_id}\t{label} {target_brat_id}{value}\n"
+    return brat_line
