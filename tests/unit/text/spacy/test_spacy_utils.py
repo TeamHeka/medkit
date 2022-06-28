@@ -157,7 +157,6 @@ def test_medkit_to_spacy_doc_all_anns(nlp_spacy):
 
 
 def test_medkit_to_spacy_doc_all_anns_family_attr(nlp_spacy):
-
     medkit_doc = _get_doc()
     raw_segment = medkit_doc.raw_segment
     spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(

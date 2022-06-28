@@ -276,7 +276,6 @@ def test_input_converter_segments_transfer(
 
 
 def test_prov(nlp_spacy):
-
     # create a spacy doc containing 2 entities and two span groups
     doc = _get_doc_spacy(nlp_spacy)
 
