@@ -82,26 +82,27 @@ class SyntacticRelationExtractor(DocOperation):
         if entities_target is None:
             entities_target = []
 
+        # check coherence between labels
+        if entities_labels is not None:
+            if not all(
+                source in entities_labels for source in entities_source
+            ) or not all(target in entities_labels for target in entities_target):
+                raise ValueError("Entities source/target must be in `entities_labels`")
+
+        # load nlp object and validate it
         nlp = spacy.load(name_spacy_model, exclude=["tagger", "ner", "lemmatizer"])
         if not nlp("X").has_annotation("DEP"):
             raise ValueError(
                 f"Model `{name_spacy_model}` does not add syntax attributes"
                 " to documents and cannot be use with SyntacticRelationExtractor."
             )
+
         self._nlp = nlp
         self.name_spacy_model = name_spacy_model
         self.entities_labels = entities_labels
         self.entities_source = entities_source
         self.entities_target = entities_target
         self.relation_label = relation_label
-
-        if self.entities_labels is not None:
-            if not all(
-                source in self.entities_labels for source in self.entities_source
-            ) or not all(
-                target in self.entities_labels for target in self.entities_target
-            ):
-                raise ValueError("Entities source/target must be in `entities_labels`")
 
     def run(self, documents: List[TextDocument]):
         """Add relations to each document from `documents`
@@ -240,8 +241,3 @@ class SyntacticRelationExtractor(DocOperation):
                     self.description,
                     source_data_items=[medkit_doc.raw_segment],
                 )
-
-        if relations:
-            logging.info(
-                f"{len(relations)} syntactic relations were added in the document"
-            )

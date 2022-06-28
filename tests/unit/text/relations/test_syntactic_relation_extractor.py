@@ -1,5 +1,6 @@
 import pytest
 import spacy.cli
+from medkit.core.prov_builder import ProvBuilder
 from medkit.text.relations import SyntacticRelationExtractor
 from medkit.core.text import TextDocument, Entity, Span, Relation
 
@@ -128,3 +129,23 @@ def test_entities_without_medkit_id(caplog, tmp_path):
     maladie_ents = medkit_doc.get_annotations_by_label("maladie")
     assert relations[0].source_id == maladie_ents[0].id
     assert relations[1].source_id == maladie_ents[1].id
+
+
+def test_prov():
+    medkit_doc = _get_medkit_doc()
+    relation_extractor = SyntacticRelationExtractor(
+        name_spacy_model="fr_core_news_sm",
+        entities_labels=["maladie", "level"],
+        entities_source=["maladie"],
+        relation_label="has_level",
+    )
+    prov_builder = ProvBuilder()
+    relation_extractor.set_prov_builder(prov_builder)
+    relation_extractor.run([medkit_doc])
+    relation = medkit_doc.get_relations()[0]
+    graph = prov_builder.graph
+
+    relation_node = graph.get_node(relation.id)
+    assert relation_node.data_item_id == relation.id
+    assert relation_node.operation_id == relation_extractor.id
+    assert relation_node.source_ids == [medkit_doc.raw_segment.id]
