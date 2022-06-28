@@ -182,7 +182,9 @@ class _PrefixerMergerWrapper:
 
 
 def test_multi_input_operation():
-    """Wrapper operation wrapping an operation deriving one item from multiple input (merger)"""
+    """Wrapper operation wrapping an operation deriving one item
+    from multiple input (merger)
+    """
     builder = ProvBuilder()
     wrapper = _PrefixerMergerWrapper(builder)
     input_items = get_text_items(2)
@@ -243,7 +245,8 @@ class _SplitterPrefixerWrapper:
 
 
 def test_multi_output_operation():
-    """Wrapper operation wrapping an operation derived several items from single input item (splitter)"""
+    """Wrapper operation wrapping an operation derived several items from single input item (splitter)
+    """
     builder = ProvBuilder()
     wrapper = _SplitterPrefixerWrapper(builder)
     input_items = get_text_items(2)

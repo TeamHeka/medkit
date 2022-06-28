@@ -1,5 +1,6 @@
 from medkit.core import ProvBuilder
 from medkit.core.text import Span
+from medkit.core.text.document import TextDocument
 from medkit.io.brat import BratInputConverter
 
 
@@ -9,7 +10,7 @@ def test_load():
     collection = brat_converter.load(dir_path="tests/data/brat/")
     assert len(collection.documents) == 2
 
-    doc = collection.documents[0]
+    doc: TextDocument = collection.documents[0]
 
     assert "path_to_text" in doc.metadata
     assert "path_to_ann" in doc.metadata
@@ -25,10 +26,20 @@ def test_load():
     assert len(doc.entities.get("medication", [])) == 2
     assert len(doc.entities.get("disease", [])) == 2
     assert len(doc.entities.get("vitamin", [])) == 3
-    # FIXME relations are not handled by TextDocument for now
-    assert len(doc.relations.get("treats", [])) == 0
+    # relations are now handled by TextDocument
+    assert len(doc.get_relations()) == 2
 
-    # check entity
+    # check relation for T1
+    entity_id_t1 = doc.entities["medication"][0]
+    entity_id_t3 = doc.entities["disease"][0]
+    relations_ent_t1 = doc.get_relations_by_source_id(entity_id_t1)
+    assert len(relations_ent_t1) == 1
+
+    assert relations_ent_t1[0].label == "treats"
+    assert relations_ent_t1[0].target_id == entity_id_t3
+    assert entity_id_t3 not in doc.relations_by_source
+
+    # check entity T4 disease
     entity_id_1 = doc.entities["disease"][1]
     entity_1 = doc.get_annotation_by_id(entity_id_1)
     assert entity_1.label == "disease"
@@ -48,7 +59,20 @@ def test_load():
     entity_2 = doc.get_annotation_by_id(entity_id_2)
     assert entity_2.spans == [Span(251, 260), Span(263, 264)]
 
-    # TODO relations
+
+def test_relations():
+    brat_converter = BratInputConverter()
+    doc: TextDocument = brat_converter.load(dir_path="tests/data/brat/").documents[0]
+    relations = doc.get_relations()
+    assert len(relations) == 2
+
+    assert relations[0].source_id == doc.entities["medication"][0]
+    assert relations[0].target_id == doc.entities["disease"][0]
+    assert relations[0].label == "treats"
+
+    assert relations[1].source_id == doc.entities["medication"][1]
+    assert relations[1].target_id == doc.entities["disease"][1]
+    assert relations[1].label == "treats"
 
 
 def test_load_no_anns():

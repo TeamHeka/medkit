@@ -1,8 +1,4 @@
-__all__ = [
-    "spacy_utils",
-    "SpacyDocPipeline",
-    "SpacyPipeline",
-]
+__all__ = ["spacy_utils", "SpacyDocPipeline", "SpacyPipeline"]
 
 from . import spacy_utils
 from .doc_pipeline import SpacyDocPipeline

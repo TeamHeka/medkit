@@ -78,7 +78,6 @@ class Normalizer(Operation):
         ]
 
     def _normalize_segment_text(self, segment: Segment):
-
         ranges = []
         replacement_texts = []
 

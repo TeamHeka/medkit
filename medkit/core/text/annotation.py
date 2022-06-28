@@ -91,10 +91,6 @@ class Segment(TextAnnotation):
         end_extended = min(end + remaining_max_extend_length, len(doc.text))
         return doc.text[start_extended:end_extended]
 
-    def __repr__(self):
-        annotation = super().__repr__()
-        return f"{annotation}, spans={self.spans!r}, text={self.text!r}"
-
 
 class Entity(Segment):
     def __init__(
@@ -170,7 +166,3 @@ class Relation(TextAnnotation):
         data = super().to_dict()
         data.update(source_id=self.source_id, target_id=self.target_id)
         return data
-
-    def __repr__(self):
-        annotation = super().__repr__()
-        return f"{annotation}, source={self.source_id}, target_id={self.target_id}"

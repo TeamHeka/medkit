@@ -302,7 +302,9 @@ def _add_entities_in_spacy_doc(
     # since Spacy does not allow overlaps in entities,
     # `filter_spans` suppresses duplicates or overlaps.
     ents_filtered = filter_spans(spacy_entities)
-    spacy_doc.ents = list(spacy_doc.ents) + ents_filtered
+    # overwrite entities in the document, ensure the transfer
+    # of the medkit entities
+    spacy_doc.ents = ents_filtered
 
     discarded_str = "--".join(
         [ent.text for ent in spacy_entities if ent not in ents_filtered]
