@@ -1,12 +1,11 @@
 import logging
-
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
 
 from smart_open import open
-from medkit.core.text.annotation import Segment, Relation as MedkitRelation
-from medkit.core import Attribute as MedkitAttribute
+from medkit.core.text.annotation import Segment, Relation
+from medkit.core import Attribute
 
 from medkit.core.text.span_utils import normalize_spans
 
@@ -15,7 +14,7 @@ GROUPING_RELATIONS = frozenset(["And", "Or"])
 
 
 @dataclass
-class Entity:
+class BratEntity:
     """A simple entity annotation data structure."""
 
     id: str
@@ -33,7 +32,7 @@ class Entity:
 
 
 @dataclass
-class Relation:
+class BratRelation:
     """A simple relation data structure."""
 
     id: str
@@ -43,7 +42,7 @@ class Relation:
 
 
 @dataclass
-class Attribute:
+class BratAttribute:
     """A simple attribute data structure."""
 
     id: str
@@ -58,7 +57,7 @@ class Grouping:
 
     id: str
     type: str
-    items: List[Entity]
+    items: List[BratEntity]
 
     @property
     def text(self):
@@ -66,16 +65,16 @@ class Grouping:
 
 
 @dataclass
-class AugmentedEntity:
+class BratAugmentedEntity:
     """An augmented entity data structure with its relations and attributes."""
 
     id: str
     type: str
     span: Tuple[Tuple[int, int], ...]
     text: str
-    relations_from_me: Tuple[Relation, ...]
-    relations_to_me: Tuple[Relation, ...]
-    attributes: Tuple[Attribute, ...]
+    relations_from_me: Tuple[BratRelation, ...]
+    relations_to_me: Tuple[BratRelation, ...]
+    attributes: Tuple[BratAttribute, ...]
 
     @property
     def start(self) -> int:
@@ -87,13 +86,13 @@ class AugmentedEntity:
 
 
 @dataclass
-class Document:
-    entities: Dict[str, Entity]
-    relations: Dict[str, Relation]
-    attributes: Dict[str, Attribute]
+class BratDocument:
+    entities: Dict[str, BratEntity]
+    relations: Dict[str, BratRelation]
+    attributes: Dict[str, BratAttribute]
     groups: Dict[str, Grouping] = None
 
-    def get_augmented_entities(self) -> Dict[str, AugmentedEntity]:
+    def get_augmented_entities(self) -> Dict[str, BratAugmentedEntity]:
         augmented_entities = {}
         for entity in self.entities.values():
             entity_relations_from_me = []
@@ -107,7 +106,7 @@ class Document:
             for attribute in self.attributes.values():
                 if attribute.target == entity.id:
                     entity_attributes.append(attribute)
-            augmented_entities[entity.id] = AugmentedEntity(
+            augmented_entities[entity.id] = BratAugmentedEntity(
                 id=entity.id,
                 type=entity.type,
                 span=entity.span,
@@ -119,7 +118,7 @@ class Document:
         return augmented_entities
 
 
-def parse_file(ann_path: Union[str, Path], detect_groups: bool = False) -> Document:
+def parse_file(ann_path: Union[str, Path], detect_groups: bool = False) -> BratDocument:
     """
     Read an annotation file to get the Entities, Relations and Attributes in it.
     All other lines are ignored.
@@ -145,7 +144,7 @@ def parse_file(ann_path: Union[str, Path], detect_groups: bool = False) -> Docum
     return document
 
 
-def parse_string(ann_string: str, detect_groups: bool = False) -> Document:
+def parse_string(ann_string: str, detect_groups: bool = False) -> BratDocument:
     """
     Read a string containing all annotations and extract Entities, Relations and
     Attributes.
@@ -204,16 +203,16 @@ def parse_string(ann_string: str, detect_groups: bool = False) -> Document:
 
         for entity in entities.values():
             if entity.type in GROUPING_ENTITIES:
-                items: List[Entity] = list()
+                items: List[BratEntity] = list()
                 for relation in grouping_relations.values():
                     if relation.subj == entity.id:
                         items.append(entities[relation.obj])
                 groups[entity.id] = Grouping(entity.id, entity.type, items)
 
-    return Document(entities, relations, attributes, groups)
+    return BratDocument(entities, relations, attributes, groups)
 
 
-def _parse_entity(entity_id: str, entity_content: str) -> Entity:
+def _parse_entity(entity_id: str, entity_content: str) -> BratEntity:
     """
     Parse the brat entity string into an Entity structure.
 
@@ -246,12 +245,12 @@ def _parse_entity(entity_id: str, entity_content: str) -> Entity:
             start_s, end_s = span.split()
             start, end = int(start_s), int(end_s)
             spans.append((start, end))
-        return Entity(entity_id.strip(), tag.strip(), tuple(spans), text.strip())
+        return BratEntity(entity_id.strip(), tag.strip(), tuple(spans), text.strip())
     except Exception as err:
         raise ValueError("Impossible to parse entity. Reason : %s" % err)
 
 
-def _parse_relation(relation_id: str, relation_content: str) -> Relation:
+def _parse_relation(relation_id: str, relation_content: str) -> BratRelation:
     """
     Parse the annotation string into a Relation structure.
 
@@ -277,14 +276,14 @@ def _parse_relation(relation_id: str, relation_content: str) -> Relation:
         relation, subj, obj = relation_content.strip().split()
         subj = subj.replace("Arg1:", "")
         obj = obj.replace("Arg2:", "")
-        return Relation(
+        return BratRelation(
             relation_id.strip(), relation.strip(), subj.strip(), obj.strip()
         )
     except Exception as err:
         raise ValueError("Impossible to parse the relation. Reason : %s" % err)
 
 
-def _parse_attribute(attribute_id: str, attribute_content: str) -> Attribute:
+def _parse_attribute(attribute_id: str, attribute_content: str) -> BratAttribute:
     """
     Parse the annotation string into an Attribute structure.
 
@@ -317,7 +316,7 @@ def _parse_attribute(attribute_id: str, attribute_content: str) -> Attribute:
     if len(attribute_arguments) > 2:
         attribute_value = attribute_arguments[2].strip()
 
-    return Attribute(
+    return BratAttribute(
         attribute_id.strip(),
         attribute_name.strip(),
         attribute_target.strip(),
@@ -325,28 +324,65 @@ def _parse_attribute(attribute_id: str, attribute_content: str) -> Attribute:
     )
 
 
-def _get_brat_from_segment(nb_segment: int, medkit_segment: Segment):
+def _get_brat_from_segment(segment: Segment, nb_segment: int) -> Tuple[int, str]:
+    """
+    Get a brat line from a medkit segment
+
+    Parameters
+    ----------
+    segment:
+        A medkit segment to convert into brat format
+    nb_segment:
+        The current counter of brat segments
+
+    Returns
+    -------
+    brat_id:
+        The brat id of the generated line
+    brat_line:
+        The equivalent line of the medkit segment
+    """
+
     brat_id = f"T{nb_segment}"
-    label = medkit_segment.label
-    text = medkit_segment.text
+    # brat does not support spaces in labels
+    label = segment.label.replace(" ", "_")
+    text = segment.text
 
-    spans = normalize_spans(medkit_segment.spans)
+    spans = normalize_spans(segment.spans)
     spans_str = ";".join(f"{span.start} {span.end}" for span in spans)
-
     brat_line = f"{brat_id}\t{label} {spans_str}\t{text}\n"
-
     return brat_id, brat_line
 
 
 def _get_brat_from_relation(
+    relation: Relation,
     nb_relation: int,
-    medkit_relation: MedkitRelation,
-    brat_id_by_segment_id: Dict[str, int],
-):
+    brat_id_by_segment_id: Dict[str, str],
+) -> Tuple[int, str]:
+    """
+    Get a brat line from a medkit relation
+
+    Parameters
+    ----------
+    relation:
+        A medkit relation to convert into brat format
+    nb_relation:
+        The current counter of brat relations
+    brat_id_by_segment_id:
+        A dict to map medkit ID from segments to brat ID
+
+    Returns
+    -------
+    brat_id:
+        The brat id of the generated line
+    brat_line:
+        The equivalent line of the medkit segment
+    """
     brat_id = f"R{nb_relation}"
-    label = medkit_relation.label
-    subj = brat_id_by_segment_id.get(medkit_relation.source_id, None)
-    obj = brat_id_by_segment_id.get(medkit_relation.target_id, None)
+    # brat does not support spaces in labels
+    label = relation.label.replace(" ", "_")
+    subj = brat_id_by_segment_id.get(relation.source_id, None)
+    obj = brat_id_by_segment_id.get(relation.target_id, None)
 
     if subj is None or obj is None:
         raise ValueError(
@@ -358,11 +394,28 @@ def _get_brat_from_relation(
 
 
 def _get_brat_from_attribute(
-    nb_atribute: int, attr: MedkitAttribute, target_brat_id: str
-):
+    attribute: Attribute, nb_attribute: int, target_brat_id: str
+) -> str:
+    """
+    Get a brat line from a medkit attribute
+
+    Parameters
+    ----------
+    attribute:
+        A medkit attribute to convert into brat format
+    nb_attribute:
+        The current counter of brat attributes
+    target_brat_id:
+        Corresponding target brat ID
+
+    Returns
+    -------
+    brat_line:
+        The equivalent line of the medkit attribute
+    """
     # medkit attrs to brat attr
-    brat_id = f"A{nb_atribute}"
-    label = attr.label
-    value = "" if attr.value is None else f" {attr.value}"
+    brat_id = f"A{nb_attribute}"
+    label = attribute.label.replace(" ", "_")
+    value = "" if attribute.value is None else f" {attribute.value}"
     brat_line = f"{brat_id}\t{label} {target_brat_id}{value}\n"
     return brat_line
