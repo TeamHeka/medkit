@@ -1,4 +1,4 @@
-__all__ = ["BratInputConverter"]
+__all__ = ["BratInputConverter", "BratOutputConverter"]
 from pathlib import Path
 from typing import Optional, Tuple, Union, ValuesView, List
 import warnings
@@ -17,6 +17,7 @@ from medkit.core import (
 from medkit.core.text import TextDocument, Entity, Relation, Span
 from medkit.core.text.annotation import Segment
 import medkit.io._brat_utils as brat_utils
+
 
 TEXT_EXT = ".txt"
 ANN_EXT = ".ann"
@@ -182,7 +183,7 @@ class BratInputConverter(InputConverter):
 
 class BratOutputConverter:
     """Class in charge of converting a list/Collection of TextDocuments into a
-    list of brat annotations files"""
+    brat collection file"""
 
     def __init__(
         self,
@@ -221,34 +222,46 @@ class BratOutputConverter:
             ]
 
         output_path = Path(output_path)
+        # TODO: check if change when output_path exists
         output_path.mkdir(parents=True, exist_ok=True)
+
+        # each brat collection must have a configuration file
+        ann_configuration = brat_utils.BratAnnConfiguration(
+            entity_types=set(), relation_types=dict(), attribute_types=dict()
+        )
 
         for medkit_doc in medkit_docs:
             doc_id = medkit_doc.id
-
             if medkit_doc.text is not None:
+                # save text file
                 text_path = output_path / f"{doc_id}{TEXT_EXT}"
                 with text_path.open("w", encoding="utf-8") as file:
                     file.write(medkit_doc.text)
                     file.close()
 
-            entities, relations, attrs = self._get_anns_from_medkit_doc(medkit_doc)
-            brat_str = self._create_brat_from_anns(entities, relations, attrs)
+            segments, relations, attrs = self._get_anns_from_medkit_doc(medkit_doc)
+            brat_anns, brat_str = self._convert_medkit_anns(segments, relations, attrs)
+
+            # save ann file
             ann_path = output_path / f"{doc_id}{ANN_EXT}"
             with ann_path.open("w", encoding="utf-8") as file:
                 file.write(brat_str)
                 file.close()
 
-        # WIP: generate annotation_conf file
-        ann_conf = self._generate_annotation_conf(entities)
+            # generate annotation_conf file from each generated brat
+            ann_configuration = brat_utils.get_configuration_from_anns(
+                brat_anns, config=ann_configuration
+            )
+
+        # save configuration file
         conf_path = output_path / ANN_CONF_FILE
         with conf_path.open("w", encoding="utf-8") as file:
-            file.write(ann_conf)
+            file.write(str(ann_configuration))
             file.close()
 
     def _get_anns_from_medkit_doc(
         self, medkit_doc: TextDocument
-    ) -> Tuple[List[Entity], List[Relation], List[str]]:
+    ) -> Tuple[List[Segment], List[Relation], List[str]]:
         """Return selected annotations from a medkit document.
         `attrs` is a list of attribute labels to include for each
          entity/segment or relation found
@@ -287,69 +300,54 @@ class BratOutputConverter:
 
         return segments, relations, attrs
 
-    def _create_brat_from_anns(
+    def _convert_medkit_anns(
         self, segments: List[Segment], relations: List[Relation], attrs: List[str]
     ):
-        brat_annotations = ""
         nb_segment, nb_relation, nb_attribute = 1, 1, 1
-        brat_id_by_segment_id = dict()
+        anns_by_medkit_id = dict()
+        brat_annotations_str = ""
 
         # First convert segments then relations including its attributes
         for medkit_segment in segments:
-            brat_id, brat_entity = brat_utils._get_brat_from_segment(
+            brat_entity = brat_utils._convert_segment_to_brat(
                 medkit_segment, nb_segment
             )
-            brat_id_by_segment_id[medkit_segment.id] = brat_id
-            brat_annotations += brat_entity
+            anns_by_medkit_id[medkit_segment.id] = brat_entity
+            brat_annotations_str += str(brat_entity)
             nb_segment += 1
+
             # include selected attributes
             for attr in medkit_segment.attrs:
                 if attr.label in attrs:
-                    attrs_brat = brat_utils._get_brat_from_attribute(
-                        attr, nb_attribute, target_brat_id=brat_id
+                    brat_attr = brat_utils._convert_attribute_to_brat(
+                        attr,
+                        nb_attribute,
+                        target_brat_id=brat_entity.id,
+                        is_from_entity=True,
                     )
+                    anns_by_medkit_id[attr.id] = brat_attr
+                    brat_annotations_str += str(brat_attr)
                     nb_attribute += 1
-                    brat_annotations += attrs_brat
 
         for medkit_relation in relations:
-            brat_id, relation_brat = brat_utils._get_brat_from_relation(
-                medkit_relation, nb_relation, brat_id_by_segment_id
+            brat_relation = brat_utils._convert_relation_to_brat(
+                medkit_relation, nb_relation, anns_by_medkit_id
             )
-            brat_annotations += relation_brat
+            anns_by_medkit_id[medkit_relation.id] = brat_relation
+            brat_annotations_str += str(brat_relation)
             nb_relation += 1
             # include selected attributes
             # Note: it seems that brat does not support attributes for relations
             for attr in medkit_relation.attrs:
                 if attr.label in attrs:
-                    attrs_brat = brat_utils._get_brat_from_attribute(
-                        attr, nb_attribute, target_brat_id=brat_id
+                    brat_attr = brat_utils._convert_attribute_to_brat(
+                        attr,
+                        nb_attribute,
+                        target_brat_id=brat_relation.id,
+                        is_from_entity=False,
                     )
+                    anns_by_medkit_id[attr.id] = brat_attr
+                    brat_annotations_str += str(brat_attr)
                     nb_attribute += 1
-                    brat_annotations += attrs_brat
 
-        return brat_annotations
-
-    def _generate_annotation_conf(
-        self,
-        entities,
-    ):
-        """WIP: Generate a annotation configuration file for brat
-        Its divided into [entities],[relations],[events] (not supported in medkit)
-        and [attributes]"""
-        annotation_conf = (
-            "# Text-based definitions of entity types, relation types\n"
-            "# and attributes. Generate using medkit from HeKa project"
-        )
-
-        annotation_conf += "\n[entities]\n\n"
-        entity_section = "\n".join(set(ent.label.replace(" ", "_") for ent in entities))
-        annotation_conf += entity_section
-
-        annotation_conf += "\n[relations]\n\n"
-        # enable overlap between entities
-        annotation_conf += "<OVERLAP> 	Arg1:<ENTITY>, Arg2:<ENTITY>, <OVL-TYPE>:<ANY>"
-
-        annotation_conf += "\n[attributes]\n\n"
-        annotation_conf += "\n[events]\n\n"
-
-        return annotation_conf
+        return anns_by_medkit_id.values(), brat_annotations_str
