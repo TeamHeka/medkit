@@ -220,21 +220,18 @@ class RegexpMatcher(NEROperation):
                 # Fallback on unicode text
                 text_ascii = text_unicode
 
-        for rule, pattern, exclusion_pattern in zip(
-            self.rules, self._patterns, self._exclusion_patterns
-        ):
+        for rule_index in range(len(self.rules)):
             yield from self._find_matches_in_segment_for_rule(
-                rule, pattern, exclusion_pattern, segment, text_ascii
+                rule_index, segment, text_ascii
             )
 
     def _find_matches_in_segment_for_rule(
-        self,
-        rule: RegexpMatcherRule,
-        pattern: re.Pattern,
-        exclusion_pattern: re.Pattern,
-        segment: Segment,
-        text_ascii: Optional[str],
+        self, rule_index: int, segment: Segment, text_ascii: Optional[str]
     ) -> Iterator[Entity]:
+        rule = self.rules[rule_index]
+        pattern = self._patterns[rule_index]
+        exclusion_pattern = self._exclusion_patterns[rule_index]
+
         flags = 0 if rule.case_sensitive else re.IGNORECASE
         text_to_match = segment.text if rule.unicode_sensitive else text_ascii
 
@@ -255,10 +252,8 @@ class RegexpMatcher(NEROperation):
                 segment.text, segment.spans, [match.span(rule.index_extract)]
             )
 
-            metadata = dict(
-                rule_id=rule.id,
-                version=rule.version,
-            )
+            rule_id = rule.id if rule.id is not None else rule_index
+            metadata = dict(rule_id=rule_id, version=rule.version)
 
             attrs = [a for a in segment.attrs if a.label in self.attrs_to_copy]
 

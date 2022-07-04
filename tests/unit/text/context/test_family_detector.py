@@ -65,6 +65,24 @@ def test_multiple_rules():
     assert attr_2.metadata["rule_id"] == "id_fam_mother"
 
 
+def test_multiple_rules_no_id():
+    syntagmas = _get_syntagma_segments(
+        ["Father died of cancer", "Mother died of cancer"]
+    )
+    rule_1 = FamilyDetectorRule(regexp=r"\bfather\b")
+    rule_2 = FamilyDetectorRule(regexp=r"\bmother\b")
+    detector = FamilyDetector(output_label=_OUTPUT_LABEL, rules=[rule_1, rule_2])
+    detector.run(syntagmas)
+
+    # attributes have corresponding rule index as rule_id metadata
+    assert len(syntagmas[0].attrs) == 1
+    attr_1 = syntagmas[0].attrs[0]
+    assert attr_1.metadata["rule_id"] == 0
+    assert len(syntagmas[1].attrs) == 1
+    attr_2 = syntagmas[1].attrs[0]
+    assert attr_2.metadata["rule_id"] == 1
+
+
 def test_exclusions():
     syntagmas = _get_syntagma_segments(
         [

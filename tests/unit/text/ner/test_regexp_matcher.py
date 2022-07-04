@@ -87,6 +87,12 @@ def test_multiple_rules_no_id():
 
     assert len(entities) == 2
 
+    # entities have corresponding rule index as rule_id metadta
+    entity_1 = entities[0]
+    assert entity_1.metadata["rule_id"] == 0
+    entity_2 = entities[1]
+    assert entity_2.metadata["rule_id"] == 1
+
 
 def test_normalization():
     sentence = _get_sentence_segment()

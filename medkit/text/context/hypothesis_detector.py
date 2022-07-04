@@ -242,9 +242,10 @@ class HypothesisDetector(ContextOperation):
                     is_hypothesis = True
                     break
             else:
-                for rule, pattern, exclusion_pattern in zip(
-                    self.rules, self._patterns, self._exclusion_patterns
-                ):
+                for rule_index, rule in enumerate(self.rules):
+                    pattern = self._patterns[rule_index]
+                    exclusion_pattern = self._exclusion_patterns[rule_index]
+
                     text = text_unicode if rule.unicode_sensitive else text_ascii
                     if pattern.search(text) is not None:
                         if (
@@ -252,8 +253,8 @@ class HypothesisDetector(ContextOperation):
                             or exclusion_pattern.search(text) is None
                         ):
                             is_hypothesis = True
-                            if rule.id is not None:
-                                metadata = _RuleMetadata(type="verb", rule_id=rule.id)
+                            rule_id = rule.id if rule.id is not None else rule_index
+                            metadata = _RuleMetadata(type="verb", rule_id=rule_id)
                             break
 
         hyp_attr = Attribute(

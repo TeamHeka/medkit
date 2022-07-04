@@ -179,20 +179,27 @@ class FamilyDetector(ContextOperation):
 
         # try all rules until we have a match
         is_family = False
-        for rule, pattern, exclusion_pattern in zip(
-            self.rules, self._patterns, self._exclusion_patterns
-        ):
+        for rule_index, rule in enumerate(self.rules):
+            pattern = self._patterns[rule_index]
+            exclusion_pattern = self._exclusion_patterns[rule_index]
             text = text_unicode if rule.unicode_sensitive else text_ascii
             if pattern.search(text) is not None:
                 if exclusion_pattern is None or exclusion_pattern.search(text) is None:
                     is_family = True
                     break
 
-        family_attr = Attribute(
-            label=self.output_label,
-            value=is_family,
-            metadata=dict(rule_id=rule.id) if is_family else None,
-        )
+        if is_family:
+            rule_id = rule.id if rule.id is not None else rule_index
+            family_attr = Attribute(
+                label=self.output_label,
+                value=True,
+                metadata=dict(rule_id=rule_id),
+            )
+        else:
+            family_attr = Attribute(
+                label=self.output_label,
+                value=False,
+            )
 
         if self._prov_builder is not None:
             self._prov_builder.add_prov(
