@@ -1,22 +1,22 @@
 __all__ = ["BratInputConverter", "BratOutputConverter"]
-from pathlib import Path
-from typing import Optional, Tuple, Union, ValuesView, List
 import warnings
+from pathlib import Path
+from typing import List, Optional, Tuple, Union, ValuesView
 
 from smart_open import open
 
+import medkit.io._brat_utils as brat_utils
 from medkit.core import (
-    Collection,
     Attribute,
+    Collection,
     InputConverter,
-    Store,
     OperationDescription,
     ProvBuilder,
+    Store,
     generate_id,
 )
-from medkit.core.text import TextDocument, Entity, Relation, Span
+from medkit.core.text import Entity, Relation, Span, TextDocument
 from medkit.core.text.annotation import Segment
-import medkit.io._brat_utils as brat_utils
 
 
 TEXT_EXT = ".txt"
@@ -189,13 +189,13 @@ class BratOutputConverter:
 
     def __init__(
         self,
-        label_anns: Optional[List[str]] = None,
+        labels_anns: Optional[List[str]] = None,
         attrs: Optional[List[str]] = None,
         keep_segments: bool = False,
         create_config: bool = True,
         op_id: Optional[str] = None,
-    ):
-        self.label_anns = label_anns
+    ):  # TODO: add docstring
+        self.labels_anns = labels_anns
         self.attrs = attrs
         self.keep_segments = keep_segments
         self.create_config = create_config
@@ -237,7 +237,6 @@ class BratOutputConverter:
         for medkit_doc in medkit_docs:
             doc_id = medkit_doc.id
             if medkit_doc.text is not None:
-                # save text file
                 text_path = output_path / f"{doc_id}{TEXT_EXT}"
                 with text_path.open("w", encoding="utf-8") as file:
                     file.write(medkit_doc.text)
@@ -276,14 +275,14 @@ class BratOutputConverter:
         """
         annotations = medkit_doc.get_annotations()
 
-        if self.label_anns is not None:
+        if self.labels_anns is not None:
             # filter annotations by label
-            annotations = [ann for ann in annotations if ann.label in self.label_anns]
+            annotations = [ann for ann in annotations if ann.label in self.labels_anns]
 
-        if self.label_anns and annotations == []:
+        if self.labels_anns and annotations == []:
             # labels_anns were a list but none of the annotations
             # had a label of interest
-            labels_str = ",".join(self.label_anns)
+            labels_str = ",".join(self.labels_anns)
             warnings.warn(
                 "No medkit annotations were included because none have"
                 f" '{labels_str}' as label."
@@ -292,6 +291,8 @@ class BratOutputConverter:
         if self.attrs is None:
             # include all atributes
             attrs = set(attr.label for ann in annotations for attr in ann.attrs)
+        else:
+            attrs = self.attrs
 
         segments = []
         relations = []

@@ -151,8 +151,8 @@ class RelationConf:
     args2: Set[str] = dataclasses.field(default_factory=set)
 
     def __str__(self) -> str:
-        arg1 = "|".join(self.args1)
-        arg2 = "|".join(self.args2)
+        arg1 = "|".join([str(arg) for arg in self.args1])
+        arg2 = "|".join([str(arg) for arg in self.args2])
         return f"{self.type}\tArg1:{arg1}, Arg2:{arg2}"
 
     def update(self, args1: Set[str], args2: Set[str]):
@@ -168,7 +168,7 @@ class AttributeConf:
 
     def __str__(self) -> str:
         arg = "<ENTITY>" if self.from_entity else "<RELATION>"
-        values_str = "|".join(self.values)
+        values_str = "|".join([str(value) for value in self.values])
         return (
             f"{self.type}\tArg:{arg}"
             if not values_str
@@ -213,7 +213,7 @@ class BratAnnConfiguration:
             "#from the HeKa project"
         )
         annotation_conf += "\n[entities]\n\n"
-        entity_section = "\n".join(self.entity_types)
+        entity_section = "\n".join([str(ent) for ent in self.entity_types])
         annotation_conf += entity_section
 
         annotation_conf += "\n[relations]\n\n"
