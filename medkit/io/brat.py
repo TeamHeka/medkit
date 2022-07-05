@@ -134,7 +134,9 @@ class BratInputConverter(InputConverter):
 
         return doc
 
-    def _load_anns(self, ann_path: Path) -> ValuesView[Union[Entity, Relation]]:
+    def _load_anns(
+        self, ann_path: Path
+    ) -> ValuesView[Union[Entity, Relation, Attribute]]:
         brat_doc = brat_utils.parse_file(ann_path)
         anns_by_brat_id = dict()
 
@@ -190,11 +192,13 @@ class BratOutputConverter:
         label_anns: Optional[List[str]] = None,
         attrs: Optional[List[str]] = None,
         keep_segments: bool = False,
+        create_config: bool = True,
         op_id: Optional[str] = None,
     ):
         self.label_anns = label_anns
         self.attrs = attrs
         self.keep_segments = keep_segments
+        self.create_config = create_config
         self.op_id: str = op_id
         self._prov_builder: Optional[ProvBuilder] = None
 
@@ -222,13 +226,13 @@ class BratOutputConverter:
             ]
 
         output_path = Path(output_path)
-        # TODO: check if change when output_path exists
         output_path.mkdir(parents=True, exist_ok=True)
 
-        # each brat collection must have a configuration file
-        ann_configuration = brat_utils.BratAnnConfiguration(
-            entity_types=set(), relation_types=dict(), attribute_types=dict()
-        )
+        if self.create_config:
+            # each brat collection should have a configuration file
+            ann_configuration = brat_utils.BratAnnConfiguration(
+                entity_types=set(), relation_types=dict(), attribute_types=dict()
+            )
 
         for medkit_doc in medkit_docs:
             doc_id = medkit_doc.id
@@ -240,7 +244,9 @@ class BratOutputConverter:
                     file.close()
 
             segments, relations, attrs = self._get_anns_from_medkit_doc(medkit_doc)
-            brat_anns, brat_str = self._convert_medkit_anns(segments, relations, attrs)
+            brat_anns, brat_str = brat_utils.convert_medkit_anns_to_brat(
+                segments, relations, attrs
+            )
 
             # save ann file
             ann_path = output_path / f"{doc_id}{ANN_EXT}"
@@ -248,16 +254,18 @@ class BratOutputConverter:
                 file.write(brat_str)
                 file.close()
 
-            # generate annotation_conf file from each generated brat
-            ann_configuration = brat_utils.get_configuration_from_anns(
-                brat_anns, config=ann_configuration
-            )
+            if self.create_config:
+                # update annotation_conf file from each generated brat
+                ann_configuration = brat_utils.get_configuration_from_anns(
+                    brat_anns, config=ann_configuration
+                )
 
-        # save configuration file
-        conf_path = output_path / ANN_CONF_FILE
-        with conf_path.open("w", encoding="utf-8") as file:
-            file.write(str(ann_configuration))
-            file.close()
+        if self.create_config:
+            # save configuration file
+            conf_path = output_path / ANN_CONF_FILE
+            with conf_path.open("w", encoding="utf-8") as file:
+                file.write(str(ann_configuration))
+                file.close()
 
     def _get_anns_from_medkit_doc(
         self, medkit_doc: TextDocument
@@ -299,55 +307,3 @@ class BratOutputConverter:
                 relations.append(ann)
 
         return segments, relations, attrs
-
-    def _convert_medkit_anns(
-        self, segments: List[Segment], relations: List[Relation], attrs: List[str]
-    ):
-        nb_segment, nb_relation, nb_attribute = 1, 1, 1
-        anns_by_medkit_id = dict()
-        brat_annotations_str = ""
-
-        # First convert segments then relations including its attributes
-        for medkit_segment in segments:
-            brat_entity = brat_utils._convert_segment_to_brat(
-                medkit_segment, nb_segment
-            )
-            anns_by_medkit_id[medkit_segment.id] = brat_entity
-            brat_annotations_str += str(brat_entity)
-            nb_segment += 1
-
-            # include selected attributes
-            for attr in medkit_segment.attrs:
-                if attr.label in attrs:
-                    brat_attr = brat_utils._convert_attribute_to_brat(
-                        attr,
-                        nb_attribute,
-                        target_brat_id=brat_entity.id,
-                        is_from_entity=True,
-                    )
-                    anns_by_medkit_id[attr.id] = brat_attr
-                    brat_annotations_str += str(brat_attr)
-                    nb_attribute += 1
-
-        for medkit_relation in relations:
-            brat_relation = brat_utils._convert_relation_to_brat(
-                medkit_relation, nb_relation, anns_by_medkit_id
-            )
-            anns_by_medkit_id[medkit_relation.id] = brat_relation
-            brat_annotations_str += str(brat_relation)
-            nb_relation += 1
-            # include selected attributes
-            # Note: it seems that brat does not support attributes for relations
-            for attr in medkit_relation.attrs:
-                if attr.label in attrs:
-                    brat_attr = brat_utils._convert_attribute_to_brat(
-                        attr,
-                        nb_attribute,
-                        target_brat_id=brat_relation.id,
-                        is_from_entity=False,
-                    )
-                    anns_by_medkit_id[attr.id] = brat_attr
-                    brat_annotations_str += str(brat_attr)
-                    nb_attribute += 1
-
-        return anns_by_medkit_id.values(), brat_annotations_str

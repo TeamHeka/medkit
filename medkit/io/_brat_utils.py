@@ -2,7 +2,7 @@ import dataclasses
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Dict, List, Optional, Set, Tuple, Union, ValuesView
 
 from smart_open import open
 from medkit.core.text.annotation import Segment, Relation
@@ -50,12 +50,10 @@ class BratRelation:
 
 
 @dataclass
-class BratRelationAugmented:
+class BratRelationAugmented(BratRelation):
     """A relation data structure with information about entities.
     Useful to get configuration file"""
 
-    id: str
-    type: str
     subj: BratEntity
     obj: BratEntity
 
@@ -211,7 +209,7 @@ class BratAnnConfiguration:
     def __str__(self) -> str:
         annotation_conf = (
             "#Text-based definitions of entity types, relation types\n"
-            "#and attributes. This file was generated using medkit\n "
+            "#and attributes. This file was generated using medkit\n"
             "#from the HeKa project"
         )
         annotation_conf += "\n[entities]\n\n"
@@ -220,7 +218,7 @@ class BratAnnConfiguration:
 
         annotation_conf += "\n[relations]\n\n"
         annotation_conf += "# This line enables entity overlapping\n"
-        annotation_conf += "<OVERLAP> 	Arg1:<ENTITY>, Arg2:<ENTITY>, <OVL-TYPE>:<ANY>\n"
+        annotation_conf += "<OVERLAP>\tArg1:<ENTITY>, Arg2:<ENTITY>, <OVL-TYPE>:<ANY>\n"
         relation_section = "\n".join(
             str(relation) for relation in self.relation_types.values()
         )
@@ -328,6 +326,57 @@ def parse_string(ann_string: str, detect_groups: bool = False) -> BratDocument:
                 groups[entity.id] = Grouping(entity.id, entity.type, items)
 
     return BratDocument(entities, relations, attributes, groups)
+
+
+def convert_medkit_anns_to_brat(
+    segments: List[Segment], relations: List[Relation], attrs: List[str]
+) -> Tuple[ValuesView[Union[BratEntity, BratAttribute, BratRelationAugmented]], str]:
+    nb_segment, nb_relation, nb_attribute = 1, 1, 1
+    anns_by_medkit_id = dict()
+    brat_annotations_str = ""
+
+    # First convert segments then relations including its attributes
+    for medkit_segment in segments:
+        brat_entity = _convert_segment_to_brat(medkit_segment, nb_segment)
+        anns_by_medkit_id[medkit_segment.id] = brat_entity
+        brat_annotations_str += str(brat_entity)
+        nb_segment += 1
+
+        # include selected attributes
+        for attr in medkit_segment.attrs:
+            if attr.label in attrs:
+                brat_attr = _convert_attribute_to_brat(
+                    attr,
+                    nb_attribute,
+                    target_brat_id=brat_entity.id,
+                    is_from_entity=True,
+                )
+                anns_by_medkit_id[attr.id] = brat_attr
+                brat_annotations_str += str(brat_attr)
+                nb_attribute += 1
+
+    for medkit_relation in relations:
+        brat_relation = _convert_relation_to_brat(
+            medkit_relation, nb_relation, anns_by_medkit_id
+        )
+        anns_by_medkit_id[medkit_relation.id] = brat_relation
+        brat_annotations_str += str(brat_relation)
+        nb_relation += 1
+        # include selected attributes
+        # Note: it seems that brat does not support attributes for relations
+        for attr in medkit_relation.attrs:
+            if attr.label in attrs:
+                brat_attr = _convert_attribute_to_brat(
+                    attr,
+                    nb_attribute,
+                    target_brat_id=brat_relation.id,
+                    is_from_entity=False,
+                )
+                anns_by_medkit_id[attr.id] = brat_attr
+                brat_annotations_str += str(brat_attr)
+                nb_attribute += 1
+
+    return anns_by_medkit_id.values(), brat_annotations_str
 
 
 def _parse_entity(entity_id: str, entity_content: str) -> BratEntity:
@@ -458,19 +507,19 @@ def _convert_segment_to_brat(segment: Segment, nb_segment: int) -> BratEntity:
     brat_entity
         The equivalent brat entity of the medkit segment
     """
-
+    assert nb_segment != 0
     brat_id = f"T{nb_segment}"
     # brat does not support spaces in labels
     type = segment.label.replace(" ", "_")
     text = segment.text
-    spans = ((span.start, span.end) for span in normalize_spans(segment.spans))
+    spans = tuple((span.start, span.end) for span in normalize_spans(segment.spans))
     return BratEntity(brat_id, type, spans, text)
 
 
 def _convert_relation_to_brat(
     relation: Relation,
     nb_relation: int,
-    brat_id_by_segment_id: Dict[str, str],
+    brat_anns_by_segment_id: Dict[str, str],
 ) -> BratRelationAugmented:
     """
     Get a brat relation from a medkit relation
@@ -481,19 +530,20 @@ def _convert_relation_to_brat(
         A medkit relation to convert into brat format
     nb_relation:
         The current counter of brat relations
-    brat_id_by_segment_id:
-        A dict to map medkit ID from segments to brat ID
+    brat_anns_by_segment_id:
+        A dict to map medkit ID from segments to brat annotation
 
     Returns
     -------
     brat_relation
         The equivalent brat relation of the medkit relation
     """
+    assert nb_relation != 0
     brat_id = f"R{nb_relation}"
     # brat does not support spaces in labels
     type = relation.label.replace(" ", "_")
-    subj = brat_id_by_segment_id.get(relation.source_id, None)
-    obj = brat_id_by_segment_id.get(relation.target_id, None)
+    subj = brat_anns_by_segment_id.get(relation.source_id, None)
+    obj = brat_anns_by_segment_id.get(relation.target_id, None)
 
     if subj is None or obj is None:
         raise ValueError(
@@ -523,10 +573,10 @@ def _convert_attribute_to_brat(
         The equivalent brat attribute of the medkit attribute
     """
     # medkit attrs to brat attr
+    assert nb_attribute != 0
     brat_id = f"A{nb_attribute}"
     type = attribute.label.replace(" ", "_")
     value = attribute.value
-
     return BratAttribute(brat_id, type, target_brat_id, value, is_from_entity)
 
 
