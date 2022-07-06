@@ -15,9 +15,13 @@ from medkit.core.text.span import Span
 class TextDocument(Document[TextAnnotation]):
     """Document holding text annotations
 
-    Annotations must be subclasses of `TextAnnotation`."""
+    Annotations must be subclasses of `TextAnnotation`.
 
-    RAW_TEXT_LABEL = "RAW_TEXT"
+    """
+
+    RAW_LABEL = "RAW_TEXT"
+    """Label to be used for raw text
+    """
 
     def __init__(
         self,
@@ -42,19 +46,26 @@ class TextDocument(Document[TextAnnotation]):
             Document metadata
         store:
             Store to use for annotations
+
+        Examples
+        --------
+        To get the raw text as an annotation to pass to processing operations:
+
+        >>> doc = TextDocument(text="hello")
+        >>> raw_text = doc.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
         """
         super().__init__(doc_id=doc_id, metadata=metadata, store=store)
         self.text: Optional[str] = text
         self.segments: Dict[str, List[str]] = dict()  # Key: label
         self.entities: Dict[str, List[str]] = dict()  # Key: label
-        self.relations: Dict[str, List[str]] = dict()  # Key: TODO : determine the key
+        self.relations_by_source: Dict[str, List[str]] = dict()  # Key: source_id
 
-        # auto-generated RAW_TEXT segment
+        # auto-generated raw segment
         # not stored with other annotations but injected in calls to get_annotations_by_label()
         # and get_annotation_by_id()
-        self._raw_text_seg: Optional[Segment] = self._generate_raw_text_segment()
+        self.raw_segment: Optional[Segment] = self._generate_raw_segment()
 
-    def _generate_raw_text_segment(self) -> Optional[Segment]:
+    def _generate_raw_segment(self) -> Optional[Segment]:
         if self.text is None:
             return None
 
@@ -64,7 +75,7 @@ class TextDocument(Document[TextAnnotation]):
         id = str(uuid.UUID(int=rng.getrandbits(128)))
 
         return Segment(
-            label=self.RAW_TEXT_LABEL,
+            label=self.RAW_LABEL,
             spans=[Span(0, len(self.text))],
             text=self.text,
             ann_id=id,
@@ -80,8 +91,6 @@ class TextDocument(Document[TextAnnotation]):
         entities, relations)
         according to the annotation category (Segment, Entity, Relation).
 
-        Note that entity is also considered as a segment of the text.
-
         Parameters
         ----------
         annotation:
@@ -91,10 +100,12 @@ class TextDocument(Document[TextAnnotation]):
         ------
         ValueError
             If `annotation.id` is already in Document.annotations.
+
+
         """
-        if annotation.label == self.RAW_TEXT_LABEL:
+        if annotation.label == self.RAW_LABEL:
             raise RuntimeError(
-                f"Cannot add annotation with reserved label {self.RAW_TEXT_LABEL}"
+                f"Cannot add annotation with reserved label {self.RAW_LABEL}"
             )
 
         try:
@@ -102,33 +113,47 @@ class TextDocument(Document[TextAnnotation]):
         except ValueError as err:
             raise err
 
-        if isinstance(annotation, Segment):
-            if annotation.label not in self.segments.keys():
-                self.segments[annotation.label] = [annotation.id]
-            else:
-                self.segments[annotation.label].append(annotation.id)
-
         if isinstance(annotation, Entity):
-            if annotation.label not in self.entities.keys():
-                self.entities[annotation.label] = [annotation.id]
-            else:
-                self.entities[annotation.label].append(annotation.id)
+            if annotation.label not in self.entities:
+                self.entities[annotation.label] = []
+            self.entities[annotation.label].append(annotation.id)
+
+        elif isinstance(annotation, Segment):
+            if annotation.label not in self.segments:
+                self.segments[annotation.label] = []
+            self.segments[annotation.label].append(annotation.id)
+
         elif isinstance(annotation, Relation):
-            pass  # TODO: complete when key is determined
+            if annotation.source_id not in self.relations_by_source:
+                self.relations_by_source[annotation.source_id] = []
+            self.relations_by_source[annotation.source_id].append(annotation.id)
 
     def get_annotations_by_label(self, label) -> List[TextAnnotation]:
-        # inject RAW_TEXT segment
-        if self._raw_text_seg is not None and label == self.RAW_TEXT_LABEL:
-            return [self._raw_text_seg]
+        # inject raw segment
+        if self.raw_segment is not None and label == self.RAW_LABEL:
+            return [self.raw_segment]
         return super().get_annotations_by_label(label)
 
     def get_annotation_by_id(self, annotation_id) -> Optional[TextAnnotation]:
-        # inject RAW_TEXT segment
-        if self._raw_text_seg is not None and annotation_id == self._raw_text_seg.id:
-            return self._raw_text_seg
+        # inject raw segment
+        if self.raw_segment is not None and annotation_id == self.raw_segment.id:
+            return self.raw_segment
         return super().get_annotation_by_id(annotation_id)
 
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
         data.update(text=self.text)
         return data
+
+    def get_relations_by_source_id(self, source_ann_id) -> List[Relation]:
+        relation_ids = self.relations_by_source.get(source_ann_id, [])
+        relations = [self.store.get_data_item(id) for id in relation_ids]
+        return relations
+
+    def get_relations(self) -> List[Relation]:
+        relations = [
+            self.store.get_data_item(ann_id)
+            for ids in self.relations_by_source.values()
+            for ann_id in ids
+        ]
+        return relations

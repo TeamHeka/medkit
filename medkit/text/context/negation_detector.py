@@ -1,6 +1,7 @@
 __all__ = ["NegationDetector", "NegationDetectorRule"]
 
 import dataclasses
+import logging
 from pathlib import Path
 import re
 from typing import List, Optional
@@ -8,14 +9,10 @@ from typing import List, Optional
 import unidecode
 import yaml
 
-from medkit.core import (
-    Attribute,
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
-from medkit.core.text import Segment
+from medkit.core import Attribute
+from medkit.core.text import ContextOperation, Segment
 
+logger = logging.getLogger(__name__)
 
 _PATH_TO_DEFAULT_RULES = Path(__file__).parent / "negation_detector_default_rules.yml"
 
@@ -24,7 +21,9 @@ _PATH_TO_DEFAULT_RULES = Path(__file__).parent / "negation_detector_default_rule
 class NegationDetectorRule:
     """Regexp-based rule to use with `NegationDetector`
 
-    Attributes
+    Input text may be converted before detecting rule.
+
+    Parameters
     ----------
     regexp:
         The regexp pattern used to match a negation
@@ -33,12 +32,13 @@ class NegationDetectorRule:
     id:
         Unique identifier of the rule to store in the metadata of the entities
     case_sensitive:
-        Wether to ignore case when running `regexp and `exclusion_regexs`
+        Whether to consider case when running `regexp and `exclusion_regexs`
     unicode_sensitive:
-        Wether to replace all non-ASCII chars by the closest ASCII chars
-        on input text before runing `regexp and `exclusion_regexs`.
-        If True, then `regexp and `exclusion_regexs` shouldn't contain
-        non-ASCII chars because they would never be matched.
+        If True, rule matches are searched on unicode text.
+        So, `regexp and `exclusion_regexs` shall not contain non-ASCII chars because
+        they would never be matched.
+        If False, rule matches are searched on closest ASCII text when possible.
+        (cf. NegationDetector)
     """
 
     regexp: str
@@ -56,40 +56,49 @@ class NegationDetectorRule:
         )
 
 
-class NegationDetector:
+class NegationDetector(ContextOperation):
     """Annotator creating negation Attributes with True/False values
 
     Because negation attributes will be attached to whole annotations,
     each input annotation should be "local"-enough rather than
     a big chunk of text (ie a sentence or a syntagma).
+
+    For detecting negation, the module uses rules that may be sensitive to unicode or
+    not. When the rule is not sensitive to unicode, we try to convert unicode chars to
+    the closest ascii chars. However, some characters need to be pre-processed before
+    (e.g., `n°` -> `number`). So, if the text lengths are different, we fall back on
+    initial unicode text for detection even if rule is not unicode-sensitive.
+    In this case, a warning is logged for recommending to pre-process data.
     """
 
     def __init__(
         self,
         output_label: str,
         rules: Optional[List[NegationDetectorRule]] = None,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """Instantiate the negation detector
 
         Parameters
         ----------
         output_label:
-            The output label of the created annotations
+            The label of the created attributes
         rules:
             The set of rules to use when detecting negation. If none provided,
             the rules in "negation_detector_default_rules.yml" will be used
-        proc_id:
+        op_id:
             Identifier of the detector
         """
-        if proc_id is None:
-            proc_id = generate_id()
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
+
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
 
         assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
 
-        self.id: str = proc_id
         self.output_label = output_label
         self.rules = rules
 
@@ -115,18 +124,6 @@ class NegationDetector:
             not r.unicode_sensitive for r in rules
         )
 
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(output_label=self.output_label, rules=self.rules)
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
-
     def run(self, segments: List[Segment]):
         """Add a negation attribute to each segment with a True/False value.
 
@@ -147,11 +144,23 @@ class NegationDetector:
             return
 
         text_unicode = segment.text
-        text_ascii = (
-            unidecode.unidecode(text_unicode)
-            if self._has_non_unicode_sensitive_rule
-            else None
-        )
+        text_ascii = None
+
+        if self._has_non_unicode_sensitive_rule:
+            # If there exists one rule which is not unicode-sensitive
+            text_ascii = unidecode.unidecode(text_unicode)
+            # Verify that text length is conserved
+            if len(text_ascii) != len(
+                text_unicode
+            ):  # if text conversion had changed its length
+                logger.warning(
+                    "Lengths of unicode text and generated ascii text are different. "
+                    "Please, pre-process input text before running NegationDetector\n\n"
+                    f"Unicode:{text_unicode} (length: {len(text_unicode)})\n"
+                    f"Ascii: {text_ascii} (length: {len(text_ascii)})\n"
+                )
+                # Fallback on unicode text
+                text_ascii = text_unicode
 
         # try all rules until we have a match
         is_negated = False

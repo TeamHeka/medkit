@@ -24,7 +24,9 @@ class TextAnnotation(Annotation):
         ann_id: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ):
-        return super().__init__(label, attrs, ann_id, metadata)
+        return super().__init__(
+            label=label, attrs=attrs, ann_id=ann_id, metadata=metadata
+        )
 
 
 class Segment(TextAnnotation):
@@ -88,10 +90,6 @@ class Segment(TextAnnotation):
         remaining_max_extend_length = max_extend_length - (start - start_extended)
         end_extended = min(end + remaining_max_extend_length, len(doc.text))
         return doc.text[start_extended:end_extended]
-
-    def __repr__(self):
-        annotation = super().__repr__()
-        return f"{annotation}, spans={self.spans!r}, text={self.text!r}"
 
 
 class Entity(Segment):
@@ -168,7 +166,3 @@ class Relation(TextAnnotation):
         data = super().to_dict()
         data.update(source_id=self.source_id, target_id=self.target_id)
         return data
-
-    def __repr__(self):
-        annotation = super().__repr__()
-        return f"{annotation}, source={self.source_id}, target_id={self.target_id}"

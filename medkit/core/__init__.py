@@ -1,5 +1,4 @@
 __all__ = [
-    "text",
     "Annotation",
     "Attribute",
     "InputConverter",
@@ -10,6 +9,8 @@ __all__ = [
     "Collection",
     "Document",
     "generate_id",
+    "DocOperation",
+    "Operation",
     "OperationDescription",
     "Pipeline",
     "PipelineStep",
@@ -23,13 +24,13 @@ __all__ = [
     "DictStore",
 ]
 
-from . import text
 from .annotation import Annotation, Attribute
 from .conversion import InputConverter, OutputConverter
 from .data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs
 from .doc_pipeline import DocPipeline
 from .document import Collection, Document
 from .id import generate_id
+from .operation import Operation, DocOperation
 from .operation_desc import OperationDescription
 from .pipeline import (
     Pipeline,

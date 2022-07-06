@@ -1,15 +1,15 @@
 __all__ = ["DocPipeline"]
 
-from typing import Dict, List, Optional, Tuple, cast
+from typing import Dict, List, Optional, Tuple, Union, cast
 
 from medkit.core.annotation import Annotation
-from medkit.core.document import Document
-from medkit.core.operation_desc import OperationDescription
-from medkit.core.pipeline import Pipeline, PipelineStep
+from medkit.core.document import Collection, Document
+from medkit.core.operation import DocOperation
+from medkit.core.pipeline import Pipeline
 from medkit.core.prov_builder import ProvBuilder
 
 
-class DocPipeline:
+class DocPipeline(DocOperation):
     """Wrapper around the `Pipeline` class that applies a list of a document or a`collection
     of documents
 
@@ -21,21 +21,18 @@ class DocPipeline:
 
     def __init__(
         self,
-        steps: List[PipelineStep],
+        pipeline: Pipeline,
         labels_by_input_key: Dict[str, List[str]],
-        output_keys: List[str],
-        id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """Initialize the pipeline
 
-        Params
-        ------
-        steps:
-            List of pipeline steps.
-
-            Steps will be executed in the order in which they were added,
-            so make sure to add first the steps generating data used by other steps.
-
+        Parameters
+        ----------
+        pipeline:
+            Pipeline to execute on documents.
+            `output_keys` in pipeline is used for selecting annotations to be
+            added to documents
         labels_by_input_key:
             Mapping of input key to document annotation labels.
 
@@ -45,59 +42,41 @@ class DocPipeline:
             is running.
 
             For all pipeline step using `key` as an input key,
-            the annotations of the document having the label `label'
+            the annotations of the document having the label `label`
             will be used as input.
 
             It is possible to associate several labels to one key,
             as well as to associate a label to several keys
 
-        output_keys:
-            List of keys corresponding to the output annotations that should be
-            added to documents
+
         """
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
 
-        self.steps: List[PipelineStep] = steps
+        self.pipeline = pipeline
         self.labels_by_input_key: Dict[str, List[str]] = labels_by_input_key
-        self.output_keys: List[str] = output_keys
-
-        input_keys = list(labels_by_input_key.keys())
-        pipeline_steps = [
-            PipelineStep(s.operation, s.input_keys, s.output_keys) for s in steps
-        ]
-        self._pipeline: Pipeline = Pipeline(
-            id=id,
-            steps=pipeline_steps,
-            input_keys=input_keys,
-            output_keys=output_keys,
-        )
-
-    @property
-    def description(self) -> OperationDescription:
-        steps = [s.to_dict() for s in self.steps]
-        config = dict(
-            steps=steps,
-            labels_by_input_key=self.labels_by_input_key,
-            output_keys=self.output_keys,
-        )
-        return OperationDescription(
-            id=self._pipeline.id, name=self.__class__.__name__, config=config
-        )
 
     def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._pipeline.set_prov_builder(prov_builder)
+        self.pipeline.set_prov_builder(prov_builder)
 
-    def run(self, docs: List[Document]):
+    def run(self, docs: Union[List[Document], Collection]) -> None:
         """Run the pipeline on a list of documents, adding
         the output annotations to each document
 
-        Params
-        ------
+        Parameters
+        ----------
         docs:
             The documents on which to run the pipeline.
             Labels to input keys association will be used to retrieve existing
             annotations from each document, and all output annotations will also
             be added to each corresponding document.
         """
+
+        if isinstance(docs, Collection):
+            docs = [doc for doc in docs.documents]
+
         for doc in docs:
             self._process_doc(doc)
 
@@ -110,7 +89,7 @@ class DocPipeline:
                 else:
                     all_input_anns[input_key] += doc.get_annotations_by_label(label)
 
-        all_output_anns = self._pipeline.run(*all_input_anns.values())
+        all_output_anns = self.pipeline.run(*all_input_anns.values())
 
         # wrap output in tuple if necessary
         # (operations performing in-place modifications

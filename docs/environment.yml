@@ -1,0 +1,15 @@
+name: medkit-docs
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - jupyter-book
+  - matplotlib
+  - spacy
+  - sphinxcontrib-mermaid
+  - sphinx-toolbox
+  - pip
+  - pip:
+      - -e ..
+
+

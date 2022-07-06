@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = [
     "Span",
     "ModifiedSpan",
@@ -6,13 +8,14 @@ __all__ = [
 
 import dataclasses
 from typing import Any, Dict, List, NamedTuple, Union
+from typing_extensions import TypeAlias
 
 
 class Span(NamedTuple):
     """
     Slice of text extracted from the original text
 
-    Attributes
+    Parameters
     ----------
     start: int
         Index of the first character in the original text
@@ -36,7 +39,7 @@ class ModifiedSpan:
     """
     Slice of text not present in the original text
 
-    Attributes
+    Parameters
     ----------
     length:
         Number of characters
@@ -52,4 +55,4 @@ class ModifiedSpan:
         return dict(length=self.length, replaced_spans=replaced_spans)
 
 
-AnySpanType = Union[Span, ModifiedSpan]
+AnySpanType: TypeAlias = Union[Span, ModifiedSpan]

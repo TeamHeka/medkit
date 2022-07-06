@@ -18,33 +18,10 @@ Once this reviewing phase is over, the merge request will be integrated into `de
 
 ## Development environment
 
-Before everything else, make sure you have the appropriate Python version running on your system (`python3 --version`). Medkit requires Python >= 3.8. Optionally, you may want to create and activate a virtual environment with Python's [built-in venv module](https://docs.python.org/3/library/venv.html) (commands will slightly differ on Windows):
-
-```shell
-python3 -m venv <path/to/venv>
-source <path/to/venv>/bin/activate
-```
-
-or [conda](https://conda.io):
-
-```shell
-conda create --name medkit python=3.8
-conda activate medkit
-```
-
-To set up a local dev environment:
-- clone the Medkit repository locally:
-  - SSH: `git clone git@gitlab.inria.fr:heka/medkit.git`
-  - HTTPS: `git clone https://gitlab.inria.fr/heka/medkit`
-- install the `wheel` package with `pip install wheel` so that dependencies relying on wheels can be installed
-- enter the repository root dir (`cd medkit/`) and install the required dev dependencies: `pip install -r requirements.txt`
-- TODO: describe how to enable pre-commit hooks
-
-To make sure everything is set up properly, you may run the tests by launching the `pytest` command in the repository root dir.
-
-If you want to run the examples stored in the `examples/` directory, you may install the medkit package in editable mode by running `pip install -e .` in the repository root dir.
+cf [Install guide](docs/user_guide/install.md)
 
 ## Coding standards
+
 ### Code conventions
 
 The Medkit codebase follows the [PEP8](https://www.python.org/dev/peps/pep-0008/) style guide for Python code, which defines several rules among which:
@@ -78,9 +55,28 @@ Some general guidelines to keep in mind:
 
 ## Tests
 
-Medkit uses [pytest](https://docs.pytest.org/) for testing. Tests are stored in the `tests/` folder in the repository root directory, and they can be executed with the command `pytest`. All tests files and test functions must be prefixed with `test_`.  It is possible to run a specific test using `pytest path/to/test_file.py::test_func`.
+Medkit uses [pytest](https://docs.pytest.org/) for testing. Tests are stored in the `tests/` folder in the repository root directory.
+All tests files and test functions must be prefixed with `test_`.
+It is possible to run a specific test using `pytest path/to/test_file.py::test_func`.
 
-Medkit doesn't explicit distinguish between unit test, integration tests, regression tests, etc. The structure in the `tests/` directory should roughly follow the structure of the `medkit/` source directory itself. For instance, the tests of the (hypothetical) `medkit/core/text/document.py` module should be in `tests/core/text/document.py`. This is not a hard rule, it might be necessary to create test modules in `tests/` that do not have a direct counter part in `medkit/` if we are extensively testing some specific feature and we want to keep these tests separately for clarity.
+Medkit tests are composed of:
+* small/unit tests which execution does not take much time. These tests are executed for each Merge Request.
+* large tests which needs more time to be executed. These tests are used for verifying that there is no regression (TODO: at each integration in development branch).
+
+The structure in the `tests/unit` directory should roughly follow the structure of the `medkit/` source directory itself.
+For instance, the tests of the (hypothetical) `medkit/core/text/document.py` module should be in `tests/core/text/test_document.py`.
+
+In `tests/large`, tests do not have a direct counterpart in `medkit/`. This folder is for extensively testing some specific feature and we need to keep these tests separately for clarity.
+
+To execute tests:
+
+```
+# For small/unit tests
+pytest -v tests/unit
+
+# For large tests
+pytest -v tests/large
+```
 
 When fixing a bug, it is a good idea to introduce a test in order to:
 - demonstrate the buggy behavior.
@@ -96,5 +92,31 @@ Each test function should have a name like `test_<tested_module_or_class_or_func
 
 ## Documentation
 
-TODO
+Documentation is available in `docs` folder.
 
+For building docs (another conda environment is available in `docs` folder).
+First you need to install [mamba](https://mamba.readthedocs.io/en/latest/user_guide/mamba.html):
+
+```
+$ cd docs
+$ mamba env create -f environment.yml
+$ conda activate medkit-docs
+$ jb build .
+```
+Then, html docs are generated in `docs/_build/html`.
+
+To transform a notebook into a markdown/myst format, you may use `jupytext`.
+e.g.,
+
+```
+jupytext --to myst myfile.ipynb
+```
+
+Thus, you will be able to integrate this notebook into documentation.
+
+To modify an existing notebook under markdown/myst format, you can also use
+`jupyter-notebook` only if `jupytext` is also installed :
+
+```
+jupyter notebook myfile.md
+```

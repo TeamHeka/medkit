@@ -12,13 +12,13 @@ from typing import (
     Dict,
     List,
     Optional,
-    Protocol,
     Tuple,
     Union,
     cast,
-    runtime_checkable,
 )
+from typing_extensions import Protocol, runtime_checkable
 
+from medkit.core.annotation import Annotation
 from medkit.core.data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs
 from medkit.core.id import generate_id
 from medkit.core.operation_desc import OperationDescription
@@ -28,10 +28,11 @@ from medkit.core.prov_builder import ProvBuilder
 @runtime_checkable
 class PipelineCompatibleOperation(Protocol):
     def run(
-        self, **all_input_data: List[Any]
+        self, *all_input_data: List[Any]
     ) -> Union[None, List[Any], Tuple[List[Any], ...]]:
-        """Params
-        ------
+        """
+        Parameters
+        ----------
         all_input_data:
             One or several list of data items to process
             (according to the number of input the operation needs)
@@ -63,7 +64,7 @@ class DescribableOperation(Protocol):
 class PipelineStep:
     """`Pipeline` item describing how a processing operation is connected to other
 
-    Attributes
+    Parameters
     ----------
     operation:
         The operation to use at that step
@@ -102,7 +103,7 @@ class Pipeline:
     and the keys are its edge. Two operations can be chained by using the same string
     as an output key for the first operation and as an input key to the second.
 
-    Steps must be added in the order of execution, there isn't any sort of depency
+    Steps must be added in the order of execution, there isn't any sort of dependency
     detection mechanism.
     """
 
@@ -115,8 +116,8 @@ class Pipeline:
     ):
         """Initialize the pipeline
 
-        Params
-        ------
+        Parameters
+        ----------
         steps:
             List of pipeline steps
 
@@ -178,12 +179,17 @@ class Pipeline:
 
         all_output_data = tuple(data_by_key[key] for key in self.output_keys)
 
+        # Keep keys only for output key
+        for data_item in [d for data_tuple in all_output_data for d in data_tuple]:
+            if isinstance(data_item, Annotation):
+                data_item.keep_keys(self.output_keys)
+
         if self._prov_builder is not None:
             self._add_provenance(all_output_data)
 
         if len(all_output_data) == 0:
             # no output
-            return all_output_data
+            return None
         elif len(all_output_data) == 1:
             # unwrap out of tuple if only 1 output
             return all_output_data[0]
@@ -229,6 +235,9 @@ class Pipeline:
                 data_by_key[output_key] = output_data
             else:
                 data_by_key[output_key] += output_data
+            for data_item in output_data:
+                if isinstance(data_item, Annotation):
+                    data_item.add_key(output_key)
 
     def _add_provenance(self, all_output_data: Tuple[List[Any], ...]):
         assert self._prov_builder is not None and self._sub_prov_builder is not None

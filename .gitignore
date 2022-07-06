@@ -23,10 +23,15 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*_out/
 
 # IPython
 profile_default/
 ipython_config.py
+
+# Tests
+.coverage
+report.xml
 
 # Distribution / packaging
 .Python

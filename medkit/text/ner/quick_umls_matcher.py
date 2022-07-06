@@ -1,18 +1,14 @@
 __all__ = ["QuickUMLSMatcher"]
 
 from pathlib import Path
-from typing import Dict, Iterator, List, Literal, NamedTuple, Optional, Union
+from typing import Dict, Iterator, List, NamedTuple, Optional, Union
+from typing_extensions import Literal
 
 from quickumls import QuickUMLS
 import quickumls.constants
 
-from medkit.core import (
-    Attribute,
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
-from medkit.core.text import Entity, Segment, span_utils
+from medkit.core import Attribute
+from medkit.core.text import Entity, NEROperation, Segment, span_utils
 
 
 # workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/issues/68
@@ -28,7 +24,7 @@ class _QuickUMLSInstall(NamedTuple):
     normalize_unicode: bool
 
 
-class QuickUMLSMatcher:
+class QuickUMLSMatcher(NEROperation):
     """Entity annotator relying on QuickUMLS.
 
     This annotator requires a QuickUMLS installation performed
@@ -41,24 +37,24 @@ class QuickUMLSMatcher:
     lowercase QuickUMLS install based on UMLS version 2021AB,
     we must first create this installation with:
 
-        python -m quickumls.install --language FRE --lowercase /path/to/umls/2021AB/data /path/to/quick/umls/install
+    >>> python -m quickumls.install --language FRE --lowercase /path/to/umls/2021AB/data /path/to/quick/umls/install
 
     then register this install with:
 
-        QuickUMLSMatcher.add_install(
-            "/path/to/quick/umls/install",
-            version="2021AB",
-            language="FRE",
-            lowercase=True,
-        )
+    >>> QuickUMLSMatcher.add_install(
+    >>>        "/path/to/quick/umls/install",
+    >>>        version="2021AB",
+    >>>        language="FRE",
+    >>>        lowercase=True,
+    >>> )
 
     and finally instantiate the matcher with:
 
-        matcher = QuickUMLSMatcher(
-            version="2021AB",
-            language="FRE",
-            lowercase=True,
-        )
+    >>> matcher = QuickUMLSMatcher(
+    >>>     version="2021AB",
+    >>>     language="FRE",
+    >>>     lowercase=True,
+    >>> )
 
     This mechanism makes it possible to store in the OperationDescription
     how the used QuickUMLS was created, and to reinstantiate the same matcher
@@ -118,9 +114,10 @@ class QuickUMLSMatcher:
         path = cls._install_paths.get(install)
         if path is None:
             raise Exception(
-                "Couldn't find any Quick- UMLS install "
-                f"for {version=}, {language=}, {lowercase=}, {normalize_unicode=}.\n"
-                f"Registered installs: {cls._install_paths}"
+                f"Couldn't find any Quick- UMLS install for version={version},"
+                f" language={language}, lowercase={lowercase},"
+                f" normalize_unicode={normalize_unicode}.\nRegistered installs:"
+                f" {cls._install_paths}"
             )
         return path
 
@@ -136,7 +133,7 @@ class QuickUMLSMatcher:
         similarity: Literal["dice", "jaccard", "cosine", "overlap"] = "jaccard",
         accepted_semtypes: List[str] = quickumls.constants.ACCEPTED_SEMTYPES,
         attrs_to_copy: Optional[List[str]] = None,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """Instantiate the QuickUMLS matcher
 
@@ -170,12 +167,13 @@ class QuickUMLSMatcher:
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
         """
-        if proc_id is None:
-            proc_id = generate_id()
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
+
         if attrs_to_copy is None:
             attrs_to_copy = []
-
-        self.id: str = proc_id
 
         self.language = language
         self.version = version
@@ -204,29 +202,6 @@ class QuickUMLSMatcher:
             and self._matcher.to_lowercase_flag == lowercase
             and self._matcher.normalize_unicode_flag == normalize_unicode
         ), "Inconsistent QuickUMLS install flags"
-
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(
-            language=self.language,
-            version=self.version,
-            lowercase=self.lowercase,
-            normalize_unicode=self.normalize_unicode,
-            overlapping=self.overlapping,
-            threshold=self.threshold,
-            similarity=self.similarity,
-            window=self.window,
-            accepted_semtypes=self.accepted_semtypes,
-            attrs_to_copy=self.attrs_to_copy,
-        )
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]) -> List[Entity]:
         """Return entities (with UMLS normalization attributes) for each match in `segments`
@@ -291,7 +266,3 @@ class QuickUMLSMatcher:
                 )
 
             yield entity
-
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)

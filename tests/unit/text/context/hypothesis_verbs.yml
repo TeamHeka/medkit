@@ -1,0 +1,48 @@
+être:
+  indicatif:
+    "présent":
+      - suis
+      - es
+      - est
+      - sommes
+      - "êtes"
+      - sont
+    futur:
+      - serai
+      - seras
+      - sera
+      - serons
+      - serez
+      - serons
+  conditionnel:
+    "présent":
+      - serais
+      - serais
+      - serait
+      - serions
+      - seriez
+      - seraient
+avoir:
+  indicatif:
+    "présent":
+      - ai
+      - as
+      - a
+      - avons
+      - avez
+      - ont
+    futur:
+      - aurai
+      - auras
+      - aura
+      - aurons
+      - aurez
+      - auront
+  conditionnel:
+    "présent":
+      - aurais
+      - aurais
+      - aurait
+      - aurions
+      - auriez
+      - auraient

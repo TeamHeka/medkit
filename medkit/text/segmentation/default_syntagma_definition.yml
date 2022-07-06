@@ -1,0 +1,22 @@
+---
+syntagmas:
+  separators:
+    - '[^a-z]mais[^a-z]'
+    - '\spour\s+qu'
+    - '\squi '
+    - '\sentre\s'
+    - '\scar\s+'
+    - '[\r\n\.;\?!\(\)]'
+    - ',\s+[^d][^A-Z]'
+    - ' sans '
+    - ' puis '
+    - 'lequel'
+    - 'laquelle'
+    - 'hormis'
+    - 'parce\s+qu'
+    - 'bien\s+qu'
+    - 'et\s+qu'
+    - 'alors\s+qu'
+    - 'en\s+dehors\s+d'
+    - 'malgr[ée]'
+    - 'en\s+raison\s+de'

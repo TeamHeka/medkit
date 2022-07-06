@@ -4,17 +4,13 @@ __all__ = ["SectionModificationRule", "SectionTokenizer"]
 
 import dataclasses
 import pathlib
-from typing import Dict, Literal, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
+from typing_extensions import Literal
 import yaml
 
 from flashtext import KeywordProcessor
 
-from medkit.core import (
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
-from medkit.core.text import Segment, span_utils
+from medkit.core.text import Segment, SegmentationOperation, span_utils
 
 
 @dataclasses.dataclass(frozen=True)
@@ -30,7 +26,7 @@ class SectionModificationRule:
     order: Literal["BEFORE", "AFTER"]
 
 
-class SectionTokenizer:
+class SectionTokenizer(SegmentationOperation):
     """Section segmentation annotator based on keyword rules"""
 
     def __init__(
@@ -38,7 +34,7 @@ class SectionTokenizer:
         section_dict: Dict[str, List[str]],
         output_label: str = DefaultConfig.output_label,
         section_rules: Tuple[SectionModificationRule] = (),
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """
         Initialize the Section Tokenizer
@@ -54,32 +50,16 @@ class SectionTokenizer:
             List of rules for modifying a section name according its order to the other
             sections.
         """
-        if proc_id is None:
-            proc_id = generate_id()
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
 
-        self.id: str = proc_id
         self.output_label = output_label
         self.section_dict = section_dict
         self.section_rules = section_rules
         self.keyword_processor = KeywordProcessor(case_sensitive=True)
         self.keyword_processor.add_keywords_from_dict(section_dict)
-
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(
-            output_label=self.output_label,
-            section_dict=self.section_dict,
-            section_rules=self.section_rules,
-        )
-
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -179,10 +159,6 @@ class SectionTokenizer:
             section_rules=section_rules,
         )
         return section_tokenizer
-
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)
 
     @staticmethod
     def load_section_definition(

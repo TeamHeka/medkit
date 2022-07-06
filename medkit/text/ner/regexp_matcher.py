@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = ["RegexpMatcher", "RegexpMatcherRule", "RegexpMatcherNormalization"]
 
 import dataclasses
+import logging
 from pathlib import Path
 import re
 from typing import Any, Iterator, List, Optional
@@ -11,13 +12,11 @@ import unidecode
 import yaml
 
 
-from medkit.core import (
-    Attribute,
-    OperationDescription,
-    ProvBuilder,
-    generate_id,
-)
-from medkit.core.text import Entity, Segment, span_utils
+from medkit.core import Attribute
+from medkit.core.text import Entity, NEROperation, Segment, span_utils
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -39,7 +38,13 @@ class RegexpMatcherRule:
         If the regexp has groups, the index of the group to use to extract
         the entity
     case_sensitive:
-        Wether to ignore case when running `regexp and `exclusion_regexp`
+        Whether to ignore case when running `regexp and `exclusion_regexp`
+    unicode_sensitive:
+        If True, regexp rule matches are searched on unicode text.
+        So, `regexp and `exclusion_regexs` shall not contain non-ASCII chars because
+        they would never be matched.
+        If False, regexp rule matches are searched on closest ASCII text when possible.
+        (cf. RegexpMatcher)
     exclusion_regexp:
         An optional exclusion pattern. Note that this exclusion pattern will
         executed on the whole input annotation, so when relying on `exclusion_regexp`
@@ -67,7 +72,7 @@ class RegexpMatcherRule:
             self.regexp.isascii()
             and (self.exclusion_regexp is None or self.exclusion_regexp.isascii())
         ), (
-            "NegationDetectorRule regexps shouldn't contain non-ASCII chars when"
+            "RegexpMatcherRule regexps shouldn't contain non-ASCII chars when"
             " unicode_sensitive is False"
         )
 
@@ -96,14 +101,22 @@ class RegexpMatcherNormalization:
 _PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.yml"
 
 
-class RegexpMatcher:
-    """Entity annotator relying on regexp-based rules"""
+class RegexpMatcher(NEROperation):
+    """Entity annotator relying on regexp-based rules
+
+    For detecting entities, the module uses rules that may be sensitive to unicode or
+    not. When the rule is not sensitive to unicode, we try to convert unicode chars to
+    the closest ascii chars. However, some characters need to be pre-processed before
+    (e.g., `n°` -> `number`). So, if the text lengths are different, we fall back on
+    initial unicode text for detection even if rule is not unicode-sensitive.
+    In this case, a warning is logged for recommending to pre-process data.
+    """
 
     def __init__(
         self,
         rules: Optional[List[RegexpMatcherRule]] = None,
         attrs_to_copy: Optional[List[str]] = None,
-        proc_id: Optional[str] = None,
+        op_id: Optional[str] = None,
     ):
         """
         Instantiate the regexp matcher
@@ -117,11 +130,14 @@ class RegexpMatcher:
             Labels of the attributes that should be copied from the source segment
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
-        proc_id:
+        op_id:
             Identifier of the tokenizer
         """
-        if proc_id is None:
-            proc_id = generate_id()
+        # Pass all arguments to super (remove self)
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
+
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
         if attrs_to_copy is None:
@@ -129,7 +145,6 @@ class RegexpMatcher:
 
         assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
 
-        self.id: str = proc_id
         self.rules = rules
         self.attrs_to_copy = attrs_to_copy
 
@@ -150,18 +165,6 @@ class RegexpMatcher:
         self._has_non_unicode_sensitive_rule = any(
             not r.unicode_sensitive for r in rules
         )
-
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        config = dict(rules=self.rules, attrs_to_copy=self.attrs_to_copy)
-        return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
-        )
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def run(self, segments: List[Segment]) -> List[Entity]:
         """
@@ -184,11 +187,24 @@ class RegexpMatcher:
         ]
 
     def _find_matches_in_segment(self, segment: Segment) -> Iterator[Entity]:
-        text_ascii = (
-            unidecode.unidecode(segment.text)
-            if self._has_non_unicode_sensitive_rule
-            else None
-        )
+        text_ascii = None
+        text_unicode = segment.text
+
+        if self._has_non_unicode_sensitive_rule:
+            # If there exists one rule which is not unicode-sensitive
+            text_ascii = unidecode.unidecode(segment.text)
+            # Verify that text length is conserved
+            if len(text_ascii) != len(
+                text_unicode
+            ):  # if text conversion had changed its length
+                logger.warning(
+                    "Lengths of unicode text and generated ascii text are different. "
+                    "Please, pre-process input text before running RegexpMatcher\n\n"
+                    f"Unicode:{text_unicode} (length: {len(text_unicode)})\n"
+                    f"Ascii: {text_ascii} (length: {len(text_ascii)})\n"
+                )
+                # Fallback on unicode text
+                text_ascii = text_unicode
 
         for rule in self.rules:
             yield from self._find_matches_in_segment_for_rule(rule, segment, text_ascii)
@@ -258,10 +274,6 @@ class RegexpMatcher:
                     )
 
             yield entity
-
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(proc_id=description.id, **description.config)
 
     @staticmethod
     def load_rules(path_to_rules) -> List[RegexpMatcherRule]:
