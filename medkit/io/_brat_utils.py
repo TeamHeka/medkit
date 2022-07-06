@@ -143,7 +143,7 @@ class BratDocument:
         return augmented_entities
 
 
-# data structures for annotation configuration purposes
+# data structures for configuration
 @dataclass
 class RelationConf:
     type: str
@@ -183,7 +183,7 @@ class AttributeConf:
 class BratAnnConfiguration:
     """A data structure to represent 'annotation.conf' in brat documents.
     This is necessary to generate a valid annotation project in brat.
-    An 'annotation.conf' has four sections. The section 'events' are not
+    An 'annotation.conf' has four sections. The section 'events' is not
     supported in medkit, so the section is empty.
     """
 
@@ -331,6 +331,26 @@ def parse_string(ann_string: str, detect_groups: bool = False) -> BratDocument:
 def convert_medkit_anns_to_brat(
     segments: List[Segment], relations: List[Relation], attrs: List[str]
 ) -> Tuple[ValuesView[Union[BratEntity, BratAttribute, BratRelationAugmented]], str]:
+    """
+    Convert Segments, Relations and selected attributes into brat data structures
+
+    Parameters
+    ----------
+    segments:
+        Medkit segments to convert
+    relations:
+        Medkit relations to convert
+    attrs:
+        Labels of medkit attributes to add in the annotations that will be converted.
+        If `None` (default) all medkit attributes found in the segments or relations
+        will be converted to brat attributes
+    Returns
+    -------
+    BratAnnotations
+        A list of brat annotations
+    brat_str
+        brat annotations string
+    """
     nb_segment, nb_relation, nb_attribute = 1, 1, 1
     anns_by_medkit_id = dict()
     brat_annotations_str = ""
@@ -393,7 +413,7 @@ def _parse_entity(entity_id: str, entity_content: str) -> BratEntity:
 
     Returns
     -------
-    Entity
+    BratEntity
         The dataclass object representing the entity
 
     Raises
@@ -430,7 +450,7 @@ def _parse_relation(relation_id: str, relation_content: str) -> BratRelation:
 
     Returns
     -------
-    Relation
+    BratRelation
         The dataclass object representing the relation
 
     Raises
@@ -463,7 +483,7 @@ def _parse_attribute(attribute_id: str, attribute_content: str) -> BratAttribute
 
     Returns
     -------
-    Attribute:
+    BratAttribute:
         The dataclass object representing the attribute
 
     Raises
@@ -504,7 +524,7 @@ def _convert_segment_to_brat(segment: Segment, nb_segment: int) -> BratEntity:
 
     Returns
     -------
-    brat_entity
+    BratEntity
         The equivalent brat entity of the medkit segment
     """
     assert nb_segment != 0
@@ -519,7 +539,7 @@ def _convert_segment_to_brat(segment: Segment, nb_segment: int) -> BratEntity:
 def _convert_relation_to_brat(
     relation: Relation,
     nb_relation: int,
-    brat_anns_by_segment_id: Dict[str, str],
+    brat_anns_by_segment_id: Dict[str, BratEntity],
 ) -> BratRelationAugmented:
     """
     Get a brat relation from a medkit relation
@@ -531,11 +551,11 @@ def _convert_relation_to_brat(
     nb_relation:
         The current counter of brat relations
     brat_anns_by_segment_id:
-        A dict to map medkit ID from segments to brat annotation
+        A dict to map medkit ID to brat annotation
 
     Returns
     -------
-    brat_relation
+    BratRelationAugmented
         The equivalent brat relation of the medkit relation
     """
     assert nb_relation != 0
@@ -569,10 +589,9 @@ def _convert_attribute_to_brat(
 
     Returns
     -------
-    brat_attribute:
+    BratAttribute:
         The equivalent brat attribute of the medkit attribute
     """
-    # medkit attrs to brat attr
     assert nb_attribute != 0
     brat_id = f"A{nb_attribute}"
     type = attribute.label.replace(" ", "_")
@@ -595,14 +614,14 @@ def get_configuration_from_anns(
     entity_types = set()
     for ann in brat_annotations:
         if isinstance(ann, BratEntity):
-            entity_types.update((ann.type,))
+            entity_types.update([ann.type])
         elif isinstance(ann, BratRelationAugmented):
             new_type = RelationConf(
-                type=ann.type, args1=set((ann.subj.type,)), args2=set((ann.obj.type,))
+                type=ann.type, args1=set([ann.subj.type]), args2=set([ann.obj.type])
             )
             config.add_relation_type(new_type)
         elif isinstance(ann, BratAttribute):
-            values = set() if ann.value is None else set((ann.value,))
+            values = set() if ann.value is None else set([ann.value])
             new_type = AttributeConf(
                 from_entity=ann.is_from_entity, type=ann.type, values=values
             )

@@ -1,22 +1,12 @@
 __all__ = ["BratInputConverter", "BratOutputConverter"]
-import warnings
+import logging
 from pathlib import Path
 from typing import List, Optional, Tuple, Union, ValuesView
 
 from smart_open import open
-
 import medkit.io._brat_utils as brat_utils
-from medkit.core import (
-    Attribute,
-    Collection,
-    InputConverter,
-    OperationDescription,
-    ProvBuilder,
-    Store,
-    generate_id,
-)
-from medkit.core.text import Entity, Relation, Span, TextDocument
-from medkit.core.text.annotation import Segment
+from medkit.core import Attribute, Collection, InputConverter, OutputConverter, Store
+from medkit.core.text import Entity, Relation, Segment, Span, TextDocument
 
 
 TEXT_EXT = ".txt"
@@ -27,21 +17,11 @@ ANN_CONF_FILE = "annotation.conf"
 class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
 
-    def __init__(self, store: Optional[Store] = None, id: Optional[str] = None):
-        if id is None:
-            id = generate_id()
-
-        self.id: str = id
+    def __init__(self, store: Optional[Store] = None, op_id: Optional[str] = None):
+        init_args = locals()
+        init_args.pop("self")
+        super().__init__(**init_args)
         self.store: Optional[Store] = store
-
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        return OperationDescription(id=self.id, name=self.__class__.__name__)
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def load(
         self,
@@ -90,7 +70,7 @@ class BratInputConverter(InputConverter):
             documents.append(doc)
 
         if not documents:
-            warnings.warn(f"Didn't load any document from dir {dir_path}")
+            logging.warn(f"Didn't load any document from dir {dir_path}")
 
         return Collection(documents)
 
@@ -183,75 +163,93 @@ class BratInputConverter(InputConverter):
         return anns_by_brat_id.values()
 
 
-class BratOutputConverter:
+class BratOutputConverter(OutputConverter):
     """Class in charge of converting a list/Collection of TextDocuments into a
     brat collection file"""
 
     def __init__(
         self,
-        labels_anns: Optional[List[str]] = None,
+        anns_labels: Optional[List[str]] = None,
         attrs: Optional[List[str]] = None,
-        keep_segments: bool = False,
+        ignore_segments: bool = True,
         create_config: bool = True,
         op_id: Optional[str] = None,
-    ):  # TODO: add docstring
-        self.labels_anns = labels_anns
+    ):
+        """
+        Initialize the Brat output converter
+
+        Parameters
+        ----------
+        anns_labels:
+            Labels of medkit annotations to convert into Brat annotations.
+            If `None` (default) all the annotations will converted
+        attrs:
+            Labels of medkit attributes to add in the annotations that will be included.
+            If `None` (default) all medkit attributes found in the segments or relations
+            will be converted to Brat attributes
+        ignore_segments:
+            If `True` medkit segments will be ignored. Only entities, attributes and relations
+            will be converted to Brat annotations.  If `False` the medkit segments will be
+            converted to Brat annotations as well.
+        create_config:
+            Whether to create a configuration file for the generated collection.
+            This file defines the types of annotations generated, it is necessary for the correct
+            visualization on Brat.
+        op_id:
+            Identifier of the converter
+        """
+        self.anns_labels = anns_labels
         self.attrs = attrs
-        self.keep_segments = keep_segments
+        self.ignore_segments = ignore_segments
         self.create_config = create_config
-        self.op_id: str = op_id
-        self._prov_builder: Optional[ProvBuilder] = None
-
-    @property
-    def description(self) -> OperationDescription:
-        return OperationDescription(id=self.op_id, name=self.__class__.__name__)
-
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
 
     def convert(
         self,
-        medkit_docs: Union[List[TextDocument], Collection],
-        output_path: Union[str, Path],
+        docs: Union[List[TextDocument], Collection],
+        dir_path: Union[str, Path],
     ):
-        """Convert a collection of TextDocuments into a brat collection
+        """Convert a collection or list of TextDocuments into a brat collection
         For each collection or list of documents, a folder is created with
-        the txt and ann files."""
+        the txt and ann files.
 
-        if isinstance(medkit_docs, Collection):
-            medkit_docs = [
+        Parameters
+        ----------
+        docs:
+            List or Collection of medkit doc objects to convert
+        dir_path:
+            String or path object to save the generated files
+        """
+
+        if isinstance(docs, Collection):
+            docs = [
                 medkit_doc
-                for medkit_doc in medkit_docs.documents
+                for medkit_doc in docs.documents
                 if isinstance(medkit_doc, TextDocument)
             ]
 
-        output_path = Path(output_path)
-        output_path.mkdir(parents=True, exist_ok=True)
+        dir_path = Path(dir_path)
+        dir_path.mkdir(parents=True, exist_ok=True)
 
         if self.create_config:
-            # each brat collection should have a configuration file
             ann_configuration = brat_utils.BratAnnConfiguration(
                 entity_types=set(), relation_types=dict(), attribute_types=dict()
             )
 
-        for medkit_doc in medkit_docs:
+        for medkit_doc in docs:
             doc_id = medkit_doc.id
-            if medkit_doc.text is not None:
-                text_path = output_path / f"{doc_id}{TEXT_EXT}"
-                with text_path.open("w", encoding="utf-8") as file:
-                    file.write(medkit_doc.text)
-                    file.close()
+            text = medkit_doc.text
+
+            if text is not None:
+                text_path = dir_path / f"{doc_id}{TEXT_EXT}"
+                text_path.write_text(text, encoding="utf-8")
 
             segments, relations, attrs = self._get_anns_from_medkit_doc(medkit_doc)
             brat_anns, brat_str = brat_utils.convert_medkit_anns_to_brat(
                 segments, relations, attrs
             )
-
             # save ann file
-            ann_path = output_path / f"{doc_id}{ANN_EXT}"
-            with ann_path.open("w", encoding="utf-8") as file:
-                file.write(brat_str)
-                file.close()
+            ann_path = dir_path / f"{doc_id}{ANN_EXT}"
+            ann_path.write_text(brat_str, encoding="utf-8")
 
             if self.create_config:
                 # update annotation_conf file from each generated brat
@@ -261,10 +259,8 @@ class BratOutputConverter:
 
         if self.create_config:
             # save configuration file
-            conf_path = output_path / ANN_CONF_FILE
-            with conf_path.open("w", encoding="utf-8") as file:
-                file.write(str(ann_configuration))
-                file.close()
+            conf_path = dir_path / ANN_CONF_FILE
+            conf_path.write_text(str(ann_configuration), encoding="utf-8")
 
     def _get_anns_from_medkit_doc(
         self, medkit_doc: TextDocument
@@ -275,15 +271,15 @@ class BratOutputConverter:
         """
         annotations = medkit_doc.get_annotations()
 
-        if self.labels_anns is not None:
+        if self.anns_labels is not None:
             # filter annotations by label
-            annotations = [ann for ann in annotations if ann.label in self.labels_anns]
+            annotations = [ann for ann in annotations if ann.label in self.anns_labels]
 
-        if self.labels_anns and annotations == []:
+        if self.anns_labels and annotations == []:
             # labels_anns were a list but none of the annotations
             # had a label of interest
-            labels_str = ",".join(self.labels_anns)
-            warnings.warn(
+            labels_str = ",".join(self.anns_labels)
+            logging.warn(
                 "No medkit annotations were included because none have"
                 f" '{labels_str}' as label."
             )
@@ -299,7 +295,7 @@ class BratOutputConverter:
         for ann in annotations:
             if isinstance(ann, Entity):
                 segments.append(ann)
-            elif isinstance(ann, Segment) and self.keep_segments:
+            elif isinstance(ann, Segment) and not self.ignore_segments:
                 # In brat only entities exists, in some cases
                 # a medkit document could include segments
                 # that may be exported as entities

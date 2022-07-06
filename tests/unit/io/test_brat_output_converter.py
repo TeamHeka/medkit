@@ -61,30 +61,30 @@ def _get_medkit_doc():
 
 
 TEST_LABELS_ANNS = [
-    (None, False, 4),  # 4 entities
-    ([], False, 0),
-    (["maladie"], False, 2),
-    (None, True, 5),  # 4 entities + 1 segment
+    (None, True, 4),  # 4 entities
     ([], True, 0),
     (["maladie"], True, 2),
+    (None, False, 5),  # 4 entities + 1 segment
+    ([], False, 0),
+    (["maladie"], False, 2),
 ]
 
 
 @pytest.mark.parametrize(
-    "labels_anns,keep_segments,expected_nb_brat_entities",
+    "anns_labels,ignore_segments,expected_nb_brat_entities",
     TEST_LABELS_ANNS,
     ids=[
-        "default_no_segment",
-        "no_annotations_no_segment",
-        "entity_by_label_no_segment",
         "default_keep_segment",
         "no_annotations_keep_segment",
         "entity_by_label_keep_segment",
+        "default_no_segment",
+        "no_annotations_no_segment",
+        "entity_by_label_no_segment",
     ],
 )
 def test_entity_conversion(
-    labels_anns,
-    keep_segments,
+    anns_labels,
+    ignore_segments,
     expected_nb_brat_entities,
 ):
     # create medkit_doc with 4 entities, 1 relation, 1 segment, 2 attrs
@@ -92,8 +92,8 @@ def test_entity_conversion(
 
     # define a brat output converter without attrs
     brat_converter = BratOutputConverter(
-        labels_anns=labels_anns,
-        keep_segments=keep_segments,
+        anns_labels=anns_labels,
+        ignore_segments=ignore_segments,
         create_config=False,
         attrs=[],
     )
@@ -134,8 +134,8 @@ def test_attrs_conversion(attrs_to_convert, expected_is_from_entity):
 
     # define a brat output converter all anns selected attrs
     brat_converter = BratOutputConverter(
-        labels_anns=None,
-        keep_segments=False,
+        anns_labels=None,
+        ignore_segments=True,
         create_config=False,
         attrs=attrs_to_convert,
     )
@@ -178,8 +178,8 @@ def test_convert(tmp_path: Path, create_config):
 
     # define a brat output converter all anns selected attrs
     brat_converter = BratOutputConverter(
-        labels_anns=None,
-        keep_segments=True,
+        anns_labels=None,
+        ignore_segments=False,
         create_config=create_config,
         attrs=None,
     )
