@@ -37,24 +37,24 @@ class QuickUMLSMatcher(NEROperation):
     lowercase QuickUMLS install based on UMLS version 2021AB,
     we must first create this installation with:
 
-        python -m quickumls.install --language FRE --lowercase /path/to/umls/2021AB/data /path/to/quick/umls/install
+    >>> python -m quickumls.install --language FRE --lowercase /path/to/umls/2021AB/data /path/to/quick/umls/install
 
     then register this install with:
 
-        QuickUMLSMatcher.add_install(
-            "/path/to/quick/umls/install",
-            version="2021AB",
-            language="FRE",
-            lowercase=True,
-        )
+    >>> QuickUMLSMatcher.add_install(
+    >>>        "/path/to/quick/umls/install",
+    >>>        version="2021AB",
+    >>>        language="FRE",
+    >>>        lowercase=True,
+    >>> )
 
     and finally instantiate the matcher with:
 
-        matcher = QuickUMLSMatcher(
-            version="2021AB",
-            language="FRE",
-            lowercase=True,
-        )
+    >>> matcher = QuickUMLSMatcher(
+    >>>     version="2021AB",
+    >>>     language="FRE",
+    >>>     lowercase=True,
+    >>> )
 
     This mechanism makes it possible to store in the OperationDescription
     how the used QuickUMLS was created, and to reinstantiate the same matcher

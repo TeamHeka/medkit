@@ -17,7 +17,9 @@ class DucklingMatcher(NEROperation):
 
     This annotator currently requires a Duckling Server running. The easiest method is
     to run a docker container :
-        docker run --rm -d -p <PORT>:8000 --name duckling rasa/duckling:<TAG>
+
+    >>> docker run --rm -d -p <PORT>:8000 --name duckling rasa/duckling:<TAG>
+
     This command will start a Duckling server listening on port <PORT>.
     The version of the server is identified by <TAG>
     """

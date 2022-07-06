@@ -1,0 +1,16 @@
+format: jb-book
+root: index
+parts:
+- caption: User Guide
+  chapters:
+  - file: user_guide/install
+  - file: user_guide/module
+- caption: Examples
+  chapters:
+  - file: examples/demo
+  - file: examples/spans
+- caption: API reference
+  chapters:
+  - file: api/core.rst
+  - file: api/text.rst
+  - file: api/io.rst

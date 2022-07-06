@@ -1,0 +1,54 @@
+# Book settings
+# Learn more at https://jupyterbook.org/customize/config.html
+
+title: medkit
+author: HeKA Research Team
+copyright: "2022"
+logo: img/medkit_logo.png
+
+# Force re-execution of notebooks on each build.
+# See https://jupyterbook.org/content/execute.html
+execute:
+  execute_notebooks: auto
+
+# Define the name of the latex output file for PDF builds
+latex:
+  latex_documents:
+    targetname: book.tex
+
+# Information about where the book exists on the web
+repository:
+  url: https://gitlab.inria.fr/heka/medkit  # Online location of your book
+  path_to_book: docs  # Optional path to your book, relative to the repository root
+  branch: main  # Which branch of the repository should be used when creating links (optional)
+
+# Add buttons to your book
+# See https://jupyterbook.org/customize/config.html#add-a-link-to-your-repository
+html:
+  use_issues_button: true
+  use_repository_button: true
+  extra_navbar: ""
+
+# Add sphinx configuration options
+sphinx:
+  config:
+    add_module_names: False
+    language: en
+    autoclass_content: 'both'
+    autodoc_typehints: 'both'
+    autodoc_typehints_description_target: 'documented'
+    autodoc_typehints_format: 'short'
+    autodoc_mock_imports:
+      - torch
+      - transformers[sentencepiece]
+      - quickumls
+      - six # needed for quickumls, workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/pull/80
+      - PyRuSH
+      - spacy
+
+  extra_extensions:
+  - 'sphinx.ext.autodoc'
+  - 'sphinx.ext.napoleon'
+  - 'sphinx.ext.viewcode'
+  - 'sphinx_toolbox.more_autodoc.typevars'
+  - 'sphinxcontrib.mermaid'

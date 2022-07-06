@@ -1,5 +1,4 @@
 __all__ = [
-    "text",
     "Annotation",
     "Attribute",
     "InputConverter",
@@ -25,7 +24,6 @@ __all__ = [
     "DictStore",
 ]
 
-from . import text
 from .annotation import Annotation, Attribute
 from .conversion import InputConverter, OutputConverter
 from .data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs

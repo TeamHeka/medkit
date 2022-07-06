@@ -15,9 +15,13 @@ from medkit.core.text.span import Span
 class TextDocument(Document[TextAnnotation]):
     """Document holding text annotations
 
-    Annotations must be subclasses of `TextAnnotation`."""
+    Annotations must be subclasses of `TextAnnotation`.
+
+    """
 
     RAW_LABEL = "RAW_TEXT"
+    """Label to be used for raw text
+    """
 
     def __init__(
         self,
@@ -42,6 +46,13 @@ class TextDocument(Document[TextAnnotation]):
             Document metadata
         store:
             Store to use for annotations
+
+        Examples
+        --------
+        To get the raw text as an annotation to pass to processing operations:
+
+        >>> doc = TextDocument(text="hello")
+        >>> raw_text = doc.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
         """
         super().__init__(doc_id=doc_id, metadata=metadata, store=store)
         self.text: Optional[str] = text
@@ -89,6 +100,8 @@ class TextDocument(Document[TextAnnotation]):
         ------
         ValueError
             If `annotation.id` is already in Document.annotations.
+
+
         """
         if annotation.label == self.RAW_LABEL:
             raise RuntimeError(

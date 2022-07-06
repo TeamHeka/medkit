@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 __all__ = [
     "replace",
     "remove",
@@ -496,12 +498,13 @@ def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
     normalized_spans:
         Spans in `spans` normalized as described
 
-    Example
-    ------
+    Examples
+    --------
+
     >>> spans = [Span(0, 10), Span(20, 30), ModifiedSpan(8, replaced_spans=[Span(30, 36)])]
     >>> spans = normalize_spans(spans)
     >>> print(spans)
-    [Span(0, 10), Span(20, 36)]
+    >>> [Span(0, 10), Span(20, 36)]
     """
     all_spans = []
     for span in spans:
@@ -537,7 +540,7 @@ def clean_up_gaps_in_normalized_spans(
     or translation) into one unique bigger span. Gaps having less than `max_gap_length`
     will be removed by merging the spans before and after the gap.
 
-    Parameters:
+    Parameters
     -----------
     spans:
         The normalized spans in which to remove gaps
@@ -546,7 +549,8 @@ def clean_up_gaps_in_normalized_spans(
     max_gap_length:
         Max number of characters in gaps, after stripping leading and trailing whitespace.
 
-    Example:
+    Examples
+    --------
     >>> text = "heart failure"
     >>> spans = [Span(0, 5), Span(6, 13)]
     >>> spans = clean_up_gaps_in_normalized_spans(spans, text)

@@ -81,8 +81,9 @@ def _get_text_alignments(original_text, translated_segment):
 
 
 def test_translator_with_matcher(translator):
-    """Make sure we are able to link an entity matched on
-    translated text back to original text
+    """
+    Make sure we are able to link an entity matched on translated text back to original
+    text
     """
     rule = RegexpMatcherRule(
         regexp="heart failure",
@@ -134,8 +135,9 @@ def test_batch(translator):
 
 
 def test_ranges_sorting():
-    """Alignment ranges are properly sorted even with model
-    outputing non-monotonic token alignment
+    """
+    Alignment ranges are properly sorted even with model outputing non-monotonic
+    token alignment
     """
     aligner = _Aligner(model="aneuraz/awesome-align-with-co")
     range_alignment = aligner.align(

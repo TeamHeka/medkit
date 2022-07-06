@@ -33,14 +33,11 @@ class SentenceTokenizer(SegmentationOperation):
         ----------
         output_label: str, Optional
             The output label of the created annotations.
-            Default: "SENTENCE" (cf.DefaultConfig)
         punct_chars: Tuple[str], Optional
             The set of characters corresponding to end punctuations.
-            Default: ("\r", "\n", ".", ";", "?", "!") (cf. DefaultConfig)
         keep_punct: bool, Optional
             If True, the end punctuations are kept in the detected sentence.
-            If False, the sentence text does not include the end punctuations
-            Default: False (cf. DefaultConfig)
+            If False, the sentence text does not include the end punctuations.
         op_id: str, Optional
             Identifier of the tokenizer
         """
@@ -59,6 +56,7 @@ class SentenceTokenizer(SegmentationOperation):
 
         Parameters
         ----------
+
         segments:
             List of segments into which to look for sentences
 

@@ -111,8 +111,9 @@ def test_multiple_subgraphs_for_same_op():
 
 
 def test_flatten():
-    """Flatten a graph containing subgraphs, without repeating nodes
-    with same operation id as subgraph
+    """
+    Flatten a graph containing subgraphs, without repeating nodes with same operation
+    id as subgraph
     """
     graph = _gen_simple_graph()
     # flattening a graph with no subgraphs should return identical graph
