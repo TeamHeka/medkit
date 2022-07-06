@@ -182,8 +182,9 @@ class _PrefixerMergerWrapper:
 
 
 def test_multi_input_operation():
-    """Wrapper operation wrapping an operation deriving one item
-    from multiple input (merger)
+    """
+    Wrapper operation wrapping an operation deriving one item from multiple input
+    (merger)
     """
     builder = ProvBuilder()
     wrapper = _PrefixerMergerWrapper(builder)

@@ -30,8 +30,9 @@ class PipelineCompatibleOperation(Protocol):
     def run(
         self, *all_input_data: List[Any]
     ) -> Union[None, List[Any], Tuple[List[Any], ...]]:
-        """Params
-        ------
+        """
+        Parameters
+        ----------
         all_input_data:
             One or several list of data items to process
             (according to the number of input the operation needs)
@@ -63,7 +64,7 @@ class DescribableOperation(Protocol):
 class PipelineStep:
     """`Pipeline` item describing how a processing operation is connected to other
 
-    Attributes
+    Parameters
     ----------
     operation:
         The operation to use at that step
@@ -102,7 +103,7 @@ class Pipeline:
     and the keys are its edge. Two operations can be chained by using the same string
     as an output key for the first operation and as an input key to the second.
 
-    Steps must be added in the order of execution, there isn't any sort of depency
+    Steps must be added in the order of execution, there isn't any sort of dependency
     detection mechanism.
     """
 
@@ -115,8 +116,8 @@ class Pipeline:
     ):
         """Initialize the pipeline
 
-        Params
-        ------
+        Parameters
+        ----------
         steps:
             List of pipeline steps
 

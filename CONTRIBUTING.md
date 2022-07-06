@@ -18,22 +18,10 @@ Once this reviewing phase is over, the merge request will be integrated into `de
 
 ## Development environment
 
-To prepare your local dev environment:
-- clone the Medkit repository locally:
-  - SSH: `git clone git@gitlab.inria.fr:heka/medkit.git`
-  - HTTPS: `git clone https://gitlab.inria.fr/heka/medkit`
-
-  and enter the repository root dir (`cd medkit/`)
-- set up your virtual environment with [conda](https://conda.io). Medkit requires Python >= 3.7. In order to create the virtual env, install the dependencies and activate the env, run:
-  ```shell
-  conda env create -f environment.yml
-  conda activate medkit
-  ```
-- TODO: describe how to enable pre-commit hooks
-
-To make sure everything is set up properly, you may run the tests (cf. [Tests](#tests)).
+cf [Install guide](docs/user_guide/install.md)
 
 ## Coding standards
+
 ### Code conventions
 
 The Medkit codebase follows the [PEP8](https://www.python.org/dev/peps/pep-0008/) style guide for Python code, which defines several rules among which:
@@ -104,5 +92,31 @@ Each test function should have a name like `test_<tested_module_or_class_or_func
 
 ## Documentation
 
-TODO
+Documentation is available in `docs` folder.
 
+For building docs (another conda environment is available in `docs` folder).
+First you need to install [mamba](https://mamba.readthedocs.io/en/latest/user_guide/mamba.html):
+
+```
+$ cd docs
+$ mamba env create -f environment.yml
+$ conda activate medkit-docs
+$ jb build .
+```
+Then, html docs are generated in `docs/_build/html`.
+
+To transform a notebook into a markdown/myst format, you may use `jupytext`.
+e.g.,
+
+```
+jupytext --to myst myfile.ipynb
+```
+
+Thus, you will be able to integrate this notebook into documentation.
+
+To modify an existing notebook under markdown/myst format, you can also use
+`jupyter-notebook` only if `jupytext` is also installed :
+
+```
+jupyter notebook myfile.md
+```

@@ -23,6 +23,7 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*_out/
 
 # IPython
 profile_default/

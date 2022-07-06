@@ -27,8 +27,8 @@ class DocPipeline(DocOperation):
     ):
         """Initialize the pipeline
 
-        Params
-        ------
+        Parameters
+        ----------
         pipeline:
             Pipeline to execute on documents.
             `output_keys` in pipeline is used for selecting annotations to be
@@ -42,7 +42,7 @@ class DocPipeline(DocOperation):
             is running.
 
             For all pipeline step using `key` as an input key,
-            the annotations of the document having the label `label'
+            the annotations of the document having the label `label`
             will be used as input.
 
             It is possible to associate several labels to one key,
@@ -65,8 +65,8 @@ class DocPipeline(DocOperation):
         """Run the pipeline on a list of documents, adding
         the output annotations to each document
 
-        Params
-        ------
+        Parameters
+        ----------
         docs:
             The documents on which to run the pipeline.
             Labels to input keys association will be used to retrieve existing
