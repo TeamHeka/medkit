@@ -74,7 +74,8 @@ class FamilyMetadata(TypedDict):
 
 
 class FamilyDetector(ContextOperation):
-    """Annotator creating family Attributes with True/False values
+    """Annotator creating family attributes with boolean values
+    indicating if a family reference has been detected.
 
     Because family attributes will be attached to whole annotations,
     each input annotation should be "local"-enough rather than
@@ -140,7 +141,8 @@ class FamilyDetector(ContextOperation):
         )
 
     def run(self, segments: List[Segment]):
-        """Add a family attribute to each segment with a True/False value.
+        """Add a family attribute to each segment with a boolean value
+        indicating if a family reference has been detected.
 
         Family attributes with a `True` value have a metadata dict with
         fields described in :class:`.FamilyMetadata`.

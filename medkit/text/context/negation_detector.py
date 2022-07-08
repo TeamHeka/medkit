@@ -74,7 +74,8 @@ class NegationMetadata(TypedDict):
 
 
 class NegationDetector(ContextOperation):
-    """Annotator creating negation Attributes with True/False values
+    """Annotator creating negation Attributes with boolean values indicating
+    if an hypothesis has been found.
 
     Because negation attributes will be attached to whole annotations,
     each input annotation should be "local"-enough rather than
@@ -141,7 +142,8 @@ class NegationDetector(ContextOperation):
         )
 
     def run(self, segments: List[Segment]):
-        """Add a negation attribute to each segment with a True/False value.
+        """Add a negation attribute to each segment with a boolean value
+        indicating if an hypothesis has been found.
 
         Negation attributes with a `True` value have a metadata dict with
         fields described in :class:`.NegationRuleMetadata`.

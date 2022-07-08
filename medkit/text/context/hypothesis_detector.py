@@ -97,7 +97,8 @@ class HypothesisVerbMetadata(TypedDict):
 
 
 class HypothesisDetector(ContextOperation):
-    """Annotator creating hypothesis Attributes with True/False values
+    """Annotator creating hypothesis Attributes with boolean values indicating
+    if an hypothesis has been found.
 
     Hypothesis will be considered present either because of the presence of a
     certain text pattern in a segment, or because of the usage of a certain verb
@@ -202,7 +203,8 @@ class HypothesisDetector(ContextOperation):
         )
 
     def run(self, segments: List[Segment]):
-        """Add an hypothesis attribute to each segment with a True/False value
+        """Add an hypothesis attribute to each segment with a boolean value
+        indicating if an hypothesis has been detected.
 
         Hypothesis attributes with a `True` value have a metadata dict with
         fields described in either :class:`.HypothesisRuleMetadata` or :class:`.HypothesisVerbMetadata`.
