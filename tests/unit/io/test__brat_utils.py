@@ -9,7 +9,6 @@ from medkit.io._brat_utils import (
     BratEntity,
     BratAttribute,
     BratRelation,
-    BratRelationAugmented,
     AttributeConf,
     RelationConf,
     _parse_entity,
@@ -19,7 +18,6 @@ from medkit.io._brat_utils import (
     _convert_attribute_to_brat,
     _convert_segment_to_brat,
     _convert_relation_to_brat,
-    get_configuration_from_anns,
 )
 
 
@@ -163,7 +161,7 @@ def test__convert_attribute_to_brat():
             is_from_entity=False,
         )
 
-    brat_attribute = _convert_attribute_to_brat(
+    brat_attribute, _ = _convert_attribute_to_brat(
         Attribute(label="label_attr", value=None),
         nb_attribute=1,
         target_brat_id="T1",
@@ -190,16 +188,15 @@ def test__convert_relation():
     anns_by_medkit_id[ent_1.id] = _convert_segment_to_brat(ent_1, nb_segment=1)
     anns_by_medkit_id[ent_2.id] = _convert_segment_to_brat(ent_2, nb_segment=2)
 
-    brat_relation = _convert_relation_to_brat(
+    brat_relation, _ = _convert_relation_to_brat(
         relation=relation, nb_relation=1, brat_anns_by_segment_id=anns_by_medkit_id
     )
     assert isinstance(brat_relation, BratRelation)
-    assert isinstance(brat_relation, BratRelationAugmented)
     assert brat_relation.id == "R1"
-    assert brat_relation.subj == anns_by_medkit_id[ent_1.id]
-    assert brat_relation.obj == anns_by_medkit_id[ent_2.id]
+    assert brat_relation.subj == anns_by_medkit_id[ent_1.id].id
+    assert brat_relation.obj == anns_by_medkit_id[ent_2.id].id
     assert brat_relation.type == "rel1"
-    assert str(brat_relation) == "R1\trel1 Arg1:T1 Arg2:T2\n"
+    assert brat_relation.to_str() == "R1\trel1 Arg1:T1 Arg2:T2\n"
 
 
 def test_attribute_conf_file():
@@ -213,7 +210,7 @@ def test_attribute_conf_file():
     # sorted to test the str representation
     attr_conf.values = sorted(attr_conf.values)
     assert attr_conf.values == ["low", "normal"]
-    assert str(attr_conf) == "severity\tArg:<ENTITY>, Value:low|normal"
+    assert attr_conf.to_str() == "severity\tArg:<ENTITY>, Value:low|normal"
 
 
 def test_relation_conf_file():
@@ -233,53 +230,6 @@ def test_relation_conf_file():
     relation_conf.args2 = sorted(relation_conf.args2)
     assert relation_conf.args1 == ["medicament_1", "medicament_2"]
     assert relation_conf.args2 == ["disease"]
-    assert str(relation_conf) == "treats\tArg1:medicament_1|medicament_2, Arg2:disease"
-
-
-EXPECTED_CONFIG = """#Text-based definitions of entity types, relation types
-#and attributes. This file was generated using medkit
-#from the HeKa project
-[entities]
-
-disease
-medicament
-[relations]
-
-# This line enables entity overlapping
-<OVERLAP>\tArg1:<ENTITY>, Arg2:<ENTITY>, <OVL-TYPE>:<ANY>
-treats\tArg1:medicament, Arg2:disease
-related\tArg1:medicament, Arg2:medicament
-[attributes]
-
-code\tArg:<ENTITY>, Value:1234|5463
-negation\tArg:<RELATION>
-[events]\n\n"""
-
-
-def test_annotation_conf_file():
-    # generate an annotation configuration for brat anns
-    ent_1 = BratEntity("T1", "medicament", (0, 5), "brand")
-    attr_1 = BratAttribute("A1", "code", "T1", "1234", is_from_entity=True)
-    ent_2 = BratEntity("T2", "disease", (0, 7), "maladie")
-    attr_2 = BratAttribute("A2", "code", "T3", "5463", is_from_entity=True)
-    ent_3 = BratEntity("T3", "medicament", (0, 7), "brand_2")
-    rel_1 = BratRelationAugmented("R1", "treats", ent_1, ent_2)
-    rel_2 = BratRelationAugmented("R2", "related", ent_1, ent_3)
-    attr_3 = BratAttribute("A3", "negation", "R1", None, is_from_entity=False)
-
-    brat_anns = [ent_1, ent_2, ent_3, attr_1, attr_2, attr_3, rel_1, rel_2]
-    config_file = get_configuration_from_anns(brat_anns)
-
-    assert "code" in config_file.attribute_types.keys()
-    assert "negation" in config_file.attribute_types.keys()
-    assert "treats" in config_file.relation_types.keys()
-    assert "related" in config_file.relation_types.keys()
-
-    # to test we sort sets, this converts sets to list
-    config_file.entity_types = sorted(config_file.entity_types)
-    for key in config_file.attribute_types.keys():
-        config_file.attribute_types[key].values = sorted(
-            config_file.attribute_types[key].values
-        )
-
-    assert str(config_file) == EXPECTED_CONFIG
+    assert (
+        relation_conf.to_str() == "treats\tArg1:medicament_1|medicament_2, Arg2:disease"
+    )

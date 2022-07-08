@@ -3,7 +3,7 @@ import pytest
 
 from medkit.core import Attribute
 from medkit.core.text import Entity, Relation, Segment, Span, TextDocument
-from medkit.io._brat_utils import BratAttribute, BratEntity, convert_medkit_anns_to_brat
+from medkit.io._brat_utils import BratAttribute, BratEntity
 from medkit.io.brat import BratOutputConverter
 
 
@@ -99,9 +99,9 @@ def test_entity_conversion(
     )
 
     # only segments are important for this test
-    segments, _, _ = brat_converter._get_anns_from_medkit_doc(medkit_doc)
+    segments, _ = brat_converter._get_anns_from_medkit_doc(medkit_doc)
     segments = sorted(segments, key=lambda x: x.id)
-    brat_anns, _ = convert_medkit_anns_to_brat(segments, [], [])
+    brat_anns, _ = brat_converter._convert_medkit_anns_to_brat(segments, [])
     assert len(brat_anns) == expected_nb_brat_entities
 
     for brat_ann, segment in zip(brat_anns, segments):
@@ -113,14 +113,14 @@ def test_entity_conversion(
 
 
 TEST_ATTRS = [
-    (None, [True, True, False]),
+    (None, ["normalized", "normalized", "from_umls"]),
     ([], []),
-    (["from_umls"], [False]),
+    (["from_umls"], ["from_umls"]),
 ]
 
 
 @pytest.mark.parametrize(
-    "attrs_to_convert,expected_is_from_entity",
+    "attrs_to_convert,expected_attrs",
     TEST_ATTRS,
     ids=[
         "all_attrs",
@@ -128,7 +128,7 @@ TEST_ATTRS = [
         "attr_by_label",
     ],
 )
-def test_attrs_conversion(attrs_to_convert, expected_is_from_entity):
+def test_attrs_conversion(attrs_to_convert, expected_attrs):
     # create medkit_doc with 4 entities, 1 relation, 1 segment, 2 attrs
     medkit_doc = _get_medkit_doc()
 
@@ -140,14 +140,14 @@ def test_attrs_conversion(attrs_to_convert, expected_is_from_entity):
         attrs=attrs_to_convert,
     )
 
-    segments, relations, attrs = brat_converter._get_anns_from_medkit_doc(medkit_doc)
+    segments, relations = brat_converter._get_anns_from_medkit_doc(medkit_doc)
     segments = sorted(segments, key=lambda x: x.id)
-    brat_anns, _ = convert_medkit_anns_to_brat(segments, relations, attrs)
+    brat_anns, _ = brat_converter._convert_medkit_anns_to_brat(segments, relations)
 
     # only check brat attributes
     brat_attrs = [ann for ann in brat_anns if isinstance(ann, BratAttribute)]
-    assert len(brat_attrs) == len(expected_is_from_entity)
-    assert [attr.is_from_entity for attr in brat_attrs] == expected_is_from_entity
+    assert len(brat_attrs) == len(expected_attrs)
+    assert [attr.type for attr in brat_attrs] == expected_attrs
 
 
 EXPECTED_ANN = """T1\tmaladie 24 42\tdouleur abdominale
@@ -176,6 +176,11 @@ def test_convert(tmp_path: Path, create_config):
     # sort for testing
     medkit_doc.annotation_ids = sorted(medkit_doc.annotation_ids)
 
+    output_path = tmp_path / "output"
+    expected_txt_path = output_path / f"{medkit_doc.id}.txt"
+    expected_ann_path = output_path / f"{medkit_doc.id}.ann"
+    expected_conf_path = output_path / "annotation.conf"
+
     # define a brat output converter all anns selected attrs
     brat_converter = BratOutputConverter(
         anns_labels=None,
@@ -183,11 +188,8 @@ def test_convert(tmp_path: Path, create_config):
         create_config=create_config,
         attrs=None,
     )
-    output_path = tmp_path / "output"
-    expected_txt_path = output_path / f"{medkit_doc.id}.txt"
-    expected_ann_path = output_path / f"{medkit_doc.id}.ann"
-    expected_conf_path = output_path / "annotation.conf"
-    brat_converter.convert([medkit_doc], output_path)
+
+    brat_converter.save([medkit_doc], output_path)
 
     assert output_path.exists()
     assert expected_txt_path.exists()
@@ -198,3 +200,52 @@ def test_convert(tmp_path: Path, create_config):
         assert expected_conf_path.exists()
     else:
         assert not expected_conf_path.exists()
+
+
+EXPECTED_CONFIG = """#Text-based definitions of entity types, relation types
+#and attributes. This file was generated using medkit
+#from the HeKa project
+[entities]
+
+grade
+level
+maladie
+[relations]
+
+# This line enables entity overlapping
+<OVERLAP>\tArg1:<ENTITY>, Arg2:<ENTITY>, <OVL-TYPE>:<ANY>
+related\tArg1:maladie, Arg2:maladie
+[attributes]
+
+normalized\tArg:<ENTITY>, Value:False|True
+from_umls\tArg:<RELATION>
+[events]\n\n"""
+
+
+def test_annotation_conf_file():
+    # create medkit_doc with 4 entities, 1 relation, 1 segment, 2 attrs
+    medkit_doc = _get_medkit_doc()
+    # sort for testing
+    medkit_doc.annotation_ids = sorted(medkit_doc.annotation_ids)
+
+    brat_converter = BratOutputConverter(
+        anns_labels=None,
+        ignore_segments=True,
+        create_config=True,
+        attrs=None,
+    )
+    segments, relations = brat_converter._get_anns_from_medkit_doc(medkit_doc)
+    _, config_file = brat_converter._convert_medkit_anns_to_brat(segments, relations)
+
+    assert "normalized" in config_file.attribute_types.keys()
+    assert "from_umls" in config_file.attribute_types.keys()
+    assert "related" in config_file.relation_types.keys()
+    assert "related" in config_file.relation_types.keys()
+
+    # to test we sort sets, this converts sets to list
+    config_file.entity_types = sorted(config_file.entity_types)
+    for key in config_file.attribute_types.keys():
+        config_file.attribute_types[key].values = sorted(
+            config_file.attribute_types[key].values
+        )
+    assert config_file.to_str() == EXPECTED_CONFIG
