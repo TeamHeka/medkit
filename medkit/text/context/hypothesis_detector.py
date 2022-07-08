@@ -156,7 +156,7 @@ class HypothesisDetector(ContextOperation):
         if modes_and_tenses is None:
             modes_and_tenses = []
 
-        self._check_rules_sanity(rules)
+        self.check_rules_sanity(rules)
 
         if (verbs is None) != (modes_and_tenses is None):
             raise ValueError(
@@ -340,7 +340,7 @@ class HypothesisDetector(ContextOperation):
         return cls(rules=rules, verbs=verbs, modes_and_tenses=modes_and_tenses)
 
     @staticmethod
-    def _check_rules_sanity(rules: List[HypothesisDetectorRule]):
+    def check_rules_sanity(rules: List[HypothesisDetectorRule]):
         """Check consistency of a set of rules"""
 
         if any(r.id is not None for r in rules):

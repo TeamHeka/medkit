@@ -166,7 +166,7 @@ class RegexpMatcher(NEROperation):
         if attrs_to_copy is None:
             attrs_to_copy = []
 
-        self._check_rules_sanity(rules)
+        self.check_rules_sanity(rules)
 
         self.rules = rules
         self.attrs_to_copy = attrs_to_copy
@@ -337,7 +337,7 @@ class RegexpMatcher(NEROperation):
         return rules
 
     @staticmethod
-    def _check_rules_sanity(rules: List[RegexpMatcherRule]):
+    def check_rules_sanity(rules: List[RegexpMatcherRule]):
         """Check consistency of a set of rules"""
 
         if any(r.id is not None for r in rules):

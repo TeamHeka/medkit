@@ -115,7 +115,7 @@ class NegationDetector(ContextOperation):
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
 
-        self._check_rules_sanity(rules)
+        self.check_rules_sanity(rules)
 
         self.output_label = output_label
         self.rules = rules
@@ -238,7 +238,7 @@ class NegationDetector(ContextOperation):
         return rules
 
     @staticmethod
-    def _check_rules_sanity(rules: List[NegationDetector]):
+    def check_rules_sanity(rules: List[NegationDetector]):
         """Check consistency of a set of rules"""
 
         if any(r.id is not None for r in rules):
