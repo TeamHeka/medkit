@@ -76,21 +76,6 @@ class RegexpMatcherRule:
             " unicode_sensitive is False"
         )
 
-    @staticmethod
-    def check_rules_sanity(rules: List[RegexpMatcherRule]):
-        """Check consistency of a set of rules"""
-
-        if any(r.id is not None for r in rules):
-            if not all(r.id is not None for r in rules):
-                raise ValueError(
-                    "Some rules have ids and other do not. Please provide either ids"
-                    " for all rules or no ids at all"
-                )
-            if len(set(r.id for r in rules)) != len(rules):
-                raise ValueError(
-                    "Some rules have the same id, each rule must have a unique id"
-                )
-
 
 @dataclasses.dataclass
 class RegexpMatcherNormalization:
@@ -158,7 +143,7 @@ class RegexpMatcher(NEROperation):
         if attrs_to_copy is None:
             attrs_to_copy = []
 
-        RegexpMatcherRule.check_rules_sanity(rules)
+        self._check_rules_sanity(rules)
 
         self.rules = rules
         self.attrs_to_copy = attrs_to_copy
@@ -326,3 +311,18 @@ class RegexpMatcher(NEROperation):
         with open(path_to_rules, mode="r") as f:
             rules = yaml.load(f, Loader=Loader)
         return rules
+
+    @staticmethod
+    def _check_rules_sanity(rules: List[RegexpMatcherRule]):
+        """Check consistency of a set of rules"""
+
+        if any(r.id is not None for r in rules):
+            if not all(r.id is not None for r in rules):
+                raise ValueError(
+                    "Some rules have ids and other do not. Please provide either ids"
+                    " for all rules or no ids at all"
+                )
+            if len(set(r.id for r in rules)) != len(rules):
+                raise ValueError(
+                    "Some rules have the same id, each rule must have a unique id"
+                )

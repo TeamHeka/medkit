@@ -54,21 +54,6 @@ class HypothesisDetectorRule:
             " unicode_sensitive is False"
         )
 
-    @staticmethod
-    def check_rules_sanity(rules: List[HypothesisDetectorRule]):
-        """Check consistency of a set of rules"""
-
-        if any(r.id is not None for r in rules):
-            if not all(r.id is not None for r in rules):
-                raise ValueError(
-                    "Some rules have ids and other do not. Please provide either ids"
-                    " for all rules or no ids at all"
-                )
-            if len(set(r.id for r in rules)) != len(rules):
-                raise ValueError(
-                    "Some rules have the same id, each rule must have a unique id"
-                )
-
 
 class _RuleMetadata(TypedDict):
     type: Literal["rule"]
@@ -139,7 +124,7 @@ class HypothesisDetector(ContextOperation):
         if modes_and_tenses is None:
             modes_and_tenses = []
 
-        HypothesisDetectorRule.check_rules_sanity(rules)
+        self._check_rules_sanity(rules)
 
         if (verbs is None) != (modes_and_tenses is None):
             raise ValueError(
@@ -184,19 +169,6 @@ class HypothesisDetector(ContextOperation):
         self._has_non_unicode_sensitive_rule = any(
             not r.unicode_sensitive for r in rules
         )
-
-    @staticmethod
-    def _check_rules_sanity(rules):
-        if any(r.id is not None for r in rules):
-            if not all(r.id is not None for r in rules):
-                raise ValueError(
-                    "Some rules have ids and other do not. Please provide either ids"
-                    " for all rules or not ids at all"
-                )
-            if len(set(r.id for r in rules)) != len(rules):
-                raise ValueError(
-                    "Some rules have the same id, each rule must have a unique id"
-                )
 
     def run(self, segments: List[Segment]):
         """Add an hypothesis attribute to each segment with a True/False value
@@ -328,3 +300,18 @@ class HypothesisDetector(ContextOperation):
             ("indicatif", "futur simple"),
         ]
         return cls(rules=rules, verbs=verbs, modes_and_tenses=modes_and_tenses)
+
+    @staticmethod
+    def _check_rules_sanity(rules: List[HypothesisDetectorRule]):
+        """Check consistency of a set of rules"""
+
+        if any(r.id is not None for r in rules):
+            if not all(r.id is not None for r in rules):
+                raise ValueError(
+                    "Some rules have ids and other do not. Please provide either ids"
+                    " for all rules or no ids at all"
+                )
+            if len(set(r.id for r in rules)) != len(rules):
+                raise ValueError(
+                    "Some rules have the same id, each rule must have a unique id"
+                )

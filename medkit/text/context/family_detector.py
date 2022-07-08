@@ -57,21 +57,6 @@ class FamilyDetectorRule:
             " unicode_sensitive is False"
         )
 
-    @staticmethod
-    def check_rules_sanity(rules: List[FamilyDetectorRule]):
-        """Check consistency of a set of rules"""
-
-        if any(r.id is not None for r in rules):
-            if not all(r.id is not None for r in rules):
-                raise ValueError(
-                    "Some rules have ids and other do not. Please provide either ids"
-                    " for all rules or no ids at all"
-                )
-            if len(set(r.id for r in rules)) != len(rules):
-                raise ValueError(
-                    "Some rules have the same id, each rule must have a unique id"
-                )
-
 
 class FamilyDetector(ContextOperation):
     """Annotator creating family Attributes with True/False values
@@ -113,7 +98,7 @@ class FamilyDetector(ContextOperation):
         if rules is None:
             rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
 
-        FamilyDetectorRule.check_rules_sanity(rules)
+        self._check_rules_sanity(rules)
 
         self.output_label = output_label
         self.rules = rules
@@ -230,3 +215,18 @@ class FamilyDetector(ContextOperation):
             rules_data = yaml.safe_load(f)
         rules = [FamilyDetectorRule(**d) for d in rules_data]
         return rules
+
+    @staticmethod
+    def _check_rules_sanity(rules: List[FamilyDetectorRule]):
+        """Check consistency of a set of rules"""
+
+        if any(r.id is not None for r in rules):
+            if not all(r.id is not None for r in rules):
+                raise ValueError(
+                    "Some rules have ids and other do not. Please provide either ids"
+                    " for all rules or no ids at all"
+                )
+            if len(set(r.id for r in rules)) != len(rules):
+                raise ValueError(
+                    "Some rules have the same id, each rule must have a unique id"
+                )
