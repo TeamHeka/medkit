@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-__all__ = ["FamilyDetector", "FamilyDetectorRule"]
+__all__ = ["FamilyDetector", "FamilyDetectorRule", "FamilyMetadata"]
 
 import dataclasses
 import logging
 from pathlib import Path
 import re
-from typing import List, Optional
+from typing import List, Optional, Union
+from typing_extensions import TypedDict
 
 import unidecode
 import yaml
@@ -56,6 +57,20 @@ class FamilyDetectorRule:
             "FamilyDetectorRule regexps shouldn't contain non-ASCII chars when"
             " unicode_sensitive is False"
         )
+
+
+class FamilyMetadata(TypedDict):
+    """Metadata dict added to family attributes with `True` value.
+
+    Parameters
+    ----------
+    rule_id:
+        Identifier of the rule used to detect a family reference.
+        If the rule has no id, then the index of the rule in
+        the list of rules is used instead.
+    """
+
+    rule_id: Union[str, int]
 
 
 class FamilyDetector(ContextOperation):
@@ -127,6 +142,9 @@ class FamilyDetector(ContextOperation):
     def run(self, segments: List[Segment]):
         """Add a family attribute to each segment with a True/False value.
 
+        Family attributes with a `True` value have a metadata dict with
+        fields described in :class:`.FamilyMetadata`.
+
         Parameters
         ----------
         segments:
@@ -178,7 +196,7 @@ class FamilyDetector(ContextOperation):
             family_attr = Attribute(
                 label=self.output_label,
                 value=True,
-                metadata=dict(rule_id=rule_id),
+                metadata=FamilyMetadata(rule_id=rule_id),
             )
         else:
             family_attr = Attribute(

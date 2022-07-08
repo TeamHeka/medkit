@@ -1,12 +1,18 @@
 from __future__ import annotations
 
-__all__ = ["RegexpMatcher", "RegexpMatcherRule", "RegexpMatcherNormalization"]
+__all__ = [
+    "RegexpMatcher",
+    "RegexpMatcherRule",
+    "RegexpMatcherNormalization",
+    "RegexpMetadata",
+]
 
 import dataclasses
 import logging
 from pathlib import Path
 import re
-from typing import Any, Iterator, List, Optional
+from typing import Any, Iterator, List, Optional, Union
+from typing_extensions import TypedDict
 
 import unidecode
 import yaml
@@ -98,6 +104,23 @@ class RegexpMatcherNormalization:
     id: Any
 
 
+class RegexpMetadata(TypedDict):
+    """Metadata dict added to entities matched by :class:`.RegexpMatcher`
+
+    Parameters
+    ----------
+    rule_id:
+        Identifier of the rule used to match an entity.
+        If the rule has no id, then the index of the rule in
+        the list of rules is used instead.
+    version:
+        Optional version of the rule used to match an entity
+    """
+
+    rule_id: Union[str, int]
+    version: Optional[str]
+
+
 _PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.yml"
 
 
@@ -177,7 +200,8 @@ class RegexpMatcher(NEROperation):
         Returns
         -------
         entities: List[Entity]:
-            Entities found in `segments` (with optional normalization attributes)
+            Entities found in `segments` (with optional normalization attributes).
+            Entities have a metadata dict with fields described in :class:`.RegexpMetadata`
         """
         return [
             entity
@@ -238,7 +262,7 @@ class RegexpMatcher(NEROperation):
             )
 
             rule_id = rule.id if rule.id is not None else rule_index
-            metadata = dict(rule_id=rule_id, version=rule.version)
+            metadata = RegexpMetadata(rule_id=rule_id, version=rule.version)
 
             attrs = [a for a in segment.attrs if a.label in self.attrs_to_copy]
 

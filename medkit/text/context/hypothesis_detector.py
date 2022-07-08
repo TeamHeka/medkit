@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-__all__ = ["HypothesisDetector", "HypothesisDetectorRule"]
+__all__ = [
+    "HypothesisDetector",
+    "HypothesisDetectorRule",
+    "HypothesisRuleMetadata",
+    "HypothesisVerbMetadata",
+]
 
 import dataclasses
 from pathlib import Path
@@ -55,12 +60,38 @@ class HypothesisDetectorRule:
         )
 
 
-class _RuleMetadata(TypedDict):
+class HypothesisRuleMetadata(TypedDict):
+    """Metadata dict added to hypothesis attributes with `True` value
+    detected by a rule
+
+    Parameters
+    ----------
+    type:
+        Metadata type, here `"rule"` (use to differenciate
+        between rule/verb metadata dict)
+    rule_id:
+        Identifier of the rule used to detect an hypothesis.
+        If the rule has no id, then the index of the rule in
+        the list of rules is used instead
+    """
+
     type: Literal["rule"]
     rule_id: str
 
 
-class _VerbMetadata(TypedDict):
+class HypothesisVerbMetadata(TypedDict):
+    """Metadata dict added to hypothesis attributes with `True` value
+    detected by a rule.
+
+    Parameters
+    ----------
+    type:
+        Metadata type, here `"verb"` (use to differenciate
+        between rule/verb metadata dict).
+    matched_verb:
+        Root of the verb used to detect an hypothesis.
+    """
+
     type: Literal["verb"]
     matched_verb: str
 
@@ -173,6 +204,9 @@ class HypothesisDetector(ContextOperation):
     def run(self, segments: List[Segment]):
         """Add an hypothesis attribute to each segment with a True/False value
 
+        Hypothesis attributes with a `True` value have a metadata dict with
+        fields described in either :class:`.HypothesisRuleMetadata` or :class:`.HypothesisVerbMetadata`.
+
         Parameters
         ----------
         segments:
@@ -210,7 +244,7 @@ class HypothesisDetector(ContextOperation):
                     )
             for verb, verb_pattern in self._patterns_by_verb.items():
                 if verb_pattern.search(text_unicode):
-                    metadata = _VerbMetadata(type="verb", matched_verb=verb)
+                    metadata = HypothesisVerbMetadata(type="verb", matched_verb=verb)
                     is_hypothesis = True
                     break
             else:
@@ -226,7 +260,9 @@ class HypothesisDetector(ContextOperation):
                         ):
                             is_hypothesis = True
                             rule_id = rule.id if rule.id is not None else rule_index
-                            metadata = _RuleMetadata(type="verb", rule_id=rule_id)
+                            metadata = HypothesisRuleMetadata(
+                                type="verb", rule_id=rule_id
+                            )
                             break
 
         hyp_attr = Attribute(

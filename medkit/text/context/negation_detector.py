@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-__all__ = ["NegationDetector", "NegationDetectorRule"]
+__all__ = ["NegationDetector", "NegationDetectorRule", "NegationMetadata"]
 
 import dataclasses
 import logging
 from pathlib import Path
 import re
-from typing import List, Optional
+from typing import List, Optional, Union
+from typing_extensions import TypedDict
 
 import unidecode
 import yaml
@@ -56,6 +57,20 @@ class NegationDetectorRule:
             "NegationDetectorRule regexps shouldn't contain non-ASCII chars when"
             " unicode_sensitive is False"
         )
+
+
+class NegationMetadata(TypedDict):
+    """Metadata dict added to negation attributes with `True` value.
+
+    Parameters
+    ----------
+    rule_id:
+        Identifier of the rule used to detect a negation.
+        If the rule has no id, then the index of the rule in
+        the list of rules is used instead.
+    """
+
+    rule_id: Union[str, int]
 
 
 class NegationDetector(ContextOperation):
@@ -128,6 +143,9 @@ class NegationDetector(ContextOperation):
     def run(self, segments: List[Segment]):
         """Add a negation attribute to each segment with a True/False value.
 
+        Negation attributes with a `True` value have a metadata dict with
+        fields described in :class:`.NegationRuleMetadata`.
+
         Parameters
         ----------
         segments:
@@ -179,7 +197,7 @@ class NegationDetector(ContextOperation):
             neg_attr = Attribute(
                 label=self.output_label,
                 value=True,
-                metadata=dict(rule_id=rule_id),
+                metadata=NegationMetadata(rule_id=rule_id),
             )
         else:
             neg_attr = Attribute(
