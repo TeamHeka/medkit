@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-__all__ = ["HypothesisDetector", "HypothesisDetectorRule"]
+__all__ = [
+    "HypothesisDetector",
+    "HypothesisDetectorRule",
+    "HypothesisRuleMetadata",
+    "HypothesisVerbMetadata",
+]
 
 import dataclasses
 from pathlib import Path
@@ -55,18 +60,45 @@ class HypothesisDetectorRule:
         )
 
 
-class _RuleMetadata(TypedDict):
+class HypothesisRuleMetadata(TypedDict):
+    """Metadata dict added to hypothesis attributes with `True` value
+    detected by a rule
+
+    Parameters
+    ----------
+    type:
+        Metadata type, here `"rule"` (use to differenciate
+        between rule/verb metadata dict)
+    rule_id:
+        Identifier of the rule used to detect an hypothesis.
+        If the rule has no id, then the index of the rule in
+        the list of rules is used instead
+    """
+
     type: Literal["rule"]
     rule_id: str
 
 
-class _VerbMetadata(TypedDict):
+class HypothesisVerbMetadata(TypedDict):
+    """Metadata dict added to hypothesis attributes with `True` value
+    detected by a rule.
+
+    Parameters
+    ----------
+    type:
+        Metadata type, here `"verb"` (use to differenciate
+        between rule/verb metadata dict).
+    matched_verb:
+        Root of the verb used to detect an hypothesis.
+    """
+
     type: Literal["verb"]
     matched_verb: str
 
 
 class HypothesisDetector(ContextOperation):
-    """Annotator creating hypothesis Attributes with True/False values
+    """Annotator creating hypothesis Attributes with boolean values indicating
+    if an hypothesis has been found.
 
     Hypothesis will be considered present either because of the presence of a
     certain text pattern in a segment, or because of the usage of a certain verb
@@ -124,6 +156,8 @@ class HypothesisDetector(ContextOperation):
         if modes_and_tenses is None:
             modes_and_tenses = []
 
+        self.check_rules_sanity(rules)
+
         if (verbs is None) != (modes_and_tenses is None):
             raise ValueError(
                 "'verbs' and 'modes_and_tenses' must be either both provided or both"
@@ -149,28 +183,31 @@ class HypothesisDetector(ContextOperation):
 
         # pre-compile rule patterns
         self._non_empty_text_pattern = re.compile(r"[a-z]", flags=re.IGNORECASE)
-        self._patterns_by_rule_id = {
-            rule.id: re.compile(
-                rule.regexp, flags=0 if rule.case_sensitive else re.IGNORECASE
-            )
+        self._patterns = [
+            re.compile(rule.regexp, flags=0 if rule.case_sensitive else re.IGNORECASE)
             for rule in self.rules
-        }
-        self._exclusion_patterns_by_rule_id = {
-            rule.id: re.compile(
+        ]
+        self._exclusion_patterns = [
+            re.compile(
                 "|".join(
                     f"(?:{r})" for r in rule.exclusion_regexps
                 ),  # join all exclusions in one pattern
                 flags=0 if rule.case_sensitive else re.IGNORECASE,
             )
-            for rule in self.rules
             if rule.exclusion_regexps
-        }
+            else None
+            for rule in self.rules
+        ]
         self._has_non_unicode_sensitive_rule = any(
             not r.unicode_sensitive for r in rules
         )
 
     def run(self, segments: List[Segment]):
-        """Add an hypothesis attribute to each segment with a True/False value
+        """Add an hypothesis attribute to each segment with a boolean value
+        indicating if an hypothesis has been detected.
+
+        Hypothesis attributes with a `True` value have a metadata dict with
+        fields described in either :class:`.HypothesisRuleMetadata` or :class:`.HypothesisVerbMetadata`.
 
         Parameters
         ----------
@@ -180,9 +217,14 @@ class HypothesisDetector(ContextOperation):
 
         for segment in segments:
             hyp_attr = self._detect_hypothesis_in_segment(segment)
-            segment.attrs.append(hyp_attr)
+            if hyp_attr is not None:
+                segment.attrs.append(hyp_attr)
 
-    def _detect_hypothesis_in_segment(self, segment: Segment) -> Attribute:
+    def _detect_hypothesis_in_segment(self, segment: Segment) -> Optional[Attribute]:
+        # skip empty segment
+        if self._non_empty_text_pattern.search(segment.text) is None:
+            return None
+
         is_hypothesis = False
         metadata = None
 
@@ -204,24 +246,25 @@ class HypothesisDetector(ContextOperation):
                     )
             for verb, verb_pattern in self._patterns_by_verb.items():
                 if verb_pattern.search(text_unicode):
-                    metadata = _VerbMetadata(type="verb", matched_verb=verb)
+                    metadata = HypothesisVerbMetadata(type="verb", matched_verb=verb)
                     is_hypothesis = True
                     break
             else:
-                for rule in self.rules:
+                for rule_index, rule in enumerate(self.rules):
+                    pattern = self._patterns[rule_index]
+                    exclusion_pattern = self._exclusion_patterns[rule_index]
+
                     text = text_unicode if rule.unicode_sensitive else text_ascii
-                    pattern = self._patterns_by_rule_id[rule.id]
                     if pattern.search(text) is not None:
-                        exclusion_pattern = self._exclusion_patterns_by_rule_id.get(
-                            rule.id
-                        )
                         if (
                             exclusion_pattern is None
                             or exclusion_pattern.search(text) is None
                         ):
                             is_hypothesis = True
-                            if rule.id is not None:
-                                metadata = _RuleMetadata(type="verb", rule_id=rule.id)
+                            rule_id = rule.id if rule.id is not None else rule_index
+                            metadata = HypothesisRuleMetadata(
+                                type="verb", rule_id=rule_id
+                            )
                             break
 
         hyp_attr = Attribute(
@@ -295,3 +338,18 @@ class HypothesisDetector(ContextOperation):
             ("indicatif", "futur simple"),
         ]
         return cls(rules=rules, verbs=verbs, modes_and_tenses=modes_and_tenses)
+
+    @staticmethod
+    def check_rules_sanity(rules: List[HypothesisDetectorRule]):
+        """Check consistency of a set of rules"""
+
+        if any(r.id is not None for r in rules):
+            if not all(r.id is not None for r in rules):
+                raise ValueError(
+                    "Some rules have ids and other do not. Please provide either ids"
+                    " for all rules or no ids at all"
+                )
+            if len(set(r.id for r in rules)) != len(rules):
+                raise ValueError(
+                    "Some rules have the same id, each rule must have a unique id"
+                )

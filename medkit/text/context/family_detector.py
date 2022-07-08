@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["NegationDetector", "NegationDetectorRule", "NegationMetadata"]
+__all__ = ["FamilyDetector", "FamilyDetectorRule", "FamilyMetadata"]
 
 import dataclasses
 import logging
@@ -17,19 +17,19 @@ from medkit.core.text import ContextOperation, Segment
 
 logger = logging.getLogger(__name__)
 
-_PATH_TO_DEFAULT_RULES = Path(__file__).parent / "negation_detector_default_rules.yml"
+_PATH_TO_DEFAULT_RULES = Path(__file__).parent / "family_detector_default_rules.yml"
 
 
 @dataclasses.dataclass
-class NegationDetectorRule:
-    """Regexp-based rule to use with `NegationDetector`
+class FamilyDetectorRule:
+    """Regexp-based rule to use with `FamilyDetector`
 
     Input text may be converted before detecting rule.
 
     Parameters
     ----------
     regexp:
-        The regexp pattern used to match a negation
+        The regexp pattern used to match a family reference
     exclusion_regexps:
         Optional exclusion patterns
     id:
@@ -38,10 +38,10 @@ class NegationDetectorRule:
         Whether to consider case when running `regexp and `exclusion_regexs`
     unicode_sensitive:
         If True, rule matches are searched on unicode text.
-        So, `regexp and `exclusion_regexs` shall not contain non-ASCII chars because
+        So, `regexp` and `exclusion_regexps` shall not contain non-ASCII chars because
         they would never be matched.
         If False, rule matches are searched on closest ASCII text when possible.
-        (cf. NegationDetector)
+        (cf. FamilyDetector)
     """
 
     regexp: str
@@ -54,18 +54,18 @@ class NegationDetectorRule:
         assert self.unicode_sensitive or (
             self.regexp.isascii() and all(r.isascii() for r in self.exclusion_regexps)
         ), (
-            "NegationDetectorRule regexps shouldn't contain non-ASCII chars when"
+            "FamilyDetectorRule regexps shouldn't contain non-ASCII chars when"
             " unicode_sensitive is False"
         )
 
 
-class NegationMetadata(TypedDict):
-    """Metadata dict added to negation attributes with `True` value.
+class FamilyMetadata(TypedDict):
+    """Metadata dict added to family attributes with `True` value.
 
     Parameters
     ----------
     rule_id:
-        Identifier of the rule used to detect a negation.
+        Identifier of the rule used to detect a family reference.
         If the rule has no id, then the index of the rule in
         the list of rules is used instead.
     """
@@ -73,15 +73,15 @@ class NegationMetadata(TypedDict):
     rule_id: Union[str, int]
 
 
-class NegationDetector(ContextOperation):
-    """Annotator creating negation Attributes with boolean values indicating
-    if an hypothesis has been found.
+class FamilyDetector(ContextOperation):
+    """Annotator creating family attributes with boolean values
+    indicating if a family reference has been detected.
 
-    Because negation attributes will be attached to whole annotations,
+    Because family attributes will be attached to whole annotations,
     each input annotation should be "local"-enough rather than
     a big chunk of text (ie a sentence or a syntagma).
 
-    For detecting negation, the module uses rules that may be sensitive to unicode or
+    For detecting family references, the module uses rules that may be sensitive to unicode or
     not. When the rule is not sensitive to unicode, we try to convert unicode chars to
     the closest ascii chars. However, some characters need to be pre-processed before
     (e.g., `n°` -> `number`). So, if the text lengths are different, we fall back on
@@ -92,19 +92,18 @@ class NegationDetector(ContextOperation):
     def __init__(
         self,
         output_label: str,
-        rules: Optional[List[NegationDetectorRule]] = None,
+        rules: Optional[List[FamilyDetectorRule]] = None,
         op_id: Optional[str] = None,
     ):
-        """Instantiate the negation detector
-
+        """
         Parameters
         ----------
         output_label:
             The label of the created attributes
         rules:
-            The set of rules to use when detecting negation. If none provided,
-            the rules in "negation_detector_default_rules.yml" will be used
-        op_id:
+            The set of rules to use when detecting family references. If none provided,
+            the rules in "family_detector_default_rules.yml" will be used
+        proc_id:
             Identifier of the detector
         """
         # Pass all arguments to super (remove self)
@@ -142,24 +141,24 @@ class NegationDetector(ContextOperation):
         )
 
     def run(self, segments: List[Segment]):
-        """Add a negation attribute to each segment with a boolean value
-        indicating if an hypothesis has been found.
+        """Add a family attribute to each segment with a boolean value
+        indicating if a family reference has been detected.
 
-        Negation attributes with a `True` value have a metadata dict with
-        fields described in :class:`.NegationRuleMetadata`.
+        Family attributes with a `True` value have a metadata dict with
+        fields described in :class:`.FamilyMetadata`.
 
         Parameters
         ----------
         segments:
-            List of segments to detect as being negated or not
+            List of segments to detect as being family references or not
         """
 
         for segment in segments:
-            neg_attr = self._detect_negation_in_segment(segment)
-            if neg_attr is not None:
-                segment.attrs.append(neg_attr)
+            family_attr = self._detect_family_ref_in_segment(segment)
+            if family_attr is not None:
+                segment.attrs.append(family_attr)
 
-    def _detect_negation_in_segment(self, segment: Segment) -> Optional[Attribute]:
+    def _detect_family_ref_in_segment(self, segment: Segment) -> Optional[Attribute]:
         # skip empty segment
         if self._non_empty_text_pattern.search(segment.text) is None:
             return None
@@ -184,38 +183,38 @@ class NegationDetector(ContextOperation):
                 text_ascii = text_unicode
 
         # try all rules until we have a match
-        is_negated = False
+        is_family = False
         for rule_index, rule in enumerate(self.rules):
             pattern = self._patterns[rule_index]
             exclusion_pattern = self._exclusion_patterns[rule_index]
             text = text_unicode if rule.unicode_sensitive else text_ascii
             if pattern.search(text) is not None:
                 if exclusion_pattern is None or exclusion_pattern.search(text) is None:
-                    is_negated = True
+                    is_family = True
                     break
 
-        if is_negated:
+        if is_family:
             rule_id = rule.id if rule.id is not None else rule_index
-            neg_attr = Attribute(
+            family_attr = Attribute(
                 label=self.output_label,
                 value=True,
-                metadata=NegationMetadata(rule_id=rule_id),
+                metadata=FamilyMetadata(rule_id=rule_id),
             )
         else:
-            neg_attr = Attribute(
+            family_attr = Attribute(
                 label=self.output_label,
                 value=False,
             )
 
         if self._prov_builder is not None:
             self._prov_builder.add_prov(
-                neg_attr, self.description, source_data_items=[segment]
+                family_attr, self.description, source_data_items=[segment]
             )
 
-        return neg_attr
+        return family_attr
 
     @staticmethod
-    def load_rules(path_to_rules) -> List[NegationDetectorRule]:
+    def load_rules(path_to_rules) -> List[FamilyDetectorRule]:
         """
         Load all rules stored in a yml file
 
@@ -223,22 +222,22 @@ class NegationDetector(ContextOperation):
         ----------
         path_to_rules:
             Path to a yml file containing a list of mappings
-            with the same structure as `NegationDetectorRule`
+            with the same structure as `FamilyDetectorRule`
 
         Returns
         -------
-        List[NegationDetectorRule]
+        List[FamilyDetectorRule]
             List of all the rules in `path_to_rules`,
-            can be used to init a `NegationDetector`
+            can be used to init a `FamilyDetector`
         """
 
         with open(path_to_rules, mode="r") as f:
             rules_data = yaml.safe_load(f)
-        rules = [NegationDetectorRule(**d) for d in rules_data]
+        rules = [FamilyDetectorRule(**d) for d in rules_data]
         return rules
 
     @staticmethod
-    def check_rules_sanity(rules: List[NegationDetector]):
+    def check_rules_sanity(rules: List[FamilyDetectorRule]):
         """Check consistency of a set of rules"""
 
         if any(r.id is not None for r in rules):

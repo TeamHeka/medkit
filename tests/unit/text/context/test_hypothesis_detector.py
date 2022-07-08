@@ -66,15 +66,31 @@ def test_multiple_rules():
     assert attr_2.metadata["rule_id"] == "id_assuming"
 
 
+def test_multiple_rules_no_id():
+    syntagmas = _get_syntagma_segments(
+        ["If patient has covid", "Assuming patient has covid"]
+    )
+    rule_1 = HypothesisDetectorRule(regexp=r"\bif\b")
+    rule_2 = HypothesisDetectorRule(regexp=r"\bassuming\b")
+    detector = HypothesisDetector(output_label="hypothesis", rules=[rule_1, rule_2])
+    detector.run(syntagmas)
+
+    # attributes have corresponding rule index as rule_id metadata
+    assert len(syntagmas[0].attrs) == 1
+    attr_1 = syntagmas[0].attrs[0]
+    assert attr_1.metadata["rule_id"] == 0
+    assert len(syntagmas[1].attrs) == 1
+    attr_2 = syntagmas[1].attrs[0]
+    assert attr_2.metadata["rule_id"] == 1
+
+
 def test_exclusions():
     syntagmas = _get_syntagma_segments(
         ["If patient has covid", "Even if patient has covid"]
     )
 
     rule = HypothesisDetectorRule(
-        id="id_if",
-        regexp=r"\bif\b",
-        exclusion_regexps=[r"\beven\s*\bif"],
+        regexp=r"\bif\b", exclusion_regexps=[r"\beven\s*\bif"]
     )
     detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
     detector.run(syntagmas)
@@ -93,7 +109,7 @@ def test_max_length():
         ["If patient has covid", "If patient has covid then he will be treated"]
     )
 
-    rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
+    rule = HypothesisDetectorRule(regexp=r"\bif\b")
     detector = HypothesisDetector(
         output_label="hypothesis", rules=[rule], max_length=30
     )
@@ -157,7 +173,7 @@ def test_verbs():
 def test_prov():
     syntagmas = _get_syntagma_segments(["If patient has covid"])
 
-    rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
+    rule = HypothesisDetectorRule(regexp=r"\bif\b")
     detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
 
     prov_builder = ProvBuilder()

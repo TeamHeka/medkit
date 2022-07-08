@@ -1,0 +1,51 @@
+- regexp: '\bantecedents\s+familiaux\b'
+
+- regexp: '\bantecedent\s+familial\b'
+
+- regexp: '\bantecedents\s+[a-z]+\s+familiaux\b'
+
+- regexp: '\bantecedent\s+[a-z]+\s+familial\b'
+
+- regexp: '\bhistoire\s+familiale\b'
+
+- regexp: '\bmere\b'
+
+- regexp: '\bpere\b'
+
+- regexp: '\bcousins?\b'
+
+- regexp: '\bcousines?\b'
+
+- regexp: '\btantes?\b'
+
+- regexp: '\boncles?\b'
+
+- regexp: '\bsoeurs?\b'
+
+- regexp: '\bpapa\b'
+
+- regexp: '\bmaman\b'
+
+- regexp: '\bfreres?\b'
+
+- regexp: '\bgrands?[- ]parents?\b'
+
+- regexp: '\bneveux?\b'
+
+- regexp: '\bfils\b'
+
+- regexp: '\bnieces?\b'
+
+- regexp: '\bpaternel'
+
+- regexp: '\bmaternel'
+
+- regexp: '\bfamille'
+  exclusion_regexps:
+    - 'avec\s+la\s+famille'
+
+- regexp: "ATCDs?[^a-z]*familiaux"
+
+- regexp: "ATCD?[^a-z]*familiale"
+
+- regexp: '\bterrain *familial'

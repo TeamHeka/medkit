@@ -1,12 +1,18 @@
 from __future__ import annotations
 
-__all__ = ["RegexpMatcher", "RegexpMatcherRule", "RegexpMatcherNormalization"]
+__all__ = [
+    "RegexpMatcher",
+    "RegexpMatcherRule",
+    "RegexpMatcherNormalization",
+    "RegexpMetadata",
+]
 
 import dataclasses
 import logging
 from pathlib import Path
 import re
-from typing import Any, Iterator, List, Optional
+from typing import Any, Iterator, List, Optional, Union
+from typing_extensions import TypedDict
 
 import unidecode
 import yaml
@@ -57,8 +63,8 @@ class RegexpMatcherRule:
 
     regexp: str
     label: str
-    id: str
-    version: str
+    id: Optional[str] = None
+    version: Optional[str] = None
     index_extract: int = 0
     case_sensitive: bool = False
     unicode_sensitive: bool = False
@@ -96,6 +102,23 @@ class RegexpMatcherNormalization:
     kb_name: str
     kb_version: str
     id: Any
+
+
+class RegexpMetadata(TypedDict):
+    """Metadata dict added to entities matched by :class:`.RegexpMatcher`
+
+    Parameters
+    ----------
+    rule_id:
+        Identifier of the rule used to match an entity.
+        If the rule has no id, then the index of the rule in
+        the list of rules is used instead.
+    version:
+        Optional version of the rule used to match an entity
+    """
+
+    rule_id: Union[str, int]
+    version: Optional[str]
 
 
 _PATH_TO_DEFAULT_RULES = Path(__file__).parent / "regexp_matcher_default_rules.yml"
@@ -143,25 +166,24 @@ class RegexpMatcher(NEROperation):
         if attrs_to_copy is None:
             attrs_to_copy = []
 
-        assert len(set(r.id for r in rules)) == len(rules), "Rule have duplicate ids"
+        self.check_rules_sanity(rules)
 
         self.rules = rules
         self.attrs_to_copy = attrs_to_copy
 
         # pre-compile patterns
-        self._patterns_by_rule_id = {
-            rule.id: re.compile(
-                rule.regexp, flags=0 if rule.case_sensitive else re.IGNORECASE
-            )
+        self._patterns = [
+            re.compile(rule.regexp, flags=0 if rule.case_sensitive else re.IGNORECASE)
             for rule in self.rules
-        }
-        self._exclusion_patterns_by_rule_id = {
-            rule.id: re.compile(
+        ]
+        self._exclusion_patterns = [
+            re.compile(
                 rule.exclusion_regexp, flags=0 if rule.case_sensitive else re.IGNORECASE
             )
-            for rule in self.rules
             if rule.exclusion_regexp is not None
-        }
+            else None
+            for rule in self.rules
+        ]
         self._has_non_unicode_sensitive_rule = any(
             not r.unicode_sensitive for r in rules
         )
@@ -178,7 +200,8 @@ class RegexpMatcher(NEROperation):
         Returns
         -------
         entities: List[Entity]:
-            Entities found in `segments` (with optional normalization attributes)
+            Entities found in `segments` (with optional normalization attributes).
+            Entities have a metadata dict with fields described in :class:`.RegexpMetadata`
         """
         return [
             entity
@@ -206,23 +229,27 @@ class RegexpMatcher(NEROperation):
                 # Fallback on unicode text
                 text_ascii = text_unicode
 
-        for rule in self.rules:
-            yield from self._find_matches_in_segment_for_rule(rule, segment, text_ascii)
+        for rule_index in range(len(self.rules)):
+            yield from self._find_matches_in_segment_for_rule(
+                rule_index, segment, text_ascii
+            )
 
     def _find_matches_in_segment_for_rule(
-        self, rule: RegexpMatcherRule, segment: Segment, text_ascii: Optional[str]
+        self, rule_index: int, segment: Segment, text_ascii: Optional[str]
     ) -> Iterator[Entity]:
+        rule = self.rules[rule_index]
+        pattern = self._patterns[rule_index]
+        exclusion_pattern = self._exclusion_patterns[rule_index]
+
         flags = 0 if rule.case_sensitive else re.IGNORECASE
         text_to_match = segment.text if rule.unicode_sensitive else text_ascii
 
-        pattern = self._patterns_by_rule_id[rule.id]
         for match in pattern.finditer(text_to_match, flags):
-            # note that we apply exclusion_regexp to the whole segment,
+            # note that we apply exclusion_pattern to the whole segment,
             # so we might have a match in a part of the text unrelated to the current
             # match
             # we could check if we have any exclude match overlapping with
             # the current match but that wouldn't work for all cases
-            exclusion_pattern = self._exclusion_patterns_by_rule_id.get(rule.id)
             if (
                 exclusion_pattern is not None
                 and exclusion_pattern.search(text_to_match, flags) is not None
@@ -234,10 +261,8 @@ class RegexpMatcher(NEROperation):
                 segment.text, segment.spans, [match.span(rule.index_extract)]
             )
 
-            metadata = dict(
-                rule_id=rule.id,
-                version=rule.version,
-            )
+            rule_id = rule.id if rule.id is not None else rule_index
+            metadata = RegexpMetadata(rule_id=rule_id, version=rule.version)
 
             attrs = [a for a in segment.attrs if a.label in self.attrs_to_copy]
 
@@ -310,3 +335,18 @@ class RegexpMatcher(NEROperation):
         with open(path_to_rules, mode="r") as f:
             rules = yaml.load(f, Loader=Loader)
         return rules
+
+    @staticmethod
+    def check_rules_sanity(rules: List[RegexpMatcherRule]):
+        """Check consistency of a set of rules"""
+
+        if any(r.id is not None for r in rules):
+            if not all(r.id is not None for r in rules):
+                raise ValueError(
+                    "Some rules have ids and other do not. Please provide either ids"
+                    " for all rules or no ids at all"
+                )
+            if len(set(r.id for r in rules)) != len(rules):
+                raise ValueError(
+                    "Some rules have the same id, each rule must have a unique id"
+                )
