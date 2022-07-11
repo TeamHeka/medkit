@@ -480,6 +480,10 @@ def _convert_relation_to_brat(
     RelationConf
         Configuration of the brat attribute
 
+    Raises
+    ------
+    ValueError
+        When the source or target was not found in the mapping object
     """
     assert nb_relation != 0
     brat_id = f"R{nb_relation}"
@@ -502,7 +506,7 @@ def _convert_relation_to_brat(
 
 def _convert_attribute_to_brat(
     attribute: Attribute, nb_attribute: int, target_brat_id: str, is_from_entity: bool
-) -> BratAttribute:
+) -> Tuple[BratAttribute, AttributeConf]:
     """
     Get a brat attribute from a medkit attribute
 
@@ -514,8 +518,6 @@ def _convert_attribute_to_brat(
         The current counter of brat attributes
     target_brat_id:
         Corresponding target brat ID
-    is_from_entity:
-        Whether `atrribute` comes from an entity
 
     Returns
     -------
