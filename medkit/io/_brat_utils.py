@@ -1,12 +1,12 @@
-import dataclasses
 import logging
+from collections import defaultdict
+
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union
 
 from smart_open import open
 from medkit.core.text.annotation import Segment, Relation
-from medkit.core import Attribute
 
 from medkit.core.text.span_utils import normalize_spans
 
@@ -131,46 +131,22 @@ class BratDocument:
 
 
 # data structures for configuration
-@dataclass
-class RelationConf:
+class RelationConf(NamedTuple):
     """Configuration data structure of a BratRelation"""
 
     type: str
-    args1: Set[str] = dataclasses.field(default_factory=set)
-    args2: Set[str] = dataclasses.field(default_factory=set)
-
-    def to_str(self) -> str:
-        arg1 = "|".join([str(arg) for arg in self.args1])
-        arg2 = "|".join([str(arg) for arg in self.args2])
-        return f"{self.type}\tArg1:{arg1}, Arg2:{arg2}"
-
-    def update(self, args1: Set[str], args2: Set[str]):
-        self.args1.update(args1)
-        self.args2.update(args2)
+    arg1: str
+    arg2: str
 
 
-@dataclass
-class AttributeConf:
+class AttributeConf(NamedTuple):
     """Configuration data structure of a BratAttribure"""
 
     from_entity: bool
     type: str
-    values: Set[str] = dataclasses.field(default_factory=set)
-
-    def to_str(self) -> str:
-        arg = "<ENTITY>" if self.from_entity else "<RELATION>"
-        values_str = "|".join([str(value) for value in self.values])
-        return (
-            f"{self.type}\tArg:{arg}"
-            if not values_str
-            else f"{self.type}\tArg:{arg}, Value:{values_str}"
-        )
-
-    def update(self, values: Set[str]):
-        self.values.update(values)
+    value: str
 
 
-@dataclass
 class BratAnnConfiguration:
     """A data structure to represent 'annotation.conf' in brat documents.
     This is necessary to generate a valid annotation project in brat.
@@ -178,24 +154,61 @@ class BratAnnConfiguration:
     supported in medkit, so the section is empty.
     """
 
-    entity_types: Set[str]
-    relation_types: Dict[str, RelationConf]  # key: relation type
-    attribute_types: Dict[str, AttributeConf]  # key: attribute_type
+    def __init__(self):
+        self._entity_types: Set[str] = set()
+        # key: relation type
+        self._rel_types_arg_1: Dict[str, Set[str]] = defaultdict(set)
+        # key: relation type
+        self._rel_types_arg_2: Dict[str, Set[str]] = defaultdict(set)
+        # key: attribute type
+        self._attr_entity_values: Dict[str, Set[Any]] = defaultdict(set)
+        self._attr_relation_values: Dict[str, Set[Any]] = defaultdict(set)
 
-    def add_relation_type(self, relation: RelationConf):
-        if relation.type not in self.relation_types:
-            self.relation_types[relation.type] = relation
+    # return sorted version of BratAnnotationConfiguration
+    @property
+    def entity_types(self) -> List[str]:
+        return sorted(self._entity_types)
+
+    @property
+    def rel_types_arg_1(self) -> Dict[str, List[str]]:
+        rels = self._rel_types_arg_1.copy()
+        for key in rels.keys():
+            rels[key] = sorted(rels[key])
+        return rels
+
+    @property
+    def rel_types_arg_2(self) -> Dict[str, List[str]]:
+        rels = self._rel_types_arg_2.copy()
+        for key in rels.keys():
+            rels[key] = sorted(rels[key])
+        return rels
+
+    @property
+    def attr_relation_values(self) -> Dict[str, List[str]]:
+        attrs = self._attr_relation_values.copy()
+        for key in attrs.keys():
+            attrs[key] = sorted(attrs[key])
+        return attrs
+
+    @property
+    def attr_entity_values(self) -> Dict[str, List[str]]:
+        attrs = self._attr_entity_values.copy()
+        for key in attrs.keys():
+            attrs[key] = sorted(attrs[key])
+        return attrs
+
+    def add_entity_type(self, type: str):
+        self._entity_types.add(type)
+
+    def add_relation_type(self, relation_conf: RelationConf):
+        self._rel_types_arg_1[relation_conf.type].add(relation_conf.arg1)
+        self._rel_types_arg_2[relation_conf.type].add(relation_conf.arg2)
+
+    def add_attribute_type(self, attr_conf: AttributeConf):
+        if attr_conf.from_entity:
+            self._attr_entity_values[attr_conf.type].add(attr_conf.value)
         else:
-            self.relation_types[relation.type].update(relation.args1, relation.args2)
-
-    def add_attribute_type(self, attribute: AttributeConf):
-        if attribute.type not in self.attribute_types:
-            self.attribute_types[attribute.type] = attribute
-        else:
-            self.attribute_types[attribute.type].update(attribute.values)
-
-    def add_entity_types(self, entity_types: Set[str]):
-        self.entity_types.update(entity_types)
+            self._attr_relation_values[attr_conf.type].add(attr_conf.value)
 
     def to_str(self) -> str:
         annotation_conf = (
@@ -204,25 +217,54 @@ class BratAnnConfiguration:
             "#from the HeKa project"
         )
         annotation_conf += "\n[entities]\n\n"
-        entity_section = "\n".join([ent for ent in self.entity_types])
+        entity_section = "\n".join(self.entity_types)
         annotation_conf += entity_section
 
+        # add relations section
         annotation_conf += "\n[relations]\n\n"
         annotation_conf += "# This line enables entity overlapping\n"
         annotation_conf += "<OVERLAP>\tArg1:<ENTITY>, Arg2:<ENTITY>, <OVL-TYPE>:<ANY>\n"
-        relation_section = "\n".join(
-            relation.to_str() for relation in self.relation_types.values()
-        )
-        annotation_conf += relation_section
 
-        annotation_conf += "\n[attributes]\n\n"
-        attribute_section = "\n".join(
-            attribute.to_str() for attribute in self.attribute_types.values()
-        )
-        annotation_conf += attribute_section
+        rel_types_arg_1 = self.rel_types_arg_1
+        rel_types_arg_2 = self.rel_types_arg_2
+        for type in rel_types_arg_1:
+            arg_1_types = rel_types_arg_1[type]
+            arg_2_types = rel_types_arg_2[type]
+            relation_line = self._relation_to_str(type, arg_1_types, arg_2_types)
+            annotation_conf += f"{relation_line}\n"
 
-        annotation_conf += "\n[events]\n\n"
+        # add attributes section
+        attr_entity_values = self.attr_entity_values
+        annotation_conf += "[attributes]\n\n"
+        for type, values in attr_entity_values.items():
+            attr_line = self._attribute_to_str(type, values, True)
+            annotation_conf += f"{attr_line}\n"
+
+        attr_relation_values = self.attr_relation_values
+        for type, values in attr_relation_values.items():
+            attr_line = self._attribute_to_str(type, values, False)
+            annotation_conf += f"{attr_line}\n"
+        # add events section (empty)
+        annotation_conf += "[events]\n\n"
         return annotation_conf
+
+    @staticmethod
+    def _attribute_to_str(type: str, values: List[str], from_entity: bool) -> str:
+        arg = "<ENTITY>" if from_entity else "<RELATION>"
+        values_str = "|".join([] if values[0] is None else values)
+        return (
+            f"{type}\tArg:{arg}"
+            if not values_str
+            else f"{type}\tArg:{arg}, Value:{values_str}"
+        )
+
+    @staticmethod
+    def _relation_to_str(
+        type: str, arg_1_types: List[str], arg_2_types: List[str]
+    ) -> str:
+        arg_1_str = "|".join(arg_1_types)
+        arg_2_str = "|".join(arg_2_types)
+        return f"{type}\tArg1:{arg_1_str}, Arg2:{arg_2_str}"
 
 
 def parse_file(ann_path: Union[str, Path], detect_groups: bool = False) -> BratDocument:
@@ -497,23 +539,26 @@ def _convert_relation_to_brat(
             "Imposible to create brat relation, entity target/source was not found."
         )
 
-    relation_conf = RelationConf(
-        type=type, args1=set([subj.type]), args2=set([obj.type])
-    )
-
+    relation_conf = RelationConf(type, arg1=subj.type, arg2=obj.type)
     return BratRelation(brat_id, type, subj.id, obj.id), relation_conf
 
 
 def _convert_attribute_to_brat(
-    attribute: Attribute, nb_attribute: int, target_brat_id: str, is_from_entity: bool
+    label: str,
+    value: Union[str, None],
+    nb_attribute: int,
+    target_brat_id: str,
+    is_from_entity: bool,
 ) -> Tuple[BratAttribute, AttributeConf]:
     """
     Get a brat attribute from a medkit attribute
 
     Parameters
     ----------
-    attribute:
-        A medkit attribute to convert into brat format
+    label:
+        Attribute label to convert into brat format
+    velue:
+       Optional string representing the attribute value
     nb_attribute:
         The current counter of brat attributes
     target_brat_id:
@@ -528,10 +573,6 @@ def _convert_attribute_to_brat(
     """
     assert nb_attribute != 0
     brat_id = f"A{nb_attribute}"
-    type = attribute.label.replace(" ", "_")
-    value = attribute.value
-
-    values = set() if value is None else set([value])
-    attr_conf = AttributeConf(from_entity=is_from_entity, type=type, values=values)
-
+    type = label.replace(" ", "_")
+    attr_conf = AttributeConf(from_entity=is_from_entity, type=type, value=value)
     return BratAttribute(brat_id, type, target_brat_id, value), attr_conf

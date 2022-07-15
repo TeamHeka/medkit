@@ -1,7 +1,6 @@
 import pathlib
 
 import pytest
-from medkit.core.annotation import Attribute
 from medkit.core.text.annotation import Entity, Relation, Segment
 from medkit.core.text.span import Span
 
@@ -9,6 +8,7 @@ from medkit.io._brat_utils import (
     BratEntity,
     BratAttribute,
     BratRelation,
+    BratAnnConfiguration,
     AttributeConf,
     RelationConf,
     _parse_entity,
@@ -155,14 +155,16 @@ def test__convert_segment_to_brat():
 def test__convert_attribute_to_brat():
     with pytest.raises(AssertionError):
         _convert_attribute_to_brat(
-            Attribute(label="label_attr", value=None),
+            label="label_attr",
+            value=None,
             nb_attribute=0,
             target_brat_id="T1",
             is_from_entity=False,
         )
 
     brat_attribute, _ = _convert_attribute_to_brat(
-        Attribute(label="label_attr", value=None),
+        label="label_attr",
+        value=None,
         nb_attribute=1,
         target_brat_id="T1",
         is_from_entity=False,
@@ -200,36 +202,58 @@ def test__convert_relation():
 
 
 def test_attribute_conf_file():
+    conf_file = BratAnnConfiguration()
     # generate a configuration line for brat attributes
     # a brat entity has an attribute 'severity' value 'normal')
-    attr_conf = AttributeConf(from_entity=True, type="severity", values=set(["normal"]))
-    assert "normal" in attr_conf.values
+    attr_conf = AttributeConf(from_entity=True, type="severity", value="normal")
+    conf_file.add_attribute_type(attr_conf)
     # another brat entity has an attribute 'severity' value 'low')
-    # we update the set of values of this attribute configuration
-    attr_conf.update(["low"])
-    # sorted to test the str representation
-    attr_conf.values = sorted(attr_conf.values)
-    assert attr_conf.values == ["low", "normal"]
-    assert attr_conf.to_str() == "severity\tArg:<ENTITY>, Value:low|normal"
+    # we add a new attribute configuration in the config file
+    attr_conf = AttributeConf(from_entity=True, type="severity", value="low")
+    conf_file.add_attribute_type(attr_conf)
+
+    # finally a brat relation has an attribure 'severity' value 'inter'
+    attr_conf = AttributeConf(from_entity=False, type="severity", value="inter")
+    conf_file.add_attribute_type(attr_conf)
+
+    entity_attrs = conf_file.attr_entity_values
+    assert list(entity_attrs.keys()) == ["severity"]
+    assert entity_attrs["severity"] == ["low", "normal"]
+    assert (
+        conf_file._attribute_to_str("severity", entity_attrs["severity"], True)
+        == "severity\tArg:<ENTITY>, Value:low|normal"
+    )
+
+    relation_attrs = conf_file.attr_relation_values
+    assert list(relation_attrs.keys()) == ["severity"]
+    assert relation_attrs["severity"] == ["inter"]
+    assert (
+        conf_file._attribute_to_str("severity", relation_attrs["severity"], False)
+        == "severity\tArg:<RELATION>, Value:inter"
+    )
 
 
 def test_relation_conf_file():
+    conf_file = BratAnnConfiguration()
     # generate a configuration line for brat relations
     # a brat relation has subj type 'medicament_1' and obj type 'disease'
-    relation_conf = RelationConf(
-        type="treats", args1=set(["medicament_1"]), args2=set(["disease"])
-    )
-    assert relation_conf.type == "treats"
-    assert "medicament_1" in relation_conf.args1
-    assert "disease" in relation_conf.args2
+    relation_conf = RelationConf(type="treats", arg1="medicament_1", arg2="disease")
+    conf_file.add_relation_type(relation_conf)
     # the same relation exists between subj type 'medicament_2' and obj type 'disease'
-    # we update the set of args1 of this relation configuration
-    relation_conf.update(args1=["medicament_2"], args2=["disease"])
-    # sorted to test the str representation
-    relation_conf.args1 = sorted(relation_conf.args1)
-    relation_conf.args2 = sorted(relation_conf.args2)
-    assert relation_conf.args1 == ["medicament_1", "medicament_2"]
-    assert relation_conf.args2 == ["disease"]
+    # we update the relation configuration
+    relation_conf = RelationConf(type="treats", arg1="medicament_2", arg2="disease")
+    conf_file.add_relation_type(relation_conf)
+
+    relation_conf_args1 = conf_file.rel_types_arg_1
+    relation_conf_args2 = conf_file.rel_types_arg_2
+
+    assert list(relation_conf_args1.keys()) == ["treats"]
+    assert list(relation_conf_args2.keys()) == ["treats"]
+    assert relation_conf_args1["treats"] == ["medicament_1", "medicament_2"]
+    assert relation_conf_args2["treats"] == ["disease"]
     assert (
-        relation_conf.to_str() == "treats\tArg1:medicament_1|medicament_2, Arg2:disease"
+        conf_file._relation_to_str(
+            "treats", relation_conf_args1["treats"], relation_conf_args2["treats"]
+        )
+        == "treats\tArg1:medicament_1|medicament_2, Arg2:disease"
     )
