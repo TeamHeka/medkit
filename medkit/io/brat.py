@@ -360,26 +360,29 @@ class BratOutputConverter(OutputConverter):
 
         if config is None:
             # initialize the configuration file
-            config = BratAnnConfiguration(
-                entity_types=set(), relation_types=dict(), attribute_types=dict()
-            )
+            config = BratAnnConfiguration()
 
-        entity_types = set()
         # First convert segments then relations including its attributes
         for medkit_segment in segments:
             brat_entity = brat_utils._convert_segment_to_brat(
                 medkit_segment, nb_segment
             )
             anns_by_medkit_id[medkit_segment.id] = brat_entity
-            entity_types.update([brat_entity.type])
+            config.add_entity_type(brat_entity.type)
             nb_segment += 1
 
             # include selected attributes
             for attr in medkit_segment.attrs:
                 if self.attrs is None or attr.label in self.attrs:
+                    create_attr, value = self._valid_attr_value(attr.value)
+
+                    if not create_attr:
+                        continue
+
                     brat_attr, attr_config = brat_utils._convert_attribute_to_brat(
-                        attr,
-                        nb_attribute,
+                        label=attr.label,
+                        value=value,
+                        nb_attribute=nb_attribute,
                         target_brat_id=brat_entity.id,
                         is_from_entity=True,
                     )
@@ -398,9 +401,15 @@ class BratOutputConverter(OutputConverter):
             # Note: it seems that brat does not support attributes for relations
             for attr in medkit_relation.attrs:
                 if self.attrs is None or attr.label in self.attrs:
+                    create_attr, value = self._valid_attr_value(attr.value)
+
+                    if not create_attr:
+                        continue
+
                     brat_attr, attr_config = brat_utils._convert_attribute_to_brat(
-                        attr,
-                        nb_attribute,
+                        label=attr.label,
+                        value=value,
+                        nb_attribute=nb_attribute,
                         target_brat_id=brat_relation.id,
                         is_from_entity=False,
                     )
@@ -408,5 +417,20 @@ class BratOutputConverter(OutputConverter):
                     config.add_attribute_type(attr_config)
                     nb_attribute += 1
 
-        config.add_entity_types(entity_types)
         return anns_by_medkit_id.values(), config
+
+    def _valid_attr_value(self, attr_value):
+        default_value = None
+        if attr_value is not None:
+            if isinstance(attr_value, bool):
+                # in brat 'False' means the attributes does not exist
+                return (attr_value, default_value)
+            if isinstance(attr_value, list):
+                if attr_value:
+                    logging.info(
+                        f"Ignoring {str(attr_value)} as value for compatibility"
+                    )
+                return (True, default_value)
+            if not isinstance(attr_value, str):
+                return (True, str(attr_value))
+        return (True, attr_value)
