@@ -3,7 +3,6 @@ import pytest
 
 from medkit.core import Attribute
 from medkit.core.text import Entity, Relation, Segment, Span, TextDocument
-from medkit.io._brat_utils import BratAttribute, BratEntity
 from medkit.io.brat import BratOutputConverter
 
 
@@ -60,133 +59,92 @@ def _get_medkit_doc():
     return doc
 
 
-TEST_LABELS_ANNS = [
-    (None, True, 4),  # 4 entities
-    ([], True, 0),
-    (["maladie"], True, 2),
-    (None, False, 5),  # 4 entities + 1 segment
-    ([], False, 0),
-    (["maladie"], False, 2),
+TEST_DATA = [
+    (
+        None,
+        None,
+        False,
+        False,
+        """T1\tmaladie 24 42\tdouleur abdominale
+T2\tgrade 46 53\tgrade 4
+A1\tnormalized T2
+T3\tmaladie 58 76\tdouleur abdominale
+T4\tlevel 81 87\tsévère
+T5\tdiagnosis 0 42;81 87\tLe patient présente une douleur abdominale sévère
+R1\trelated Arg1:T1 Arg2:T3
+A2\tfrom_umls R1
+""",
+    ),
+    ([], [], False, False, ""),
+    (
+        ["maladie", "related"],
+        ["from_umls"],
+        False,
+        False,
+        """T1\tmaladie 24 42\tdouleur abdominale
+T2\tmaladie 58 76\tdouleur abdominale
+R1\trelated Arg1:T1 Arg2:T2
+A1\tfrom_umls R1
+""",
+    ),
+    (
+        None,
+        None,
+        True,
+        True,
+        """T1\tmaladie 24 42\tdouleur abdominale
+T2\tgrade 46 53\tgrade 4
+A1\tnormalized T2
+T3\tmaladie 58 76\tdouleur abdominale
+T4\tlevel 81 87\tsévère
+R1\trelated Arg1:T1 Arg2:T3
+A2\tfrom_umls R1
+""",
+    ),
+    ([], [], True, True, ""),
+    (
+        ["maladie", "related"],
+        ["from_umls"],
+        True,
+        True,
+        """T1\tmaladie 24 42\tdouleur abdominale
+T2\tmaladie 58 76\tdouleur abdominale
+R1\trelated Arg1:T1 Arg2:T2
+A1\tfrom_umls R1
+""",
+    ),
 ]
 
 
 @pytest.mark.parametrize(
-    "anns_labels,ignore_segments,expected_nb_brat_entities",
-    TEST_LABELS_ANNS,
+    "ann_labels,attrs,ignore_segments,create_config,expected_ann",
+    TEST_DATA,
     ids=[
-        "default_keep_segment",
-        "no_annotations_keep_segment",
-        "entity_by_label_keep_segment",
-        "default_no_segment",
-        "no_annotations_no_segment",
-        "entity_by_label_no_segment",
+        "all_anns_all_attrs",
+        "no_anns_no_attrs",
+        "list_anns_list_attrs",
+        "all_anns_all_attrs_no_segment",
+        "no_anns_no_attrs_no_segment",
+        "list_anns_list_attrs_no_segment",
     ],
 )
-def test_entity_conversion(
-    anns_labels,
-    ignore_segments,
-    expected_nb_brat_entities,
+def test_save(
+    tmp_path: Path, ann_labels, attrs, ignore_segments, create_config, expected_ann
 ):
     # create medkit_doc with 4 entities, 1 relation, 1 segment, 2 attrs
     medkit_doc = _get_medkit_doc()
-
-    # define a brat output converter without attrs
-    brat_converter = BratOutputConverter(
-        anns_labels=anns_labels,
-        ignore_segments=ignore_segments,
-        create_config=False,
-        attrs=[],
-    )
-
-    # only segments are important for this test
-    segments, _ = brat_converter._get_anns_from_medkit_doc(medkit_doc)
-    segments = sorted(segments, key=lambda x: x.id)
-    brat_anns, _ = brat_converter._convert_medkit_anns_to_brat(segments, [])
-    assert len(brat_anns) == expected_nb_brat_entities
-
-    for brat_ann, segment in zip(brat_anns, segments):
-        assert isinstance(brat_ann, BratEntity)
-        assert brat_ann.type == segment.label
-        assert brat_ann.start == segment.spans[0].start
-        assert brat_ann.end == segment.spans[-1].end
-        assert brat_ann.text == segment.text
-
-
-TEST_ATTRS = [
-    (None, ["normalized", "normalized", "from_umls"]),
-    ([], []),
-    (["from_umls"], ["from_umls"]),
-]
-
-
-@pytest.mark.parametrize(
-    "attrs_to_convert,expected_attrs",
-    TEST_ATTRS,
-    ids=[
-        "all_attrs",
-        "no_attrs",
-        "attr_by_label",
-    ],
-)
-def test_attrs_conversion(attrs_to_convert, expected_attrs):
-    # create medkit_doc with 4 entities, 1 relation, 1 segment, 2 attrs
-    medkit_doc = _get_medkit_doc()
-
-    # define a brat output converter all anns selected attrs
-    brat_converter = BratOutputConverter(
-        anns_labels=None,
-        ignore_segments=True,
-        create_config=False,
-        attrs=attrs_to_convert,
-    )
-
-    segments, relations = brat_converter._get_anns_from_medkit_doc(medkit_doc)
-    segments = sorted(segments, key=lambda x: x.id)
-    brat_anns, _ = brat_converter._convert_medkit_anns_to_brat(segments, relations)
-
-    # only check brat attributes
-    brat_attrs = [ann for ann in brat_anns if isinstance(ann, BratAttribute)]
-    assert len(brat_attrs) == len(expected_attrs)
-    assert [attr.type for attr in brat_attrs] == expected_attrs
-
-
-EXPECTED_ANN = """T1\tmaladie 24 42\tdouleur abdominale
-T2\tgrade 46 53\tgrade 4
-A1\tnormalized T2 True
-T3\tmaladie 58 76\tdouleur abdominale
-T4\tlevel 81 87\tsévère
-A2\tnormalized T4 False
-T5\tdiagnosis 0 42;81 87\tLe patient présente une douleur abdominale sévère
-R1\trelated Arg1:T1 Arg2:T3
-A3\tfrom_umls R1
-"""
-
-
-@pytest.mark.parametrize(
-    "create_config",
-    [False, True],
-    ids=[
-        "with_config",
-        "no_config",
-    ],
-)
-def test_convert(tmp_path: Path, create_config):
-    # create medkit_doc with 4 entities, 1 relation, 1 segment, 2 attrs
-    medkit_doc = _get_medkit_doc()
-    # sort for testing
     medkit_doc.annotation_ids = sorted(medkit_doc.annotation_ids)
-
     output_path = tmp_path / "output"
     expected_txt_path = output_path / f"{medkit_doc.id}.txt"
     expected_ann_path = output_path / f"{medkit_doc.id}.ann"
     expected_conf_path = output_path / "annotation.conf"
 
-    # define a brat output converter all anns selected attrs
+    # define a brat output converter all anns all attrs
     brat_converter = BratOutputConverter(
-        anns_labels=None,
-        ignore_segments=False,
+        anns_labels=ann_labels,
+        ignore_segments=ignore_segments,
         create_config=create_config,
-        attrs=None,
+        attrs=attrs,
     )
 
     brat_converter.save([medkit_doc], output_path)
@@ -195,7 +153,7 @@ def test_convert(tmp_path: Path, create_config):
     assert expected_txt_path.exists()
     assert expected_ann_path.exists()
     assert expected_txt_path.read_text() == medkit_doc.text
-    assert expected_ann_path.read_text() == EXPECTED_ANN
+    assert expected_ann_path.read_text() == expected_ann
     if create_config:
         assert expected_conf_path.exists()
     else:
@@ -217,16 +175,15 @@ maladie
 related\tArg1:maladie, Arg2:maladie
 [attributes]
 
-normalized\tArg:<ENTITY>, Value:False|True
+normalized\tArg:<ENTITY>
 from_umls\tArg:<RELATION>
 [events]\n\n"""
 
 
 def test_annotation_conf_file():
+    # test to check configuration file
     # create medkit_doc with 4 entities, 1 relation, 1 segment, 2 attrs
     medkit_doc = _get_medkit_doc()
-    # sort for testing
-    medkit_doc.annotation_ids = sorted(medkit_doc.annotation_ids)
 
     brat_converter = BratOutputConverter(
         anns_labels=None,
@@ -237,15 +194,11 @@ def test_annotation_conf_file():
     segments, relations = brat_converter._get_anns_from_medkit_doc(medkit_doc)
     _, config_file = brat_converter._convert_medkit_anns_to_brat(segments, relations)
 
-    assert "normalized" in config_file.attribute_types.keys()
-    assert "from_umls" in config_file.attribute_types.keys()
-    assert "related" in config_file.relation_types.keys()
-    assert "related" in config_file.relation_types.keys()
+    assert config_file.entity_types == ["grade", "level", "maladie"]
+    assert "normalized" in config_file.attr_entity_values.keys()
+    assert "from_umls" in config_file.attr_relation_values.keys()
+    assert "related" in config_file.rel_types_arg_1.keys()
+    assert "related" in config_file.rel_types_arg_2.keys()
 
-    # to test we sort sets, this converts sets to list
-    config_file.entity_types = sorted(config_file.entity_types)
-    for key in config_file.attribute_types.keys():
-        config_file.attribute_types[key].values = sorted(
-            config_file.attribute_types[key].values
-        )
+    # already sorted
     assert config_file.to_str() == EXPECTED_CONFIG
