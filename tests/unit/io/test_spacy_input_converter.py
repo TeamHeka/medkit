@@ -60,20 +60,14 @@ def test_input_converter_entity_transfer(
 
     assert isinstance(medkit_doc, TextDocument)
     # all entities should be included
-    assert len(medkit_doc.entities.values()) == expected_nb_ents
+    assert len(medkit_doc.get_entities()) == expected_nb_ents
     assert len(medkit_doc.get_annotations()) == expected_nb_ents
 
-    ents = [
-        medkit_doc.get_annotation_by_id(id)
-        for ids in medkit_doc.entities.values()
-        for id in ids
-    ]
-
+    ents = medkit_doc.get_entities()
     assert all(isinstance(ent, Entity) for ent in ents)
     # check entity
     if ents:
-        entity_id_0 = medkit_doc.entities.get("PERSON", [])[0]
-        entity_0 = medkit_doc.get_annotation_by_id(entity_id_0)
+        entity_0 = medkit_doc.get_annotations_by_label("PERSON")[0]
         assert entity_0.label == "PERSON"
         assert entity_0.text == "Marie Dupont"
         assert entity_0.spans == [Span(0, 12)]
@@ -128,13 +122,9 @@ def test_input_converter_attribute_transfer(
 
     assert isinstance(medkit_doc, TextDocument)
     assert medkit_doc.text == doc.text
-    assert len(medkit_doc.entities) == 2
+    assert len(medkit_doc.get_entities()) == 2
 
-    ents = [
-        medkit_doc.get_annotation_by_id(id)
-        for ids in medkit_doc.entities.values()
-        for id in ids
-    ]
+    ents = medkit_doc.get_entities()
     # verify the number of attrs for each entity
     assert [len(ent.attrs) for ent in ents] == expected_nb_attrs
 
@@ -185,44 +175,34 @@ def test_input_converter_medkit_attribute_transfer_all_anns(nlp_spacy):
 
     assert isinstance(medkit_doc, TextDocument)
     assert medkit_doc.text == doc.text
-    assert len(medkit_doc.entities) == 2
+    assert len(medkit_doc.get_entities()) == 2
 
-    ents = [
-        medkit_doc.get_annotation_by_id(id)
-        for ids in medkit_doc.entities.values()
-        for id in ids
-    ]
+    ents = medkit_doc.get_entities()
     # verify the number of attrs for each entity
     assert [len(ent.attrs) for ent in ents] == [2, 2]
     # check value for medkit attr transferred
-    entity_id_0 = medkit_doc.entities.get("PERSON", [])[0]
-    entity_0 = medkit_doc.get_annotation_by_id(entity_id_0)
+    entity_0 = medkit_doc.get_annotations_by_label("PERSON")[0]
     mock_medkit_attr = [
         attr for attr in entity_0.attrs if attr.label == label_mock_attr_medkit
     ][0]
     assert mock_medkit_attr.value == "value_for_entities"
 
     # verify segments
-    segments = [
-        medkit_doc.get_annotation_by_id(id)
-        for ids in medkit_doc.segments.values()
-        for id in ids
-    ]
+    segments = medkit_doc.get_segments()
     # three nouns and one sentence
-    assert list(medkit_doc.segments.keys()) == ["NOUN_CHUNKS", "SENTENCES"]
+    assert {s.label for s in segments} == {"NOUN_CHUNKS", "SENTENCES"}
     assert len(segments) == 4
 
-    sentence_id = medkit_doc.segments.get("SENTENCES", [])[0]
-    sentence = medkit_doc.get_annotation_by_id(sentence_id)
+    sentence = medkit_doc.get_annotations_by_label("SENTENCES")[0]
     assert len(sentence.attrs) == 1
     assert sentence.attrs[0].label == label_mock_attr_medkit
     assert sentence.attrs[0].value == "value_for_sentences"
 
 
 TEST_SEGMENTS_FROM_SPACY = [
-    (None, ["SENTENCES", "NOUN_CHUNKS"], 4),
-    ([], [], 0),
-    (["NOUN_CHUNKS"], ["NOUN_CHUNKS"], 3),
+    (None, {"SENTENCES", "NOUN_CHUNKS"}, 4),
+    ([], set(), 0),
+    (["NOUN_CHUNKS"], {"NOUN_CHUNKS"}, 3),
 ]
 
 
@@ -258,10 +238,9 @@ def test_input_converter_segments_transfer(
     assert medkit_doc.text == doc.text
     assert isinstance(medkit_doc, TextDocument)
 
-    # each span group was transferred using its name as key in segments
-    assert sorted(list(medkit_doc.segments.keys())) == sorted(
-        expected_labels_in_segments
-    )
+    # each span group was transferred as a segment using its name as label
+    assert {s.label for s in medkit_doc.get_segments()} == expected_labels_in_segments
+
     # all selected spans should be included
     assert len(medkit_doc.get_annotations()) == expected_total_annotations
 
@@ -287,9 +266,9 @@ def test_prov(nlp_spacy):
     graph = prov_builder.graph
 
     medkit_doc = collection.documents[0]
-    entity_id = medkit_doc.entities["PERSON"][0]
+    entity = medkit_doc.get_annotations_by_label("PERSON")[0]
 
-    node = graph.get_node(entity_id)
-    assert node.data_item_id == entity_id
+    node = graph.get_node(entity.id)
+    assert node.data_item_id == entity.id
     assert node.operation_id == spacy_converter.id
     assert not node.source_ids

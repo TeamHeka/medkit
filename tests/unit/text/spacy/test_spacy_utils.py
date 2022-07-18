@@ -106,11 +106,7 @@ def test_medkit_to_spacy_doc_selected_ents_list(nlp_spacy):
     # ents were transfer, 2 for medication, 1 for disease
     assert len(spacy_doc.ents) == 3
 
-    ents = [
-        ent
-        for label in ["medication", "disease"]
-        for ent in medkit_doc.get_annotations_by_label(label)
-    ]
+    ents = medkit_doc.get_entities()
     # guarantee the same order to compare
     doc_ents = sorted(
         spacy_doc.ents, key=lambda ent_spacy: ent_spacy._.get("medkit_id")
