@@ -1,7 +1,7 @@
 __all__ = ["BratInputConverter", "BratOutputConverter"]
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, Union, ValuesView
+from typing import List, Optional, Tuple, Union, ValuesView, Dict
 
 from smart_open import open
 from medkit.core.id import generate_id
@@ -12,6 +12,8 @@ from medkit.io._brat_utils import (
     BratAttribute,
     BratEntity,
     BratRelation,
+    RelationConf,
+    AttributeConf,
 )
 from medkit.core import (
     Attribute,
@@ -22,6 +24,7 @@ from medkit.core import (
     ProvBuilder,
 )
 from medkit.core.text import Entity, Relation, Segment, Span, TextDocument
+from medkit.core.text.span_utils import normalize_spans
 
 
 TEXT_EXT = ".txt"
@@ -364,9 +367,7 @@ class BratOutputConverter(OutputConverter):
 
         # First convert segments then relations including its attributes
         for medkit_segment in segments:
-            brat_entity = brat_utils._convert_segment_to_brat(
-                medkit_segment, nb_segment
-            )
+            brat_entity = self._convert_segment_to_brat(medkit_segment, nb_segment)
             anns_by_medkit_id[medkit_segment.id] = brat_entity
             config.add_entity_type(brat_entity.type)
             nb_segment += 1
@@ -379,7 +380,7 @@ class BratOutputConverter(OutputConverter):
                     if not create_attr:
                         continue
 
-                    brat_attr, attr_config = brat_utils._convert_attribute_to_brat(
+                    brat_attr, attr_config = self._convert_attribute_to_brat(
                         label=attr.label,
                         value=value,
                         nb_attribute=nb_attribute,
@@ -391,7 +392,7 @@ class BratOutputConverter(OutputConverter):
                     nb_attribute += 1
 
         for medkit_relation in relations:
-            brat_relation, relation_config = brat_utils._convert_relation_to_brat(
+            brat_relation, relation_config = self._convert_relation_to_brat(
                 medkit_relation, nb_relation, anns_by_medkit_id
             )
             anns_by_medkit_id[medkit_relation.id] = brat_relation
@@ -406,7 +407,7 @@ class BratOutputConverter(OutputConverter):
                     if not create_attr:
                         continue
 
-                    brat_attr, attr_config = brat_utils._convert_attribute_to_brat(
+                    brat_attr, attr_config = self._convert_attribute_to_brat(
                         label=attr.label,
                         value=value,
                         nb_attribute=nb_attribute,
@@ -434,3 +435,108 @@ class BratOutputConverter(OutputConverter):
             if not isinstance(attr_value, str):
                 return (True, str(attr_value))
         return (True, attr_value)
+
+    @staticmethod
+    def _convert_segment_to_brat(segment: Segment, nb_segment: int) -> BratEntity:
+        """
+        Get a brat entity from a medkit segment
+
+        Parameters
+        ----------
+        segment:
+            A medkit segment to convert into brat format
+        nb_segment:
+            The current counter of brat segments
+
+        Returns
+        -------
+        BratEntity
+            The equivalent brat entity of the medkit segment
+        """
+        assert nb_segment != 0
+        brat_id = f"T{nb_segment}"
+        # brat does not support spaces in labels
+        type = segment.label.replace(" ", "_")
+        text = segment.text
+        spans = tuple((span.start, span.end) for span in normalize_spans(segment.spans))
+        return BratEntity(brat_id, type, spans, text)
+
+    @staticmethod
+    def _convert_relation_to_brat(
+        relation: Relation,
+        nb_relation: int,
+        brat_anns_by_segment_id: Dict[str, BratEntity],
+    ) -> Tuple[BratRelation, RelationConf]:
+        """
+        Get a brat relation from a medkit relation
+
+        Parameters
+        ----------
+        relation:
+            A medkit relation to convert into brat format
+        nb_relation:
+            The current counter of brat relations
+        brat_anns_by_segment_id:
+            A dict to map medkit ID to brat annotation
+
+        Returns
+        -------
+        BratRelation
+            The equivalent brat relation of the medkit relation
+        RelationConf
+            Configuration of the brat attribute
+
+        Raises
+        ------
+        ValueError
+            When the source or target was not found in the mapping object
+        """
+        assert nb_relation != 0
+        brat_id = f"R{nb_relation}"
+        # brat does not support spaces in labels
+        type = relation.label.replace(" ", "_")
+        subj = brat_anns_by_segment_id.get(relation.source_id)
+        obj = brat_anns_by_segment_id.get(relation.target_id)
+
+        if subj is None or obj is None:
+            raise ValueError(
+                "Imposible to create brat relation, entity target/source was not found."
+            )
+
+        relation_conf = RelationConf(type, arg1=subj.type, arg2=obj.type)
+        return BratRelation(brat_id, type, subj.id, obj.id), relation_conf
+
+    @staticmethod
+    def _convert_attribute_to_brat(
+        label: str,
+        value: Union[str, None],
+        nb_attribute: int,
+        target_brat_id: str,
+        is_from_entity: bool,
+    ) -> Tuple[BratAttribute, AttributeConf]:
+        """
+        Get a brat attribute from a medkit attribute
+
+        Parameters
+        ----------
+        label:
+            Attribute label to convert into brat format
+        velue:
+        Optional string representing the attribute value
+        nb_attribute:
+            The current counter of brat attributes
+        target_brat_id:
+            Corresponding target brat ID
+
+        Returns
+        -------
+        BratAttribute:
+            The equivalent brat attribute of the medkit attribute
+        AttributeConf:
+            Configuration of the brat attribute
+        """
+        assert nb_attribute != 0
+        brat_id = f"A{nb_attribute}"
+        type = label.replace(" ", "_")
+        attr_conf = AttributeConf(from_entity=is_from_entity, type=type, value=value)
+        return BratAttribute(brat_id, type, target_brat_id, value), attr_conf

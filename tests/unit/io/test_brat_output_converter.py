@@ -3,6 +3,7 @@ import pytest
 
 from medkit.core import Attribute
 from medkit.core.text import Entity, Relation, Segment, Span, TextDocument
+from medkit.io._brat_utils import BratAttribute, BratEntity, BratRelation
 from medkit.io.brat import BratOutputConverter
 
 
@@ -202,3 +203,77 @@ def test_annotation_conf_file():
 
     # already sorted
     assert config_file.to_str() == EXPECTED_CONFIG
+
+
+def test__convert_segment_to_brat():
+    segment_medkit = Segment(
+        label="label_segment", spans=[Span(0, 5)], text="segment_text"
+    )
+    with pytest.raises(AssertionError):
+        BratOutputConverter._convert_segment_to_brat(
+            segment=segment_medkit,
+            nb_segment=0,
+        )
+
+    brat_entity = BratOutputConverter._convert_segment_to_brat(
+        segment=segment_medkit,
+        nb_segment=1,
+    )
+    assert isinstance(brat_entity, BratEntity)
+    assert brat_entity.id == "T1"
+    assert brat_entity.type == "label_segment"
+    assert brat_entity.span == ((0, 5),)
+    assert brat_entity.text == "segment_text"
+
+
+def test__convert_attribute_to_brat():
+    with pytest.raises(AssertionError):
+        BratOutputConverter._convert_attribute_to_brat(
+            label="label_attr",
+            value=None,
+            nb_attribute=0,
+            target_brat_id="T1",
+            is_from_entity=False,
+        )
+
+    brat_attribute, _ = BratOutputConverter._convert_attribute_to_brat(
+        label="label_attr",
+        value=None,
+        nb_attribute=1,
+        target_brat_id="T1",
+        is_from_entity=False,
+    )
+    assert isinstance(brat_attribute, BratAttribute)
+    assert brat_attribute.id == "A1"
+    assert brat_attribute.type == "label_attr"
+    assert brat_attribute.value is None
+    assert brat_attribute.target == "T1"
+
+
+def test__convert_relation():
+    ent_1 = Entity(
+        entity_id="id_1", label="ent_suj", spans=[Span(0, 10)], text="ent_1_text"
+    )
+    ent_2 = Entity(
+        entity_id="id_2", label="ent_suj", spans=[Span(0, 10)], text="ent_1_text"
+    )
+    relation = Relation(label="rel1", source_id=ent_1.id, target_id=ent_2.id)
+
+    # create entities brat and save them in a dict
+    anns_by_medkit_id = dict()
+    anns_by_medkit_id[ent_1.id] = BratOutputConverter._convert_segment_to_brat(
+        ent_1, nb_segment=1
+    )
+    anns_by_medkit_id[ent_2.id] = BratOutputConverter._convert_segment_to_brat(
+        ent_2, nb_segment=2
+    )
+
+    brat_relation, _ = BratOutputConverter._convert_relation_to_brat(
+        relation=relation, nb_relation=1, brat_anns_by_segment_id=anns_by_medkit_id
+    )
+    assert isinstance(brat_relation, BratRelation)
+    assert brat_relation.id == "R1"
+    assert brat_relation.subj == anns_by_medkit_id[ent_1.id].id
+    assert brat_relation.obj == anns_by_medkit_id[ent_2.id].id
+    assert brat_relation.type == "rel1"
+    assert brat_relation.to_str() == "R1\trel1 Arg1:T1 Arg2:T2\n"
