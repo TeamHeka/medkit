@@ -3,7 +3,12 @@ import pytest
 
 from medkit.core import Attribute
 from medkit.core.text import Entity, Relation, Segment, Span, TextDocument
-from medkit.io._brat_utils import BratAttribute, BratEntity, BratRelation
+from medkit.io._brat_utils import (
+    BratAttribute,
+    BratEntity,
+    BratRelation,
+    BratAnnConfiguration,
+)
 from medkit.io.brat import BratOutputConverter
 
 
@@ -192,8 +197,11 @@ def test_annotation_conf_file():
         create_config=True,
         attrs=None,
     )
+    config_file = BratAnnConfiguration()
     segments, relations = brat_converter._get_anns_from_medkit_doc(medkit_doc)
-    _, config_file = brat_converter._convert_medkit_anns_to_brat(segments, relations)
+    _, config_file = brat_converter._convert_medkit_anns_to_brat(
+        segments, relations, config_file
+    )
 
     assert config_file.entity_types == ["grade", "level", "maladie"]
     assert "normalized" in config_file.attr_entity_values.keys()
@@ -246,7 +254,7 @@ def test__convert_attribute_to_brat():
     assert isinstance(brat_attribute, BratAttribute)
     assert brat_attribute.id == "A1"
     assert brat_attribute.type == "label_attr"
-    assert brat_attribute.value is None
+    assert brat_attribute.value == ""
     assert brat_attribute.target == "T1"
 
 

@@ -4,8 +4,6 @@ from pathlib import Path
 from typing import List, Optional, Tuple, Union, ValuesView, Dict
 
 from smart_open import open
-from medkit.core.id import generate_id
-from medkit.core.operation_desc import OperationDescription
 import medkit.io._brat_utils as brat_utils
 from medkit.io._brat_utils import (
     BratAnnConfiguration,
@@ -22,6 +20,8 @@ from medkit.core import (
     OutputConverter,
     Store,
     ProvBuilder,
+    generate_id,
+    OperationDescription,
 )
 from medkit.core.text import Entity, Relation, Segment, Span, TextDocument
 from medkit.core.text.span_utils import normalize_spans
@@ -45,7 +45,7 @@ class BratInputConverter(InputConverter):
 
     @property
     def description(self) -> OperationDescription:
-        return OperationDescription(id=self.id, name=self.__class__.__name__, config={})
+        return OperationDescription(id=self.id, name=self.__class__.__name__)
 
     def set_prov_builder(self, prov_builder: ProvBuilder):
         self._prov_builder = prov_builder
@@ -209,7 +209,7 @@ class BratOutputConverter(OutputConverter):
         ----------
         anns_labels:
             Labels of medkit annotations to convert into Brat annotations.
-            If `None` (default) all the annotations will converted
+            If `None` (default) all the annotations will be converted
         attrs:
             Labels of medkit attributes to add in the annotations that will be included.
             If `None` (default) all medkit attributes found in the segments or relations
@@ -272,7 +272,7 @@ class BratOutputConverter(OutputConverter):
 
         dir_path = Path(dir_path)
         dir_path.mkdir(parents=True, exist_ok=True)
-        config = None
+        config = BratAnnConfiguration()
 
         for medkit_doc in docs:
             doc_id = medkit_doc.id
@@ -334,7 +334,7 @@ class BratOutputConverter(OutputConverter):
         self,
         segments: List[Segment],
         relations: List[Relation],
-        config: Optional[BratAnnConfiguration] = None,
+        config: BratAnnConfiguration,
     ) -> Tuple[
         ValuesView[Union[BratEntity, BratAttribute, BratRelation]],
         Optional[BratAnnConfiguration],
@@ -361,10 +361,6 @@ class BratOutputConverter(OutputConverter):
         nb_segment, nb_relation, nb_attribute = 1, 1, 1
         anns_by_medkit_id = dict()
 
-        if config is None:
-            # initialize the configuration file
-            config = BratAnnConfiguration()
-
         # First convert segments then relations including its attributes
         for medkit_segment in segments:
             brat_entity = self._convert_segment_to_brat(medkit_segment, nb_segment)
@@ -375,10 +371,12 @@ class BratOutputConverter(OutputConverter):
             # include selected attributes
             for attr in medkit_segment.attrs:
                 if self.attrs is None or attr.label in self.attrs:
-                    create_attr, value = self._valid_attr_value(attr.value)
+                    value = attr.value
 
-                    if not create_attr:
-                        continue
+                    if isinstance(value, bool):
+                        if not value:
+                            # in brat 'False' means the attributes does not exist
+                            continue
 
                     brat_attr, attr_config = self._convert_attribute_to_brat(
                         label=attr.label,
@@ -402,10 +400,10 @@ class BratOutputConverter(OutputConverter):
             # Note: it seems that brat does not support attributes for relations
             for attr in medkit_relation.attrs:
                 if self.attrs is None or attr.label in self.attrs:
-                    create_attr, value = self._valid_attr_value(attr.value)
-
-                    if not create_attr:
-                        continue
+                    value = attr.value
+                    if isinstance(value, bool):
+                        if not value:
+                            continue
 
                     brat_attr, attr_config = self._convert_attribute_to_brat(
                         label=attr.label,
@@ -419,22 +417,6 @@ class BratOutputConverter(OutputConverter):
                     nb_attribute += 1
 
         return anns_by_medkit_id.values(), config
-
-    def _valid_attr_value(self, attr_value):
-        default_value = None
-        if attr_value is not None:
-            if isinstance(attr_value, bool):
-                # in brat 'False' means the attributes does not exist
-                return (attr_value, default_value)
-            if isinstance(attr_value, list):
-                if attr_value:
-                    logging.info(
-                        f"Ignoring {str(attr_value)} as value for compatibility"
-                    )
-                return (True, default_value)
-            if not isinstance(attr_value, str):
-                return (True, str(attr_value))
-        return (True, attr_value)
 
     @staticmethod
     def _convert_segment_to_brat(segment: Segment, nb_segment: int) -> BratEntity:
@@ -521,8 +503,8 @@ class BratOutputConverter(OutputConverter):
         ----------
         label:
             Attribute label to convert into brat format
-        velue:
-        Optional string representing the attribute value
+        value:
+            Attribute value
         nb_attribute:
             The current counter of brat attributes
         target_brat_id:
@@ -538,5 +520,6 @@ class BratOutputConverter(OutputConverter):
         assert nb_attribute != 0
         brat_id = f"A{nb_attribute}"
         type = label.replace(" ", "_")
+        value: str = brat_utils.ensure_attr_value(value)
         attr_conf = AttributeConf(from_entity=is_from_entity, type=type, value=value)
         return BratAttribute(brat_id, type, target_brat_id, value), attr_conf

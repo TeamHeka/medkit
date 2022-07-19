@@ -56,8 +56,21 @@ class BratAttribute:
     value: str = None  # Only one value is possible
 
     def to_str(self) -> str:
-        value = "" if self.value is None else f" {self.value}"
-        return f"{self.id}\t{self.type} {self.target}{value}\n"
+        value = ensure_attr_value(self.value)
+        value_str = f" {value}" if value else ""
+        return f"{self.id}\t{self.type} {self.target}{value_str}\n"
+
+
+def ensure_attr_value(attr_value) -> str:
+    """Ensure that `attr_value` is a string. If it's not, the
+    value is changed depending on its original format."""
+    if isinstance(attr_value, str):
+        return attr_value
+    if attr_value is None or isinstance(attr_value, bool):
+        return ""
+    if isinstance(attr_value, list):
+        return " ".join(attr_value)
+    return str(attr_value)
 
 
 @dataclass
@@ -248,7 +261,7 @@ class BratAnnConfiguration:
     @staticmethod
     def _attribute_to_str(type: str, values: List[str], from_entity: bool) -> str:
         arg = "<ENTITY>" if from_entity else "<RELATION>"
-        values_str = "|".join([] if values[0] is None else values)
+        values_str = "|".join(values)
         return (
             f"{type}\tArg:{arg}"
             if not values_str
