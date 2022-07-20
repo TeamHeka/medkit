@@ -285,3 +285,41 @@ def test__convert_relation():
     assert brat_relation.obj == anns_by_medkit_id[ent_2.id].id
     assert brat_relation.type == "rel1"
     assert brat_relation.to_str() == "R1\trel1 Arg1:T1 Arg2:T2\n"
+
+
+def test_doc_names(tmp_path: Path):
+    output_path = tmp_path / "output"
+    medkit_docs = [_get_medkit_doc(), _get_medkit_doc()]
+
+    brat_converter = BratOutputConverter(
+        anns_labels=None,
+        ignore_segments=True,
+        create_config=True,
+        attrs=None,
+    )
+
+    with pytest.raises(AssertionError):
+        brat_converter.save(medkit_docs, output_path, doc_names=[])
+
+    # names by default
+    brat_converter.save(medkit_docs, output_path)
+
+    for medkit_doc in medkit_docs:
+        expected_txt_path = output_path / f"{medkit_doc.id}.txt"
+        expected_ann_path = output_path / f"{medkit_doc.id}.ann"
+        assert output_path.exists()
+        assert expected_txt_path.exists()
+        assert expected_ann_path.exists()
+        assert expected_txt_path.read_text() == medkit_doc.text
+
+    # custom names
+    expected_names = ["PID_DOC_0", "PID_DOC_1"]
+    brat_converter.save(medkit_docs, output_path, doc_names=expected_names)
+
+    for medkit_doc, doc_name in zip(medkit_docs, expected_names):
+        expected_txt_path = output_path / f"{doc_name}.txt"
+        expected_ann_path = output_path / f"{doc_name}.ann"
+        assert output_path.exists()
+        assert expected_txt_path.exists()
+        assert expected_ann_path.exists()
+        assert expected_txt_path.read_text() == medkit_doc.text

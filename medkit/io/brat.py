@@ -261,10 +261,11 @@ class BratOutputConverter(OutputConverter):
         self,
         docs: Union[List[TextDocument], Collection],
         dir_path: Union[str, Path],
+        doc_names: Optional[List[str]] = None,
     ):
         """Convert and save a collection or list of TextDocuments into a Brat collection.
-        For each collection or list of documents, a folder is created with
-        the txt and ann files; an 'annotation.conf' is saved if required.
+        For each collection or list of documents, a folder is created with '.txt' and '.ann'
+        files; an 'annotation.conf' is saved if required.
 
         Parameters
         ----------
@@ -272,7 +273,14 @@ class BratOutputConverter(OutputConverter):
             List or Collection of medkit doc objects to convert
         dir_path:
             String or path object to save the generated files
+        doc_names:
+            Optional list with the names for the generated files. If 'None', 'doc_id' will
+            be used as the name. Where 'doc_id.txt' has the raw text of the document and
+            'doc_id.ann' the Brat annotation file.
         """
+
+        if doc_names is not None:
+            assert isinstance(doc_names, list) and len(doc_names) == len(docs)
 
         if isinstance(docs, Collection):
             docs = [
@@ -285,8 +293,8 @@ class BratOutputConverter(OutputConverter):
         dir_path.mkdir(parents=True, exist_ok=True)
         config = BratAnnConfiguration(self.top_values_by_attr)
 
-        for medkit_doc in docs:
-            doc_id = medkit_doc.id
+        for i, medkit_doc in enumerate(docs):
+            doc_id = medkit_doc.id if doc_names is None else doc_names[i]
             text = medkit_doc.text
 
             if text is not None:
