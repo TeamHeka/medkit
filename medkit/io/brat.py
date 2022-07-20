@@ -200,6 +200,7 @@ class BratOutputConverter(OutputConverter):
         attrs: Optional[List[str]] = None,
         ignore_segments: bool = True,
         create_config: bool = True,
+        top_values_by_attr: Optional[int] = None,
         op_id: Optional[str] = None,
     ):
         """
@@ -222,6 +223,10 @@ class BratOutputConverter(OutputConverter):
             Whether to create a configuration file for the generated collection.
             This file defines the types of annotations generated, it is necessary for the correct
             visualization on Brat.
+        top_values_by_attr:
+            Defines the number of most common values by attribute to show in the configuration.
+            This is useful when an attribute has a large number of values, only the 'top' ones
+            will be in the config. If `None`, the top 50 of values by attr will be in the config.
         op_id:
             Identifier of the converter
         """
@@ -234,6 +239,11 @@ class BratOutputConverter(OutputConverter):
         self.ignore_segments = ignore_segments
         self.create_config = create_config
 
+        if top_values_by_attr is None:
+            top_values_by_attr = 50
+
+        self.top_values_by_attr = top_values_by_attr
+
     @property
     def description(self) -> OperationDescription:
         config = dict(
@@ -241,6 +251,7 @@ class BratOutputConverter(OutputConverter):
             attrs=self.attrs,
             ignore_segments=self.ignore_segments,
             create_config=self.create_config,
+            top_values_by_attr=self.top_values_by_attr,
         )
         return OperationDescription(
             id=self.id, name=self.__class__.__name__, config=config
@@ -272,7 +283,7 @@ class BratOutputConverter(OutputConverter):
 
         dir_path = Path(dir_path)
         dir_path.mkdir(parents=True, exist_ok=True)
-        config = BratAnnConfiguration()
+        config = BratAnnConfiguration(self.top_values_by_attr)
 
         for medkit_doc in docs:
             doc_id = medkit_doc.id

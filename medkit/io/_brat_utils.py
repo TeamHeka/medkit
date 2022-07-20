@@ -1,9 +1,9 @@
 import logging
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union
+from typing import Dict, List, NamedTuple, Set, Tuple, Union
 
 from smart_open import open
 
@@ -164,15 +164,17 @@ class BratAnnConfiguration:
     supported in medkit, so the section is empty.
     """
 
-    def __init__(self):
+    def __init__(self, top_values_by_attr: int = 50):
         self._entity_types: Set[str] = set()
         # key: relation type
         self._rel_types_arg_1: Dict[str, Set[str]] = defaultdict(set)
         # key: relation type
         self._rel_types_arg_2: Dict[str, Set[str]] = defaultdict(set)
         # key: attribute type
-        self._attr_entity_values: Dict[str, Set[Any]] = defaultdict(set)
-        self._attr_relation_values: Dict[str, Set[Any]] = defaultdict(set)
+        self._attr_entity_values: Dict[str, List[str]] = defaultdict(list)
+        self._attr_relation_values: Dict[str, List[str]] = defaultdict(list)
+        # 'n' most common values by attr to be included in the conf file
+        self.top_values_by_attr = top_values_by_attr
 
     # return sorted version of BratAnnotationConfiguration
     @property
@@ -193,18 +195,30 @@ class BratAnnConfiguration:
             rels[key] = sorted(rels[key])
         return rels
 
+    # as brat only allows defined values, certain data types
+    # are not fully supported (e.g. int, float).
+    # We limit the number of different values of an attribute
+    # to show in the configuration.
     @property
     def attr_relation_values(self) -> Dict[str, List[str]]:
         attrs = self._attr_relation_values.copy()
         for key in attrs.keys():
-            attrs[key] = sorted(attrs[key])
+            # get the 'n' most common values in the attr
+            most_common_values = Counter(attrs[key]).most_common(
+                self.top_values_by_attr
+            )
+            attrs[key] = sorted(attr_value for attr_value, _ in most_common_values)
         return attrs
 
     @property
     def attr_entity_values(self) -> Dict[str, List[str]]:
         attrs = self._attr_entity_values.copy()
         for key in attrs.keys():
-            attrs[key] = sorted(attrs[key])
+            # get the 'n' most common values in the attr
+            most_common_values = Counter(attrs[key]).most_common(
+                self.top_values_by_attr
+            )
+            attrs[key] = sorted(attr_value for attr_value, _ in most_common_values)
         return attrs
 
     def add_entity_type(self, type: str):
@@ -216,9 +230,9 @@ class BratAnnConfiguration:
 
     def add_attribute_type(self, attr_conf: AttributeConf):
         if attr_conf.from_entity:
-            self._attr_entity_values[attr_conf.type].add(attr_conf.value)
+            self._attr_entity_values[attr_conf.type].append(attr_conf.value)
         else:
-            self._attr_relation_values[attr_conf.type].add(attr_conf.value)
+            self._attr_relation_values[attr_conf.type].append(attr_conf.value)
 
     def to_str(self) -> str:
         annotation_conf = (

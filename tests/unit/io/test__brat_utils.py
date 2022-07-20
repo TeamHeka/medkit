@@ -182,3 +182,53 @@ def test_relation_conf_file():
         )
         == "treats\tArg1:medicament_1|medicament_2, Arg2:disease"
     )
+
+
+TEST_CONFIG = [
+    (0, [], "severity\tArg:<ENTITY>"),
+    (2, ["low", "normal"], "severity\tArg:<ENTITY>, Value:low|normal"),
+    (
+        10,
+        ["low", "normal", "other", "other_V"],
+        "severity\tArg:<ENTITY>, Value:low|normal|other|other_V",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "top_values_by_attr,expected_values,expected_str",
+    TEST_CONFIG,
+    ids=["no_values", "max_2_values", "all_values"],
+)
+def test_attribute_entity_conf_file_top_values(
+    top_values_by_attr, expected_values, expected_str
+):
+    # testing limit of values in attr config
+    # an attribute may have many values,'top_values_by_attr' allow to
+    # limit that number. Only the 'n' most common values will be shown in the config (max)
+    conf_file = BratAnnConfiguration(top_values_by_attr=top_values_by_attr)
+
+    # add values into the config
+    # the value 'normal' appears 10 times, 'low' 5 times, and 'other' and 'other_V' once
+    for i in range(10):
+        attr_conf = AttributeConf(from_entity=True, type="severity", value="normal")
+        conf_file.add_attribute_type(attr_conf)
+
+    for i in range(5):
+        attr_conf = AttributeConf(from_entity=True, type="severity", value="low")
+        conf_file.add_attribute_type(attr_conf)
+
+    attr_conf = AttributeConf(from_entity=True, type="severity", value="other")
+    conf_file.add_attribute_type(attr_conf)
+
+    attr_conf = AttributeConf(from_entity=True, type="severity", value="other_V")
+    conf_file.add_attribute_type(attr_conf)
+
+    # check values
+    entity_attrs = conf_file.attr_entity_values
+    assert list(entity_attrs.keys()) == ["severity"]
+    assert entity_attrs["severity"] == expected_values
+    assert (
+        conf_file._attribute_to_str("severity", entity_attrs["severity"], True)
+        == expected_str
+    )
