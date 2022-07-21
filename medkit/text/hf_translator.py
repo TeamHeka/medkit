@@ -5,7 +5,7 @@ __all__ = ["HFTranslator"]
 from collections import defaultdict
 import dataclasses
 from pathlib import Path
-from typing import Dict, Iterator, List, Tuple, Union
+from typing import Any, Dict, Iterator, List, Tuple, Union
 
 import torch
 import transformers
@@ -23,6 +23,7 @@ class DefaultConfig:
     alignment_layer: int = 8
     alignment_threshold: float = 1e-3
     device: int = -1  # -1 corresponds to the cpu else device number
+    batch_size: int = 1
 
 
 class HFTranslator(Operation):
@@ -50,6 +51,7 @@ class HFTranslator(Operation):
         alignment_layer: int = DefaultConfig.alignment_layer,
         alignment_threshold: float = DefaultConfig.alignment_threshold,
         device: int = DefaultConfig.device,
+        batch_size: int = DefaultConfig.batch_size,
         op_id: str = None,
     ):
         """
@@ -71,6 +73,8 @@ class HFTranslator(Operation):
         device:
             Device to use for transformers models. Follows the HuggingFace convention
             (-1 for "cpu" and device number for gpu, for instance 0 for "cuda:0")
+        batch_size:
+            Number of segments in batches processed by translation and alignment models
         op_id:
             Identifier of the translator
         """
@@ -86,6 +90,7 @@ class HFTranslator(Operation):
         self.alignment_layer = alignment_layer
         self.alignment_threshold = alignment_threshold
         self.device = device
+        self.batch_size = batch_size
 
         task = transformers.pipelines.get_task(self.translation_model)
         if not task.startswith("translation"):
@@ -99,12 +104,14 @@ class HFTranslator(Operation):
             model=self.translation_model,
             pipeline_class=TranslationPipeline,
             device=self.device,
+            batch_size=self.batch_size,
         )
         self._aligner = _Aligner(
             model=self.alignment_model,
             layer_index=self.alignment_layer,
             threshold=self.alignment_threshold,
             device=self.device,
+            batch_size=self.batch_size,
         )
 
     def run(self, segments: List[Segment]) -> List[Segment]:
@@ -228,8 +235,10 @@ class _Aligner:
         layer_index: int = 8,
         threshold: float = 1e-3,
         device: int = -1,
+        batch_size: int = 1,
     ):
         self._device = torch.device("cpu" if device < 0 else f"cuda:{device}")
+        self._batch_size = batch_size
         self._model = BertModel.from_pretrained(model, output_hidden_states=True).to(
             self._device
         )
@@ -258,6 +267,16 @@ class _Aligner:
             target_texts
         ), "Must have same number of source and target texts"
 
+        aligments = []
+        source_text_batches_iter = _batchify(source_texts, self._batch_size)
+        target_text_batches_iter = _batchify(target_texts, self._batch_size)
+        for source_text_batch, target_text_batch in zip(
+            source_text_batches_iter, target_text_batches_iter
+        ):
+            aligments += self._align_batch(source_text_batch, target_text_batch)
+        return aligments
+
+    def _align_batch(self, source_texts, target_texts):
         # preprocess
         source_encoding = self._encode_text(source_texts)
         target_encoding = self._encode_text(target_texts)
@@ -339,3 +358,8 @@ class _Aligner:
             target_ranges.sort()
 
         return word_alignment
+
+
+def _batchify(list: List[Any], batch_size: int) -> Iterator[List[Any]]:
+    for i in range(0, len(list), batch_size):
+        yield list[i : i + batch_size]
