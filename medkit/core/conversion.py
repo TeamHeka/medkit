@@ -1,6 +1,7 @@
 import abc
+from typing import List, Optional, Union
 
-from medkit.core.document import Collection
+from medkit.core.document import Collection, Document
 
 
 class InputConverter:
@@ -8,12 +9,12 @@ class InputConverter:
 
     @abc.abstractmethod
     def load(self, **kwargs) -> Collection:
-        pass
+        raise NotImplementedError
 
 
 class OutputConverter:
     """Abstract class for converting medkit document to external format"""
 
     @abc.abstractmethod
-    def save(self, collection: Collection):
-        pass
+    def save(self, docs: Union[List[Document], Collection], **kwargs) -> Optional[List]:
+        raise NotImplementedError

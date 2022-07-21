@@ -3,9 +3,12 @@ import pathlib
 import pytest
 
 from medkit.io._brat_utils import (
-    Entity,
-    Attribute,
-    Relation,
+    BratEntity,
+    BratAttribute,
+    BratRelation,
+    BratAnnConfiguration,
+    AttributeConf,
+    RelationConf,
     _parse_entity,
     _parse_relation,
     _parse_attribute,
@@ -80,11 +83,11 @@ def test__parse_attribute_error():
 def test_parse_file():
     test_file = pathlib.Path("tests/data/brat/1_example.ann")
     doc = parse_file(str(test_file))
-    entity = Entity(id="T1", type="medication", span=((36, 46),), text="Lisinopril")
+    entity = BratEntity(id="T1", type="medication", span=((36, 46),), text="Lisinopril")
     assert entity in doc.entities.values()
-    relation = Relation(id="R1", type="treats", subj="T1", obj="T3")
+    relation = BratRelation(id="R1", type="treats", subj="T1", obj="T3")
     assert relation in doc.relations.values()
-    attribute = Attribute(id="A1", type="negation", target="R1")
+    attribute = BratAttribute(id="A1", type="negation", target="R1")
     assert attribute in doc.attributes.values()
 
 
@@ -97,11 +100,11 @@ def test_document_get_augmented_entities():
     assert entity.text == "entity1 entity2"
     assert entity.type == "And-Group"
     assert entity.span == ((30, 37), (120, 127))
-    relation1 = Relation(id="R1", type="And", subj="T4", obj="T1")
-    relation2 = Relation(id="R3", type="Or", subj="T5", obj="T4")
+    relation1 = BratRelation(id="R1", type="And", subj="T4", obj="T1")
+    relation2 = BratRelation(id="R3", type="Or", subj="T5", obj="T4")
     assert relation1 in entity.relations_from_me
     assert relation2 in entity.relations_to_me
-    attribute = Attribute(id="A1", type="attribute", target="T4")
+    attribute = BratAttribute(id="A1", type="attribute", target="T4")
     assert attribute in entity.attributes
 
 
@@ -113,11 +116,119 @@ def test_document_grouping():
     assert "T4" in doc.groups.keys()
     and_group = doc.groups["T4"]
     assert and_group.type == "And-Group"
-    entity1 = Entity(id="T1", type="label1", span=((30, 37),), text="entity1")
+    entity1 = BratEntity(id="T1", type="label1", span=((30, 37),), text="entity1")
     assert entity1 in and_group.items
     # Test Or-Group
     assert "T5" in doc.groups.keys()
     or_group = doc.groups["T5"]
     assert or_group.type == "Or-Group"
-    entity3 = Entity(id="T3", type="label3", span=((140, 147),), text="entity3")
+    entity3 = BratEntity(id="T3", type="label3", span=((140, 147),), text="entity3")
     assert entity3 in or_group.items
+
+
+def test_attribute_conf_file():
+    conf_file = BratAnnConfiguration()
+    # generate a configuration line for brat attributes
+    # a brat entity has an attribute 'severity' value 'normal')
+    attr_conf = AttributeConf(from_entity=True, type="severity", value="normal")
+    conf_file.add_attribute_type(attr_conf)
+    # another brat entity has an attribute 'severity' value 'low')
+    # we add a new attribute configuration in the config file
+    attr_conf = AttributeConf(from_entity=True, type="severity", value="low")
+    conf_file.add_attribute_type(attr_conf)
+
+    # finally a brat relation has an attribure 'severity' value 'inter'
+    attr_conf = AttributeConf(from_entity=False, type="severity", value="inter")
+    conf_file.add_attribute_type(attr_conf)
+
+    entity_attrs = conf_file.attr_entity_values
+    assert list(entity_attrs.keys()) == ["severity"]
+    assert entity_attrs["severity"] == ["low", "normal"]
+    assert (
+        conf_file._attribute_to_str("severity", entity_attrs["severity"], True)
+        == "severity\tArg:<ENTITY>, Value:low|normal"
+    )
+
+    relation_attrs = conf_file.attr_relation_values
+    assert list(relation_attrs.keys()) == ["severity"]
+    assert relation_attrs["severity"] == ["inter"]
+    assert (
+        conf_file._attribute_to_str("severity", relation_attrs["severity"], False)
+        == "severity\tArg:<RELATION>, Value:inter"
+    )
+
+
+def test_relation_conf_file():
+    conf_file = BratAnnConfiguration()
+    # generate a configuration line for brat relations
+    # a brat relation has subj type 'medicament_1' and obj type 'disease'
+    relation_conf = RelationConf(type="treats", arg1="medicament_1", arg2="disease")
+    conf_file.add_relation_type(relation_conf)
+    # the same relation exists between subj type 'medicament_2' and obj type 'disease'
+    # we update the relation configuration
+    relation_conf = RelationConf(type="treats", arg1="medicament_2", arg2="disease")
+    conf_file.add_relation_type(relation_conf)
+
+    relation_conf_args1 = conf_file.rel_types_arg_1
+    relation_conf_args2 = conf_file.rel_types_arg_2
+
+    assert list(relation_conf_args1.keys()) == ["treats"]
+    assert list(relation_conf_args2.keys()) == ["treats"]
+    assert relation_conf_args1["treats"] == ["medicament_1", "medicament_2"]
+    assert relation_conf_args2["treats"] == ["disease"]
+    assert (
+        conf_file._relation_to_str(
+            "treats", relation_conf_args1["treats"], relation_conf_args2["treats"]
+        )
+        == "treats\tArg1:medicament_1|medicament_2, Arg2:disease"
+    )
+
+
+TEST_CONFIG = [
+    (0, [], "severity\tArg:<ENTITY>"),
+    (2, ["low", "normal"], "severity\tArg:<ENTITY>, Value:low|normal"),
+    (
+        10,
+        ["low", "normal", "other", "other_V"],
+        "severity\tArg:<ENTITY>, Value:low|normal|other|other_V",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "top_values_by_attr,expected_values,expected_str",
+    TEST_CONFIG,
+    ids=["no_values", "max_2_values", "all_values"],
+)
+def test_attribute_entity_conf_file_top_values(
+    top_values_by_attr, expected_values, expected_str
+):
+    # testing limit of values in attr config
+    # an attribute may have many values,'top_values_by_attr' allow to
+    # limit that number. Only the 'n' most common values will be shown in the config (max)
+    conf_file = BratAnnConfiguration(top_values_by_attr=top_values_by_attr)
+
+    # add values into the config
+    # the value 'normal' appears 10 times, 'low' 5 times, and 'other' and 'other_V' once
+    for i in range(10):
+        attr_conf = AttributeConf(from_entity=True, type="severity", value="normal")
+        conf_file.add_attribute_type(attr_conf)
+
+    for i in range(5):
+        attr_conf = AttributeConf(from_entity=True, type="severity", value="low")
+        conf_file.add_attribute_type(attr_conf)
+
+    attr_conf = AttributeConf(from_entity=True, type="severity", value="other")
+    conf_file.add_attribute_type(attr_conf)
+
+    attr_conf = AttributeConf(from_entity=True, type="severity", value="other_V")
+    conf_file.add_attribute_type(attr_conf)
+
+    # check values
+    entity_attrs = conf_file.attr_entity_values
+    assert list(entity_attrs.keys()) == ["severity"]
+    assert entity_attrs["severity"] == expected_values
+    assert (
+        conf_file._attribute_to_str("severity", entity_attrs["severity"], True)
+        == expected_str
+    )

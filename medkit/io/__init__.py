@@ -1,7 +1,7 @@
-__all__ = ["BratInputConverter"]
+__all__ = ["BratInputConverter", "BratOutputConverter"]
 
 import importlib.util
-from .brat import BratInputConverter
+from .brat import BratInputConverter, BratOutputConverter
 
 _spacy_is_available = importlib.util.find_spec("spacy") is not None
 if _spacy_is_available:
