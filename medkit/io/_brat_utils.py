@@ -350,7 +350,7 @@ def parse_string(ann_string: str, detect_groups: bool = False) -> BratDocument:
     for i, ann in enumerate(annotations):
         line_number = i + 1
         if len(ann) == 0 or ann[0] not in ("T", "R", "A"):
-            logger.warning(
+            logger.info(
                 f"Ignoring empty line or unsupported annotation {ann} on {line_number}"
             )
             continue

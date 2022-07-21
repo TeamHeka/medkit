@@ -277,15 +277,15 @@ class BratOutputConverter(OutputConverter):
             'doc_id.ann' the Brat annotation file.
         """
 
-        if doc_names is not None:
-            assert len(doc_names) == len(docs)
-
         if isinstance(docs, Collection):
             docs = [
                 medkit_doc
                 for medkit_doc in docs.documents
                 if isinstance(medkit_doc, TextDocument)
             ]
+
+        if doc_names is not None:
+            assert len(doc_names) == len(docs)
 
         dir_path = Path(dir_path)
         dir_path.mkdir(parents=True, exist_ok=True)
@@ -326,7 +326,7 @@ class BratOutputConverter(OutputConverter):
             # labels_anns were a list but none of the annotations
             # had a label of interest
             labels_str = ",".join(self.anns_labels)
-            logger.warning(
+            logger.info(
                 "No medkit annotations were included because none have"
                 f" '{labels_str}' as label."
             )
