@@ -1,8 +1,8 @@
 import pytest
 
 from medkit.core.text import Segment, Span, ModifiedSpan, span_utils
-from medkit.text.hf_translator import HFTranslator, _Aligner
 from medkit.text.ner import RegexpMatcher, RegexpMatcherRule
+from medkit.text.translation.hf_translator import HFTranslator, _Aligner
 
 
 _TEXT_FR = "Je souffre d'insuffisance cardiaque depuis 10 ans."
