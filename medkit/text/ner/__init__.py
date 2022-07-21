@@ -24,3 +24,11 @@ if _packaging_is_available and _quickumls_is_available and _six_is_available:
     from .quick_umls_matcher import QuickUMLSMatcher  # noqa: F401
     __all__.append("QuickUMLSMatcher")
     # fmt: on
+
+_torch_is_available = importlib.util.find_spec("torch") is not None
+_transformers_is_available = importlib.util.find_spec("transformers") is not None
+if _torch_is_available and _transformers_is_available:
+    # fmt: off
+    from .hf_entity_matcher import HFEntityMatcher  # noqa: F401
+    __all__.append("HFEntityMatcher")
+    # fmt: on
