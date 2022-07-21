@@ -4,14 +4,14 @@ __all__ = ["HFTranslator"]
 
 from collections import defaultdict
 import dataclasses
-from typing import Dict, Iterator, List, Tuple
+from pathlib import Path
+from typing import Dict, Iterator, List, Tuple, Union
 
 import torch
 import transformers
 from transformers import TranslationPipeline, BertModel, BertTokenizerFast
 
-from medkit.core.operation import Operation
-
+from medkit.core import Operation
 from medkit.core.text import Segment, ModifiedSpan, span_utils
 
 
@@ -26,13 +26,15 @@ class DefaultConfig:
 
 
 class HFTranslator(Operation):
-    """Translator based on a Hugging Face transformers model
+    """Translator based on HuggingFace transformers model
+
+    Any translation model from the HuggingFace hub can be used.
 
     For segment given in input, a translated segment will be returned.
     The spans of the translated segment are "aligned" to the original segment.
     An alignment model is used to find matches between translated words and
-    original words, and for each of these matches a `ModifiedSpan` is created, referencing
-    the original span in the original text.
+    original words, and for each of these matches a :class:`~medkit.core.text.ModifiedSpan`
+    is created, referencing the original span in the original text.
 
     Segment given in input should not contain more than one sentence, because only the 1st
     sentence will be translated and the others will be discarded (this might vary with the model).
@@ -43,8 +45,8 @@ class HFTranslator(Operation):
     def __init__(
         self,
         output_label: str = DefaultConfig.output_label,
-        translation_model: str = DefaultConfig.translation_model,
-        alignment_model: str = DefaultConfig.alignment_model,
+        translation_model: Union[str, Path] = DefaultConfig.translation_model,
+        alignment_model: Union[str, Path] = DefaultConfig.alignment_model,
         alignment_layer: int = DefaultConfig.alignment_layer,
         alignment_threshold: float = DefaultConfig.alignment_threshold,
         device: int = DefaultConfig.device,
@@ -56,22 +58,23 @@ class HFTranslator(Operation):
         output_label:
             Label of the translated segments
         translation_model:
-            Name of the translation model on the Hugging Face models hub. Must be a model compatible
-            with the TranslationPipeline transformers class.
+            Name (on the HuggingFace models hub) or path of the translation model. Must be a model compatible
+            with the `TranslationPipeline` transformers class.
         alignment_model:
-            Name of the alignment model on the Hugging Face models hub. Must be a multilingual BERT model
-            compatible with the BertModel transformers class.
+            Name (on the HuggingFace models hub) or path of the alignment model. Must be a multilingual BERT model
+            compatible with the `BertModel` transformers class.
         alignment_layer:
             Index of the layer in the alignment model that contains the token embeddings
             (the original and translated embedding will be. compared)
         alignment_threshold:
             Threshold value used to decide if embeddings are similar enough to be aligned
         device:
-            Device to use for pytorch models. Follows the Hugging Face convention (-1 for "cpu"
-            and device number for gpu, for instance 0 for "cuda:0")
+            Device to use for transformers models. Follows the HuggingFace convention
+            (-1 for "cpu" and device number for gpu, for instance 0 for "cuda:0")
         op_id:
             Identifier of the translator
         """
+
         # Pass all arguments to super (remove self)
         init_args = locals()
         init_args.pop("self")
@@ -115,7 +118,7 @@ class HFTranslator(Operation):
 
         Returns
         -------
-        List[Segments]:
+        List[Segment]:
             Translated segments (with spans referring to words in original text, for translated
             words that have been aligned to original words)
         """
@@ -221,7 +224,7 @@ _AlignmentDict = Dict[Tuple[int, int], List[Tuple[int, int]]]
 class _Aligner:
     def __init__(
         self,
-        model: str = "bert-base-multilingual-cased",
+        model: Union[str, Path] = "bert-base-multilingual-cased",
         layer_index: int = 8,
         threshold: float = 1e-3,
         device: int = -1,
