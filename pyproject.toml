@@ -22,6 +22,7 @@ flashtext = "*"
 pyaml = "*"
 requests = "*"
 smart-open = "*"
+tqdm = "*"
 typing-extensions = "*"
 Unidecode = "*"
 
