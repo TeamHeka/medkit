@@ -230,7 +230,9 @@ class _Aligner:
         device: int = -1,
     ):
         self._device = torch.device("cpu" if device < 0 else f"cuda:{device}")
-        self._model = BertModel.from_pretrained(model).to(self._device)
+        self._model = BertModel.from_pretrained(model, output_hidden_states=True).to(
+            self._device
+        )
         self._layer_index = layer_index
         self._threshold: float = threshold
         self._tokenizer = BertTokenizerFast.from_pretrained(model)
@@ -264,10 +266,10 @@ class _Aligner:
         self._model.eval()
         with torch.no_grad():
             batch_in_source = source_encoding["input_ids"].to(self._device)
-            batch_out_source = self._model(batch_in_source, output_hidden_states=True)
+            batch_out_source = self._model(batch_in_source)
             batch_out_source = batch_out_source[2][self._layer_index]
             batch_in_target = target_encoding["input_ids"].to(self._device)
-            batch_out_target = self._model(batch_in_target, output_hidden_states=True)
+            batch_out_target = self._model(batch_in_target)
             batch_out_target = batch_out_target[2][self._layer_index]
 
         # compute alignment for each pair of texts in batch
