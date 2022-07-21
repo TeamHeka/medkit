@@ -199,9 +199,7 @@ def test_annotation_conf_file():
     )
     config_file = BratAnnConfiguration()
     segments, relations = brat_converter._get_anns_from_medkit_doc(medkit_doc)
-    _, config_file = brat_converter._convert_medkit_anns_to_brat(
-        segments, relations, config_file
-    )
+    _ = brat_converter._convert_medkit_anns_to_brat(segments, relations, config_file)
 
     assert config_file.entity_types == ["grade", "level", "maladie"]
     assert "normalized" in config_file.attr_entity_values.keys()
