@@ -31,6 +31,8 @@ TEXT_EXT = ".txt"
 ANN_EXT = ".ann"
 ANN_CONF_FILE = "annotation.conf"
 
+logger = logging.getLogger(__name__)
+
 
 class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
@@ -97,7 +99,7 @@ class BratInputConverter(InputConverter):
             documents.append(doc)
 
         if not documents:
-            logging.warn(f"Didn't load any document from dir {dir_path}")
+            logger.warning(f"Didn't load any document from dir {dir_path}")
 
         return Collection(documents)
 
@@ -200,7 +202,7 @@ class BratOutputConverter(OutputConverter):
         attrs: Optional[List[str]] = None,
         ignore_segments: bool = True,
         create_config: bool = True,
-        top_values_by_attr: Optional[int] = None,
+        top_values_by_attr: int = 50,
         op_id: Optional[str] = None,
     ):
         """
@@ -226,7 +228,7 @@ class BratOutputConverter(OutputConverter):
         top_values_by_attr:
             Defines the number of most common values by attribute to show in the configuration.
             This is useful when an attribute has a large number of values, only the 'top' ones
-            will be in the config. If `None`, the top 50 of values by attr will be in the config.
+            will be in the config. By default, the top 50 of values by attr will be in the config.
         op_id:
             Identifier of the converter
         """
@@ -238,10 +240,6 @@ class BratOutputConverter(OutputConverter):
         self.attrs = attrs
         self.ignore_segments = ignore_segments
         self.create_config = create_config
-
-        if top_values_by_attr is None:
-            top_values_by_attr = 50
-
         self.top_values_by_attr = top_values_by_attr
 
     @property
@@ -280,7 +278,7 @@ class BratOutputConverter(OutputConverter):
         """
 
         if doc_names is not None:
-            assert isinstance(doc_names, list) and len(doc_names) == len(docs)
+            assert len(doc_names) == len(docs)
 
         if isinstance(docs, Collection):
             docs = [
@@ -302,9 +300,8 @@ class BratOutputConverter(OutputConverter):
                 text_path.write_text(text, encoding="utf-8")
 
             segments, relations = self._get_anns_from_medkit_doc(medkit_doc)
-            brat_anns, config = self._convert_medkit_anns_to_brat(
-                segments, relations, config
-            )
+            brat_anns = self._convert_medkit_anns_to_brat(segments, relations, config)
+
             # save ann file
             ann_path = dir_path / f"{doc_id}{ANN_EXT}"
             brat_str = "".join(f"{brat_ann.to_str()}" for brat_ann in brat_anns)
@@ -329,7 +326,7 @@ class BratOutputConverter(OutputConverter):
             # labels_anns were a list but none of the annotations
             # had a label of interest
             labels_str = ",".join(self.anns_labels)
-            logging.warn(
+            logger.warning(
                 "No medkit annotations were included because none have"
                 f" '{labels_str}' as label."
             )
@@ -354,10 +351,7 @@ class BratOutputConverter(OutputConverter):
         segments: List[Segment],
         relations: List[Relation],
         config: BratAnnConfiguration,
-    ) -> Tuple[
-        ValuesView[Union[BratEntity, BratAttribute, BratRelation]],
-        Optional[BratAnnConfiguration],
-    ]:
+    ) -> Tuple[ValuesView[Union[BratEntity, BratAttribute, BratRelation]]]:
         """
         Convert Segments, Relations and Attributes into brat data structures
 
@@ -374,8 +368,6 @@ class BratOutputConverter(OutputConverter):
         -------
         BratAnnotations
             A list of brat annotations
-        BratAnnConfiguration
-            The updated configuration
         """
         nb_segment, nb_relation, nb_attribute = 1, 1, 1
         anns_by_medkit_id = dict()
@@ -392,50 +384,60 @@ class BratOutputConverter(OutputConverter):
                 if self.attrs is None or attr.label in self.attrs:
                     value = attr.value
 
-                    if isinstance(value, bool):
-                        if not value:
-                            # in brat 'False' means the attributes does not exist
-                            continue
+                    if isinstance(value, bool) and not value:
+                        # in brat 'False' means the attributes does not exist
+                        continue
 
-                    brat_attr, attr_config = self._convert_attribute_to_brat(
-                        label=attr.label,
-                        value=value,
-                        nb_attribute=nb_attribute,
-                        target_brat_id=brat_entity.id,
-                        is_from_entity=True,
-                    )
-                    anns_by_medkit_id[attr.id] = brat_attr
-                    config.add_attribute_type(attr_config)
-                    nb_attribute += 1
+                    try:
+                        brat_attr, attr_config = self._convert_attribute_to_brat(
+                            label=attr.label,
+                            value=value,
+                            nb_attribute=nb_attribute,
+                            target_brat_id=brat_entity.id,
+                            is_from_entity=True,
+                        )
+                        anns_by_medkit_id[attr.id] = brat_attr
+                        config.add_attribute_type(attr_config)
+                        nb_attribute += 1
+
+                    except TypeError as err:
+                        logger.warning(f"Ignore attribute {attr.id}. {err}")
 
         for medkit_relation in relations:
-            brat_relation, relation_config = self._convert_relation_to_brat(
-                medkit_relation, nb_relation, anns_by_medkit_id
-            )
-            anns_by_medkit_id[medkit_relation.id] = brat_relation
-            config.add_relation_type(relation_config)
-            nb_relation += 1
-            # include selected attributes
+            try:
+                brat_relation, relation_config = self._convert_relation_to_brat(
+                    medkit_relation, nb_relation, anns_by_medkit_id
+                )
+                anns_by_medkit_id[medkit_relation.id] = brat_relation
+                config.add_relation_type(relation_config)
+                nb_relation += 1
+            except ValueError as err:
+                logger.warning(f"Ignore relation {medkit_relation.id}. {err}")
+                continue
+
             # Note: it seems that brat does not support attributes for relations
             for attr in medkit_relation.attrs:
                 if self.attrs is None or attr.label in self.attrs:
                     value = attr.value
-                    if isinstance(value, bool):
-                        if not value:
-                            continue
 
-                    brat_attr, attr_config = self._convert_attribute_to_brat(
-                        label=attr.label,
-                        value=value,
-                        nb_attribute=nb_attribute,
-                        target_brat_id=brat_relation.id,
-                        is_from_entity=False,
-                    )
-                    anns_by_medkit_id[attr.id] = brat_attr
-                    config.add_attribute_type(attr_config)
-                    nb_attribute += 1
+                    if isinstance(value, bool) and not value:
+                        continue
 
-        return anns_by_medkit_id.values(), config
+                    try:
+                        brat_attr, attr_config = self._convert_attribute_to_brat(
+                            label=attr.label,
+                            value=value,
+                            nb_attribute=nb_attribute,
+                            target_brat_id=brat_relation.id,
+                            is_from_entity=False,
+                        )
+                        anns_by_medkit_id[attr.id] = brat_attr
+                        config.add_attribute_type(attr_config)
+                        nb_attribute += 1
+                    except TypeError as err:
+                        logger.warning(f"Ignore attribute {attr.id}. {err}")
+
+        return anns_by_medkit_id.values()
 
     @staticmethod
     def _convert_segment_to_brat(segment: Segment, nb_segment: int) -> BratEntity:
@@ -500,9 +502,7 @@ class BratOutputConverter(OutputConverter):
         obj = brat_anns_by_segment_id.get(relation.target_id)
 
         if subj is None or obj is None:
-            raise ValueError(
-                "Imposible to create brat relation, entity target/source was not found."
-            )
+            raise ValueError("Entity target/source was not found.")
 
         relation_conf = RelationConf(type, arg1=subj.type, arg2=obj.type)
         return BratRelation(brat_id, type, subj.id, obj.id), relation_conf

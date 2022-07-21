@@ -3,12 +3,14 @@ from collections import defaultdict, Counter
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, NamedTuple, Set, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union
 
 from smart_open import open
 
 GROUPING_ENTITIES = frozenset(["And-Group", "Or-Group"])
 GROUPING_RELATIONS = frozenset(["And", "Or"])
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -61,15 +63,18 @@ class BratAttribute:
         return f"{self.id}\t{self.type} {self.target}{value_str}\n"
 
 
-def ensure_attr_value(attr_value) -> str:
-    """Ensure that `attr_value` is a string. If it's not, the
-    value is changed depending on its original format."""
+def ensure_attr_value(attr_value: Any) -> str:
+    """
+    Ensure that `attr_value` is a string. If it's not, the
+    value is changed depending on its original format.
+    """
     if isinstance(attr_value, str):
         return attr_value
     if attr_value is None or isinstance(attr_value, bool):
         return ""
     if isinstance(attr_value, list):
-        return " ".join(attr_value)
+        # list is not supported in Brat
+        raise TypeError("Its value is a list and this is not supported by Brat")
     return str(attr_value)
 
 
@@ -183,16 +188,16 @@ class BratAnnConfiguration:
 
     @property
     def rel_types_arg_1(self) -> Dict[str, List[str]]:
-        rels = self._rel_types_arg_1.copy()
-        for key in rels.keys():
-            rels[key] = sorted(rels[key])
+        rels = {}
+        for rel_type, values in self._rel_types_arg_1.items():
+            rels[rel_type] = sorted(values)
         return rels
 
     @property
     def rel_types_arg_2(self) -> Dict[str, List[str]]:
-        rels = self._rel_types_arg_2.copy()
-        for key in rels.keys():
-            rels[key] = sorted(rels[key])
+        rels = {}
+        for rel_type, values in self._rel_types_arg_2.items():
+            rels[rel_type] = sorted(values)
         return rels
 
     # as brat only allows defined values, certain data types
@@ -201,24 +206,24 @@ class BratAnnConfiguration:
     # to show in the configuration.
     @property
     def attr_relation_values(self) -> Dict[str, List[str]]:
-        attrs = self._attr_relation_values.copy()
-        for key in attrs.keys():
+        attrs = {}
+        for attr_type, values in self._attr_relation_values.items():
             # get the 'n' most common values in the attr
-            most_common_values = Counter(attrs[key]).most_common(
-                self.top_values_by_attr
+            most_common_values = Counter(values).most_common(self.top_values_by_attr)
+            attrs[attr_type] = sorted(
+                attr_value for attr_value, _ in most_common_values
             )
-            attrs[key] = sorted(attr_value for attr_value, _ in most_common_values)
         return attrs
 
     @property
     def attr_entity_values(self) -> Dict[str, List[str]]:
-        attrs = self._attr_entity_values.copy()
-        for key in attrs.keys():
+        attrs = {}
+        for attr_type, values in self._attr_entity_values.items():
             # get the 'n' most common values in the attr
-            most_common_values = Counter(attrs[key]).most_common(
-                self.top_values_by_attr
+            most_common_values = Counter(values).most_common(self.top_values_by_attr)
+            attrs[attr_type] = sorted(
+                attr_value for attr_value, _ in most_common_values
             )
-            attrs[key] = sorted(attr_value for attr_value, _ in most_common_values)
         return attrs
 
     def add_entity_type(self, type: str):
@@ -345,10 +350,8 @@ def parse_string(ann_string: str, detect_groups: bool = False) -> BratDocument:
     for i, ann in enumerate(annotations):
         line_number = i + 1
         if len(ann) == 0 or ann[0] not in ("T", "R", "A"):
-            logging.info(
-                "Ignoring empty line or unsupported annotation %s on line %d",
-                ann,
-                line_number,
+            logger.warning(
+                f"Ignoring empty line or unsupported annotation {ann} on {line_number}"
             )
             continue
         ann_id, ann_content = ann.split("\t", maxsplit=1)
@@ -363,8 +366,8 @@ def parse_string(ann_string: str, detect_groups: bool = False) -> BratDocument:
                 attribute = _parse_attribute(ann_id, ann_content)
                 attributes[attribute.id] = attribute
         except ValueError as err:
-            logging.info(err)
-            logging.info(f"Ignore annotation {ann_id} at line {line_number}")
+            logger.warning(err)
+            logger.warning(f"Ignore annotation {ann_id} at line {line_number}")
 
     # Process groups
     groups = None
