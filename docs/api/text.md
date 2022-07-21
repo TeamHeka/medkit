@@ -143,3 +143,13 @@ For using this python module, you need to install [spacy](https://spacy.io/).
 .. automodule:: medkit.text.spacy.displacy_utils
     :members:
 ```
+
+## Translation operations
+
+This section lists operations related to translation. Thay are part of
+`medkit.text.translation` module.
+
+```{eval-rst}
+.. automodule:: medkit.text.translation
+    :members:
+```
