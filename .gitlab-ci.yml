@@ -1,3 +1,5 @@
+image: python:3.7
+
 # Trigger the pipeline on develop/main branches and all MRs (except develop merge to main)
 workflow:
   rules:
@@ -8,24 +10,39 @@ workflow:
     - if: '$CI_COMMIT_TAG'
 
 stages:
+  - setup
   - test
   - publish
 
-# Declare common job configurations
-.medkit-jobs:
-  image: condaforge/mambaforge
-  before_script:
-    - apt update
-    - apt install -y gcc g++
-    - mamba env create -f environment.yml
-    - source /opt/conda/bin/activate
-    - conda init bash
-    - source ~/.bashrc
-    - conda activate medkit
-    - poetry config virtualenvs.create true --local
-    - poetry config virtualenvs.in-project --local
-    - poetry install -E optional -E hf-translator
-  interruptible: true
+variables:
+  GIT_DEPTH: 1
+  POETRY_HOME: /etc/poetry
+
+.use_cache_tags:
+  tags:
+    - docker-cache
+
+# Define a default cache per branch
+cache: &default_cache
+  key: $CI_COMMIT_BRANCH
+  paths:
+    - poetry.lock
+    - .venv
+  policy: pull
+
+.prepare_python_env: &prepare_python_env
+  - curl -sSL https://install.python-poetry.org | python3 -
+  - export PATH=$PATH:$POETRY_HOME/bin
+  - poetry --version
+  - poetry env use python3.7
+  - poetry env info
+  - poetry update
+  - poetry install -E optional -E hf-translator
+
+.install_gcc: &install_gcc
+ - apt update
+ - apt install -y gcc g++
+
 
 .medkit-docs-jobs:
   tags:
@@ -41,27 +58,52 @@ stages:
     - conda activate medkit-docs
   interruptible: true
 
-# Declare test jobs
-linting:
-  extends: .medkit-jobs
-  stage: test
+
+# ------- Jobs declaration --------
+
+# Set up cache for all pipeline jobs
+setup_cache:
+  stage: setup
+  extends: .use_cache_tags
+  cache:
+    <<: *default_cache
+    policy: pull-push
   script:
+    - *prepare_python_env
+    - source ./.venv/bin/activate
+    - pip list
+
+
+# Declare testing jobs
+.test_jobs:
+  stage: test
+  extends: .use_cache_tags
+  needs: [setup_cache]
+  cache: *default_cache
+  before_script:
+    - *install_gcc
+    - source ./.venv/bin/activate
+
+linting:
+  extends: .test_jobs
+  script:
+    - flake8 --version
+    - black --version
     - echo "Executing linting..."
-    - poetry run flake8 .
-    - poetry run black --check .
+    - flake8 medkit
+    - black --check medkit
   rules:
     - if: '$CI_COMMIT_TAG'
       when: never
     - when: always
 
 unit_tests:
-  extends: .medkit-jobs
-  stage: test
+  extends: .test_jobs
   script:
     - echo "Executing unit tests..."
-    - poetry run coverage run -m pytest -v --junit-xml=report.xml tests/unit
-    - poetry run coverage report
-    - poetry run coverage xml
+    - coverage run -m pytest -v --junit-xml=report.xml tests/unit
+    - coverage report
+    - coverage xml
   coverage: '/^TOTAL.+?(\d+\%)$/'
   artifacts:
     reports:
@@ -76,19 +118,18 @@ unit_tests:
 
 # TODO: activate weekly job to verify non-regression ?
 large_tests:
-  extends: .medkit-jobs
-  stage: test
+  extends: .test_jobs
   script:
     - echo "Executing large tests..."
-    - poetry pytest -v tests/large
+    - pytest -v tests/large
   rules:
     - when: never
 
 # Declare release jobs
 release:
-  extends: .medkit-jobs
   stage: publish
   script:
+    - *prepare_python_env
     - poetry build
     - poetry config repositories.gitlab "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi"
     - poetry publish -r gitlab -u gitlab-ci-token -p ${CI_JOB_TOKEN}
@@ -123,3 +164,4 @@ doc-release:
       - public
   rules:
     - if: '$CI_COMMIT_TAG'
+
