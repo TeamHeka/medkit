@@ -128,6 +128,20 @@ For using Quick UMLS Matcher, you need to install `quickumls` and `six`.
     :members:
 ```
 
+### UMLS Coder Normalizer
+
+This operation is not an entity matcher per-say but a normalizer that will add normalization
+attributes to pre-existing entities.
+
+:::{important}
+`UMLSCoderNormalizer` needs additional dependencies that can be installed with `pip install medkit[umls-coder-normalizer]`
+:::
+
+```{eval-rst}
+.. automodule:: medkit.text.ner.umls_coder_normalizer
+    :members:
+```
+
 ## Spacy modules
 
 This section lists operations and utilities related to spacy. They are part of

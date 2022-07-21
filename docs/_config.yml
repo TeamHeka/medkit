@@ -38,10 +38,12 @@ sphinx:
     autodoc_typehints: 'both'
     autodoc_typehints_description_target: 'documented'
     autodoc_typehints_format: 'short'
+    autodoc_member_order: 'bysource'
     autodoc_mock_imports:
       - torch
       - transformers
       - quickumls
+      - pandas
       - PyRuSH
       - spacy
 

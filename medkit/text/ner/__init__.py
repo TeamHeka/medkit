@@ -32,3 +32,12 @@ if _torch_is_available and _transformers_is_available:
     from .hf_entity_matcher import HFEntityMatcher  # noqa: F401
     __all__.append("HFEntityMatcher")
     # fmt: on
+
+_pandas_is_available = importlib.util.find_spec("pandas") is not None
+_torch_is_available = importlib.util.find_spec("torch") is not None
+_transformers_is_available = importlib.util.find_spec("transformers") is not None
+if _pandas_is_available and _torch_is_available and _transformers_is_available:
+    # fmt: off
+    from .umls_coder_normalizer import UMLSCoderNormalizer, UMLSCoderMetadata  # noqa: F401
+    __all__ += ["UMLSCoderNormalizer", "UMLSCoderMetadata"]
+    # fmt: on
