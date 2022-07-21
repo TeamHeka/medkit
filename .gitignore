@@ -9,6 +9,13 @@
 # Windows
 Thumbs.db
 
+# Environments
+.env/
+.venv/
+
+# Poetry
+poetry.toml
+poetry.lock
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
