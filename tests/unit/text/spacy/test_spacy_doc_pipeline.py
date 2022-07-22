@@ -71,29 +71,15 @@ def test_default_pipeline(nlp_spacy):
 
     # get a medkit doc with annotations
     medkit_doc = _get_doc()
-    original_entities = sorted(
-        [
-            medkit_doc.get_annotation_by_id(id)
-            for ids in medkit_doc.entities.values()
-            for id in ids
-        ],
-        key=lambda ann: ann.id,
-    )
-    assert len(medkit_doc.get_annotations()) == 2
-    assert "DATE" not in medkit_doc.entities.keys()
+    original_entities = medkit_doc.get_entities()
+    assert len(original_entities) == 2
+    assert "DATE" not in {e.label for e in original_entities}
 
     # run the pipeline
     spacydoc_pipeline.run([medkit_doc])
 
     # check entities after the pipeline
-    after_docpipeline_entities = sorted(
-        [
-            medkit_doc.get_annotation_by_id(id)
-            for ids in medkit_doc.entities.values()
-            for id in ids
-        ],
-        key=lambda ann: ann.id,
-    )
+    after_docpipeline_entities = medkit_doc.get_entities()
 
     # entities have no changes because nlp object does not add attrs or entities
     assert all(len(ent.attrs) == 0 for ent in after_docpipeline_entities)
@@ -117,14 +103,9 @@ def test_default_with_modified_pipeline(nlp_spacy_modified):
 
     # get a medkit doc with annotations
     medkit_doc = _get_doc()
-    assert len(medkit_doc.get_annotations()) == 2
-    assert "DATE" not in medkit_doc.entities.keys()
-
-    original_entities = [
-        medkit_doc.get_annotation_by_id(id)
-        for ids in medkit_doc.entities.values()
-        for id in ids
-    ]
+    original_entities = medkit_doc.get_entities()
+    assert len(original_entities) == 2
+    assert "DATE" not in {e.label for e in original_entities}
     # original entities have no attrs
     assert all(len(ent.attrs) == 0 for ent in original_entities)
     # entity to compare after pipeline
@@ -135,18 +116,14 @@ def test_default_with_modified_pipeline(nlp_spacy_modified):
 
     # spacy add a new annotation with 'DATE' as label
     assert len(medkit_doc.get_annotations()) == 3
-    after_docpipeline_entities = [
-        medkit_doc.get_annotation_by_id(id)
-        for ids in medkit_doc.entities.values()
-        for id in ids
-    ]
+    after_docpipeline_entities = medkit_doc.get_entities()
+    assert "DATE" in {e.label for e in after_docpipeline_entities}
 
     # spacy_doc adds 1 attribute
     assert all(len(ent.attrs) == 1 for ent in after_docpipeline_entities)
 
     # check new entity
     new_annotation = medkit_doc.get_annotations_by_label("DATE")[0]
-    assert "DATE" in medkit_doc.entities.keys()
     assert new_annotation.label == "DATE"
     assert new_annotation.text == "2005"
     assert new_annotation.attrs[0].label == "is_from_medkit"
@@ -183,10 +160,9 @@ def test_prov(nlp_spacy_modified):
 
     # check new entity
     graph = prov_builder.graph
-    entity_id = medkit_doc.entities["DATE"][0]
-    entity = medkit_doc.get_annotation_by_id(entity_id)
-    node = graph.get_node(entity_id)
-    assert node.data_item_id == entity_id
+    entity = medkit_doc.get_annotations_by_label("DATE")[0]
+    node = graph.get_node(entity.id)
+    assert node.data_item_id == entity.id
     assert node.operation_id == spacydoc_pipeline.id
     assert node.source_ids == [raw_segment.id]
 
@@ -198,12 +174,11 @@ def test_prov(nlp_spacy_modified):
     assert attr.source_ids == [raw_segment.id]
 
     # check new attr entity
-    entity_id = medkit_doc.entities["disease"][0]
-    entity = medkit_doc.get_annotation_by_id(entity_id)
+    entity = medkit_doc.get_annotations_by_label("disease")[0]
 
     attribute = entity.attrs[0]
     attr = graph.get_node(attribute.id)
     assert attr.data_item_id == attribute.id
     assert attr.operation_id == spacydoc_pipeline.id
     # it is a medkit entity, medkit object origin was entity
-    assert attr.source_ids == [entity_id]
+    assert attr.source_ids == [entity.id]
