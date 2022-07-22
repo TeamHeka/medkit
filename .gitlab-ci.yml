@@ -47,9 +47,7 @@ linting:
     - flake8 .
     - black --check .
   rules:
-    - if: '$CI_COMMIT_TAG'
-      when: never
-    - when: always
+    - when: never
 
 unit_tests:
   extends: .medkit-jobs
@@ -67,9 +65,7 @@ unit_tests:
         path: coverage.xml
       junit: report.xml
   rules:
-    - if: '$CI_COMMIT_TAG'
-      when: never
-    - when: always
+    - when: never
 
 # TODO: activate weekly job to verify non-regression ?
 large_tests:
@@ -91,7 +87,7 @@ release:
     - python -m build
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
   rules:
-    - if: '$CI_COMMIT_TAG'
+    - when: never
 
 # Declare documentation jobs
 doc-test:
@@ -105,13 +101,11 @@ doc-test:
     paths:
       - test
   rules:
-    - if: '$CI_COMMIT_TAG'
-      when: never
-    - when: always
+    - when: never
 
-doc-release:
+pages:
   extends: .medkit-docs-jobs
-  stage: test
+  stage: publish
   script:
     - jb build docs
     - mv docs/_build/jupyter_execute .
@@ -121,3 +115,4 @@ doc-release:
       - public
   rules:
     - if: '$CI_COMMIT_TAG'
+    - if: '$CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH =~ /^release-*/'
