@@ -80,6 +80,13 @@ detector.run(syntagmas)
     :members:
 ```
 
+### Family reference
+
+```{eval-rst}
+.. automodule:: medkit.text.context.family_detector
+    :members:
+```
+
 ## NER modules
 
 This section lists text annotators for detecting entities. They are part of

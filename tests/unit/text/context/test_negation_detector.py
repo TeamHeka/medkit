@@ -59,6 +59,23 @@ def test_multiple_rules():
     assert attr_2.metadata["rule_id"] == "id_neg_discard"
 
 
+def test_multiple_rules_no_id():
+    syntagmas = _get_syntagma_segments(["No sign of covid", "Diabetes is discarded"])
+
+    rule_1 = NegationDetectorRule(regexp=r"^no\b")
+    rule_2 = NegationDetectorRule(regexp=r"\bdiscard(s|ed)?\b")
+    detector = NegationDetector(output_label="negation", rules=[rule_1, rule_2])
+    detector.run(syntagmas)
+
+    # attributes have corresponding rule index as rule_id metadata
+    assert len(syntagmas[0].attrs) == 1
+    attr_1 = syntagmas[0].attrs[0]
+    assert attr_1.metadata["rule_id"] == 0
+    assert len(syntagmas[1].attrs) == 1
+    attr_2 = syntagmas[1].attrs[0]
+    assert attr_2.metadata["rule_id"] == 1
+
+
 def test_exclusions():
     syntagmas = _get_syntagma_segments(
         ["Diabetes is discarded", "Results have not discarded covid"]
@@ -84,7 +101,7 @@ def test_exclusions():
 def test_case_sensitive_off():
     syntagmas = _get_syntagma_segments(["No sign of covid", "no sign of covid"])
 
-    rule = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b", case_sensitive=False)
+    rule = NegationDetectorRule(regexp=r"^no\b", case_sensitive=False)
     detector = NegationDetector(output_label="negation", rules=[rule])
     detector.run(syntagmas)
 
@@ -98,7 +115,7 @@ def test_case_sensitive_off():
 def test_case_sensitive_on():
     syntagmas = _get_syntagma_segments(["No sign of covid", "no sign of covid"])
 
-    rule = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b", case_sensitive=True)
+    rule = NegationDetectorRule(regexp=r"^no\b", case_sensitive=True)
     detector = NegationDetector(output_label="negation", rules=[rule])
     detector.run(syntagmas)
 
@@ -133,9 +150,7 @@ def test_case_sensitive_exclusions():
 def test_unicode_sensitive_off(caplog):
     syntagmas = _get_syntagma_segments(["Elimine: covid", "Éliminé: covid"])
 
-    rule = NegationDetectorRule(
-        id="id_neg_no", regexp=r"elimine: ", unicode_sensitive=False
-    )
+    rule = NegationDetectorRule(regexp=r"elimine: ", unicode_sensitive=False)
     detector = NegationDetector(output_label="negation", rules=[rule])
     detector.run(syntagmas)
 
@@ -156,9 +171,7 @@ def test_unicode_sensitive_off(caplog):
 def test_unicode_sensitive_on():
     syntagmas = _get_syntagma_segments(["Elimine: covid", "Éliminé: covid"])
 
-    rule = NegationDetectorRule(
-        id="id_neg_no", regexp=r"éliminé: ", unicode_sensitive=True
-    )
+    rule = NegationDetectorRule(regexp=r"éliminé: ", unicode_sensitive=True)
     detector = NegationDetector(output_label="negation", rules=[rule])
     detector.run(syntagmas)
 
@@ -172,7 +185,7 @@ def test_unicode_sensitive_on():
 def test_prov():
     syntagmas = _get_syntagma_segments(["No sign of covid"])
 
-    rule = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b")
+    rule = NegationDetectorRule(regexp=r"^no\b")
     detector = NegationDetector(output_label="negation", rules=[rule])
 
     prov_builder = ProvBuilder()

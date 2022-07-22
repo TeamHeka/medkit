@@ -109,7 +109,7 @@ Here is the representation of the full document data
 ```{code-cell} ipython3
 doc = docs[0]
 data = doc.to_dict()
-pprint(data, sort_dicts=False)
+pprint(data)
 ```
 
 ## Pipeline example

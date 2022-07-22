@@ -12,18 +12,22 @@ def init_data():
     attribute = Attribute(label="Negation")
     ent1 = Entity(label="ent1", spans=[Span(0, 0)], text="", attrs=[attribute])
     ent2 = Entity(label="ent2", spans=[Span(0, 0)], text="")
+    segment = Segment(label="seg1", spans=[Span(0, 0)], text="")
     relation = Relation(label="toto", source_id=ent1.id, target_id=ent2.id)
-    return doc, ent1, ent2, relation, attribute
+    return doc, ent1, ent2, segment, relation, attribute
 
 
 def test_add_annotation(init_data):
-    doc, ent1, ent2, relation, attribute = init_data
+    doc, ent1, ent2, segment, relation, attribute = init_data
     # Test entity addition in entity list
     doc.add_annotation(ent1)
-    assert ent1.id in doc.entities.get(ent1.label)
+    assert ent1 in doc.get_entities()
     # Test exception when adding the same annotation
     with pytest.raises(ValueError):
         doc.add_annotation(ent1)
+    # Test segment addition
+    doc.add_annotation(segment)
+    assert segment in doc.get_segments()
     # Test relation addition in annotations list
     doc.add_annotation(ent2)
     doc.add_annotation(relation)
@@ -31,7 +35,7 @@ def test_add_annotation(init_data):
 
 
 def test_get_annotations_by_key(init_data):
-    doc, ent1, ent2, relation, attribute = init_data
+    doc, ent1, ent2, segment, relation, attribute = init_data
     ent1.add_key(key="superkey")
     doc.add_annotation(ent1)
     assert doc.get_annotations_by_key(key="superkey") == [ent1]
@@ -39,7 +43,7 @@ def test_get_annotations_by_key(init_data):
 
 
 def test_get_annotations_by_label(init_data):
-    doc, ent1, ent2, relation, attribute = init_data
+    doc, ent1, ent2, segment, relation, attribute = init_data
     doc.add_annotation(ent1)
     doc.add_annotation(ent2)
 

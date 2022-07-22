@@ -56,8 +56,8 @@ class TextDocument(Document[TextAnnotation]):
         """
         super().__init__(doc_id=doc_id, metadata=metadata, store=store)
         self.text: Optional[str] = text
-        self.segments: Dict[str, List[str]] = dict()  # Key: label
-        self.entities: Dict[str, List[str]] = dict()  # Key: label
+        self._segment_ids: List[str] = []
+        self._entity_ids: List[str] = []
         self.relations_by_source: Dict[str, List[str]] = dict()  # Key: source_id
 
         # auto-generated raw segment
@@ -114,15 +114,9 @@ class TextDocument(Document[TextAnnotation]):
             raise err
 
         if isinstance(annotation, Entity):
-            if annotation.label not in self.entities:
-                self.entities[annotation.label] = []
-            self.entities[annotation.label].append(annotation.id)
-
+            self._entity_ids.append(annotation.id)
         elif isinstance(annotation, Segment):
-            if annotation.label not in self.segments:
-                self.segments[annotation.label] = []
-            self.segments[annotation.label].append(annotation.id)
-
+            self._segment_ids.append(annotation.id)
         elif isinstance(annotation, Relation):
             if annotation.source_id not in self.relations_by_source:
                 self.relations_by_source[annotation.source_id] = []
@@ -144,6 +138,26 @@ class TextDocument(Document[TextAnnotation]):
         data = super().to_dict()
         data.update(text=self.text)
         return data
+
+    def get_entities(self) -> List[Entity]:
+        """Return all entities attached to document
+
+        Returns
+        -------
+        List[Entity]:
+            Entities in document
+        """
+        return [self.get_annotation_by_id(id) for id in self._entity_ids]
+
+    def get_segments(self) -> List[Segment]:
+        """Return all segments attached to document (not including entities)
+
+        Returns
+        -------
+        List[Segment]:
+            Segments in document
+        """
+        return [self.get_annotation_by_id(id) for id in self._segment_ids]
 
     def get_relations_by_source_id(self, source_ann_id) -> List[Relation]:
         relation_ids = self.relations_by_source.get(source_ann_id, [])

@@ -9,4 +9,4 @@ A2	severity R2 normal
 A3	antecedent T4
 T5	vitamin 251 261	vitamins A
 T6	vitamin 251 260;263 264	vitamins D
-T7	vitamin 251 250;266 267	vitamins E
+T7	vitamin 251 260;266 267	vitamins E
