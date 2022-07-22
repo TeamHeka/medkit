@@ -92,12 +92,13 @@ class HFTranslator(Operation):
         self.device = device
         self.batch_size = batch_size
 
-        task = transformers.pipelines.get_task(self.translation_model)
-        if not task.startswith("translation"):
-            raise ValueError(
-                f"Model {self.translation_model} is not associated to a translation"
-                " task and cannot be use with HFTranslator"
-            )
+        if isinstance(self.translation_model, str):
+            task = transformers.pipelines.get_task(translation_model)
+            if not task.startswith("translation"):
+                raise ValueError(
+                    f"Model {self.translation_model} is not associated to a translation"
+                    " task and cannot be use with HFTranslator"
+                )
 
         self._translation_pipeline = transformers.pipeline(
             task=task,
