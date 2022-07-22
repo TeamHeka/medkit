@@ -146,7 +146,7 @@ For using this python module, you need to install [spacy](https://spacy.io/).
 
 ## Translation operations
 
-This section lists operations related to translation. Thay are part of
+This section lists operations related to translation. They are part of
 `medkit.text.translation` module.
 
 ```{eval-rst}
