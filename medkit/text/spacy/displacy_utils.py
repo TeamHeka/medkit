@@ -1,6 +1,6 @@
 __all__ = ["medkit_doc_to_displacy", "entities_to_displacy"]
 
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from medkit.core.text import TextDocument, Entity, span_utils
 
@@ -10,9 +10,10 @@ def medkit_doc_to_displacy(
     entity_labels: Optional[List[str]] = None,
     entity_formatter: Optional[Callable[[Entity], str]] = None,
     max_gap_length: int = 3,
-):
+) -> Dict[str, Any]:
     """Build data dict that can be passed to `displacy.render()`
-    (with params `manual=True` and `style="ent"`) from the entities of a document.
+    (with `manual=True` and `style="ent"`) to vizualize entities of
+    a document.
 
     Parameters
     ----------
@@ -29,6 +30,12 @@ def medkit_doc_to_displacy(
         When cleaning up gaps in spans, spans around gaps smaller than `max_gap_length`
         will be merged.
         Cf :func:`~medkit.core.text.span_utils.clean_up_gaps_in_normalized_spans()`.
+
+    Returns
+    -------
+    Dict[str, Any]
+        Data to be passed to `displacy.render()` as `docs` argument
+        (with `manual=True` and `style="ent"`)
     """
     if medkit_doc.text is None:
         raise RuntimeError(
@@ -54,9 +61,9 @@ def entities_to_displacy(
     raw_text: str,
     entity_formatter: Optional[Callable[[Entity], str]] = None,
     max_gap_length: int = 3,
-) -> Dict:
+) -> Dict[str, Any]:
     """Build data dict that can be passed to `displacy.render()`
-    (with params `manual=True` and `style="ent"`) from list of entities
+    (with `manual=True` and `style="ent"`) to vizualize entities.
 
     Parameters
     ----------
@@ -74,6 +81,12 @@ def entities_to_displacy(
         When cleaning up gaps in spans, spans around gaps smaller than `max_gap_length`
         will be merged.
         Cf :func:`~medkit.core.text.span_utils.clean_up_gaps_in_normalized_spans()`.
+
+    Returns
+    -------
+    Dict[str, Any]
+        Data to be passed to `displacy.render()` as `docs` argument
+        (with `manual=True` and `style="ent"`)
     """
     entities_data = []
 
