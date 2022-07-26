@@ -6,7 +6,7 @@ from medkit.core.text import TextDocument, Entity, span_utils
 
 
 def medkit_doc_to_displacy(
-    doc: TextDocument,
+    medkit_doc: TextDocument,
     entity_labels: Optional[List[str]] = None,
     entity_formatter: Optional[Callable[[Entity], str]] = None,
     max_gap_length: int = 3,
@@ -16,7 +16,7 @@ def medkit_doc_to_displacy(
 
     Parameters
     ----------
-    doc:
+    medkit_doc:
         Document to visualize.
     entity_labels:
         Labels of entities to display. If `None`, all entities are displayed
@@ -30,19 +30,23 @@ def medkit_doc_to_displacy(
         will be merged.
         Cf :func:`~medkit.core.text.span_utils.clean_up_gaps_in_normalized_spans()`.
     """
-    if doc.text is None:
+    if medkit_doc.text is None:
         raise RuntimeError(
             "Document cannot be visualized with displacy because it doesn't contain its"
             " full text"
         )
     if entity_labels:
         entities = [
-            e for label in entity_labels for e in doc.get_annotations_by_label(label)
+            e
+            for label in entity_labels
+            for e in medkit_doc.get_annotations_by_label(label)
         ]
     else:
-        entities = doc.get_entities()
+        entities = medkit_doc.get_entities()
 
-    return entities_to_displacy(entities, doc.text, entity_formatter, max_gap_length)
+    return entities_to_displacy(
+        entities, medkit_doc.text, entity_formatter, max_gap_length
+    )
 
 
 def entities_to_displacy(
