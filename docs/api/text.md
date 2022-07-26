@@ -117,13 +117,29 @@ For using Quick UMLS Matcher, you need to install `quickumls` and `six`.
     :members:
 ```
 
-## Spacy operation modules
+## Spacy modules
 
-This section lists operations related to spacy. Thay are part of
+This section lists operations and utilities related to spacy. They are part of
 `medkit.text.spacy` module.
 For using this python module, you need to install [spacy](https://spacy.io/).
 
+### Spacy annotation-level pipeline
+
 ```{eval-rst}
-.. automodule:: medkit.text.spacy
+.. automodule:: medkit.text.spacy.pipeline
+    :members:
+```
+
+### Spacy document-level pipeline
+
+```{eval-rst}
+.. automodule:: medkit.text.spacy.doc_pipeline
+    :members:
+```
+
+### Displacy helpers
+
+```{eval-rst}
+.. automodule:: medkit.text.spacy.displacy_utils
     :members:
 ```
