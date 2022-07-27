@@ -79,7 +79,7 @@ class SentenceTokenizer(SegmentationOperation):
             + "".join(self.punct_chars)
             + "]+)"
         )
-        pattern = re.compile(regex_rule)
+        pattern = re.compile(regex_rule, flags=re.DOTALL)
 
         for match in pattern.finditer(segment.text):
             # Ignore empty sentences

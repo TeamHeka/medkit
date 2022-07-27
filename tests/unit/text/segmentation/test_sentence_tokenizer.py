@@ -21,6 +21,7 @@ def _get_clean_text_segment(text=_TEXT):
 
 
 TEST_CONFIG = [
+    # basic
     (
         SentenceTokenizer(),
         [
@@ -33,6 +34,7 @@ TEST_CONFIG = [
             ("Several punctuation characters", [Span(start=139, end=169)]),
         ],
     ),
+    # keep punct chars in sentence
     (
         SentenceTokenizer(keep_punct=True),
         [
@@ -45,17 +47,34 @@ TEST_CONFIG = [
             ("Several punctuation characters?!...", [Span(start=139, end=174)]),
         ],
     ),
+    # multiline sentences (don't split on \r and \n)
+    (
+        SentenceTokenizer(punct_chars=[".", ";", "?", "!"]),
+        [
+            ("Sentence testing the dot", [Span(start=0, end=24)]),
+            (
+                "We are testing the carriage return\rthis is the newline\n Test"
+                " interrogation ",
+                [Span(start=26, end=101)],
+            ),
+            ("Now, testing semicolon", [Span(start=103, end=125)]),
+            ("Exclamation", [Span(start=126, end=137)]),
+            ("Several punctuation characters", [Span(start=139, end=169)]),
+        ],
+    ),
 ]
 
 
 @pytest.mark.parametrize(
-    "sentence_tokenizer,expected_sentences", TEST_CONFIG, ids=["default", "keep_punct"]
+    "sentence_tokenizer,expected_sentences",
+    TEST_CONFIG,
+    ids=["default", "keep_punct", "multiline"],
 )
 def test_run(sentence_tokenizer, expected_sentences):
     clean_text_segment = _get_clean_text_segment()
     sentences = sentence_tokenizer.run([clean_text_segment])
 
-    assert len(sentences) == 7
+    assert len(sentences) == len(expected_sentences)
     for i, (text, spans) in enumerate(expected_sentences):
         assert sentences[i].text == text
         assert sentences[i].spans == spans
