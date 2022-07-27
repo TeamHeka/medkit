@@ -77,7 +77,7 @@ class SentenceTokenizer(SegmentationOperation):
             + "(?P<sentence>.+?)"  # Sentence to detect
             + "(?P<punctuation>["  # End punctuation (may be repeated)
             + "".join(self.punct_chars)
-            + "]+)"
+            + "]+|$)"  # including potential last sentence without punct
         )
         pattern = re.compile(regex_rule, flags=re.DOTALL)
 

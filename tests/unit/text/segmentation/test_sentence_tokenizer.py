@@ -12,7 +12,7 @@ _TEXT = (
 )
 
 
-def _get_clean_text_segment(text=_TEXT):
+def _get_clean_text_segment(text):
     return Segment(
         label="clean_text",
         spans=[Span(0, len(text))],
@@ -24,6 +24,7 @@ TEST_CONFIG = [
     # basic
     (
         SentenceTokenizer(),
+        _TEXT,
         [
             ("Sentence testing the dot", [Span(start=0, end=24)]),
             ("We are testing the carriage return", [Span(start=26, end=60)]),
@@ -37,6 +38,7 @@ TEST_CONFIG = [
     # keep punct chars in sentence
     (
         SentenceTokenizer(keep_punct=True),
+        _TEXT,
         [
             ("Sentence testing the dot.", [Span(start=0, end=25)]),
             ("We are testing the carriage return\r", [Span(start=26, end=61)]),
@@ -49,29 +51,32 @@ TEST_CONFIG = [
     ),
     # multiline sentences (don't split on \r and \n)
     (
-        SentenceTokenizer(punct_chars=[".", ";", "?", "!"]),
+        SentenceTokenizer(punct_chars=(".", ";", "?", "!")),
+        "This is a multiline\nsentence! This is another\nmultiline sentence.",
         [
-            ("Sentence testing the dot", [Span(start=0, end=24)]),
-            (
-                "We are testing the carriage return\rthis is the newline\n Test"
-                " interrogation ",
-                [Span(start=26, end=101)],
-            ),
-            ("Now, testing semicolon", [Span(start=103, end=125)]),
-            ("Exclamation", [Span(start=126, end=137)]),
-            ("Several punctuation characters", [Span(start=139, end=169)]),
+            ("This is a multiline\nsentence", [Span(start=0, end=28)]),
+            ("This is another\nmultiline sentence", [Span(start=30, end=64)]),
+        ],
+    ),
+    # trailing sentence with no final punct char
+    (
+        SentenceTokenizer(),
+        "This is a sentence. This is a trailing sentence with no punct",
+        [
+            ("This is a sentence", [Span(start=0, end=18)]),
+            ("This is a trailing sentence with no punct", [Span(start=20, end=61)]),
         ],
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    "sentence_tokenizer,expected_sentences",
+    "sentence_tokenizer,text,expected_sentences",
     TEST_CONFIG,
-    ids=["default", "keep_punct", "multiline"],
+    ids=["default", "keep_punct", "multiline", "trailing"],
 )
-def test_run(sentence_tokenizer, expected_sentences):
-    clean_text_segment = _get_clean_text_segment()
+def test_run(sentence_tokenizer, text, expected_sentences):
+    clean_text_segment = _get_clean_text_segment(text)
     sentences = sentence_tokenizer.run([clean_text_segment])
 
     assert len(sentences) == len(expected_sentences)
