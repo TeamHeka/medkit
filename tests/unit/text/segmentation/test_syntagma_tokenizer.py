@@ -10,8 +10,10 @@ _TEXT = (
     " droit"
 )
 TEST_CONFIG = [
+    # basic
     (
         SyntagmaTokenizer.get_example(),
+        _TEXT,
         [
             {
                 "spans": [Span(start=1, end=72)],
@@ -29,8 +31,10 @@ TEST_CONFIG = [
             },
         ],
     ),
+    # don't keep separators in syntagma
     (
         SyntagmaTokenizer.get_example(keep_separator=False),
+        _TEXT,
         [
             {
                 "spans": [Span(start=1, end=72)],
@@ -48,10 +52,25 @@ TEST_CONFIG = [
             },
         ],
     ),
+    # multiline syntagmas (don't split on \r and \n)
+    (
+        SyntagmaTokenizer(separators=(r"\bmais\b",)),
+        "Elle avait été\naméliorée mais présentait des douleurs",
+        [
+            {
+                "spans": [Span(start=0, end=25)],
+                "text": "Elle avait été\naméliorée ",
+            },
+            {
+                "spans": [Span(start=25, end=53)],
+                "text": "mais présentait des douleurs",
+            },
+        ],
+    ),
 ]
 
 
-def _get_segment_from_text(text=_TEXT):
+def _get_segment_from_text(text):
     return Segment(
         label="segment",
         spans=[Span(0, len(text))],
@@ -59,12 +78,12 @@ def _get_segment_from_text(text=_TEXT):
     )
 
 
-@pytest.mark.parametrize("syntagma_tokenizer, expected_syntagmas", TEST_CONFIG)
-def test_run(syntagma_tokenizer, expected_syntagmas):
-    segment = _get_segment_from_text()
+@pytest.mark.parametrize("syntagma_tokenizer, text, expected_syntagmas", TEST_CONFIG)
+def test_run(syntagma_tokenizer, text, expected_syntagmas):
+    segment = _get_segment_from_text(text)
 
     syntagmas = syntagma_tokenizer.run([segment])
-    assert len(syntagmas) == 2
+    assert len(syntagmas) == len(expected_syntagmas)
     for i, expected in enumerate(expected_syntagmas):
         assert syntagmas[i].label == "SYNTAGMA"
         assert syntagmas[i].spans == expected["spans"]
@@ -72,7 +91,7 @@ def test_run(syntagma_tokenizer, expected_syntagmas):
 
 
 def test_prov():
-    segment = _get_segment_from_text()
+    segment = _get_segment_from_text(_TEXT)
 
     tokenizer = SyntagmaTokenizer.get_example()
     prov_builder = ProvBuilder()

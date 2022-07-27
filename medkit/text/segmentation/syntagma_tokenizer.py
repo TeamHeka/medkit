@@ -82,7 +82,7 @@ class SyntagmaTokenizer(SegmentationOperation):
             + "|".join(self.separators)
             + "|$)"  # including the last syntagma without end separator
         )
-        pattern = re.compile(regex_rule)
+        pattern = re.compile(regex_rule, flags=re.DOTALL)
 
         sep_exists = False
         start = 0
