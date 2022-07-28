@@ -55,6 +55,23 @@ class SentenceTokenizer(SegmentationOperation):
         self.keep_punct = keep_punct
         self.split_on_newlines = split_on_newlines
 
+        # pre-compile pattern
+        regexp = (
+            # Blanks at the beginning of the sentence
+            "(?P<blanks> *)"
+            # Sentence to detect
+            + "(?P<sentence>.+?)"
+            # End punctuation (may be repeated)
+            + "(?P<punctuation>["
+            + "".join(self.punct_chars)
+            + "]+"
+            # One or more newlines chars
+            + (r"|(?P<newlines>[\n\r]+)" if self.split_on_newlines else "")
+            # Potential last sentence without punctuation
+            + "|$)"
+        )
+        self._pattern = re.compile(regexp, flags=re.DOTALL)
+
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
         Return sentences detected in `segments`.
@@ -77,18 +94,7 @@ class SentenceTokenizer(SegmentationOperation):
         ]
 
     def _find_sentences_in_segment(self, segment: Segment) -> Iterator[Segment]:
-        regex_rule = (
-            "(?P<blanks> *)"  # Blanks at the beginning of the sentence
-            + "(?P<sentence>.+?)"  # Sentence to detect
-            + "(?P<punctuation>["  # End punctuation (may be repeated)
-            + "".join(self.punct_chars)
-            + "]+"
-            + (r"|(?P<newlines>[\n\r]+)" if self.split_on_newlines else "")
-            + "|$)"  # Including potential last sentence without punct
-        )
-        pattern = re.compile(regex_rule, flags=re.DOTALL)
-
-        for match in pattern.finditer(segment.text):
+        for match in self._pattern.finditer(segment.text):
             # Ignore empty sentences
             if len(match.group("sentence").strip()) == 0:
                 continue
