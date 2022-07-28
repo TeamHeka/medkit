@@ -49,13 +49,20 @@ TEST_CONFIG = [
             ("Several punctuation characters?!...", [Span(start=139, end=174)]),
         ],
     ),
-    # multiline sentences (don't split on \r and \n)
+    # don't split on newlines
     (
-        SentenceTokenizer(punct_chars=(".", ";", "?", "!")),
-        "This is a multiline\nsentence! This is another\nmultiline sentence.",
+        SentenceTokenizer(split_on_newlines=False),
+        _TEXT,
         [
-            ("This is a multiline\nsentence", [Span(start=0, end=28)]),
-            ("This is another\nmultiline sentence", [Span(start=30, end=64)]),
+            ("Sentence testing the dot", [Span(start=0, end=24)]),
+            (
+                "We are testing the carriage return\rthis is the newline\n Test"
+                " interrogation ",
+                [Span(start=26, end=101)],
+            ),
+            ("Now, testing semicolon", [Span(start=103, end=125)]),
+            ("Exclamation", [Span(start=126, end=137)]),
+            ("Several punctuation characters", [Span(start=139, end=169)]),
         ],
     ),
     # trailing sentence with no final punct char
