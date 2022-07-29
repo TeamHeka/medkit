@@ -170,6 +170,19 @@ def test_verbs():
         assert not attr.metadata
 
 
+def test_empty_segment():
+    """Make sure an attribute is created with False value even for empty segments"""
+
+    syntagmas = _get_syntagma_segments(["", " .", "21."])
+    rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
+    detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
+    detector.run(syntagmas)
+    for syntagma in syntagmas:
+        assert len(syntagma.attrs) == 1
+        attr = syntagma.attrs[0]
+        assert attr.value is False
+
+
 def test_prov():
     syntagmas = _get_syntagma_segments(["If patient has covid"])
 

@@ -182,6 +182,19 @@ def test_unicode_sensitive_on():
     assert attr_2.value is True
 
 
+def test_empty_segment():
+    """Make sure an attribute is created with False value even for empty segments"""
+
+    syntagmas = _get_syntagma_segments(["", " .", "21."])
+    rule = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b")
+    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector.run(syntagmas)
+    for syntagma in syntagmas:
+        assert len(syntagma.attrs) == 1
+        attr = syntagma.attrs[0]
+        assert attr.value is False
+
+
 def test_prov():
     syntagmas = _get_syntagma_segments(["No sign of covid"])
 
