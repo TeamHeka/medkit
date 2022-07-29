@@ -12,8 +12,9 @@ from medkit.core.text import Segment, SegmentationOperation, span_utils
 @dataclasses.dataclass(frozen=True)
 class DefaultConfig:
     output_label = "SENTENCE"
-    punct_chars = ("\r", "\n", ".", ";", "?", "!")
+    punct_chars = (".", ";", "?", "!")
     keep_punct = False
+    split_on_newlines = True
 
 
 class SentenceTokenizer(SegmentationOperation):
@@ -24,6 +25,7 @@ class SentenceTokenizer(SegmentationOperation):
         output_label: str = DefaultConfig.output_label,
         punct_chars: Tuple[str] = DefaultConfig.punct_chars,
         keep_punct: bool = DefaultConfig.keep_punct,
+        split_on_newlines: bool = DefaultConfig.split_on_newlines,
         op_id: Optional[str] = None,
     ):
         """
@@ -38,6 +40,8 @@ class SentenceTokenizer(SegmentationOperation):
         keep_punct: bool, Optional
             If True, the end punctuations are kept in the detected sentence.
             If False, the sentence text does not include the end punctuations.
+        split_on_newlines:
+            Whether to consider that newlines characters are sentence boundaries or not.
         op_id: str, Optional
             Identifier of the tokenizer
         """
@@ -49,6 +53,24 @@ class SentenceTokenizer(SegmentationOperation):
         self.output_label = output_label
         self.punct_chars = punct_chars
         self.keep_punct = keep_punct
+        self.split_on_newlines = split_on_newlines
+
+        # pre-compile pattern
+        regexp = (
+            # Blanks at the beginning of the sentence
+            "(?P<blanks> *)"
+            # Sentence to detect
+            + "(?P<sentence>.+?)"
+            # End punctuation (may be repeated)
+            + "(?P<punctuation>["
+            + "".join(self.punct_chars)
+            + "]+"
+            # One or more newlines chars
+            + (r"|(?P<newlines>[\n\r]+)" if self.split_on_newlines else "")
+            # Potential last sentence without punctuation
+            + "|$)"
+        )
+        self._pattern = re.compile(regexp, flags=re.DOTALL)
 
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -72,16 +94,7 @@ class SentenceTokenizer(SegmentationOperation):
         ]
 
     def _find_sentences_in_segment(self, segment: Segment) -> Iterator[Segment]:
-        regex_rule = (
-            "(?P<blanks> *)"  # Blanks at the beginning of the sentence
-            + "(?P<sentence>.+?)"  # Sentence to detect
-            + "(?P<punctuation>["  # End punctuation (may be repeated)
-            + "".join(self.punct_chars)
-            + "]+|$)"  # including potential last sentence without punct
-        )
-        pattern = re.compile(regex_rule, flags=re.DOTALL)
-
-        for match in pattern.finditer(segment.text):
+        for match in self._pattern.finditer(segment.text):
             # Ignore empty sentences
             if len(match.group("sentence").strip()) == 0:
                 continue
