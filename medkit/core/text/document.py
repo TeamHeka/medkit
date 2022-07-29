@@ -25,10 +25,10 @@ class TextDocument(Document[TextAnnotation]):
 
     def __init__(
         self,
-        doc_id: Optional[str] = None,
         text: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
         store: Optional[Store] = None,
+        doc_id: Optional[str] = None,
     ):
         """
         Initializes the text document
@@ -38,14 +38,14 @@ class TextDocument(Document[TextAnnotation]):
 
         Parameters
         ----------
-        doc_id: str, Optional
-            Document identifier. If None, an uuid is generated.
         text: str, Optional
             Document text
         metadata: dict  # TODO
             Document metadata
         store:
             Store to use for annotations
+        doc_id: str, Optional
+            Document identifier. If None, an uuid is generated.
 
         Examples
         --------
