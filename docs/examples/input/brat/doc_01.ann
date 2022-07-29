@@ -1,0 +1,7 @@
+T1	medication 27 37	Lisinopril
+T2	disease 60 72	hypertension
+T3	disease 95 105	déficience
+A1	antecedent T3
+T4	vitamin 109 117;119 120	vitamine A
+T5	vitamin 109 117;124 126	vitamine B.
+R1	treats Arg1:T1 Arg2:T2	

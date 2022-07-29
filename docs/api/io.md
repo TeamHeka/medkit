@@ -2,6 +2,7 @@
 
 This page lists all components for converting and loading/saving data.
 
+(api:io:brat)=
 ## Brat
 
 ```{eval-rst}
@@ -9,6 +10,7 @@ This page lists all components for converting and loading/saving data.
     :members:
 ```
 
+(api:io:spacy)=
 ## Spacy
 
 For using spacy converters, you need to install [spacy](https://spacy.io/).
