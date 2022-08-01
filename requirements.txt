@@ -10,6 +10,7 @@ torch
 transformers[sentencepiece]
 
 # other optional dependencies
+packaging # needed to check quickumls version
 quickumls
 six # needed for quickumls, workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/pull/80
 PyRuSH
