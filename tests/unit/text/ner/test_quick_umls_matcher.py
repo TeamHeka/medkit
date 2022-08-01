@@ -90,8 +90,9 @@ def test_single_match():
     assert entity.spans == [Span(16, 22)]
 
     # normalization attribute
-    assert len(entity.attrs) == 1
-    attr = entity.attrs[0]
+    attrs = entity.get_attrs_by_label("umls")
+    assert len(attrs) == 1
+    attr = attrs[0]
     assert attr.label == "umls"
     assert attr.value == _ASTHMA_CUI
     assert attr.metadata["version"] == "2021AB"
@@ -113,8 +114,7 @@ def test_multiple_matches():
     assert entity_1.text == "type 1 diabetes"
     assert entity_1.spans == [Span(27, 42)]
 
-    attr_1 = entity_1.attrs[0]
-    assert attr_1.label == "umls"
+    attr_1 = entity_1.get_attrs_by_label("umls")[0]
     assert attr_1.value == _DIABETES_CUI
 
     # 2d entity (asthma)
@@ -123,8 +123,7 @@ def test_multiple_matches():
     assert entity_2.text == "asthma"
     assert entity_2.spans == [Span(16, 22)]
 
-    attr_2 = entity_2.attrs[0]
-    assert attr_2.label == "umls"
+    attr_2 = entity_2.get_attrs_by_label("umls")[0]
     assert attr_2.value == _ASTHMA_CUI
 
 
@@ -140,8 +139,7 @@ def test_language():
     assert entity.text == "Asthme"
 
     # normalization attribute, same CUI as in english
-    attr = entity.attrs[0]
-    assert attr.label == "umls"
+    attr = entity.get_attrs_by_label("umls")[0]
     assert attr.value == _ASTHMA_CUI
 
 
@@ -175,15 +173,16 @@ def test_ambiguous_match():
     # 1 normalization attribute is created
     assert len(entities) == 1
     entity = entities[0]
-    assert len(entity.attrs) == 1
+    attrs = entity.get_attrs_by_label("umls")
+    assert len(attrs) == 1
 
 
 def test_attrs_to_copy():
     sentence = _get_sentence_segment("The patient has asthma.")
     # copied attribute
-    sentence.attrs.append(Attribute(label="negation", value=True))
+    sentence.add_attr(Attribute(label="negation", value=True))
     # uncopied attribute
-    sentence.attrs.append(Attribute(label="hypothesis", value=True))
+    sentence.add_attr(Attribute(label="hypothesis", value=True))
 
     umls_matcher = QuickUMLSMatcher(
         version="2021AB",
@@ -192,11 +191,11 @@ def test_attrs_to_copy():
     )
     entity = umls_matcher.run([sentence])[0]
 
-    non_norm_attrs = [a for a in entity.attrs if a.label != "umls"]
+    assert len(entity.get_attrs_by_label("umls")) == 1
     # only negation attribute was copied
-    assert len(non_norm_attrs) == 1
-    attr = non_norm_attrs[0]
-    assert attr.label == "negation" and attr.value is True
+    neg_attrs = entity.get_attrs_by_label("negation")
+    assert len(neg_attrs) == 1 and neg_attrs[0].value is True
+    assert len(entity.get_attrs_by_label("hypothesis")) == 0
 
 
 def test_prov():
@@ -215,7 +214,7 @@ def test_prov():
     assert entity_node.operation_id == umls_matcher.id
     assert entity_node.source_ids == [sentence.id]
 
-    attr = entity.attrs[0]
+    attr = entity.get_attrs_by_label("umls")[0]
     attr_node = graph.get_node(attr.id)
     assert attr_node.data_item_id == attr.id
     assert attr_node.operation_id == umls_matcher.id

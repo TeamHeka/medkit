@@ -43,8 +43,66 @@ class Annotation(abc.ABC):
         self.id: str = ann_id
         self.label: str = label
         self.keys: Set[str] = keys if keys is not None else set()
-        self.attrs: List[Attribute] = attrs
         self.metadata: Dict[str, Any] = metadata
+
+        self._attrs_by_id: Dict[str, Attribute] = {}
+        self._attr_ids_by_label: Dict[str, List[str]] = {}
+        for attr in attrs:
+            self.add_attr(attr)
+
+    def add_attr(self, attr: Attribute):
+        """
+        Attach an attribute to the annotation.
+
+        Parameters
+        ----------
+        attr:
+            Attribute to add.
+
+        Raises
+        ------
+        ValueError
+            If the attribute is already attached to the annotation
+            (based on `attr.id`).
+        """
+        id = attr.id
+        if id in self._attrs_by_id:
+            raise ValueError(f"Attribute with id {id} already attached to annotation")
+
+        # TODO: we should probably store attributes in a Store,
+        # the same way annotations in a document are stored in a Store because:
+        # - ProvBuilder already adds attributes to the store
+        # - an attribute can be shared among several annotations
+        self._attrs_by_id[id] = attr
+
+        label = attr.label
+        if label not in self._attr_ids_by_label:
+            self._attr_ids_by_label[label] = []
+        self._attr_ids_by_label[label].append(id)
+
+    def get_attrs(self) -> List[Attribute]:
+        """
+        Return the attributes of the annotation.
+
+        Returns
+        -------
+        List[Attribute]
+            List of all the attributes attached to the annotation.
+        """
+        return list(self._attrs_by_id.values())
+
+    def get_attrs_by_label(self, label: str) -> List[Attribute]:
+        """
+        Return the attributes of the annotation having a specific label.
+
+        Returns
+        -------
+        List[Attribute]
+            List of all the attributes attached to the annotation
+            with labels equal to `label`.
+        """
+
+        return [self._attrs_by_id[id] for id in self._attr_ids_by_label.get(label, [])]
 
     def add_key(self, key: str):
         self.keys.add(key)
@@ -58,7 +116,7 @@ class Annotation(abc.ABC):
         self.metadata[key] = value
 
     def to_dict(self) -> Dict[str, Any]:
-        attrs = [a.to_dict() for a in self.attrs]
+        attrs = [a.to_dict() for a in self._attrs_by_id.values()]
         return dict(
             id=self.id,
             keys=list(self.keys),

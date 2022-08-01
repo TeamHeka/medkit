@@ -5,6 +5,9 @@ from medkit.core.text import Segment, Span
 from medkit.text.context.negation_detector import NegationDetector, NegationDetectorRule
 
 
+_OUTPUT_LABEL = "negation"
+
+
 def _get_syntagma_segments(syntagma_texts):
     return [
         Segment(
@@ -20,20 +23,21 @@ def test_single_rule():
     syntagmas = _get_syntagma_segments(["No sign of covid", "Patient has asthma"])
 
     rule = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b")
-    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector = NegationDetector(output_label=_OUTPUT_LABEL, rules=[rule])
     detector.run(syntagmas)
 
     # 1st syntagma has negation
-    assert len(syntagmas[0].attrs) == 1
-    attr_1 = syntagmas[0].attrs[0]
-    assert attr_1.label == "negation"
+    attrs_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)
+    assert len(attrs_1) == 1
+    attr_1 = attrs_1[0]
+    assert attr_1.label == _OUTPUT_LABEL
     assert attr_1.value is True
     assert attr_1.metadata["rule_id"] == "id_neg_no"
 
     # 2d syntagma has no negation
-    assert len(syntagmas[1].attrs) == 1
-    attr_2 = syntagmas[1].attrs[0]
-    assert attr_2.label == "negation"
+    attrs_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)
+    assert len(attrs_2) == 1
+    attr_2 = attrs_2[0]
     assert attr_2.value is False
     assert not attr_2.metadata
 
@@ -43,18 +47,16 @@ def test_multiple_rules():
 
     rule_1 = NegationDetectorRule(id="id_neg_no", regexp=r"^no\b")
     rule_2 = NegationDetectorRule(id="id_neg_discard", regexp=r"\bdiscard(s|ed)?\b")
-    detector = NegationDetector(output_label="negation", rules=[rule_1, rule_2])
+    detector = NegationDetector(output_label=_OUTPUT_LABEL, rules=[rule_1, rule_2])
     detector.run(syntagmas)
 
     # 1st syntagma has negation, matched by 1st rule
-    assert len(syntagmas[0].attrs) == 1
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is True
     assert attr_1.metadata["rule_id"] == "id_neg_no"
 
     # 2d syntagma also has negation, matched by 2d rule
-    assert len(syntagmas[1].attrs) == 1
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is True
     assert attr_2.metadata["rule_id"] == "id_neg_discard"
 
@@ -64,15 +66,13 @@ def test_multiple_rules_no_id():
 
     rule_1 = NegationDetectorRule(regexp=r"^no\b")
     rule_2 = NegationDetectorRule(regexp=r"\bdiscard(s|ed)?\b")
-    detector = NegationDetector(output_label="negation", rules=[rule_1, rule_2])
+    detector = NegationDetector(output_label=_OUTPUT_LABEL, rules=[rule_1, rule_2])
     detector.run(syntagmas)
 
     # attributes have corresponding rule index as rule_id metadata
-    assert len(syntagmas[0].attrs) == 1
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.metadata["rule_id"] == 0
-    assert len(syntagmas[1].attrs) == 1
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.metadata["rule_id"] == 1
 
 
@@ -86,15 +86,15 @@ def test_exclusions():
         regexp=r"\bdiscard(s|ed)?\b",
         exclusion_regexps=[r"\bnot\s*\bdiscard"],
     )
-    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector = NegationDetector(output_label=_OUTPUT_LABEL, rules=[rule])
     detector.run(syntagmas)
 
     # 1st syntagma has negation
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is True
 
     # 2d syntagma doesn't have negation because of exclusion
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is False
 
 
@@ -102,13 +102,13 @@ def test_case_sensitive_off():
     syntagmas = _get_syntagma_segments(["No sign of covid", "no sign of covid"])
 
     rule = NegationDetectorRule(regexp=r"^no\b", case_sensitive=False)
-    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector = NegationDetector(output_label=_OUTPUT_LABEL, rules=[rule])
     detector.run(syntagmas)
 
     # both syntagmas have negation
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is True
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is True
 
 
@@ -116,13 +116,13 @@ def test_case_sensitive_on():
     syntagmas = _get_syntagma_segments(["No sign of covid", "no sign of covid"])
 
     rule = NegationDetectorRule(regexp=r"^no\b", case_sensitive=True)
-    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector = NegationDetector(output_label=_OUTPUT_LABEL, rules=[rule])
     detector.run(syntagmas)
 
     # only 2d syntagma has negation
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is False
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is True
 
 
@@ -135,15 +135,15 @@ def test_case_sensitive_exclusions():
         exclusion_regexps=[r"\bNOT DISCARDED:"],
         case_sensitive=True,
     )
-    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector = NegationDetector(output_label=_OUTPUT_LABEL, rules=[rule])
     detector.run(syntagmas)
 
     # 1st syntagma doesn't have negation because of exclusion
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is False
 
     # 2d syntagma has negation
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is True
 
 
@@ -151,13 +151,13 @@ def test_unicode_sensitive_off(caplog):
     syntagmas = _get_syntagma_segments(["Elimine: covid", "Éliminé: covid"])
 
     rule = NegationDetectorRule(regexp=r"elimine: ", unicode_sensitive=False)
-    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector = NegationDetector(output_label=_OUTPUT_LABEL, rules=[rule])
     detector.run(syntagmas)
 
     # both syntagmas have negation
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is True
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is True
 
     syntagmas_with_ligatures = _get_syntagma_segments(["Sœur non covidée"])
@@ -172,13 +172,13 @@ def test_unicode_sensitive_on():
     syntagmas = _get_syntagma_segments(["Elimine: covid", "Éliminé: covid"])
 
     rule = NegationDetectorRule(regexp=r"éliminé: ", unicode_sensitive=True)
-    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector = NegationDetector(output_label=_OUTPUT_LABEL, rules=[rule])
     detector.run(syntagmas)
 
     # only 2d syntagma has negation
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is False
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is True
 
 
@@ -190,23 +190,22 @@ def test_empty_segment():
     detector = NegationDetector(output_label="negation", rules=[rule])
     detector.run(syntagmas)
     for syntagma in syntagmas:
-        assert len(syntagma.attrs) == 1
-        attr = syntagma.attrs[0]
-        assert attr.value is False
+        attrs = syntagma.get_attrs_by_label(_OUTPUT_LABEL)
+        assert len(attrs) == 1 and attrs[0].value is False
 
 
 def test_prov():
     syntagmas = _get_syntagma_segments(["No sign of covid"])
 
     rule = NegationDetectorRule(regexp=r"^no\b")
-    detector = NegationDetector(output_label="negation", rules=[rule])
+    detector = NegationDetector(output_label=_OUTPUT_LABEL, rules=[rule])
 
     prov_builder = ProvBuilder()
     detector.set_prov_builder(prov_builder)
     detector.run(syntagmas)
     graph = prov_builder.graph
 
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     node_1 = graph.get_node(attr_1.id)
     assert node_1.data_item_id == attr_1.id
     assert node_1.operation_id == detector.id
@@ -303,15 +302,13 @@ def test_default_rules():
     syntagma_texts = [d[0] for d in _TEST_DATA]
     syntagmas = _get_syntagma_segments(syntagma_texts)
 
-    detector = NegationDetector(output_label="negation")
+    detector = NegationDetector(output_label=_OUTPUT_LABEL)
     detector.run(syntagmas)
 
     for i in range(len(_TEST_DATA)):
         _, is_negated, rule_id = _TEST_DATA[i]
         syntagma = syntagmas[i]
-        assert len(syntagma.attrs) == 1
-        attr = syntagma.attrs[0]
-        assert attr.label == "negation"
+        attr = syntagma.get_attrs_by_label(_OUTPUT_LABEL)[0]
 
         if is_negated:
             assert attr.value is True, (

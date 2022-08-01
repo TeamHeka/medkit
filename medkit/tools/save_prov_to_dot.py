@@ -95,7 +95,7 @@ class _DotWriter:
         if self._show_attr_links and isinstance(
             data_item, IdentifiableDataItemWithAttrs
         ):
-            for attr in data_item.attrs:
+            for attr in data_item.get_attrs():
                 self._file.write(
                     f'"{data_item.id}" -> "{attr.id}" [style=dashed, color=grey,'
                     ' label="attr", fontcolor=grey];\n'

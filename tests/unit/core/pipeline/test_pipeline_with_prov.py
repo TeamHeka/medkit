@@ -9,7 +9,13 @@ class _Segment:
     def __init__(self, text):
         self.id = generate_id()
         self.text = text
-        self.attrs = []
+        self._attrs = []
+
+    def get_attrs(self):
+        return self._attrs
+
+    def add_attr(self, attr):
+        self._attrs.append(attr)
 
 
 class _Attribute:
@@ -101,7 +107,7 @@ class _AttributeAdder:
     def run(self, segments):
         for segment in segments:
             attr = _Attribute(label=self.label, value=True)
-            segment.attrs.append(attr)
+            segment.add_attr(attr)
             if self._prov_builder is not None:
                 self._prov_builder.add_prov(
                     attr, self.description, source_data_items=[segment]
@@ -250,8 +256,9 @@ def test_step_with_attributes():
     graph.check_sanity()
 
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
-        assert len(uppercased_seg.attrs) == 1
-        attr = uppercased_seg.attrs[0]
+        attrs = uppercased_seg.get_attrs()
+        assert len(attrs) == 1
+        attr = attrs[0]
         attr_node = graph.get_node(attr.id)
         # operation id is of outer pipeline operation
         assert attr_node.operation_id == pipeline.id
@@ -263,8 +270,9 @@ def test_step_with_attributes():
     sub_graph = graph.get_sub_graph(pipeline.id)
 
     for uppercased_seg in uppercased_segs:
-        assert len(uppercased_seg.attrs) == 1
-        attr = uppercased_seg.attrs[0]
+        attrs = uppercased_seg.get_attrs()
+        assert len(attrs) == 1
+        attr = attrs[0]
         attr_node = sub_graph.get_node(attr.id)
         # operation id is of inner attribute adder operation
         assert attr_node.operation_id == attribute_adder.id

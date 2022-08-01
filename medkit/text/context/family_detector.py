@@ -156,7 +156,7 @@ class FamilyDetector(ContextOperation):
         for segment in segments:
             family_attr = self._detect_family_ref_in_segment(segment)
             if family_attr is not None:
-                segment.attrs.append(family_attr)
+                segment.add_attr(family_attr)
 
     def _detect_family_ref_in_segment(self, segment: Segment) -> Optional[Attribute]:
         rule_id = self._find_matching_rule(segment.text)

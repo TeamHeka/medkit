@@ -100,7 +100,7 @@ class _AttributeAdder:
 
     def run(self, anns):
         for ann in anns:
-            ann.attrs.append(Attribute(label=self.output_label, value=True))
+            ann.add_attr(Attribute(label=self.output_label, value=True))
 
 
 def test_single_step():
@@ -195,9 +195,8 @@ def test_no_output():
 
     sentence_anns = doc.get_annotations_by_label("sentence")
     for ann in sentence_anns:
-        assert len(ann.attrs) == 1
-        attr = ann.attrs[0]
-        assert attr.label == "validated" and attr.value is True
+        attrs = ann.get_attrs_by_label("validated")
+        assert len(attrs) == 1 and attrs[0].value is True
 
 
 def test_multiple_outputs():

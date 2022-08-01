@@ -127,7 +127,7 @@ class SpacyDocPipeline(DocOperation):
             for ann_id, attrs in attrs_by_ann_id.items():
                 ann = medkit_doc.get_annotation_by_id(ann_id)
                 for attr in attrs:
-                    ann.attrs.append(attr)
+                    ann.add_attr(attr)
                     if self._prov_builder is not None:
                         # if ann is an existing annotation, in terms
                         # of provenance, the annotation was used to

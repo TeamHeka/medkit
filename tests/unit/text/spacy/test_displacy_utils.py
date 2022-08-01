@@ -13,8 +13,9 @@ _TEXT = "The patient has asthma and a diabetes of type 1."
 
 def _custom_entity_formatter(entity):
     label = entity.label
-    if entity.attrs:
-        attrs_string = ", ".join(f"{a.label}={a.value}" for a in entity.attrs)
+    attrs = entity.get_attrs()
+    if attrs:
+        attrs_string = ", ".join(f"{a.label}={a.value}" for a in attrs)
         label += f" ({attrs_string})"
     return label
 

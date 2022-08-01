@@ -108,8 +108,9 @@ def test_normalization():
     entity = entities[0]
     assert entity.label == "Diabetes"
 
-    assert len(entity.attrs) == 1
-    attr = entity.attrs[0]
+    attrs = entity.get_attrs_by_label("umls")
+    assert len(attrs) == 1
+    attr = attrs[0]
     assert attr.label == "umls"
     assert attr.value == "C0011849"
 
@@ -200,9 +201,9 @@ def test_unicode_sensitive_on():
 def test_attrs_to_copy():
     sentence = _get_sentence_segment()
     # copied attribute
-    sentence.attrs.append(Attribute(label="negation", value=True))
+    sentence.add_attr(Attribute(label="negation", value=True))
     # uncopied attribute
-    sentence.attrs.append(Attribute(label="hypothesis", value=True))
+    sentence.add_attr(Attribute(label="hypothesis", value=True))
 
     rule = RegexpMatcherRule(label="Diabetes", regexp="diabetes")
 
@@ -213,9 +214,9 @@ def test_attrs_to_copy():
     entity = matcher.run([sentence])[0]
 
     # only negation attribute was copied
-    assert len(entity.attrs) == 1
-    attr = entity.attrs[0]
-    assert attr.label == "negation" and attr.value is True
+    neg_attrs = entity.get_attrs_by_label("negation")
+    assert len(neg_attrs) == 1 and neg_attrs[0].value is True
+    assert len(entity.get_attrs_by_label("hypothesis")) == 0
 
 
 def test_default_rules():
@@ -246,7 +247,7 @@ def test_prov():
     assert entity_node.operation_id == matcher.id
     assert entity_node.source_ids == [sentence.id]
 
-    attr = entity.attrs[0]
+    attr = entity.get_attrs_by_label("umls")[0]
     attr_node = graph.get_node(attr.id)
     assert attr_node.data_item_id == attr.id
     assert attr_node.operation_id == matcher.id
