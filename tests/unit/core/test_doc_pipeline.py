@@ -15,6 +15,11 @@ _SENTENCES = [
     "This is another sentence",
     "This is the last sentence",
 ]
+_ALT_SENTENCES = [
+    "This is a sentence with a different label",
+    "This is another sentence with a different label",
+]
+_ENTITIES = ["Entity1", "Entity2"]
 
 
 class _TextAnnotation(Annotation):
@@ -30,6 +35,10 @@ def _get_doc():
     for text in _SENTENCES:
         ann = _TextAnnotation(label="sentence", text=text)
         doc.add_annotation(ann)
+    for text in _ALT_SENTENCES:
+        doc.add_annotation(_TextAnnotation(label="alt_sentence", text=text))
+    for text in _ENTITIES:
+        doc.add_annotation(_TextAnnotation(label="entity", text=text))
     return doc
 
 
@@ -235,13 +244,6 @@ def test_labels_for_input_key():
     """Doc pipeline with several label to input key associations,
     including 2 labels associated to the same key"""
     doc = _get_doc()
-    for text in [
-        "This is a sentence with a different label",
-        "This is another sentence with a different label",
-    ]:
-        doc.add_annotation(_TextAnnotation(label="alt_sentence", text=text))
-    for text in ["Entity1", "Entity2"]:
-        doc.add_annotation(_TextAnnotation(label="entity", text=text))
 
     uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step_1 = PipelineStep(
@@ -286,6 +288,56 @@ def test_labels_for_input_key():
     prefixed_entity_anns = doc.get_annotations_by_label("prefixed_entity")
     assert len(prefixed_entity_anns) == len(entity_anns)
 
+    expected_texts = [prefix + a.text for a in entity_anns]
+    assert [a.text for a in prefixed_entity_anns] == expected_texts
+
+
+def test_labels_for_input_key_different_order():
+    """Doc pipeline with several labels to input key associations,
+    provided in different order than the underlying pipeline's input keys
+    (regression test)"""
+    doc = _get_doc()
+
+    uppercaser = _Uppercaser(output_label="uppercased_sentence")
+    step_1 = PipelineStep(
+        operation=uppercaser,
+        input_keys=["SENTENCE"],
+        output_keys=["UPPERCASE"],
+    )
+
+    prefix = "Hello! "
+    prefixer = _Prefixer(output_label="prefixed_entity", prefix=prefix)
+    step_2 = PipelineStep(
+        operation=prefixer,
+        input_keys=["ENTITY"],
+        output_keys=["PREFIX"],
+    )
+
+    pipeline = Pipeline(
+        steps=[step_1, step_2],
+        input_keys=["SENTENCE", "ENTITY"],
+        output_keys=["UPPERCASE", "PREFIX"],
+    )
+
+    # ordering of labels_by_input_key different that ordering of pipeline input_keys
+    labels_by_input_key = {
+        "ENTITY": ["entity"],
+        "SENTENCE": ["sentence"],
+    }
+
+    doc_pipeline = DocPipeline(
+        pipeline=pipeline,
+        labels_by_input_key=labels_by_input_key,
+    )
+    doc_pipeline.run([doc])
+
+    sentence_anns = doc.get_annotations_by_label("sentence")
+    uppercased_sentence_anns = doc.get_annotations_by_label("uppercased_sentence")
+    expected_texts = [a.text.upper() for a in (sentence_anns)]
+    assert [a.text for a in uppercased_sentence_anns] == expected_texts
+
+    entity_anns = doc.get_annotations_by_label("entity")
+    prefixed_entity_anns = doc.get_annotations_by_label("prefixed_entity")
     expected_texts = [prefix + a.text for a in entity_anns]
     assert [a.text for a in prefixed_entity_anns] == expected_texts
 
