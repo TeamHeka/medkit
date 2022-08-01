@@ -1,10 +1,12 @@
 __all__ = ["QuickUMLSMatcher"]
 
+from packaging.version import parse as parse_version
 from pathlib import Path
 from typing import Dict, Iterator, List, NamedTuple, Optional, Union
 from typing_extensions import Literal
 
 from quickumls import QuickUMLS
+import quickumls.about
 import quickumls.constants
 
 from medkit.core import Attribute
@@ -12,9 +14,10 @@ from medkit.core.text import Entity, NEROperation, Segment, span_utils
 
 
 # workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/issues/68
-for key, value in quickumls.constants.SPACY_LANGUAGE_MAP.items():
-    ext = "_core_web_sm" if value == "en" else "_core_news_sm"
-    quickumls.constants.SPACY_LANGUAGE_MAP[key] = value + ext
+if parse_version(quickumls.about.__version__) < parse_version("1.4.1"):
+    for key, value in quickumls.constants.SPACY_LANGUAGE_MAP.items():
+        ext = "_core_web_sm" if value == "en" else "_core_news_sm"
+        quickumls.constants.SPACY_LANGUAGE_MAP[key] = value + ext
 
 
 class _QuickUMLSInstall(NamedTuple):
