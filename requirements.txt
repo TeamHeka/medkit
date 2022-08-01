@@ -6,6 +6,7 @@ typing-extensions
 Unidecode
 
 # hf-translator
+sacremoses  # needed by default model "Helsinki-NLP/opus-mt-fr-en"
 torch
 transformers[sentencepiece]
 

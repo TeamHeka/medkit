@@ -143,3 +143,19 @@ For using this python module, you need to install [spacy](https://spacy.io/).
 .. automodule:: medkit.text.spacy.displacy_utils
     :members:
 ```
+
+## Translation operations
+
+This section lists operations related to translation. They are part of
+`medkit.text.translation` module.
+
+### HuggingFace Translator
+
+:::{important}
+`HFTranslator` needs additional dependencies that can be installed with `pip install medkit[hf-translator]`
+:::
+
+```{eval-rst}
+.. automodule:: medkit.text.translation
+    :members:
+```

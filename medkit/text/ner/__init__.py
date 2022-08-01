@@ -1,4 +1,5 @@
 __all__ = [
+    "DucklingMatcher",
     "RegexpMatcher",
     "RegexpMatcherRule",
     "RegexpMatcherNormalization",
@@ -7,6 +8,7 @@ __all__ = [
 
 import importlib.util
 
+from .duckling_matcher import DucklingMatcher
 from .regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,

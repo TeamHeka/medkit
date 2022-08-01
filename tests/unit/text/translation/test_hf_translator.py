@@ -1,8 +1,8 @@
 import pytest
 
 from medkit.core.text import Segment, Span, ModifiedSpan, span_utils
-from medkit.text.hf_translator import HFTranslator, _Aligner
 from medkit.text.ner import RegexpMatcher, RegexpMatcherRule
+from medkit.text.translation.hf_translator import HFTranslator, _Aligner
 
 
 _TEXT_FR = "Je souffre d'insuffisance cardiaque depuis 10 ans."
@@ -111,10 +111,14 @@ def test_translator_with_matcher(translator):
     assert matched_original_text == "insuffisance cardiaque"
 
 
-def test_batch(translator):
-    # generate batch of different texts by changing number of years in ref sentence,
+@pytest.mark.parametrize(
+    "input_size,batch_size",
+    [(12, 1), (1, 12), (24, 12)],
+)
+def test_batch(input_size, batch_size):
+    # generate different texts by changing number of years in ref sentence,
     segments = []
-    for i in range(20):
+    for i in range(input_size):
         text = _TEXT_FR.replace("10", str(i + 1))
         segment = _get_raw_text_segment(text)
         segments.append(segment)
@@ -124,9 +128,11 @@ def test_batch(translator):
     segment = _get_raw_text_segment(text)
     segments.append(segment)
 
-    # translate batch of texts
+    # translate all texts with translator with specific batch size
+    translator = HFTranslator(batch_size=batch_size)
     translated_segments = translator.run(segments)
     assert len(translated_segments) == len(segments)
+
     # check that result is identical to translating one by one
     for segment, translated_segment in zip(segments, translated_segments):
         expected_translated_segment = translator.run([segment])[0]

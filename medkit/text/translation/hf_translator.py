@@ -4,14 +4,14 @@ __all__ = ["HFTranslator"]
 
 from collections import defaultdict
 import dataclasses
-from typing import Dict, Iterator, List, Tuple
+from pathlib import Path
+from typing import Any, Dict, Iterator, List, Tuple, Union
 
 import torch
 import transformers
 from transformers import TranslationPipeline, BertModel, BertTokenizerFast
 
-from medkit.core.operation import Operation
-
+from medkit.core import Operation
 from medkit.core.text import Segment, ModifiedSpan, span_utils
 
 
@@ -23,16 +23,19 @@ class DefaultConfig:
     alignment_layer: int = 8
     alignment_threshold: float = 1e-3
     device: int = -1  # -1 corresponds to the cpu else device number
+    batch_size: int = 1
 
 
 class HFTranslator(Operation):
-    """Translator based on a Hugging Face transformers model
+    """Translator based on HuggingFace transformers model
+
+    Any translation model from the HuggingFace hub can be used.
 
     For segment given in input, a translated segment will be returned.
     The spans of the translated segment are "aligned" to the original segment.
     An alignment model is used to find matches between translated words and
-    original words, and for each of these matches a `ModifiedSpan` is created, referencing
-    the original span in the original text.
+    original words, and for each of these matches a :class:`~medkit.core.text.ModifiedSpan`
+    is created, referencing the original span in the original text.
 
     Segment given in input should not contain more than one sentence, because only the 1st
     sentence will be translated and the others will be discarded (this might vary with the model).
@@ -43,11 +46,12 @@ class HFTranslator(Operation):
     def __init__(
         self,
         output_label: str = DefaultConfig.output_label,
-        translation_model: str = DefaultConfig.translation_model,
-        alignment_model: str = DefaultConfig.alignment_model,
+        translation_model: Union[str, Path] = DefaultConfig.translation_model,
+        alignment_model: Union[str, Path] = DefaultConfig.alignment_model,
         alignment_layer: int = DefaultConfig.alignment_layer,
         alignment_threshold: float = DefaultConfig.alignment_threshold,
         device: int = DefaultConfig.device,
+        batch_size: int = DefaultConfig.batch_size,
         op_id: str = None,
     ):
         """
@@ -56,22 +60,25 @@ class HFTranslator(Operation):
         output_label:
             Label of the translated segments
         translation_model:
-            Name of the translation model on the Hugging Face models hub. Must be a model compatible
-            with the TranslationPipeline transformers class.
+            Name (on the HuggingFace models hub) or path of the translation model. Must be a model compatible
+            with the `TranslationPipeline` transformers class.
         alignment_model:
-            Name of the alignment model on the Hugging Face models hub. Must be a multilingual BERT model
-            compatible with the BertModel transformers class.
+            Name (on the HuggingFace models hub) or path of the alignment model. Must be a multilingual BERT model
+            compatible with the `BertModel` transformers class.
         alignment_layer:
             Index of the layer in the alignment model that contains the token embeddings
             (the original and translated embedding will be. compared)
         alignment_threshold:
             Threshold value used to decide if embeddings are similar enough to be aligned
         device:
-            Device to use for pytorch models. Follows the Hugging Face convention (-1 for "cpu"
-            and device number for gpu, for instance 0 for "cuda:0")
+            Device to use for transformers models. Follows the HuggingFace convention
+            (-1 for "cpu" and device number for gpu, for instance 0 for "cuda:0")
+        batch_size:
+            Number of segments in batches processed by translation and alignment models
         op_id:
             Identifier of the translator
         """
+
         # Pass all arguments to super (remove self)
         init_args = locals()
         init_args.pop("self")
@@ -83,25 +90,29 @@ class HFTranslator(Operation):
         self.alignment_layer = alignment_layer
         self.alignment_threshold = alignment_threshold
         self.device = device
+        self.batch_size = batch_size
 
-        task = transformers.pipelines.get_task(self.translation_model)
-        if not task.startswith("translation"):
-            raise ValueError(
-                f"Model {self.translation_model} is not associated to a translation"
-                " task and cannot be use with HFTranslator"
-            )
+        if isinstance(self.translation_model, str):
+            task = transformers.pipelines.get_task(translation_model)
+            if not task.startswith("translation"):
+                raise ValueError(
+                    f"Model {self.translation_model} is not associated to a translation"
+                    " task and cannot be use with HFTranslator"
+                )
 
         self._translation_pipeline = transformers.pipeline(
             task=task,
             model=self.translation_model,
             pipeline_class=TranslationPipeline,
             device=self.device,
+            batch_size=self.batch_size,
         )
         self._aligner = _Aligner(
             model=self.alignment_model,
             layer_index=self.alignment_layer,
             threshold=self.alignment_threshold,
             device=self.device,
+            batch_size=self.batch_size,
         )
 
     def run(self, segments: List[Segment]) -> List[Segment]:
@@ -115,7 +126,7 @@ class HFTranslator(Operation):
 
         Returns
         -------
-        List[Segments]:
+        List[Segment]:
             Translated segments (with spans referring to words in original text, for translated
             words that have been aligned to original words)
         """
@@ -221,13 +232,17 @@ _AlignmentDict = Dict[Tuple[int, int], List[Tuple[int, int]]]
 class _Aligner:
     def __init__(
         self,
-        model: str = "bert-base-multilingual-cased",
+        model: Union[str, Path] = "bert-base-multilingual-cased",
         layer_index: int = 8,
         threshold: float = 1e-3,
         device: int = -1,
+        batch_size: int = 1,
     ):
         self._device = torch.device("cpu" if device < 0 else f"cuda:{device}")
-        self._model = BertModel.from_pretrained(model).to(self._device)
+        self._batch_size = batch_size
+        self._model = BertModel.from_pretrained(model, output_hidden_states=True).to(
+            self._device
+        )
         self._layer_index = layer_index
         self._threshold: float = threshold
         self._tokenizer = BertTokenizerFast.from_pretrained(model)
@@ -253,6 +268,16 @@ class _Aligner:
             target_texts
         ), "Must have same number of source and target texts"
 
+        aligments = []
+        source_text_batches_iter = _batchify(source_texts, self._batch_size)
+        target_text_batches_iter = _batchify(target_texts, self._batch_size)
+        for source_text_batch, target_text_batch in zip(
+            source_text_batches_iter, target_text_batches_iter
+        ):
+            aligments += self._align_batch(source_text_batch, target_text_batch)
+        return aligments
+
+    def _align_batch(self, source_texts, target_texts):
         # preprocess
         source_encoding = self._encode_text(source_texts)
         target_encoding = self._encode_text(target_texts)
@@ -261,10 +286,10 @@ class _Aligner:
         self._model.eval()
         with torch.no_grad():
             batch_in_source = source_encoding["input_ids"].to(self._device)
-            batch_out_source = self._model(batch_in_source, output_hidden_states=True)
+            batch_out_source = self._model(batch_in_source)
             batch_out_source = batch_out_source[2][self._layer_index]
             batch_in_target = target_encoding["input_ids"].to(self._device)
-            batch_out_target = self._model(batch_in_target, output_hidden_states=True)
+            batch_out_target = self._model(batch_in_target)
             batch_out_target = batch_out_target[2][self._layer_index]
 
         # compute alignment for each pair of texts in batch
@@ -334,3 +359,8 @@ class _Aligner:
             target_ranges.sort()
 
         return word_alignment
+
+
+def _batchify(list: List[Any], batch_size: int) -> Iterator[List[Any]]:
+    for i in range(0, len(list), batch_size):
+        yield list[i : i + batch_size]
