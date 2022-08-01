@@ -11,7 +11,7 @@ from medkit.core.prov_builder import ProvBuilder
 
 class DocPipeline(DocOperation):
     """Wrapper around the `Pipeline` class that runs a pipeline on a list
-    (or collection`) of documents, retrieving input annotations from each document
+    (or collection) of documents, retrieving input annotations from each document
     and attaching output annotations back to documents.
     """
 
