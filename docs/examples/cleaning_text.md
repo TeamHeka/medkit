@@ -15,89 +15,59 @@ kernelspec:
 
 +++
 
-In the medical domain, it is common to find documents that are difficult to process. A text may include special characters, unwanted newline characters '\n' or multiple spaces. 
+This tutorial will show you how to use the class {class}`~medkit.text.preprocessing.eds_cleaner.EDSCleaner` class. A cleanup operation inspired by documents with formatting problems given previous conversion processes. 
 
-Consider a document with the following format:
 
-```{code-cell} ipython3
-text = """Depuis la mise en place du traitement, 
+## Loading a text to clean
 
-le papa note clairement une nette
-
-amélioration du 
-
-comportement."""
-```
-
-## Removing the character `\n` using text utils
-
-Medkit has some functions already implemented to clean up text in special cases such as ending lines, multiple spaces or text near keywords.  Here we use  {func}`~medkit.core.text.utils.clean_newline_character`.
-
+Consider the following document:
 
 ```{code-cell} ipython3
+from pathlib import Path
 from medkit.core.text import TextDocument
-from medkit.core.text.utils import clean_newline_character
 
-def print_info(title,text,spans): 
-    # show info about text and spans
-    info = f"--- {title} ---\n\n"
-    info += f"\"{text}\"\n"
-    info += f"\n--- Spans ---\n"
-    info += "\n".join(f"- {span}" for span in spans)
-    print(info)
-
-doc = TextDocument(text=text)
-raw_segment = doc.raw_segment
-print_info("Original raw text",raw_segment.text,raw_segment.spans)
+file = Path("./input/text/text_to_clean.txt")
+doc = TextDocument(text=file.read_text())
 ```
-**Using clean_newline_character**
 ```{code-cell} ipython3
-new_text, new_spans = clean_newline_character(raw_segment.text,raw_segment.spans)
-print_info("Clean text",new_text,new_spans)
+print(doc.text)
 ```
+As we can see, the text has:
+- additional spaces;
+- multiple newlines characters;
+- long parentheses and numbers in English format.
+  
+## Using EDSCleaner 
 
+The class works on `Segment` objects. In the `run` method it performs various operations to delete or change characters of interest. By default it performs these operations:
+
+* Changes points between uppercase letters by space
+* Changes points between numbers to commas
+* Clears multiple spaces and newline characters.
+
+```{note}
+There are two special operations that process parentheses and dots near French keywords such as Dr., Mme. and others. To enable/disable these operations you can use `handle_parentheses_eds` and `handle_points_eds`.
+```
+```{seealso}
+For further information on the utilities used in this class, see {class}`~medkit.core.text.utils`
+
+``` 
+
+Let's clean the segment keeping the endlines characters. 
+
+```{code-cell} ipython3
+from medkit.text.preprocessing import EDSCleaner
+
+eds_cleaner = EDSCleaner(keep_endlines=True)
+clean_segment = eds_cleaner.run([doc.raw_segment])[0]
+print(clean_segment.text)
+
+```
 ## Extract text from the clean text
 
-+++
-
-You can now create a new segment with the clean version and find terms. 
-
-Imagine `nette amélioration` is a term of interest. In the clean text this match starts in the character **68** and ends in the character **86**. 
-
-To extract the information you can use {func}`~medkit.core.text.span_utils.extract`.
+Since the clean segment contains the information from the original span, it will always be possible to go back and display the information in the raw text. Let's imagine we want to section into sentences. 
 
 ```{code-cell} ipython3
-from medkit.core.text import Segment
-from medkit.core.text.span_utils import extract, normalize_spans
+from medkit.text.segmentation import SentenceTokenizer
 
-# Create a new segment 
-clean_segment = Segment(
-  label="CLEAN_TEXT", text = new_text, spans = new_spans
-)
-
-# Extract term from the new segment
-term_text, term_spans = extract(
-  clean_segment.text,clean_segment.spans,[(68,86)]
-)
-print_info("Term found in the clean text",term_text,term_spans)
 ```
-
-You can see that `term_spans` saves the modifications.
-
-Now, to get the same term in the original annotation, you can use the following:
-
-* {func}`~medkit.core.text.span_utils.normalize_spans` to get the original span.
-* `extract` to get the term in its original version.
-
-```{code-cell} ipython3
-# Normalize spans of the term
-span_original = normalize_spans(term_spans)[0]
-
-# Get the term in the raw segment
-raw_term_text, raw_term_spans = extract(
-    raw_segment.text,raw_segment.spans,[(span_original.start,span_original.end)]
-)
-
-print_info("Term found in the raw text",raw_term_text,raw_term_spans)
-```
-

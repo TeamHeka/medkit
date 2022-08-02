@@ -27,80 +27,71 @@ Annotations with other types are ignored in the conversion process.
 Consider this text file: 
 
 +++
+```{code-cell} ipython3
+from pathlib import Path
 
-```
-Le patient est prescrit du Lisinopril parce qu'il souffre d'hypertension.
-Le patient avait une déficience en vitamines A et B.
+print(Path("./input/brat/doc_01.txt").read_text())
 ```
 
 +++
 
-It could have the following brat annotation file:
+It has the following brat annotation file:
 
-```
-T1	medication 27 37	Lisinopril
-T2	disease 60 72	hypertension
-T3	disease 95 105	déficience
-A1	antecedent T3
-T4	vitamin 109 117;119 120	vitamine A
-T5	vitamin 109 117;124 126	vitamine B.
-R1	treats Arg1:T1 Arg2:T2	
+```{code-cell} ipython3
+print(Path("./input/brat/doc_01.ann").read_text())
 ```
 
 ## Load brat into a Collection of TextDocuments
 
-Medkit provides {class}`~medkit.text.brat.BratInputConverter` to load Brat Files.
+To load Brat Files, medkit provides the {class}`~medkit.io.brat.BratInputConverter` class. This converter returns a `Collection` of `TextDocument`. 
 
 ```{tip}
-You can set the provenance using:
-```python
-from medkit.core import ProvBuilder
+You can enable the provenance tracing using the method `set_prov_builder` with a {class}`~medkit.core.ProvBuilder` object.
 
-# Define Input Converter and set provenance builder
-prov_builder = ProvBuilder()
-brat_converter = BratInputConverter()
-brat_converter.set_prov_builder(prov_builder)
 ```
 
 ```{code-cell} ipython3
-from pathlib import Path
 from medkit.io.brat import BratInputConverter
 
 # Define Input Converter 
 brat_converter = BratInputConverter()
 
-# Define path to brat
-root_path = Path('.').resolve()
-path_to_brat = root_path / "input"/"brat"
-
 # Load brat into a collection of documents
-collection = brat_converter.load(dir_path=path_to_brat)
+collection = brat_converter.load(dir_path="./input/brat")
 medkit_doc = collection.documents[0]
 
 # Explore annotations
-print(f"The documents has {len(medkit_doc.get_annotations())} annotations")
+print(f"The document has {len(medkit_doc.get_annotations())} annotations")
 entities_disease = medkit_doc.get_annotations_by_label("disease")
 print(f"Where {len(entities_disease)} annotations have 'disease' as label")
 
 ```
 
-```{code-cell} ipython3
-# Show info in entities
-for ent in entities_disease:
-    print(ent.label, ent.spans,ent.text)
-    if ent.attrs:
-        print("\t -> Has an attribute:", ent.attrs[0].label)
-```
+**Visualize entities information**
 
+The created document contains the annotations defined in the brat annotation file. 
+We can show the entities information, for example.
+
+```{code-cell} ipython3
+for entity in medkit_doc.get_entities():
+    print(f"label={entity.label}, spans={entity.spans}, text={entity.text!r}")
+```
 
 ## Save a collection to Brat
 
-To save a Collection or list of `TextDocument` in Brat format, you can use {class}`~medkit.text.brat.BratOutputConverter`.
+To save a Collection or list of `TextDocument` in Brat format, you can use {class}`~medkit.io.brat.BratOutputConverter`.
 
-You can choose which medkit annotations and attributes to keep in the resulting Brat collection. 
+You can choose which medkit annotations and attributes to keep in the resulting Brat collection. By default, since its `anns_labels` and `attrs` are set to `None`, all annotations and attributes will be in the generated file. 
 
-Medkit generates an automatic `annotation.conf` so you can copy the collection directly to your brat data directory. 
++++
 
+**Automatic configuration of annotations**
++++
+Brat is actually controlling the configuration with text-based configuration files. It uses four types, but only the annotation types configuration is necessary (cf: [brat configuration](https://brat.nlplab.org/configuration.html)).
+
+To facilitate integration and ensure correct visualisation, medkit automatically generates an `annotation.conf` for each collection.
+ 
++++
 ```{code-cell} ipython3
 from medkit.io.brat import BratOutputConverter
 
@@ -108,13 +99,22 @@ from medkit.io.brat import BratOutputConverter
 # transfer all annotations and attributes
 brat_output_converter = BratOutputConverter()
 
-root_path = Path('.').resolve()
-output_path = root_path / "_out"/"brat"
-
+# save the medkit collection in `dir_path`
 brat_output_converter.save(
-  collection,  dir_path=output_path, doc_names=["doc_1"])
+  collection,  dir_path="./_out/brat", doc_names=["doc_1"])
 ```
-The collection is saved in the given path. By default the name is the document id, you can change it using the `doc_names` parameter. If the generated configuration does not include all values for each attribute, you can adjust the number of values when creating the converter.
+
+The collection is saved on disk including the following files:
+* `doc_1.txt`: text of medkit document
+* `doc_1.ann`: brat annotation file
+* `annotation.conf`: annotation type configuration
+
+
+By default the name is the `document_id`, you can change it using the `doc_names` parameter.
+
+```{note}
+Since the values of the attributes in brat must be defined in the configuration, medkit shows the top50 for each attribute. In case you want to show more values in the configuration, you can change `top_values_by_attr` in the brat output converter.
+ ```
 
 :::{seealso}
 cf. [Brat IO module](api:io:brat).
