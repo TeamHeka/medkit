@@ -66,14 +66,12 @@ class _DotWriter:
         max_sub_graph_depth: Optional[int],
         show_attr_links: bool = True,
     ):
-        self._store: Store = store
-        self._file: TextIO = file
-        self._data_item_formatter: Callable[
-            [IdentifiableDataItem], str
-        ] = data_item_formatter
-        self._op_formatter: Callable[[OperationDescription], str] = op_formatter
-        self._max_sub_graph_depth: Optional[int] = max_sub_graph_depth
-        self._show_attr_links: bool = show_attr_links
+        self._store = store
+        self._file = file
+        self._data_item_formatter = data_item_formatter
+        self._op_formatter = op_formatter
+        self._max_sub_graph_depth = max_sub_graph_depth
+        self._show_attr_links = show_attr_links
 
     def write_graph(self, graph: ProvGraph, current_sub_graph_depth: int = 0):
         if current_sub_graph_depth == 0:
