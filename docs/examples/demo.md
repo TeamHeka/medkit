@@ -261,14 +261,12 @@ from medkit.core.text import TextAnnotation
 from medkit.tools import save_prov_to_dot
 
 os.makedirs(output_dir, exist_ok=True)
-prov_graph = prov_tracer.graph
 dot_graph = output_dir / "prov.dot"
 
-# save prov graph to dot file
+# save provenance to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
 save_prov_to_dot(
-    prov_graph,
-    store,
+    prov_tracer,
     dot_graph,
 )
 ```
@@ -401,7 +399,6 @@ from medkit.core.text import TextAnnotation
 from medkit.tools import save_prov_to_dot
 
 os.makedirs(output_dir, exist_ok=True)
-prov_graph = prov_tracer.graph
 ```
 
 #### Basic information (graph depth = 0)
@@ -410,13 +407,12 @@ prov_graph = prov_tracer.graph
 dot_graph = output_dir / "prov.dot"
 png_graph = output_dir / "prov.png"
 
-# save prov graph to dot file
+# save provenance to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
 save_prov_to_dot(
-    prov_graph,
-    store,
+    prov_tracer,
     dot_graph,
-    max_sub_graph_depth=0,
+    max_sub_prov_depth=0,
 )
 
 cmd = f"dot -Tpng {dot_graph} -o {png_graph}"
@@ -432,13 +428,12 @@ Image(png_graph)
 dot_graph = output_dir / "prov_intermediate.dot"
 png_graph = output_dir / "prov_intermediate.png"
 
-# save prov graph to dot file
+# save provenance to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
 save_prov_to_dot(
-    prov_graph,
-    store,
+    prov_tracer,
     dot_graph,
-    max_sub_graph_depth=1,
+    max_sub_prov_depth=1,
 )
 
 cmd = f"dot -Tpng {dot_graph} -o {png_graph}"
@@ -454,13 +449,12 @@ Image(png_graph)
 dot_graph = output_dir / "prov_full.dot"
 png_graph = output_dir / "prov_full.png"
 
-# save prov graph to dot file
+# save provenance to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
 save_prov_to_dot(
-    prov_graph,
-    store,
+    prov_tracer,
     dot_graph,
-    max_sub_graph_depth=2,
+    max_sub_prov_depth=2,
 )
 
 cmd = f"dot -Tpng {dot_graph} -o {png_graph}"

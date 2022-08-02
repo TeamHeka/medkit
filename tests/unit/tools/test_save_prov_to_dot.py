@@ -49,7 +49,7 @@ def test_basic(tmp_path):
 
     # export to dot
     dot_file = tmp_path / "prov.dot"
-    save_prov_to_dot(prov_tracer.graph, prov_tracer.store, dot_file)
+    save_prov_to_dot(prov_tracer, dot_file)
     dot_text = dot_file.read_text()
 
     # check dot entries
@@ -79,8 +79,7 @@ def test_custom_format(tmp_path):
 
     dot_file = tmp_path / "prov.dot"
     save_prov_to_dot(
-        prov_tracer.graph,
-        prov_tracer.store,
+        prov_tracer,
         dot_file,
         # change formatting
         data_item_formatters={Segment: lambda s: s.text},
@@ -108,7 +107,7 @@ def test_attrs(tmp_path):
 
     # export to dot
     dot_file = tmp_path / "prov.dot"
-    save_prov_to_dot(prov_tracer.graph, prov_tracer.store, dot_file)
+    save_prov_to_dot(prov_tracer, dot_file)
     dot_text = dot_file.read_text()
 
     # check attribute link in dot entries
@@ -120,8 +119,8 @@ def test_attrs(tmp_path):
     )
 
 
-def test_sub_prov_graph(tmp_path):
-    """Handling of provenance sub graphs"""
+def test_sub_prov(tmp_path):
+    """Handling of nested provenance tracers"""
     prov_tracer = ProvTracer()
 
     # build provenance for inner graph
@@ -133,24 +132,20 @@ def test_sub_prov_graph(tmp_path):
     pipeline_desc = OperationDescription(name="Pipeline", id=generate_id())
     prov_tracer.add_prov_from_sub_tracer([entity], pipeline_desc, sub_prov_tracer)
 
-    # render dot, not expanding sub graphs
+    # render dot, not expanding sub provenance
     dot_file = tmp_path / "prov.dot"
-    save_prov_to_dot(
-        prov_tracer.graph, prov_tracer.store, dot_file, max_sub_graph_depth=0
-    )
+    save_prov_to_dot(prov_tracer, dot_file, max_sub_prov_depth=0)
     dot_text = dot_file.read_text()
 
     # must have a dot entry for outer pipeline operation
     assert f'"{sentence_segment.id}" -> "{entity.id}" [label="Pipeline"];\n' in dot_text
 
-    # render dot, expanding all sub graphs
+    # render dot, expanding all sub provenance
     dot_file_full = tmp_path / "prov_full.dot"
-    save_prov_to_dot(
-        prov_tracer.graph, prov_tracer.store, dot_file_full, max_sub_graph_depth=None
-    )
+    save_prov_to_dot(prov_tracer, dot_file_full, max_sub_prov_depth=None)
     dot_text_full = dot_file_full.read_text()
 
-    # must have a dot entry for inner operations in sub graphs
+    # must have a dot entry for inner operations in sub provenance
     assert (
         f'"{sentence_segment.id}" -> "{syntagma_segment.id}"'
         ' [label="SyntagmaTokenizer"];\n'
