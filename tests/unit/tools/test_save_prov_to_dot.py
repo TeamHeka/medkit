@@ -81,7 +81,7 @@ def test_basic(tmp_path):
 
 
 def test_attrs(tmp_path):
-    """Basic usage"""
+    """Display attribute links"""
     # build provenance
     sentence_segment, syntagma_segment, entity = _get_segment_and_entity(with_attr=True)
     store = DictStore()
