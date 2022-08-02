@@ -16,8 +16,8 @@ def save_prov_to_dot(
     prov_graph: ProvGraph,
     store: Store,
     file: TextIO,
-    data_item_formatter: Callable[[IdentifiableDataItem], str],
-    op_formatter: Callable[[OperationDescription], str],
+    data_item_formatter: Optional[Callable[[IdentifiableDataItem], str]] = None,
+    op_formatter: Optional[Callable[[OperationDescription], str]] = None,
     max_sub_graph_depth: Optional[int] = None,
     show_attr_links: bool = True,
 ):
@@ -61,8 +61,8 @@ class _DotWriter:
         self,
         store: Store,
         file: TextIO,
-        data_item_formatter: Callable[[IdentifiableDataItem], str],
-        op_formatter: Callable[[OperationDescription], str],
+        data_item_formatter: Optional[Callable[[IdentifiableDataItem], str]],
+        op_formatter: Optional[Callable[[OperationDescription], str]],
         max_sub_graph_depth: Optional[int],
         show_attr_links: bool = True,
     ):
@@ -99,12 +99,20 @@ class _DotWriter:
 
     def _write_node(self, node: ProvNode):
         data_item = self._store.get_data_item(node.data_item_id)
-        data_item_label = self._data_item_formatter(data_item)
+        data_item_label = (
+            self._data_item_formatter(data_item)
+            if self._data_item_formatter is not None
+            else data_item.id
+        )
         self._file.write(f'"{data_item.id}" [label="{data_item_label}"];\n')
 
         if node.operation_id is not None:
             op_desc = self._store.get_op_desc(node.operation_id)
-            op_label = self._op_formatter(op_desc)
+            op_label = (
+                self._op_formatter(op_desc)
+                if self._op_formatter is not None
+                else op_desc.id
+            )
         else:
             op_label = "Unknown"
         for source_id in node.source_ids:
