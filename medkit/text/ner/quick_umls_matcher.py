@@ -14,10 +14,20 @@ from medkit.core.text import Entity, NEROperation, Segment, span_utils
 
 
 # workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/issues/68
-if parse_version(quickumls.about.__version__) < parse_version("1.4.1"):
-    for key, value in quickumls.constants.SPACY_LANGUAGE_MAP.items():
-        ext = "_core_web_sm" if value == "en" else "_core_news_sm"
-        quickumls.constants.SPACY_LANGUAGE_MAP[key] = value + ext
+_spacy_language_map_fixed = False
+
+
+def _fix_spacy_language_map():
+    global _spacy_language_map_fixed
+    if _spacy_language_map_fixed:
+        return
+
+    if parse_version(quickumls.about.__version__) < parse_version("1.4.1"):
+        for key, value in quickumls.constants.SPACY_LANGUAGE_MAP.items():
+            ext = "_core_web_sm" if value == "en" else "_core_news_sm"
+            quickumls.constants.SPACY_LANGUAGE_MAP[key] = value + ext
+
+    _spacy_language_map_fixed = True
 
 
 class _QuickUMLSInstall(NamedTuple):
@@ -170,6 +180,8 @@ class QuickUMLSMatcher(NEROperation):
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
         """
+        _fix_spacy_language_map()
+
         # Pass all arguments to super (remove self)
         init_args = locals()
         init_args.pop("self")
