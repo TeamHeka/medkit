@@ -4,6 +4,7 @@ parts:
 - caption: User Guide
   chapters:
   - file: user_guide/install
+  - file: user_guide/first_steps
   - file: user_guide/module
 - caption: Examples
   chapters:
