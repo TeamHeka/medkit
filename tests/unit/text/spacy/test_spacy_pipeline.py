@@ -53,19 +53,19 @@ def test_default_spacy_pipeline(nlp_spacy_modified):
     # original segment does not have entities, nlp from spacy adds 2 entities
     assert len(new_segments) == 2
     assert all(isinstance(seg, Entity) for seg in new_segments)
-    assert all(len(seg.attrs) == 1 for seg in new_segments)
+    assert all(len(seg.get_attrs()) == 1 for seg in new_segments)
 
     ent = new_segments[0]
     assert ent.label == "PERSON"
     assert ent.text == "Marie Dupont"
-    assert ent.attrs[0].label == "has_numbers"
-    assert not ent.attrs[0].value
+    attr = ent.get_attrs_by_label("has_numbers")[0]
+    assert not attr.value
 
     ent = new_segments[1]
     assert ent.label == "DATE"
     assert ent.text == "2012"
-    assert ent.attrs[0].label == "has_numbers"
-    assert ent.attrs[0].value
+    attr = ent.get_attrs_by_label("has_numbers")[0]
+    assert attr.value
 
 
 def test_prov(nlp_spacy_modified):
@@ -88,7 +88,7 @@ def test_prov(nlp_spacy_modified):
     assert node.operation_id == pipe.id
     assert node.source_ids == [segment.id]
 
-    attribute = entity.attrs[0]
+    attribute = entity.get_attrs()[0]
     attr = graph.get_node(attribute.id)
     assert attr.data_item_id == attribute.id
     assert attr.operation_id == pipe.id

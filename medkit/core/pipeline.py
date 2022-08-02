@@ -260,7 +260,7 @@ class Pipeline:
             attr
             for data_item in data_items
             if isinstance(data_item, IdentifiableDataItemWithAttrs)
-            for attr in data_item.attrs
+            for attr in data_item.get_attrs()
             if (
                 sub_graph.has_node(attr.id)
                 # ignore stub nodes with no operation

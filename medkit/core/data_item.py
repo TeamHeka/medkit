@@ -15,4 +15,5 @@ IdentifiableDataItemType = TypeVar(
 
 @runtime_checkable
 class IdentifiableDataItemWithAttrs(Protocol, Generic[IdentifiableDataItemType]):
-    attrs: List[IdentifiableDataItemType]
+    def get_attrs(self) -> List[IdentifiableDataItemType]:
+        ...

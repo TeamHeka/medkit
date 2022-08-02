@@ -17,7 +17,7 @@ def _get_segment_and_entity(with_attr=False):
     entity = Entity(label="word", spans=[Span(10, 18)], text="sentence")
     if with_attr:
         attr = Attribute(label="negated", value=False)
-        entity.attrs.append(attr)
+        entity.add_attr(attr)
 
     return sentence_segment, syntagma_segment, entity
 
@@ -31,8 +31,7 @@ def _build_prov(prov_builder, sentence_segment, syntagma_segment, entity):
     matcher_desc = OperationDescription(name="EntityMatcher", id=generate_id())
     prov_builder.add_prov(entity, matcher_desc, source_data_items=[syntagma_segment])
 
-    if entity.attrs:
-        attr = entity.attrs[0]
+    for attr in entity.get_attrs():
         # add attribute to entity
         neg_detector_desc = OperationDescription(
             name="NegationDetector", id=generate_id()
@@ -103,8 +102,9 @@ def test_attrs(tmp_path):
         dot_lines = file.readlines()
 
     # check attribute link in dot entries
+    attr = entity.get_attrs()[0]
     assert (
-        f'"{entity.id}" -> "{entity.attrs[0].id}" [style=dashed, color=grey,'
+        f'"{entity.id}" -> "{attr.id}" [style=dashed, color=grey,'
         ' label="attr", fontcolor=grey];\n'
         in dot_lines
     )

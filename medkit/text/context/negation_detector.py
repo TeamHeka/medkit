@@ -157,7 +157,7 @@ class NegationDetector(ContextOperation):
         for segment in segments:
             neg_attr = self._detect_negation_in_segment(segment)
             if neg_attr is not None:
-                segment.attrs.append(neg_attr)
+                segment.add_attr(neg_attr)
 
     def _detect_negation_in_segment(self, segment: Segment) -> Optional[Attribute]:
         rule_id = self._find_matching_rule(segment.text)

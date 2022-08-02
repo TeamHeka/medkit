@@ -47,8 +47,9 @@ def test_load():
     assert entity_1.metadata.get("brat_id") == "T4"
 
     # check attribute
-    assert len(entity_1.attrs) == 1
-    attr = entity_1.attrs[0]
+    attrs = entity_1.get_attrs()
+    assert len(attrs) == 1
+    attr = attrs[0]
     assert attr.label == "antecedent"
     assert attr.value is None
     assert attr.metadata.get("brat_id") == "A3"

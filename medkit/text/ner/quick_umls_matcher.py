@@ -236,7 +236,15 @@ class QuickUMLSMatcher(NEROperation):
                 segment.text, segment.spans, [(match["start"], match["end"])]
             )
 
-            attrs = [a for a in segment.attrs if a.label in self.attrs_to_copy]
+            entity = Entity(
+                label=match["term"],
+                text=text,
+                spans=spans,
+            )
+
+            for label in self.attrs_to_copy:
+                for attr in segment.get_attrs_by_label(label):
+                    entity.add_attr(attr)
 
             # TODO force now we consider the version, score and semtypes
             # to be just extra informational metadata
@@ -251,14 +259,7 @@ class QuickUMLSMatcher(NEROperation):
                     sem_types=list(match["semtypes"]),
                 ),
             )
-            attrs.append(norm_attr)
-
-            entity = Entity(
-                label=match["term"],
-                text=text,
-                spans=spans,
-                attrs=attrs,
-            )
+            entity.add_attr(norm_attr)
 
             if self._prov_builder is not None:
                 self._prov_builder.add_prov(

@@ -7,7 +7,9 @@ from medkit.text.context.hypothesis_detector import (
     HypothesisDetectorRule,
 )
 
+
 _PATH_TO_VERBS = Path(__file__).parent / "hypothesis_verbs.yml"
+_OUTPUT_LABEL = "hypothesis"
 
 
 def _get_syntagma_segments(syntagma_texts):
@@ -25,20 +27,22 @@ def test_single_rule():
     syntagmas = _get_syntagma_segments(["If patient has covid", "Patient has covid"])
 
     rule = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
-    detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
+    detector = HypothesisDetector(output_label=_OUTPUT_LABEL, rules=[rule])
     detector.run(syntagmas)
 
     # 1st syntagma is hypothesis
-    assert len(syntagmas[0].attrs) == 1
-    attr_1 = syntagmas[0].attrs[0]
-    assert attr_1.label == "hypothesis"
+    attrs_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)
+    assert len(attrs_1) == 1
+    attr_1 = attrs_1[0]
+    assert attr_1.label == _OUTPUT_LABEL
     assert attr_1.value is True
     assert attr_1.metadata["rule_id"] == "id_if"
 
     # 2d syntagma isn't hypothesis
-    assert len(syntagmas[1].attrs) == 1
-    attr_2 = syntagmas[1].attrs[0]
-    assert attr_2.label == "hypothesis"
+    attrs_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)
+    assert len(attrs_2) == 1
+    attr_2 = attrs_2[0]
+    assert attr_2.label == _OUTPUT_LABEL
     assert attr_2.value is False
     assert not attr_2.metadata
 
@@ -50,18 +54,16 @@ def test_multiple_rules():
 
     rule_1 = HypothesisDetectorRule(id="id_if", regexp=r"\bif\b")
     rule_2 = HypothesisDetectorRule(id="id_assuming", regexp=r"\bassuming\b")
-    detector = HypothesisDetector(output_label="hypothesis", rules=[rule_1, rule_2])
+    detector = HypothesisDetector(output_label=_OUTPUT_LABEL, rules=[rule_1, rule_2])
     detector.run(syntagmas)
 
     # 1st syntagma is hypothesis, matched by 1st rule
-    assert len(syntagmas[0].attrs) == 1
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is True
     assert attr_1.metadata["rule_id"] == "id_if"
 
     # 2d syntagma also is hypothesis, matched by 2d rule
-    assert len(syntagmas[1].attrs) == 1
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is True
     assert attr_2.metadata["rule_id"] == "id_assuming"
 
@@ -72,15 +74,13 @@ def test_multiple_rules_no_id():
     )
     rule_1 = HypothesisDetectorRule(regexp=r"\bif\b")
     rule_2 = HypothesisDetectorRule(regexp=r"\bassuming\b")
-    detector = HypothesisDetector(output_label="hypothesis", rules=[rule_1, rule_2])
+    detector = HypothesisDetector(output_label=_OUTPUT_LABEL, rules=[rule_1, rule_2])
     detector.run(syntagmas)
 
     # attributes have corresponding rule index as rule_id metadata
-    assert len(syntagmas[0].attrs) == 1
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.metadata["rule_id"] == 0
-    assert len(syntagmas[1].attrs) == 1
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.metadata["rule_id"] == 1
 
 
@@ -92,15 +92,15 @@ def test_exclusions():
     rule = HypothesisDetectorRule(
         regexp=r"\bif\b", exclusion_regexps=[r"\beven\s*\bif"]
     )
-    detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
+    detector = HypothesisDetector(output_label=_OUTPUT_LABEL, rules=[rule])
     detector.run(syntagmas)
 
     # 1st syntagma is hypothesis
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is True
 
     # 2d syntagma isn't hypothesis because of exclusion
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is False
 
 
@@ -111,23 +111,23 @@ def test_max_length():
 
     rule = HypothesisDetectorRule(regexp=r"\bif\b")
     detector = HypothesisDetector(
-        output_label="hypothesis", rules=[rule], max_length=30
+        output_label=_OUTPUT_LABEL, rules=[rule], max_length=30
     )
     detector.run(syntagmas)
 
     # 1st syntagma is hypothesis
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is True
 
     # 2d syntagma isn't hypothesis because it is longer than max_length
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is False
 
 
 def test_verbs():
     verbs = HypothesisDetector.load_verbs(_PATH_TO_VERBS)
     detector = HypothesisDetector(
-        output_label="hypothesis",
+        output_label=_OUTPUT_LABEL,
         verbs=verbs,
         modes_and_tenses=[("indicatif", "futur"), ("conditionnel", "présent")],
     )
@@ -141,20 +141,17 @@ def test_verbs():
     detector.run(hyp_syntagmas)
 
     # 1st hypothesis syntagma attr
-    attr = hyp_syntagmas[0].attrs[0]
-    assert attr.label == "hypothesis"
+    attr = hyp_syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr.value is True
     assert attr.metadata["matched_verb"] == "être"
 
     # 2d hypothesis syntagma attr
-    attr = hyp_syntagmas[1].attrs[0]
-    assert attr.label == "hypothesis"
+    attr = hyp_syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr.value is True
     assert attr.metadata["matched_verb"] == "être"
 
     # 3d hypothesis syntagma attr
-    attr = hyp_syntagmas[2].attrs[0]
-    assert attr.label == "hypothesis"
+    attr = hyp_syntagmas[2].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr.value is True
     assert attr.metadata["matched_verb"] == "avoir"
 
@@ -164,8 +161,7 @@ def test_verbs():
 
     # certain syntagma attrs, not matched because of mode and tense
     for syntagma in certain_syntagmas:
-        attr = syntagma.attrs[0]
-        assert attr.label == "hypothesis"
+        attr = syntagma.get_attrs_by_label(_OUTPUT_LABEL)[0]
         assert attr.value is False
         assert not attr.metadata
 
@@ -178,23 +174,22 @@ def test_empty_segment():
     detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
     detector.run(syntagmas)
     for syntagma in syntagmas:
-        assert len(syntagma.attrs) == 1
-        attr = syntagma.attrs[0]
-        assert attr.value is False
+        attrs = syntagma.get_attrs_by_label(_OUTPUT_LABEL)
+        assert len(attrs) == 1 and attrs[0].value is False
 
 
 def test_prov():
     syntagmas = _get_syntagma_segments(["If patient has covid"])
 
     rule = HypothesisDetectorRule(regexp=r"\bif\b")
-    detector = HypothesisDetector(output_label="hypothesis", rules=[rule])
+    detector = HypothesisDetector(output_label=_OUTPUT_LABEL, rules=[rule])
 
     prov_builder = ProvBuilder()
     detector.set_prov_builder(prov_builder)
     detector.run(syntagmas)
     graph = prov_builder.graph
 
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     node_1 = graph.get_node(attr_1.id)
     assert node_1.data_item_id == attr_1.id
     assert node_1.operation_id == detector.id
@@ -241,8 +236,7 @@ def test_example_rules_and_verbs():
     for i in range(len(_TEST_DATA)):
         _, is_hypothesis, rule_id, matched_verb = _TEST_DATA[i]
         syntagma = syntagmas[i]
-        assert len(syntagma.attrs) == 1
-        attr = syntagma.attrs[0]
+        attr = syntagma.get_attrs_by_label("hypothesis")[0]
         assert attr.label == "hypothesis"
 
         if is_hypothesis:

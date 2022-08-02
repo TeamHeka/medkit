@@ -5,6 +5,7 @@ from medkit.core.text import Segment, Span
 from medkit.text.ner.duckling_matcher import DucklingMatcher
 
 _TEXT = "The patient was admitted on 01/02/2001 and stayed for 3 days before leaving"
+_OUTPUT_LABEL = "duckling"
 
 _TIME_VALUE = {
     "grain": "day",
@@ -83,7 +84,7 @@ def test_single_dim(_mocked_requests):
     sentence = _get_sentence_segment()
 
     matcher = DucklingMatcher(
-        output_label="duckling",
+        output_label=_OUTPUT_LABEL,
         version="MOCK",
         locale="en",
         dims=["time"],
@@ -98,9 +99,10 @@ def test_single_dim(_mocked_requests):
     assert entity.spans == [Span(25, 38)]
 
     # normalization attribute
-    assert len(entity.attrs) == 1
-    attr = entity.attrs[0]
-    assert attr.label == "duckling"
+    attrs = entity.get_attrs_by_label(_OUTPUT_LABEL)
+    assert len(attrs) == 1
+    attr = attrs[0]
+    assert attr.label == _OUTPUT_LABEL
     assert attr.value == _TIME_VALUE
     assert attr.metadata["version"] == "MOCK"
 
@@ -109,7 +111,7 @@ def test_multiple_dims(_mocked_requests):
     sentence = _get_sentence_segment()
 
     matcher = DucklingMatcher(
-        output_label="duckling",
+        output_label=_OUTPUT_LABEL,
         version="MOCK",
         locale="en",
         dims=["time", "duration"],
@@ -123,8 +125,7 @@ def test_multiple_dims(_mocked_requests):
     assert entity_1.text == "on 01/02/2001"
     assert entity_1.spans == [Span(25, 38)]
 
-    assert len(entity_1.attrs) == 1
-    attr_1 = entity_1.attrs[0]
+    attr_1 = entity_1.get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.label == "duckling"
     assert attr_1.value == _TIME_VALUE
 
@@ -134,8 +135,7 @@ def test_multiple_dims(_mocked_requests):
     assert entity_2.text == "3 days"
     assert entity_2.spans == [Span(54, 60)]
 
-    assert len(entity_2.attrs) == 1
-    attr_2 = entity_2.attrs[0]
+    attr_2 = entity_2.get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.label == "duckling"
     assert attr_2.value == _DURATION_VALUE
 
@@ -144,7 +144,7 @@ def test_all_dims(_mocked_requests):
     sentence = _get_sentence_segment()
 
     matcher = DucklingMatcher(
-        output_label="duckling",
+        output_label=_OUTPUT_LABEL,
         version="MOCK",
         locale="en",
         dims=["time", "duration"],
@@ -156,12 +156,12 @@ def test_all_dims(_mocked_requests):
 def test_attrs_to_copy(_mocked_requests):
     sentence = _get_sentence_segment()
     # copied attribute
-    sentence.attrs.append(Attribute(label="negation", value=True))
+    sentence.add_attr(Attribute(label="negation", value=True))
     # uncopied attribute
-    sentence.attrs.append(Attribute(label="hypothesis", value=True))
+    sentence.add_attr(Attribute(label="hypothesis", value=True))
 
     matcher = DucklingMatcher(
-        output_label="duckling",
+        output_label=_OUTPUT_LABEL,
         version="MOCK",
         locale="en",
         dims=["time"],
@@ -169,16 +169,18 @@ def test_attrs_to_copy(_mocked_requests):
     )
     entity = matcher.run([sentence])[0]
 
-    assert len(entity.attrs) == 2
-    attr = entity.attrs[0]
-    assert attr.label == "negation" and attr.value is True
+    assert len(entity.get_attrs_by_label(_OUTPUT_LABEL)) == 1
+    # only negation attribute was copied
+    neg_attrs = entity.get_attrs_by_label("negation")
+    assert len(neg_attrs) == 1 and neg_attrs[0].value is True
+    assert len(entity.get_attrs_by_label("hypothesis")) == 0
 
 
 def test_prov(_mocked_requests):
     sentence = _get_sentence_segment()
 
     matcher = DucklingMatcher(
-        output_label="duckling",
+        output_label=_OUTPUT_LABEL,
         version="MOCK",
         locale="en",
         dims=["time"],
@@ -194,7 +196,7 @@ def test_prov(_mocked_requests):
     assert entity_node.operation_id == matcher.id
     assert entity_node.source_ids == [sentence.id]
 
-    attr = entity.attrs[0]
+    attr = entity.get_attrs_by_label(_OUTPUT_LABEL)[0]
     attr_node = graph.get_node(attr.id)
     assert attr_node.data_item_id == attr.id
     assert attr_node.operation_id == matcher.id
