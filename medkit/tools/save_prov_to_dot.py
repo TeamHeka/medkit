@@ -1,5 +1,6 @@
 __all__ = ["save_prov_to_dot"]
 
+from pathlib import Path
 from typing import Callable, TextIO, Optional
 
 from medkit.core import (
@@ -15,7 +16,7 @@ from medkit.core import (
 def save_prov_to_dot(
     prov_graph: ProvGraph,
     store: Store,
-    file: TextIO,
+    file: Path,
     data_item_formatter: Optional[Callable[[IdentifiableDataItem], str]] = None,
     op_formatter: Optional[Callable[[OperationDescription], str]] = None,
     max_sub_graph_depth: Optional[int] = None,
@@ -32,7 +33,7 @@ def save_prov_to_dot(
         Store holding the data items and operation descriptions referenced by
         `prov_graph`.
     file:
-        File handle to the .dot file.
+        Path to the .dot file.
     data_item_formatter:
         Callback function returning the label to use for each data item.
     op_formatter:
@@ -45,29 +46,30 @@ def save_prov_to_dot(
         attached to (not strictly provenance but can make things easier to
         understand).
     """
-    writer = _DotWriter(
-        store,
-        file,
-        data_item_formatter,
-        op_formatter,
-        max_sub_graph_depth,
-        show_attr_links,
-    )
-    writer.write_graph(prov_graph)
+    with open(file, mode="w") as fp:
+        writer = _DotWriter(
+            store,
+            fp,
+            data_item_formatter,
+            op_formatter,
+            max_sub_graph_depth,
+            show_attr_links,
+        )
+        writer.write_graph(prov_graph)
 
 
 class _DotWriter:
     def __init__(
         self,
         store: Store,
-        file: TextIO,
+        fp: TextIO,
         data_item_formatter: Optional[Callable[[IdentifiableDataItem], str]],
         op_formatter: Optional[Callable[[OperationDescription], str]],
         max_sub_graph_depth: Optional[int],
         show_attr_links: bool = True,
     ):
         self._store = store
-        self._file = file
+        self._fp = fp
         self._data_item_formatter = data_item_formatter
         self._op_formatter = op_formatter
         self._max_sub_graph_depth = max_sub_graph_depth
@@ -75,7 +77,7 @@ class _DotWriter:
 
     def write_graph(self, graph: ProvGraph, current_sub_graph_depth: int = 0):
         if current_sub_graph_depth == 0:
-            self._file.write("digraph {\n\n")
+            self._fp.write("digraph {\n\n")
 
         write_sub_graph = (
             self._max_sub_graph_depth is None
@@ -95,7 +97,7 @@ class _DotWriter:
                 self.write_graph(sub_graph, current_sub_graph_depth + 1)
 
         if current_sub_graph_depth == 0:
-            self._file.write("\n\n}")
+            self._fp.write("\n\n}")
 
     def _write_node(self, node: ProvNode):
         data_item = self._store.get_data_item(node.data_item_id)
@@ -104,7 +106,7 @@ class _DotWriter:
             if self._data_item_formatter is not None
             else data_item.id
         )
-        self._file.write(f'"{data_item.id}" [label="{data_item_label}"];\n')
+        self._fp.write(f'"{data_item.id}" [label="{data_item_label}"];\n')
 
         if node.operation_id is not None:
             op_desc = self._store.get_op_desc(node.operation_id)
@@ -116,16 +118,14 @@ class _DotWriter:
         else:
             op_label = "Unknown"
         for source_id in node.source_ids:
-            self._file.write(
-                f'"{source_id}" -> "{data_item.id}" [label="{op_label}"];\n'
-            )
-        self._file.write("\n\n")
+            self._fp.write(f'"{source_id}" -> "{data_item.id}" [label="{op_label}"];\n')
+        self._fp.write("\n\n")
 
         if self._show_attr_links and isinstance(
             data_item, IdentifiableDataItemWithAttrs
         ):
             for attr in data_item.get_attrs():
-                self._file.write(
+                self._fp.write(
                     f'"{data_item.id}" -> "{attr.id}" [style=dashed, color=grey,'
                     ' label="attr", fontcolor=grey];\n'
                 )

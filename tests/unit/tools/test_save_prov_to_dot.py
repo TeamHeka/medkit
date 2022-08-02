@@ -48,16 +48,15 @@ def test_basic(tmp_path):
     _build_prov(prov_builder, sentence_segment, syntagma_segment, entity)
 
     # export to dot
-    path_to_dot = tmp_path / "prov.dot"
-    with open(path_to_dot, mode="w") as file:
-        save_prov_to_dot(
-            prov_builder.graph,
-            prov_builder.store,
-            file,
-            data_item_formatter=lambda a: f"{a.label}: {a.text}",
-            op_formatter=lambda o: o.name,
-        )
-    dot_text = path_to_dot.read_text()
+    dot_file = tmp_path / "prov.dot"
+    save_prov_to_dot(
+        prov_builder.graph,
+        prov_builder.store,
+        dot_file,
+        data_item_formatter=lambda a: f"{a.label}: {a.text}",
+        op_formatter=lambda o: o.name,
+    )
+    dot_text = dot_file.read_text()
 
     # check dot entries
     assert (
@@ -85,16 +84,15 @@ def test_attrs(tmp_path):
     _build_prov(prov_builder, sentence_segment, syntagma_segment, entity)
 
     # export to dot
-    path_to_dot = tmp_path / "prov.dot"
-    with open(path_to_dot, mode="w") as file:
-        save_prov_to_dot(
-            prov_builder.graph,
-            prov_builder.store,
-            file,
-            data_item_formatter=lambda a: f"{a.label}",
-            op_formatter=lambda o: o.name,
-        )
-    dot_text = path_to_dot.read_text()
+    dot_file = tmp_path / "prov.dot"
+    save_prov_to_dot(
+        prov_builder.graph,
+        prov_builder.store,
+        dot_file,
+        data_item_formatter=lambda a: f"{a.label}",
+        op_formatter=lambda o: o.name,
+    )
+    dot_text = dot_file.read_text()
 
     # check attribute link in dot entries
     attr = entity.get_attrs()[0]
@@ -119,33 +117,31 @@ def test_sub_prov_graph(tmp_path):
     prov_builder.add_prov_from_sub_graph([entity], pipeline_desc, sub_prov_builder)
 
     # render dot, not expanding sub graphs
-    path_to_dot = tmp_path / "prov.dot"
-    with open(path_to_dot, mode="w") as file:
-        save_prov_to_dot(
-            prov_builder.graph,
-            prov_builder.store,
-            file,
-            data_item_formatter=lambda a: f"{a.label}: {a.text}",
-            op_formatter=lambda o: o.name,
-            max_sub_graph_depth=0,
-        )
-    dot_text = path_to_dot.read_text()
+    dot_file = tmp_path / "prov.dot"
+    save_prov_to_dot(
+        prov_builder.graph,
+        prov_builder.store,
+        dot_file,
+        data_item_formatter=lambda a: f"{a.label}: {a.text}",
+        op_formatter=lambda o: o.name,
+        max_sub_graph_depth=0,
+    )
+    dot_text = dot_file.read_text()
 
     # must have a dot entry for outer pipeline operation
     assert f'"{sentence_segment.id}" -> "{entity.id}" [label="Pipeline"];\n' in dot_text
 
     # render dot, expanding all sub graphs
-    path_to_dot_full = tmp_path / "prov.dot"
-    with open(path_to_dot_full, mode="w") as file:
-        save_prov_to_dot(
-            prov_builder.graph,
-            prov_builder.store,
-            file,
-            data_item_formatter=lambda a: f"{a.label}: {a.text}",
-            op_formatter=lambda o: o.name,
-            max_sub_graph_depth=None,
-        )
-    dot_text_full = path_to_dot_full.read_text()
+    dot_file_full = tmp_path / "prov_full.dot"
+    save_prov_to_dot(
+        prov_builder.graph,
+        prov_builder.store,
+        dot_file_full,
+        data_item_formatter=lambda a: f"{a.label}: {a.text}",
+        op_formatter=lambda o: o.name,
+        max_sub_graph_depth=None,
+    )
+    dot_text_full = dot_file_full.read_text()
 
     # must have a dot entry for inner operations in sub graphs
     assert (

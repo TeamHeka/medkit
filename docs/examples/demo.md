@@ -266,16 +266,15 @@ dot_graph = output_dir / "prov.dot"
 
 # save prov graph to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
-with open(dot_graph, mode="w") as file:
-    save_prov_to_dot(
-        prov_graph,
-        store,
-        file,
-        data_item_formatter=lambda d: d.text
-        if isinstance(d, TextAnnotation)
-        else f"{d.label}:{d.value}",
-        op_formatter=lambda o: o.name,
-    )
+save_prov_to_dot(
+    prov_graph,
+    store,
+    dot_graph,
+    data_item_formatter=lambda d: d.text
+    if isinstance(d, TextAnnotation)
+    else f"{d.label}:{d.value}",
+    op_formatter=lambda o: o.name,
+)
 ```
 
 ```{code-cell} ipython3
@@ -423,15 +422,14 @@ png_graph = output_dir / "prov.png"
 
 # save prov graph to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
-with open(dot_graph, mode="w") as file:
-    save_prov_to_dot(
-        prov_graph,
-        store,
-        file,
-        data_item_formatter,
-        operation_formatter,
-        max_sub_graph_depth=0,
-    )
+save_prov_to_dot(
+    prov_graph,
+    store,
+    dot_graph,
+    data_item_formatter,
+    operation_formatter,
+    max_sub_graph_depth=0,
+)
 
 cmd = f"dot -Tpng {dot_graph} -o {png_graph}"
 os.system(cmd)
@@ -448,15 +446,14 @@ png_graph = output_dir / "prov_intermediate.png"
 
 # save prov graph to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
-with open(dot_graph, mode="w") as file:
-    save_prov_to_dot(
-        prov_graph,
-        store,
-        file,
-        data_item_formatter,
-        operation_formatter,
-        max_sub_graph_depth=1,
-    )
+save_prov_to_dot(
+    prov_graph,
+    store,
+    dot_graph,
+    data_item_formatter,
+    operation_formatter,
+    max_sub_graph_depth=1,
+)
 
 cmd = f"dot -Tpng {dot_graph} -o {png_graph}"
 os.system(cmd)
@@ -473,15 +470,14 @@ png_graph = output_dir / "prov_full.png"
 
 # save prov graph to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
-with open(dot_graph, mode="w") as file:
-    save_prov_to_dot(
-        prov_graph,
-        store,
-        file,
-        data_item_formatter,
-        operation_formatter,
-        max_sub_graph_depth=2,
-    )
+save_prov_to_dot(
+    prov_graph,
+    store,
+    dot_graph,
+    data_item_formatter,
+    operation_formatter,
+    max_sub_graph_depth=2,
+)
 
 cmd = f"dot -Tpng {dot_graph} -o {png_graph}"
 os.system(cmd)
