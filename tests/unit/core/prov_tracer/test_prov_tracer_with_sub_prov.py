@@ -29,55 +29,55 @@ class _PrefixerWrapper:
 
 
 def test_single_operation():
-    """Wrapper operation wrapping only one operation"""
+    """Composite operation using only one operation"""
     tracer = ProvTracer()
     wrapper = _PrefixerWrapper(tracer)
     input_items = get_text_items(2)
     output_items = wrapper.run(input_items)
 
-    # check outer main graph
-    graph = tracer.graph
-    graph.check_sanity()
-    # main graph must have a node for each input item and each output item
-    assert len(graph.get_nodes()) == len(input_items) + len(output_items)
+    tracer.graph.check_sanity()
+
+    # check outer main provenance
+    # must have prov for each input item and each output item
+    assert len(tracer.get_provs()) == len(input_items) + len(output_items)
 
     for input_item, output_item in zip(input_items, output_items):
-        input_node = graph.get_node(input_item.id)
-        assert input_node.data_item_id == input_item.id
-        assert input_node.operation_id is None
-        assert not input_node.source_ids
-        # input node has corresponding output item as derived
-        assert input_node.derived_ids == [output_item.id]
+        input_prov = tracer.get_prov(input_item.id)
+        assert input_prov.data_item == input_item
+        assert input_prov.op_desc is None
+        assert len(input_prov.source_data_items) == 0
+        # input item has corresponding output item as derived
+        assert input_prov.derived_data_items == [output_item]
 
-        output_node = graph.get_node(output_item.id)
-        assert output_node.data_item_id == output_item.id
-        # operation id is of outer wrapper operation
-        assert output_node.operation_id == wrapper.id
-        # output node has corresponding input item as source
-        assert output_node.source_ids == [input_item.id]
-        assert not output_node.derived_ids
+        output_prov = tracer.get_prov(output_item.id)
+        assert output_prov.data_item == output_item
+        # operation is outer wrapper operation
+        assert output_prov.op_desc == wrapper.description
+        # output item has corresponding input item as source
+        assert output_prov.source_data_items == [input_item]
+        assert len(output_prov.derived_data_items) == 0
 
-    # check inner sub graph
-    assert graph.has_sub_graph(wrapper.id)
-    sub_graph = graph.get_sub_graph(wrapper.id)
-    # sub graph must have a node for each input item and each output item
-    assert len(sub_graph.get_nodes()) == len(input_items) + len(output_items)
+    # check inner sub provenance
+    assert tracer.has_sub_prov_tracer(wrapper.id)
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    # must have prov for each input item and each output item
+    assert len(sub_tracer.get_provs()) == len(input_items) + len(output_items)
 
     for input_item, output_item in zip(input_items, output_items):
-        input_node = sub_graph.get_node(input_item.id)
-        assert input_node.data_item_id == input_item.id
-        assert input_node.operation_id is None
-        assert not input_node.source_ids
-        # input node has corresponding output item as derived
-        assert input_node.derived_ids == [output_item.id]
+        input_prov = sub_tracer.get_prov(input_item.id)
+        assert input_prov.data_item == input_item
+        assert input_prov.op_desc is None
+        assert len(input_prov.source_data_items) == 0
+        # input item has corresponding output item as derived
+        assert input_prov.derived_data_items == [output_item]
 
-        output_node = sub_graph.get_node(output_item.id)
-        assert output_node.data_item_id == output_item.id
-        # operation id is of inner prefixer
-        assert output_node.operation_id == wrapper.prefixer.id
-        # output node has corresponding input item as source
-        assert output_node.source_ids == [input_item.id]
-        assert not output_node.derived_ids
+        output_prov = sub_tracer.get_prov(output_item.id)
+        assert output_prov.data_item == output_item
+        # operation is inner prefixer
+        assert output_prov.op_desc == wrapper.prefixer.description
+        # output item has corresponding input item as source
+        assert output_prov.source_data_items == [input_item]
+        assert len(output_prov.derived_data_items) == 0
 
 
 class _DoublePrefixerWrapper:
@@ -105,56 +105,57 @@ class _DoublePrefixerWrapper:
 
 
 def test_intermediate_operation():
-    """Wrapper operation wrapping 2 consecutive operations,
-    only the output of the 2d operation is returned"""
+    """Composite operation using 2 consecutive operations, only the output of the
+    2d operation is returned
+    """
     tracer = ProvTracer()
     wrapper = _DoublePrefixerWrapper(tracer)
     input_items = get_text_items(2)
     output_items = wrapper.run(input_items)
 
-    # check outer main graph
-    graph = tracer.graph
-    graph.check_sanity()
-    # graph must have a node for each input item and each output item
-    assert len(graph.get_nodes()) == len(input_items) + len(output_items)
+    tracer.graph.check_sanity()
+
+    # check outer main provenance
+    # must have prov for each input item and each output item
+    assert len(tracer.get_provs()) == len(input_items) + len(output_items)
 
     for input_item, output_item in zip(input_items, output_items):
-        input_node = graph.get_node(input_item.id)
-        # input node has corresponding output item as derived
-        assert input_node.derived_ids == [output_item.id]
+        input_prov = tracer.get_prov(input_item.id)
+        # input item has corresponding output item as derived
+        assert input_prov.derived_data_items == [output_item]
 
-        output_node = graph.get_node(output_item.id)
-        # operation id is of outer wrapper operation
-        assert output_node.operation_id == wrapper.id
-        # output node has corresponding input item as source
-        assert output_node.source_ids == [input_item.id]
+        output_prov = tracer.get_prov(output_item.id)
+        # operation is outer wrapper operation
+        assert output_prov.op_desc == wrapper.description
+        # output item has corresponding input item as source
+        assert output_prov.source_data_items == [input_item]
 
-    # check inner sub graph
-    sub_graph = graph.get_sub_graph(wrapper.id)
-    # sub graph must have a node for each input item, each intermediate item and each output item
-    assert len(sub_graph.get_nodes()) == len(input_items) + 2 * len(output_items)
+    # check inner sub provenance
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    # must have prov for each input item, each intermediate item and each output item
+    assert len(sub_tracer.get_provs()) == len(input_items) + 2 * len(output_items)
 
     for input_item, output_item in zip(input_items, output_items):
-        assert sub_graph.has_node(input_item.id)
+        assert sub_tracer.has_prov(input_item.id)
 
-        output_node = sub_graph.get_node(output_item.id)
-        # operation id is of inner 1st prefixer
-        assert output_node.operation_id == wrapper.prefixer_2.id
-        # output node has 1 intermediate item as source
-        assert len(output_node.source_ids) == 1
-        intermediate_item_id = output_node.source_ids[0]
+        output_prov = sub_tracer.get_prov(output_item.id)
+        # operation is inner 1st prefixer
+        assert output_prov.op_desc == wrapper.prefixer_2.description
+        # output item has 1 intermediate item as source
+        assert len(output_prov.source_data_items) == 1
+        intermediate_item = output_prov.source_data_items[0]
 
-        intermediate_node = sub_graph.get_node(intermediate_item_id)
-        # operation id is of inner 2d prefixer
-        assert intermediate_node.operation_id == wrapper.prefixer_1.id
-        # intermediate node has corresponding input item as source
-        assert intermediate_node.source_ids == [input_item.id]
-        # intermediate node has corresponding output item as derived
-        assert intermediate_node.derived_ids == [output_item.id]
+        intermediate_prov = sub_tracer.get_prov(intermediate_item.id)
+        # operation is inner 2d prefixer
+        assert intermediate_prov.op_desc == wrapper.prefixer_1.description
+        # intermediate item has corresponding input item as source
+        assert intermediate_prov.source_data_items == [input_item]
+        # intermediate item has corresponding output item as derived
+        assert intermediate_prov.derived_data_items == [output_item]
 
-        input_node = sub_graph.get_node(input_item.id)
-        # input node has corresponding intermediate item as derived
-        assert input_node.derived_ids == [intermediate_item_id]
+        input_prov = sub_tracer.get_prov(input_item.id)
+        # input item has corresponding intermediate item as derived
+        assert input_prov.derived_data_items == [intermediate_item]
 
 
 class _PrefixerMergerWrapper:
@@ -182,8 +183,7 @@ class _PrefixerMergerWrapper:
 
 
 def test_multi_input_operation():
-    """
-    Wrapper operation wrapping an operation deriving one item from multiple input
+    """Composite operation using an operation deriving one item from multiple input
     (merger)
     """
     tracer = ProvTracer()
@@ -191,34 +191,34 @@ def test_multi_input_operation():
     input_items = get_text_items(2)
     output_item = wrapper.run(input_items)
 
-    # check outer main graph
-    graph = tracer.graph
-    graph.check_sanity()
-    # graph must have a node for each input item and each output item
-    assert len(graph.get_nodes()) == len(input_items) + 1
+    tracer.graph.check_sanity()
 
-    output_node = graph.get_node(output_item.id)
-    # operation id is of outer wrapper operation
-    assert output_node.operation_id == wrapper.id
+    # check outer main provenance
+    # must have prov for each input item and each output item
+    assert len(tracer.get_provs()) == len(input_items) + 1
+
+    output_prov = tracer.get_prov(output_item.id)
+    # operation is outer wrapper operation
+    assert output_prov.op_desc == wrapper.description
     # output item has all input items as sources
-    assert output_node.source_ids == [i.id for i in input_items]
+    assert output_prov.source_data_items == input_items
 
-    # check inner sub graph
-    sub_graph = graph.get_sub_graph(wrapper.id)
-    # sub graph must have a node for each input item, each prefixed item and each output item
+    # check inner sub provenance
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    # must have prov for each input item, each prefixed item and each output item
     nb_prefixed_items = len(input_items)
-    assert len(sub_graph.get_nodes()) == len(input_items) + nb_prefixed_items + 1
+    assert len(sub_tracer.get_provs()) == len(input_items) + nb_prefixed_items + 1
     # merged item has all prefixed items as sources
-    merged_node = sub_graph.get_node(output_item.id)
-    assert merged_node.operation_id == wrapper.merger.id
-    assert len(merged_node.source_ids) == nb_prefixed_items
+    merged_prov = sub_tracer.get_prov(output_item.id)
+    assert merged_prov.op_desc == wrapper.merger.description
+    assert len(merged_prov.source_data_items) == nb_prefixed_items
 
-    for prefixed_item_id, input_item in zip(merged_node.source_ids, input_items):
-        prefixed_node = sub_graph.get_node(prefixed_item_id)
-        # operation id is of inner prefixer
-        assert prefixed_node.operation_id == wrapper.prefixer.id
-        # prefixed_item node has corresponding input item as source
-        assert prefixed_node.source_ids == [input_item.id]
+    for prefixed_item, input_item in zip(merged_prov.source_data_items, input_items):
+        prefixed_prov = sub_tracer.get_prov(prefixed_item.id)
+        # operation is inner prefixer
+        assert prefixed_prov.op_desc == wrapper.prefixer.description
+        # prefixed item has corresponding input item as source
+        assert prefixed_prov.source_data_items == [input_item]
 
 
 class _SplitterPrefixerWrapper:
@@ -246,49 +246,50 @@ class _SplitterPrefixerWrapper:
 
 
 def test_multi_output_operation():
-    """Wrapper operation wrapping an operation derived several items from single input item (splitter)
+    """Composite operation using an operation derived several items from single
+    input item (splitter)
     """
     tracer = ProvTracer()
     wrapper = _SplitterPrefixerWrapper(tracer)
     input_items = get_text_items(2)
     output_items = wrapper.run(input_items)
 
-    # check outer main graph
-    graph = tracer.graph
-    graph.check_sanity()
-    # graph must have a node for each input item and each output item
-    assert len(graph.get_nodes()) == len(input_items) + len(output_items)
+    tracer.graph.check_sanity()
+
+    # check outer main provenance
+    # must have prov for each input item and each output item
+    assert len(tracer.get_provs()) == len(input_items) + len(output_items)
 
     for i, output_item in enumerate(output_items):
         input_item = input_items[i // 2]
         # output item has corresponding input item as source
-        output_node = graph.get_node(output_item.id)
-        # operation id is of outer wrapper operation
-        assert output_node.operation_id == wrapper.id
-        assert output_node.source_ids == [input_item.id]
+        output_prov = tracer.get_prov(output_item.id)
+        # operation is outer wrapper operation
+        assert output_prov.op_desc == wrapper.description
+        assert output_prov.source_data_items == [input_item]
 
-    # check inner sub graph
-    sub_graph = graph.get_sub_graph(wrapper.id)
-    # sub graph must have a node for each input item, each prefixed item and each output item
+    # check inner sub provenance
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    # must have prov for each input item, each prefixed item and each output item
     nb_split_items = 2 * len(input_items)
-    assert len(sub_graph.get_nodes()) == len(input_items) + nb_split_items + len(
+    assert len(sub_tracer.get_provs()) == len(input_items) + nb_split_items + len(
         output_items
     )
 
     for i, prefixed_item in enumerate(output_items):
         input_item = input_items[i // 2]
 
-        prefixed_node = sub_graph.get_node(prefixed_item.id)
-        assert prefixed_node.operation_id == wrapper.prefixer.id
-        # prefixed node has one split item as source
-        assert len(prefixed_node.source_ids) == 1
+        prefixed_prov = sub_tracer.get_prov(prefixed_item.id)
+        assert prefixed_prov.op_desc == wrapper.prefixer.description
+        # prefixed item has one split item as source
+        assert len(prefixed_prov.source_data_items) == 1
 
-        split_item_id = prefixed_node.source_ids[0]
-        split_node = sub_graph.get_node(split_item_id)
-        # operation id is of inner splitter
-        assert split_node.operation_id == wrapper.splitter.id
-        # split node has its corresponding input item as source
-        assert split_node.source_ids == [input_item.id]
+        split_item = prefixed_prov.source_data_items[0]
+        split_prov = sub_tracer.get_prov(split_item.id)
+        # operation is inner splitter
+        assert split_prov.op_desc == wrapper.splitter.description
+        # split item has its corresponding input item as source
+        assert split_prov.source_data_items == [input_item]
 
 
 class _BranchedPrefixerWrapper:
@@ -317,57 +318,58 @@ class _BranchedPrefixerWrapper:
 
 
 def test_operation_reusing_output():
-    """Wrapper operation  wrapping 2 operations, with 2 outputs,
-    the 2d output being the result of the 2d operation applied on the 1st output
-    (make sure we don't try to add the same node twice in the main group)"""
+    """Composite operation using 2 operations, with 2 outputs, the 2d output being
+    the result of the 2d operation applied on the 1st output (make sure we don't
+    try to add the same item twice in the main graph)
+    """
     tracer = ProvTracer()
     wrapper = _BranchedPrefixerWrapper(tracer)
     input_items = get_text_items(2)
     prefixed_items, double_prefixed_items = wrapper.run(input_items)
 
-    # check outer main graph
-    graph = tracer.graph
-    graph.check_sanity()
-    # graph must have a node for each input item and each output prefixed_items
-    assert len(graph.get_nodes()) == len(input_items) + len(prefixed_items) + len(
+    tracer.graph.check_sanity()
+
+    # check outer main provenance
+    # must have prov for each input item and each output prefixed_items
+    assert len(tracer.get_provs()) == len(input_items) + len(prefixed_items) + len(
         double_prefixed_items
     )
 
     for input_item, prefixed_item in zip(input_items, prefixed_items):
-        prefixed_node = graph.get_node(prefixed_item.id)
-        # operation id is of outer wrapper operation
-        assert prefixed_node.operation_id == wrapper.id
-        # prefixed node has corresponding input item as source
-        assert prefixed_node.source_ids == [input_item.id]
+        prefixed_prov = tracer.get_prov(prefixed_item.id)
+        # operation is outer wrapper operation
+        assert prefixed_prov.op_desc == wrapper.description
+        # prefixed item has corresponding input item as source
+        assert prefixed_prov.source_data_items == [input_item]
     for input_item, double_prefixed_item in zip(input_items, prefixed_items):
-        double_prefixed_node = graph.get_node(double_prefixed_item.id)
-        # operation id is of outer wrapper operation
-        assert double_prefixed_node.operation_id == wrapper.id
-        # prefixed node has corresponding input item as source
-        assert double_prefixed_node.source_ids == [input_item.id]
+        double_prefixed_prov = tracer.get_prov(double_prefixed_item.id)
+        # operation is outer wrapper operation
+        assert double_prefixed_prov.op_desc == wrapper.description
+        # prefixed item has corresponding input item as source
+        assert double_prefixed_prov.source_data_items == [input_item]
 
-    # check inner sub graph
-    sub_graph = graph.get_sub_graph(wrapper.id)
-    # sub graph must have a node for each input item, each prefixed item and each double prefixed item
-    assert len(sub_graph.get_nodes()) == len(input_items) + len(prefixed_items) + len(
+    # check inner sub provenance
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    # must have prov for each input item, each prefixed item and each double prefixed item
+    assert len(sub_tracer.get_provs()) == len(input_items) + len(prefixed_items) + len(
         double_prefixed_items
     )
 
     for input_item, prefixed_item in zip(input_items, prefixed_items):
-        prefixed_node = sub_graph.get_node(prefixed_item.id)
-        # operation id is of inner 1st prefixer
-        assert prefixed_node.operation_id == wrapper.prefixer_1.id
-        # prefixed node has corresponding input item as source
-        assert prefixed_node.source_ids == [input_item.id]
+        prefixed_prov = sub_tracer.get_prov(prefixed_item.id)
+        # operation is inner 1st prefixer
+        assert prefixed_prov.op_desc == wrapper.prefixer_1.description
+        # prefixed item has corresponding input item as source
+        assert prefixed_prov.source_data_items == [input_item]
 
     for prefixed_item, double_prefixed_item in zip(
         prefixed_items, double_prefixed_items
     ):
-        double_prefixed_node = sub_graph.get_node(double_prefixed_item.id)
-        # operation id is of inner 2d prefixer
-        assert double_prefixed_node.operation_id == wrapper.prefixer_2.id
-        # double prefixed node has corresponding prefixed item as source
-        assert double_prefixed_node.source_ids == [prefixed_item.id]
+        double_prefixed_prov = sub_tracer.get_prov(double_prefixed_item.id)
+        # operation is inner 2d prefixer
+        assert double_prefixed_prov.op_desc == wrapper.prefixer_2.description
+        # double prefixed item has corresponding prefixed item as source
+        assert double_prefixed_prov.source_data_items == [prefixed_item]
 
 
 def test_consecutive_calls():
@@ -381,13 +383,13 @@ def test_consecutive_calls():
     input_items = input_items_1 + input_items_2
     output_items = output_items_1 + output_items_2
 
-    # check outer main graph
-    graph = tracer.graph
-    graph.check_sanity()
-    # graph must have a node for each input item and each output item
-    assert len(graph.get_nodes()) == len(input_items) + len(output_items)
+    tracer.graph.check_sanity()
 
-    # check inner sub graph
-    sub_graph = graph.get_sub_graph(wrapper.id)
-    # sub graph must have a node for each input item, each intermediate item and each output item
-    assert len(sub_graph.get_nodes()) == len(input_items) + 2 * len(output_items)
+    # check outer main provenance
+    # must have prov for each input item and each output item
+    assert len(tracer.get_provs()) == len(input_items) + len(output_items)
+
+    # check inner sub provenance
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    # must have prov for each input item, each intermediate item and each output item
+    assert len(sub_tracer.get_provs()) == len(input_items) + 2 * len(output_items)
