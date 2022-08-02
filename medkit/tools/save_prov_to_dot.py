@@ -21,7 +21,30 @@ def save_prov_to_dot(
     max_sub_graph_depth: Optional[int] = None,
     show_attr_links: bool = True,
 ):
-    """Generate a graphviz-compatible .dot file from a ProvGraph for visualization"""
+    """Generate a graphviz-compatible .dot file from a ProvGraph for
+    visualization.
+
+    Parameters
+    ----------
+    prov_graph:
+        Provenance graph to save.
+    store:
+        Store holding the data items and operation descriptions referenced by
+        `prov_graph`.
+    file:
+        File handle to the .dot file.
+    data_item_formatter:
+        Callback function returning the label to use for each data item.
+    op_formatter:
+        Callback function returning the label to use for each operation.
+    max_sub_graph_depth:
+        When there are nested provenance sub graphs for some operations, how
+        deep should we go when displaying the contents of these sub graphs.
+    show_attr_links:
+        Wether to show links between attributes and the data items they are
+        attached to (not strictly provenance but can make things easier to
+        understand).
+    """
     writer = _DotWriter(
         store,
         file,
