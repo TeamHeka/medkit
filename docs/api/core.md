@@ -202,6 +202,18 @@ cf. [spans notebook example](../examples/spans).
     :members:
 ```
 
+### Text utilities
+
+These utilities have some preconfigured patterns for preprocessing text documents without destruction. They are not really supposed to be used directly, but rather inside a cleaning operation.
+
+:::{seealso}
+ Medkit provides the {class}`~medkit.text.preprocessing.eds_cleaner.EDSCleaner` class that combines all these utilities to clean french documents (related to EDS documents coming from PDF).
+:::
+
+```{eval-rst}
+.. automodule:: medkit.core.text.utils
+    :members:
+```
 
 (api:core:provenance)=
 ## Provenance & Store
