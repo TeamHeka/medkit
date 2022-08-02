@@ -8,7 +8,7 @@ from typing import List, Optional
 
 from medkit.core.data_item import IdentifiableDataItem
 from medkit.core.operation_desc import OperationDescription
-from medkit.core.prov_graph import ProvGraph, ProvNode
+from medkit.core._prov_graph import ProvGraph, ProvNode
 from medkit.core.store import Store, DictStore
 
 
@@ -67,7 +67,7 @@ class ProvTracer:
     """
 
     def __init__(
-        self, store: Optional[Store] = None, graph: Optional[ProvGraph] = None
+        self, store: Optional[Store] = None, _graph: Optional[ProvGraph] = None
     ):
         """
         Parameters
@@ -75,17 +75,14 @@ class ProvTracer:
         store:
             Store into which to store all traced data items of which we are tracing the
             provenance.
-        graph:
-            Provenance graph to use, should only be provided when instantiating
-            a sub-provenance tracer from a sub-graph.
         """
         if store is None:
             store = DictStore()
-        if graph is None:
-            graph = ProvGraph()
+        if _graph is None:
+            _graph = ProvGraph()
 
         self.store: Store = store
-        self.graph: ProvGraph = graph
+        self._graph: ProvGraph = _graph
 
     def add_prov(
         self,
@@ -105,7 +102,7 @@ class ProvTracer:
         source_data_items:
             Data items that were used by the operation to create the data item.
         """
-        assert not self.graph.has_node(
+        assert not self._graph.has_node(
             data_item.id
         ), f"Provenance of data item with id {data_item.id} was already added"
 
@@ -117,7 +114,7 @@ class ProvTracer:
 
         # add node to graph
         source_ids = [s.id for s in source_data_items]
-        self.graph.add_node(data_item.id, op_desc.id, source_ids)
+        self._graph.add_node(data_item.id, op_desc.id, source_ids)
 
     def add_prov_from_sub_tracer(
         self,
@@ -142,15 +139,15 @@ class ProvTracer:
         assert self.store is sub_tracer.store
         self.store.store_op_desc(op_desc)
 
-        sub_graph = sub_tracer.graph
-        self.graph.add_sub_graph(op_desc.id, sub_graph)
+        sub_graph = sub_tracer._graph
+        self._graph.add_sub_graph(op_desc.id, sub_graph)
 
         for data_item in data_items:
             # ignore data items already known
             # (can happen with attributes being copied from one annotation to another)
-            if self.graph.has_node(data_item.id):
+            if self._graph.has_node(data_item.id):
                 # check operation_id is consistent
-                node = self.graph.get_node(data_item.id)
+                node = self._graph.get_node(data_item.id)
                 if node.operation_id != op_desc.id:
                     raise RuntimeError(
                         "Trying to add provenance for sub graph for data item with id"
@@ -168,7 +165,7 @@ class ProvTracer:
         operation_id: str,
         sub_graph: ProvGraph,
     ):
-        assert not self.graph.has_node(data_item_id)
+        assert not self._graph.has_node(data_item_id)
         assert sub_graph.has_node(data_item_id)
 
         # find source ids
@@ -186,7 +183,7 @@ class ProvTracer:
 
         # add new node on main graph representing
         # the data item generation by the composed operation
-        self.graph.add_node(data_item_id, operation_id, source_ids)
+        self._graph.add_node(data_item_id, operation_id, source_ids)
 
     def has_prov(self, data_item_id: str) -> bool:
         """Check if the provenance tracer has provenance information about a
@@ -206,7 +203,7 @@ class ProvTracer:
             `True` if there is provenance info that can be retrieved with
             :meth:`~get_prov()`.
         """
-        return self.graph.has_node(data_item_id)
+        return self._graph.has_node(data_item_id)
 
     def get_prov(self, data_item_id: str) -> Prov:
         """Return provenance information about a specific data item.
@@ -221,7 +218,7 @@ class ProvTracer:
         Prov
             Provenance info about the data item.
         """
-        node = self.graph.get_node(data_item_id)
+        node = self._graph.get_node(data_item_id)
         return self._build_prov_from_node(node)
 
     def get_provs(self) -> List[Prov]:
@@ -234,7 +231,7 @@ class ProvTracer:
         List[Prov]
             Provenance info about all known data items.
         """
-        return [self._build_prov_from_node(node) for node in self.graph.get_nodes()]
+        return [self._build_prov_from_node(node) for node in self._graph.get_nodes()]
 
     def has_sub_prov_tracer(self, operation_id: str) -> bool:
         """Check if the provenance tracer has a sub-provenance tracer for a
@@ -254,7 +251,7 @@ class ProvTracer:
         bool
             `True` if there is a sub-provenance tracer for the operation.
         """
-        return self.graph.has_sub_graph(operation_id)
+        return self._graph.has_sub_graph(operation_id)
 
     def get_sub_prov_tracer(self, operation_id: str) -> ProvTracer:
         """Return a sub-provenance tracer containing sub-provenance information from a
@@ -271,8 +268,8 @@ class ProvTracer:
             The sub-provenance tracer containing sub-provenance information from the
             operation.
         """
-        sub_graph = self.graph.get_sub_graph(operation_id)
-        return ProvTracer(store=self.store, graph=sub_graph)
+        sub_graph = self._graph.get_sub_graph(operation_id)
+        return ProvTracer(store=self.store, _graph=sub_graph)
 
     def get_sub_prov_tracers(self) -> List[ProvTracer]:
         """
@@ -287,8 +284,8 @@ class ProvTracer:
             All sub-provenance tracers of this provenance tracer.
         """
         return [
-            ProvTracer(store=self.store, graph=sub_graph)
-            for sub_graph in self.graph.get_sub_graphs()
+            ProvTracer(store=self.store, _graph=sub_graph)
+            for sub_graph in self._graph.get_sub_graphs()
         ]
 
     def _build_prov_from_node(self, node: ProvNode):

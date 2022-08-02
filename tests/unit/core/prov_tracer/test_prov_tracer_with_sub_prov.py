@@ -35,7 +35,7 @@ def test_single_operation():
     input_items = get_text_items(2)
     output_items = wrapper.run(input_items)
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
 
     # check outer main provenance
     # must have prov for each input item and each output item
@@ -114,7 +114,7 @@ def test_intermediate_operation():
     input_items = get_text_items(2)
     output_items = wrapper.run(input_items)
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
 
     # check outer main provenance
     # must have prov for each input item and each output item
@@ -192,7 +192,7 @@ def test_multi_input_operation():
     input_items = get_text_items(2)
     output_item = wrapper.run(input_items)
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
 
     # check outer main provenance
     # must have prov for each input item and each output item
@@ -255,7 +255,7 @@ def test_multi_output_operation():
     input_items = get_text_items(2)
     output_items = wrapper.run(input_items)
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
 
     # check outer main provenance
     # must have prov for each input item and each output item
@@ -328,7 +328,7 @@ def test_operation_reusing_output():
     input_items = get_text_items(2)
     prefixed_items, double_prefixed_items = wrapper.run(input_items)
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
 
     # check outer main provenance
     # must have prov for each input item and each output prefixed_items
@@ -384,7 +384,7 @@ def test_consecutive_calls():
     input_items = input_items_1 + input_items_2
     output_items = output_items_1 + output_items_2
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
 
     # check outer main provenance
     # must have prov for each input item and each output item
@@ -423,7 +423,7 @@ def test_nested():
     input_items = get_text_items(2)
     prefixed_items = wrapper.run(input_items)
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
 
     # check outer main provenance
     input_item = input_items[0]

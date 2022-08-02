@@ -245,16 +245,6 @@ This work is still under development. It may be changed in the future.
 ```
 
 ```{eval-rst}
-.. autoclass:: medkit.core::ProvGraph
-    :members:
-```
-
-```{eval-rst}
-.. autoclass:: medkit.core::ProvNode
-    :members:
-```
-
-```{eval-rst}
 .. autoclass:: medkit.core::Store
     :members:
 ```

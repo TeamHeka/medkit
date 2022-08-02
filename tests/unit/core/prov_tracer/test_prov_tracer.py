@@ -9,7 +9,7 @@ def test_single_item_with_no_source():
     generator = Generator(tracer)
     item = generator.generate(1)[0]
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
 
     # tracer must have prov for generated item
     prov = tracer.get_prov(item.id)
@@ -28,7 +28,7 @@ def test_multiple_items():
     generator = Generator(tracer)
     items = generator.generate(2)
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
     # tracer must have prov for each generated item
     assert len(tracer.get_provs()) == len(items)
 
@@ -48,7 +48,7 @@ def test_multiple_items_with_sources():
     input_items = generator.generate(2)
     prefixed_items = prefixer.prefix(input_items)
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
     assert len(tracer.get_provs()) == len(input_items) + len(prefixed_items)
 
     for input_item, prefixed_item in zip(input_items, prefixed_items):
@@ -77,7 +77,7 @@ def test_intermediate_operation():
     prefixed_items_1 = prefixer_1.prefix(input_items)
     prefixed_items_2 = prefixer_2.prefix(prefixed_items_1)
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
     assert len(tracer.get_provs()) == len(input_items) + len(prefixed_items_1) + len(
         prefixed_items_2
     )
@@ -115,7 +115,7 @@ def test_multiple_derived():
     input_item = input_items[0]
     split_items = splitter.split(input_items)
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
     assert len(tracer.get_provs()) == len(input_items) + len(split_items)
 
     prov = tracer.get_prov(input_item.id)
@@ -141,7 +141,7 @@ def test_multiple_source():
     input_items = generator.generate(2)
     merged_item = merger.merge(input_items)
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
     assert (
         len(tracer.get_provs()) == len(input_items) + 1
     )  # 2 input items + 1 merged item
@@ -170,7 +170,7 @@ def test_partial_provenance():
     split_items = splitter.split(input_items)
     merged_item = merger.merge(split_items)
 
-    tracer.graph.check_sanity()
+    tracer._graph.check_sanity()
     assert len(tracer.get_provs()) == len(split_items) + 1
 
     # operation and source data items are available for merged item

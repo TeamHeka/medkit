@@ -131,7 +131,7 @@ def test_single_step():
     uppercased_segs = pipeline.run(sentence_segs)
     assert len(uppercased_segs) == len(sentence_segs)
 
-    prov_tracer.graph.check_sanity()
+    prov_tracer._graph.check_sanity()
 
     # check outer main provenance
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
@@ -184,7 +184,7 @@ def test_multiple_steps():
     uppercased_segs = pipeline.run(sentence_segs)
     assert len(uppercased_segs) == len(sentence_segs)
 
-    prov_tracer.graph.check_sanity()
+    prov_tracer._graph.check_sanity()
 
     # check outer main provenance
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
@@ -244,7 +244,7 @@ def test_step_with_attributes():
     uppercased_segs = pipeline.run(sentence_segs)
     assert len(uppercased_segs) == len(sentence_segs)
 
-    prov_tracer.graph.check_sanity()
+    prov_tracer._graph.check_sanity()
 
     # check outer main provenance
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
@@ -321,7 +321,7 @@ def test_nested_pipeline():
     output_segs = pipeline.run(sentence_segs)
     assert len(output_segs) == len(sentence_segs)
 
-    prov_tracer.graph.check_sanity()
+    prov_tracer._graph.check_sanity()
 
     # check outer main provenance
     for output_seg, sentence_seg in zip(output_segs, sentence_segs):
