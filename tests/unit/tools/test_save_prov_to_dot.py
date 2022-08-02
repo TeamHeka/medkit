@@ -57,24 +57,23 @@ def test_basic(tmp_path):
             data_item_formatter=lambda a: f"{a.label}: {a.text}",
             op_formatter=lambda o: o.name,
         )
-    with open(path_to_dot) as file:
-        dot_lines = file.readlines()
+    dot_text = path_to_dot.read_text()
 
     # check dot entries
     assert (
         f'"{sentence_segment.id}" [label="sentence: This is a sentence."];\n'
-        in dot_lines
+        in dot_text
     )
-    assert f'"{syntagma_segment.id}" [label="syntagma: a sentence"];\n' in dot_lines
-    assert f'"{entity.id}" [label="word: sentence"];\n' in dot_lines
+    assert f'"{syntagma_segment.id}" [label="syntagma: a sentence"];\n' in dot_text
+    assert f'"{entity.id}" [label="word: sentence"];\n' in dot_text
     assert (
         f'"{sentence_segment.id}" -> "{syntagma_segment.id}"'
         ' [label="SyntagmaTokenizer"];\n'
-        in dot_lines
+        in dot_text
     )
     assert (
         f'"{syntagma_segment.id}" -> "{entity.id}" [label="EntityMatcher"];\n'
-        in dot_lines
+        in dot_text
     )
 
 
@@ -95,15 +94,14 @@ def test_attrs(tmp_path):
             data_item_formatter=lambda a: f"{a.label}",
             op_formatter=lambda o: o.name,
         )
-    with open(path_to_dot) as file:
-        dot_lines = file.readlines()
+    dot_text = path_to_dot.read_text()
 
     # check attribute link in dot entries
     attr = entity.get_attrs()[0]
     assert (
         f'"{entity.id}" -> "{attr.id}" [style=dashed, color=grey,'
         ' label="attr", fontcolor=grey];\n'
-        in dot_lines
+        in dot_text
     )
 
 
@@ -131,13 +129,10 @@ def test_sub_prov_graph(tmp_path):
             op_formatter=lambda o: o.name,
             max_sub_graph_depth=0,
         )
-    with open(path_to_dot) as file:
-        dot_lines = file.readlines()
+    dot_text = path_to_dot.read_text()
 
     # must have a dot entry for outer pipeline operation
-    assert (
-        f'"{sentence_segment.id}" -> "{entity.id}" [label="Pipeline"];\n' in dot_lines
-    )
+    assert f'"{sentence_segment.id}" -> "{entity.id}" [label="Pipeline"];\n' in dot_text
 
     # render dot, expanding all sub graphs
     path_to_dot_full = tmp_path / "prov.dot"
@@ -150,16 +145,15 @@ def test_sub_prov_graph(tmp_path):
             op_formatter=lambda o: o.name,
             max_sub_graph_depth=None,
         )
-    with open(path_to_dot_full) as file:
-        dot_full_lines = file.readlines()
+    dot_text_full = path_to_dot_full.read_text()
 
     # must have a dot entry for inner operations in sub graphs
     assert (
         f'"{sentence_segment.id}" -> "{syntagma_segment.id}"'
         ' [label="SyntagmaTokenizer"];\n'
-        in dot_full_lines
+        in dot_text_full
     )
     assert (
         f'"{syntagma_segment.id}" -> "{entity.id}" [label="EntityMatcher"];\n'
-        in dot_full_lines
+        in dot_text_full
     )
