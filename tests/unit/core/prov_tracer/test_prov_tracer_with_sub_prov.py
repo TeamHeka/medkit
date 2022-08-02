@@ -21,7 +21,7 @@ class _PrefixerWrapper:
     def run(self, input_items):
         output_items = self.prefixer.prefix(input_items)
 
-        self.prov_tracer.add_prov_from_sub_graph(
+        self.prov_tracer.add_prov_from_sub_tracer(
             output_items, self.description, self.sub_prov_tracer
         )
 
@@ -97,7 +97,7 @@ class _DoublePrefixerWrapper:
         intermediate_items = self.prefixer_1.prefix(input_items)
         output_items = self.prefixer_2.prefix(intermediate_items)
 
-        self.prov_tracer.add_prov_from_sub_graph(
+        self.prov_tracer.add_prov_from_sub_tracer(
             output_items, self.description, self.sub_prov_tracer
         )
 
@@ -174,7 +174,7 @@ class _PrefixerMergerWrapper:
         intermediate_items = self.prefixer.prefix(input_items)
         output_item = self.merger.merge(intermediate_items)
 
-        self.prov_tracer.add_prov_from_sub_graph(
+        self.prov_tracer.add_prov_from_sub_tracer(
             [output_item], self.description, self.sub_prov_tracer
         )
 
@@ -238,7 +238,7 @@ class _SplitterPrefixerWrapper:
         intermediate_items = self.splitter.split(input_items)
         output_items = self.prefixer.prefix(intermediate_items)
 
-        self.prov_tracer.add_prov_from_sub_graph(
+        self.prov_tracer.add_prov_from_sub_tracer(
             output_items, self.description, self.sub_prov_tracer
         )
 
@@ -309,7 +309,7 @@ class _BranchedPrefixerWrapper:
         double_prefixed_items = self.prefixer_2.prefix(prefixed_items)
 
         output_items = prefixed_items + double_prefixed_items
-        self.prov_tracer.add_prov_from_sub_graph(
+        self.prov_tracer.add_prov_from_sub_tracer(
             output_items, self.description, self.sub_prov_tracer
         )
 
@@ -371,7 +371,7 @@ def test_operation_reusing_output():
 
 
 def test_consecutive_calls():
-    """Make sure add_prov_from_sub_graph can be called several times"""
+    """Make sure add_prov_from_sub_tracer can be called several times"""
     tracer = ProvTracer()
     wrapper = _DoublePrefixerWrapper(tracer)
     input_items_1 = get_text_items(2)

@@ -131,7 +131,7 @@ def test_sub_prov_graph(tmp_path):
 
     # wrap it in outer pipeline graph
     pipeline_desc = OperationDescription(name="Pipeline", id=generate_id())
-    prov_tracer.add_prov_from_sub_graph([entity], pipeline_desc, sub_prov_tracer)
+    prov_tracer.add_prov_from_sub_tracer([entity], pipeline_desc, sub_prov_tracer)
 
     # render dot, not expanding sub graphs
     dot_file = tmp_path / "prov.dot"
