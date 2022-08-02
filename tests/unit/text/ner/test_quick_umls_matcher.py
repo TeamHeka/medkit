@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import spacy.cli
 
-from medkit.core import Attribute, ProvBuilder
+from medkit.core import Attribute, ProvTracer
 from medkit.core.text import Segment, Span
 from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher
 
@@ -203,10 +203,10 @@ def test_prov():
 
     umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
 
-    prov_builder = ProvBuilder()
-    umls_matcher.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    umls_matcher.set_prov_tracer(prov_tracer)
     entities = umls_matcher.run([sentence])
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
 
     entity = entities[0]
     entity_node = graph.get_node(entity.id)

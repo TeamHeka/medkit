@@ -1,6 +1,6 @@
 import logging
 
-from medkit.core import Attribute, ProvBuilder
+from medkit.core import Attribute, ProvTracer
 from medkit.core.text import Segment, Span
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
@@ -236,10 +236,10 @@ def test_prov():
     )
     matcher = RegexpMatcher(rules=[rule])
 
-    prov_builder = ProvBuilder()
-    matcher.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    matcher.set_prov_tracer(prov_tracer)
     entities = matcher.run([sentence])
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
 
     entity = entities[0]
     entity_node = graph.get_node(entity.id)

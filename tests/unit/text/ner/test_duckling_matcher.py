@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import Attribute, ProvBuilder
+from medkit.core import Attribute, ProvTracer
 from medkit.core.text import Segment, Span
 from medkit.text.ner.duckling_matcher import DucklingMatcher
 
@@ -185,11 +185,11 @@ def test_prov(_mocked_requests):
         locale="en",
         dims=["time"],
     )
-    prov_builder = ProvBuilder()
-    matcher.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    matcher.set_prov_tracer(prov_tracer)
 
     entity = matcher.run([sentence])[0]
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
 
     entity_node = graph.get_node(entity.id)
     assert entity_node.data_item_id == entity.id

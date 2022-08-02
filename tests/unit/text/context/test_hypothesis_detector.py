@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from medkit.core import ProvBuilder
+from medkit.core import ProvTracer
 from medkit.core.text import Segment, Span
 from medkit.text.context.hypothesis_detector import (
     HypothesisDetector,
@@ -184,10 +184,10 @@ def test_prov():
     rule = HypothesisDetectorRule(regexp=r"\bif\b")
     detector = HypothesisDetector(output_label=_OUTPUT_LABEL, rules=[rule])
 
-    prov_builder = ProvBuilder()
-    detector.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    detector.set_prov_tracer(prov_tracer)
     detector.run(syntagmas)
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
 
     attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     node_1 = graph.get_node(attr_1.id)

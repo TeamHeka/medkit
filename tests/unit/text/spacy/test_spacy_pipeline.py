@@ -1,7 +1,7 @@
 import pytest
 import spacy
 from spacy.tokens import Span as SpacySpan, Doc
-from medkit.core import ProvBuilder
+from medkit.core import ProvTracer
 from medkit.core.text import Span, Entity, Segment
 from medkit.text.spacy import SpacyPipeline
 
@@ -69,17 +69,17 @@ def test_default_spacy_pipeline(nlp_spacy_modified):
 
 
 def test_prov(nlp_spacy_modified):
-    prov_builder = ProvBuilder()
+    prov_tracer = ProvTracer()
 
     segment = _get_segment()
-    # set provenance builder
+    # set provenance tracer
     pipe = SpacyPipeline(nlp=nlp_spacy_modified)
-    pipe.set_prov_builder(prov_builder)
+    pipe.set_prov_tracer(prov_tracer)
 
     # execute the pipeline
     new_segments = pipe.run([segment])
 
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
 
     # check new entity
     entity = new_segments[0]

@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import ProvBuilder
+from medkit.core import ProvTracer
 from medkit.core.text import Segment, Span
 from medkit.text.segmentation import SentenceTokenizer
 
@@ -98,10 +98,10 @@ def test_prov():
     )
 
     tokenizer = SentenceTokenizer()
-    prov_builder = ProvBuilder()
-    tokenizer.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    tokenizer.set_prov_tracer(prov_tracer)
     sentences = tokenizer.run([clean_text_segment])
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
 
     sentence_1 = sentences[0]
     node_1 = graph.get_node(sentence_1.id)

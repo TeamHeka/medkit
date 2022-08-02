@@ -6,7 +6,7 @@ from medkit.core.annotation import Annotation
 from medkit.core.document import Collection, Document
 from medkit.core.operation import DocOperation
 from medkit.core.pipeline import Pipeline
-from medkit.core.prov_builder import ProvBuilder
+from medkit.core.prov_tracer import ProvTracer
 
 
 class DocPipeline(DocOperation):
@@ -57,8 +57,8 @@ class DocPipeline(DocOperation):
         self.pipeline = pipeline
         self.labels_by_input_key: Dict[str, List[str]] = labels_by_input_key
 
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self.pipeline.set_prov_builder(prov_builder)
+    def set_prov_tracer(self, prov_tracer: ProvTracer):
+        self.pipeline.set_prov_tracer(prov_tracer)
 
     def run(self, docs: Union[List[Document], Collection]) -> None:
         """Run the pipeline on a list of documents, adding

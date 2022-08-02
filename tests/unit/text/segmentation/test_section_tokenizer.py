@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import ProvBuilder
+from medkit.core import ProvTracer
 from medkit.core.text import Span, Segment
 from medkit.text.segmentation.section_tokenizer import (
     SectionTokenizer,
@@ -103,10 +103,10 @@ def test_prov():
 
     section_dict = {"antecedent": ["Antécédents médicaux"], "examen": ["Examen :"]}
     tokenizer = SectionTokenizer(section_dict)
-    prov_builder = ProvBuilder()
-    tokenizer.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    tokenizer.set_prov_tracer(prov_tracer)
     sections = tokenizer.run([clean_text_segment])
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
 
     section_1 = sections[0]
     node_1 = graph.get_node(section_1.id)

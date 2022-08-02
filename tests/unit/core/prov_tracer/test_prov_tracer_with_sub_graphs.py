@@ -1,7 +1,7 @@
 from medkit.core import generate_id, OperationDescription
-from medkit.core.prov_builder import ProvBuilder
+from medkit.core.prov_tracer import ProvTracer
 
-from tests.unit.core.prov_builder._common import (
+from tests.unit.core.prov_tracer._common import (
     get_text_items,
     Prefixer,
     Splitter,
@@ -10,19 +10,19 @@ from tests.unit.core.prov_builder._common import (
 
 
 class _PrefixerWrapper:
-    def __init__(self, prov_builder):
+    def __init__(self, prov_tracer):
         self.id = generate_id()
         self.prefixer = Prefixer()
-        self.prov_builder = prov_builder
-        self.sub_prov_builder = ProvBuilder(prov_builder.store)
-        self.prefixer.prov_builder = self.sub_prov_builder
+        self.prov_tracer = prov_tracer
+        self.sub_prov_tracer = ProvTracer(prov_tracer.store)
+        self.prefixer.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(id=self.id, name="PrefixerWrapper")
 
     def run(self, input_items):
         output_items = self.prefixer.prefix(input_items)
 
-        self.prov_builder.add_prov_from_sub_graph(
-            output_items, self.description, self.sub_prov_builder
+        self.prov_tracer.add_prov_from_sub_graph(
+            output_items, self.description, self.sub_prov_tracer
         )
 
         return output_items
@@ -30,13 +30,13 @@ class _PrefixerWrapper:
 
 def test_single_operation():
     """Wrapper operation wrapping only one operation"""
-    builder = ProvBuilder()
-    wrapper = _PrefixerWrapper(builder)
+    tracer = ProvTracer()
+    wrapper = _PrefixerWrapper(tracer)
     input_items = get_text_items(2)
     output_items = wrapper.run(input_items)
 
     # check outer main graph
-    graph = builder.graph
+    graph = tracer.graph
     graph.check_sanity()
     # main graph must have a node for each input item and each output item
     assert len(graph.get_nodes()) == len(input_items) + len(output_items)
@@ -81,14 +81,14 @@ def test_single_operation():
 
 
 class _DoublePrefixerWrapper:
-    def __init__(self, prov_builder):
+    def __init__(self, prov_tracer):
         self.id = generate_id()
         self.prefixer_1 = Prefixer()
         self.prefixer_2 = Prefixer()
-        self.prov_builder = prov_builder
-        self.sub_prov_builder = ProvBuilder(prov_builder.store)
-        self.prefixer_1.prov_builder = self.sub_prov_builder
-        self.prefixer_2.prov_builder = self.sub_prov_builder
+        self.prov_tracer = prov_tracer
+        self.sub_prov_tracer = ProvTracer(prov_tracer.store)
+        self.prefixer_1.prov_tracer = self.sub_prov_tracer
+        self.prefixer_2.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(
             id=self.id, name="DoublePrefixerWrapper"
         )
@@ -97,8 +97,8 @@ class _DoublePrefixerWrapper:
         intermediate_items = self.prefixer_1.prefix(input_items)
         output_items = self.prefixer_2.prefix(intermediate_items)
 
-        self.prov_builder.add_prov_from_sub_graph(
-            output_items, self.description, self.sub_prov_builder
+        self.prov_tracer.add_prov_from_sub_graph(
+            output_items, self.description, self.sub_prov_tracer
         )
 
         return output_items
@@ -107,13 +107,13 @@ class _DoublePrefixerWrapper:
 def test_intermediate_operation():
     """Wrapper operation wrapping 2 consecutive operations,
     only the output of the 2d operation is returned"""
-    builder = ProvBuilder()
-    wrapper = _DoublePrefixerWrapper(builder)
+    tracer = ProvTracer()
+    wrapper = _DoublePrefixerWrapper(tracer)
     input_items = get_text_items(2)
     output_items = wrapper.run(input_items)
 
     # check outer main graph
-    graph = builder.graph
+    graph = tracer.graph
     graph.check_sanity()
     # graph must have a node for each input item and each output item
     assert len(graph.get_nodes()) == len(input_items) + len(output_items)
@@ -158,14 +158,14 @@ def test_intermediate_operation():
 
 
 class _PrefixerMergerWrapper:
-    def __init__(self, prov_builder):
+    def __init__(self, prov_tracer):
         self.id = generate_id()
         self.prefixer = Prefixer()
         self.merger = Merger()
-        self.prov_builder = prov_builder
-        self.sub_prov_builder = ProvBuilder(prov_builder.store)
-        self.prefixer.prov_builder = self.sub_prov_builder
-        self.merger.prov_builder = self.sub_prov_builder
+        self.prov_tracer = prov_tracer
+        self.sub_prov_tracer = ProvTracer(prov_tracer.store)
+        self.prefixer.prov_tracer = self.sub_prov_tracer
+        self.merger.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(
             id=self.id, name="PrefixerMergerWrapper"
         )
@@ -174,8 +174,8 @@ class _PrefixerMergerWrapper:
         intermediate_items = self.prefixer.prefix(input_items)
         output_item = self.merger.merge(intermediate_items)
 
-        self.prov_builder.add_prov_from_sub_graph(
-            [output_item], self.description, self.sub_prov_builder
+        self.prov_tracer.add_prov_from_sub_graph(
+            [output_item], self.description, self.sub_prov_tracer
         )
 
         return output_item
@@ -186,13 +186,13 @@ def test_multi_input_operation():
     Wrapper operation wrapping an operation deriving one item from multiple input
     (merger)
     """
-    builder = ProvBuilder()
-    wrapper = _PrefixerMergerWrapper(builder)
+    tracer = ProvTracer()
+    wrapper = _PrefixerMergerWrapper(tracer)
     input_items = get_text_items(2)
     output_item = wrapper.run(input_items)
 
     # check outer main graph
-    graph = builder.graph
+    graph = tracer.graph
     graph.check_sanity()
     # graph must have a node for each input item and each output item
     assert len(graph.get_nodes()) == len(input_items) + 1
@@ -222,14 +222,14 @@ def test_multi_input_operation():
 
 
 class _SplitterPrefixerWrapper:
-    def __init__(self, prov_builder):
+    def __init__(self, prov_tracer):
         self.id = generate_id()
         self.splitter = Splitter()
         self.prefixer = Prefixer()
-        self.prov_builder = prov_builder
-        self.sub_prov_builder = ProvBuilder(prov_builder.store)
-        self.splitter.prov_builder = self.sub_prov_builder
-        self.prefixer.prov_builder = self.sub_prov_builder
+        self.prov_tracer = prov_tracer
+        self.sub_prov_tracer = ProvTracer(prov_tracer.store)
+        self.splitter.prov_tracer = self.sub_prov_tracer
+        self.prefixer.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(
             id=self.id, name="SplitterPrefixerMWrapper"
         )
@@ -238,8 +238,8 @@ class _SplitterPrefixerWrapper:
         intermediate_items = self.splitter.split(input_items)
         output_items = self.prefixer.prefix(intermediate_items)
 
-        self.prov_builder.add_prov_from_sub_graph(
-            output_items, self.description, self.sub_prov_builder
+        self.prov_tracer.add_prov_from_sub_graph(
+            output_items, self.description, self.sub_prov_tracer
         )
 
         return output_items
@@ -248,13 +248,13 @@ class _SplitterPrefixerWrapper:
 def test_multi_output_operation():
     """Wrapper operation wrapping an operation derived several items from single input item (splitter)
     """
-    builder = ProvBuilder()
-    wrapper = _SplitterPrefixerWrapper(builder)
+    tracer = ProvTracer()
+    wrapper = _SplitterPrefixerWrapper(tracer)
     input_items = get_text_items(2)
     output_items = wrapper.run(input_items)
 
     # check outer main graph
-    graph = builder.graph
+    graph = tracer.graph
     graph.check_sanity()
     # graph must have a node for each input item and each output item
     assert len(graph.get_nodes()) == len(input_items) + len(output_items)
@@ -292,14 +292,14 @@ def test_multi_output_operation():
 
 
 class _BranchedPrefixerWrapper:
-    def __init__(self, prov_builder):
+    def __init__(self, prov_tracer):
         self.id = generate_id()
         self.prefixer_1 = Prefixer()
         self.prefixer_2 = Prefixer()
-        self.prov_builder = prov_builder
-        self.sub_prov_builder = ProvBuilder(prov_builder.store)
-        self.prefixer_1.prov_builder = self.sub_prov_builder
-        self.prefixer_2.prov_builder = self.sub_prov_builder
+        self.prov_tracer = prov_tracer
+        self.sub_prov_tracer = ProvTracer(prov_tracer.store)
+        self.prefixer_1.prov_tracer = self.sub_prov_tracer
+        self.prefixer_2.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(
             id=self.id, name="BrancherPrefixerWrapper"
         )
@@ -309,8 +309,8 @@ class _BranchedPrefixerWrapper:
         double_prefixed_items = self.prefixer_2.prefix(prefixed_items)
 
         output_items = prefixed_items + double_prefixed_items
-        self.prov_builder.add_prov_from_sub_graph(
-            output_items, self.description, self.sub_prov_builder
+        self.prov_tracer.add_prov_from_sub_graph(
+            output_items, self.description, self.sub_prov_tracer
         )
 
         return prefixed_items, double_prefixed_items
@@ -320,13 +320,13 @@ def test_operation_reusing_output():
     """Wrapper operation  wrapping 2 operations, with 2 outputs,
     the 2d output being the result of the 2d operation applied on the 1st output
     (make sure we don't try to add the same node twice in the main group)"""
-    builder = ProvBuilder()
-    wrapper = _BranchedPrefixerWrapper(builder)
+    tracer = ProvTracer()
+    wrapper = _BranchedPrefixerWrapper(tracer)
     input_items = get_text_items(2)
     prefixed_items, double_prefixed_items = wrapper.run(input_items)
 
     # check outer main graph
-    graph = builder.graph
+    graph = tracer.graph
     graph.check_sanity()
     # graph must have a node for each input item and each output prefixed_items
     assert len(graph.get_nodes()) == len(input_items) + len(prefixed_items) + len(
@@ -372,8 +372,8 @@ def test_operation_reusing_output():
 
 def test_consecutive_calls():
     """Make sure add_prov_from_sub_graph can be called several times"""
-    builder = ProvBuilder()
-    wrapper = _DoublePrefixerWrapper(builder)
+    tracer = ProvTracer()
+    wrapper = _DoublePrefixerWrapper(tracer)
     input_items_1 = get_text_items(2)
     output_items_1 = wrapper.run(input_items_1)
     input_items_2 = get_text_items(2)
@@ -382,7 +382,7 @@ def test_consecutive_calls():
     output_items = output_items_1 + output_items_2
 
     # check outer main graph
-    graph = builder.graph
+    graph = tracer.graph
     graph.check_sanity()
     # graph must have a node for each input item and each output item
     assert len(graph.get_nodes()) == len(input_items) + len(output_items)

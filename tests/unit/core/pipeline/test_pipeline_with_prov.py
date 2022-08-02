@@ -1,6 +1,6 @@
 from medkit.core import generate_id, OperationDescription
 from medkit.core.pipeline import Pipeline, PipelineStep
-from medkit.core.prov_builder import ProvBuilder
+from medkit.core.prov_tracer import ProvTracer
 
 
 class _Segment:
@@ -43,22 +43,22 @@ class _Uppercaser:
 
     def __init__(self):
         self.id = generate_id()
-        self._prov_builder = None
+        self._prov_tracer = None
 
     @property
     def description(self):
         return OperationDescription(id=self.id, name="Uppercaser")
 
-    def set_prov_builder(self, prov_builder):
-        self._prov_builder = prov_builder
+    def set_prov_tracer(self, prov_tracer):
+        self._prov_tracer = prov_tracer
 
     def run(self, segments):
         uppercase_segments = []
         for segment in segments:
             uppercase_segment = _Segment(segment.text.upper())
             uppercase_segments.append(uppercase_segment)
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     uppercase_segment, self.description, source_data_items=[segment]
                 )
         return uppercase_segments
@@ -75,16 +75,16 @@ class _Prefixer:
     def description(self):
         return OperationDescription(id=self.id, name="Prefixer")
 
-    def set_prov_builder(self, prov_builder):
-        self._prov_builder = prov_builder
+    def set_prov_tracer(self, prov_tracer):
+        self._prov_tracer = prov_tracer
 
     def run(self, segments):
         prefixed_segments = []
         for segment in segments:
             prefixed_segment = _Segment(self.prefix + segment.text)
             prefixed_segments.append(prefixed_segment)
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     prefixed_segment, self.description, source_data_items=[segment]
                 )
         return prefixed_segments
@@ -101,15 +101,15 @@ class _AttributeAdder:
     def description(self):
         return OperationDescription(id=self.id, name="AttributeAdder")
 
-    def set_prov_builder(self, prov_builder):
-        self._prov_builder = prov_builder
+    def set_prov_tracer(self, prov_tracer):
+        self._prov_tracer = prov_tracer
 
     def run(self, segments):
         for segment in segments:
             attr = _Attribute(label=self.label, value=True)
             segment.add_attr(attr)
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     attr, self.description, source_data_items=[segment]
                 )
 
@@ -125,14 +125,14 @@ def test_single_step():
         steps=[step], input_keys=["SENTENCE"], output_keys=["UPPERCASE"]
     )
 
-    prov_builder = ProvBuilder()
-    pipeline.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    pipeline.set_prov_tracer(prov_tracer)
     sentence_segs = _get_sentence_segments()
     uppercased_segs = pipeline.run(sentence_segs)
     assert len(uppercased_segs) == len(sentence_segs)
 
     # check outer main graph
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
     graph.check_sanity()
 
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
@@ -181,17 +181,17 @@ def test_multiple_steps():
         steps=[step_1, step_2], input_keys=["SENTENCE"], output_keys=["UPPERCASE"]
     )
 
-    prov_builder = ProvBuilder()
-    pipeline.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    pipeline.set_prov_tracer(prov_tracer)
     sentence_segs = _get_sentence_segments()
     uppercased_segs = pipeline.run(sentence_segs)
     assert len(uppercased_segs) == len(sentence_segs)
 
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
     graph.check_sanity()
 
     # check outer main graph
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
     graph.check_sanity()
 
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
@@ -245,14 +245,14 @@ def test_step_with_attributes():
         output_keys=["UPPERCASE"],
     )
 
-    prov_builder = ProvBuilder()
-    pipeline.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    pipeline.set_prov_tracer(prov_tracer)
     sentence_segs = _get_sentence_segments()
     uppercased_segs = pipeline.run(sentence_segs)
     assert len(uppercased_segs) == len(sentence_segs)
 
     # check outer main graph
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
     graph.check_sanity()
 
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
@@ -323,14 +323,14 @@ def test_nested_pipeline():
         output_keys=["SUB_PIPELINE"],
     )
 
-    prov_builder = ProvBuilder()
-    pipeline.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    pipeline.set_prov_tracer(prov_tracer)
     sentence_segs = _get_sentence_segments()
     output_segs = pipeline.run(sentence_segs)
     assert len(output_segs) == len(sentence_segs)
 
     # check outer main graph
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
     graph.check_sanity()
 
     for output_seg, sentence_seg in zip(output_segs, sentence_segs):

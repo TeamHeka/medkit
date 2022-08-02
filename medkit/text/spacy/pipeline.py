@@ -100,8 +100,8 @@ class SpacyPipeline(Operation):
         )
         for new_segment in segments:
             # add provenance
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     new_segment,
                     self.description,
                     source_data_items=[medkit_source_ann],
@@ -111,8 +111,8 @@ class SpacyPipeline(Operation):
             if new_segment.id in attrs_by_ann_id.keys():
                 for attr in attrs_by_ann_id[new_segment.id]:
                     new_segment.add_attr(attr)
-                    if self._prov_builder is not None:
-                        self._prov_builder.add_prov(
+                    if self._prov_tracer is not None:
+                        self._prov_tracer.add_prov(
                             attr,
                             self.description,
                             source_data_items=[medkit_source_ann],

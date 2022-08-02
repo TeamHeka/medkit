@@ -116,8 +116,8 @@ class SpacyDocPipeline(DocOperation):
             # add new annotations
             for ann in anns:
                 medkit_doc.add_annotation(ann)
-                if self._prov_builder is not None:
-                    self._prov_builder.add_prov(
+                if self._prov_tracer is not None:
+                    self._prov_tracer.add_prov(
                         ann,
                         self.description,
                         source_data_items=[raw_segment],
@@ -128,12 +128,12 @@ class SpacyDocPipeline(DocOperation):
                 ann = medkit_doc.get_annotation_by_id(ann_id)
                 for attr in attrs:
                     ann.add_attr(attr)
-                    if self._prov_builder is not None:
+                    if self._prov_tracer is not None:
                         # if ann is an existing annotation, in terms
                         # of provenance, the annotation was used to
                         # generate the attribute, else, it was regenerate using
                         # raw_text_segment
                         source_data_item = raw_segment if ann in anns else ann
-                        self._prov_builder.add_prov(
+                        self._prov_tracer.add_prov(
                             attr, self.description, source_data_items=[source_data_item]
                         )

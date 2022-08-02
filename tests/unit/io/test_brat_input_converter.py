@@ -1,4 +1,4 @@
-from medkit.core import ProvBuilder
+from medkit.core import ProvTracer
 from medkit.core.text import Span
 from medkit.core.text.document import TextDocument
 from medkit.io.brat import BratInputConverter
@@ -84,10 +84,10 @@ def test_load_no_anns():
 
 def test_prov():
     brat_converter = BratInputConverter()
-    prov_builder = ProvBuilder()
-    brat_converter.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    brat_converter.set_prov_tracer(prov_tracer)
     collection = brat_converter.load(dir_path="tests/data/brat")
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
 
     doc = collection.documents[0]
     entity = doc.get_annotations_by_label("disease")[1]

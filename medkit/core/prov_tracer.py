@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["ProvBuilder"]
+__all__ = ["ProvTracer"]
 
 import collections
 from typing import List, Optional
@@ -11,7 +11,7 @@ from medkit.core.prov_graph import ProvGraph
 from medkit.core.store import Store, DictStore
 
 
-class ProvBuilder:
+class ProvTracer:
     def __init__(self, store: Optional[Store] = None):
         if store is None:
             store = DictStore()
@@ -43,12 +43,12 @@ class ProvBuilder:
         self,
         data_items: List[IdentifiableDataItem],
         op_desc: OperationDescription,
-        sub_builder: ProvBuilder,
+        sub_tracer: ProvTracer,
     ):
-        assert self.store is sub_builder.store
+        assert self.store is sub_tracer.store
         self.store.store_op_desc(op_desc)
 
-        sub_graph = sub_builder.graph
+        sub_graph = sub_tracer.graph
         self.graph.add_sub_graph(op_desc.id, sub_graph)
 
         for data_item in data_items:

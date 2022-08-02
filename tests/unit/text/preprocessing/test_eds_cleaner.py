@@ -1,5 +1,5 @@
 import pytest
-from medkit.core.prov_builder import ProvBuilder
+from medkit.core.prov_tracer import ProvTracer
 
 from medkit.core.text import Span, ModifiedSpan, Segment
 from medkit.text.preprocessing.eds_cleaner import EDSCleaner
@@ -176,10 +176,10 @@ def test_prov():
     raw_segment = _get_raw_segment("Traitement :\n\n\n à dose curative dès cet appel.")
 
     cleaner = EDSCleaner()
-    prov_builder = ProvBuilder()
-    cleaner.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    cleaner.set_prov_tracer(prov_tracer)
     clean_segments = cleaner.run([raw_segment])
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
 
     clean_segment = clean_segments[0]
     node_1 = graph.get_node(clean_segment.id)

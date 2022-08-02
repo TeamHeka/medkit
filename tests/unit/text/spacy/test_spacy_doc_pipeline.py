@@ -4,7 +4,7 @@ import spacy
 from spacy.tokens import Doc
 from spacy.tokens import Span as SpacySpan
 
-from medkit.core import ProvBuilder
+from medkit.core import ProvTracer
 from medkit.core.text import Entity, Span, TextDocument
 from medkit.text.spacy import SpacyDocPipeline
 
@@ -148,8 +148,8 @@ def test_prov(nlp_spacy_modified):
     # created a docpipeline using the new nlp object
     # by default params are None, transfer all information
     spacydoc_pipeline = SpacyDocPipeline(nlp=nlp)
-    prov_builder = ProvBuilder()
-    spacydoc_pipeline.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    spacydoc_pipeline.set_prov_tracer(prov_tracer)
 
     # create original annotations
     medkit_doc = _get_doc()
@@ -159,7 +159,7 @@ def test_prov(nlp_spacy_modified):
     raw_segment = medkit_doc.raw_segment
 
     # check new entity
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
     entity = medkit_doc.get_annotations_by_label("DATE")[0]
     node = graph.get_node(entity.id)
     assert node.data_item_id == entity.id

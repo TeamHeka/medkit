@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import ProvBuilder
+from medkit.core import ProvTracer
 from medkit.core.text import Segment, Span
 from medkit.text.segmentation import SyntagmaTokenizer
 
@@ -94,10 +94,10 @@ def test_prov():
     segment = _get_segment_from_text(_TEXT)
 
     tokenizer = SyntagmaTokenizer.get_example()
-    prov_builder = ProvBuilder()
-    tokenizer.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    tokenizer.set_prov_tracer(prov_tracer)
     syntagmas = tokenizer.run([segment])
-    graph = prov_builder.graph
+    graph = prov_tracer.graph
 
     syntagma_1 = syntagmas[0]
     node_1 = graph.get_node(syntagma_1.id)
