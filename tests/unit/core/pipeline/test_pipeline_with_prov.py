@@ -131,38 +131,35 @@ def test_single_step():
     uppercased_segs = pipeline.run(sentence_segs)
     assert len(uppercased_segs) == len(sentence_segs)
 
-    # check outer main graph
-    graph = prov_tracer.graph
-    graph.check_sanity()
+    prov_tracer.graph.check_sanity()
+
+    # check outer main provenance
+    for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
+        uppercased_seg_prov = prov_tracer.get_prov(uppercased_seg.id)
+        # operation is outer pipeline operation
+        assert uppercased_seg_prov.op_desc == pipeline.description
+        # uppercased segment has corresponding sentence segment as source
+        assert uppercased_seg_prov.source_data_items == [sentence_seg]
+
+        # sentence seg has stub provenance (no operation, no source)
+        sentence_seg_prov = prov_tracer.get_prov(sentence_seg.id)
+        assert sentence_seg_prov.op_desc is None
+        assert len(sentence_seg_prov.source_data_items) == 0
+
+    # check inner sub provenance
+    sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.id)
 
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
-        uppercased_node = graph.get_node(uppercased_seg.id)
-        # operation id is of outer pipeline operation
-        assert uppercased_node.operation_id == pipeline.id
-        # uppercased node has corresponding sentence segment as source
-        assert len(uppercased_node.source_ids) == 1
-        assert uppercased_node.source_ids == [sentence_seg.id]
+        uppercased_seg_prov = sub_tracer.get_prov(uppercased_seg.id)
+        # operation is inner uppercaser operation
+        assert uppercased_seg_prov.op_desc == uppercaser.description
+        # uppercased segment has corresponding sentence segment as source
+        assert uppercased_seg_prov.source_data_items == [sentence_seg]
 
-        # sentence node is a stub node (no operation, no source)
-        sentence_node = graph.get_node(sentence_seg.id)
-        assert sentence_node.operation_id is None
-        assert not sentence_node.source_ids
-
-    # check inner sub graph
-    sub_graph = graph.get_sub_graph(pipeline.id)
-
-    for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
-        uppercased_node = sub_graph.get_node(uppercased_seg.id)
-        # operation id is of inner uppercaser operation
-        assert uppercased_node.operation_id == uppercaser.id
-        # uppercased node has corresponding sentence segment as source
-        assert len(uppercased_node.source_ids) == 1
-        assert uppercased_node.source_ids == [sentence_seg.id]
-
-        # sentence node is a stub node (no operation, no source)
-        sentence_node = sub_graph.get_node(sentence_seg.id)
-        assert sentence_node.operation_id is None
-        assert not sentence_node.source_ids
+        # sentence segment has stub provenance (no operation, no source)
+        sentence_seg_prov = sub_tracer.get_prov(sentence_seg.id)
+        assert sentence_seg_prov.op_desc is None
+        assert len(sentence_seg_prov.source_data_items) == 0
 
 
 def test_multiple_steps():
@@ -187,36 +184,32 @@ def test_multiple_steps():
     uppercased_segs = pipeline.run(sentence_segs)
     assert len(uppercased_segs) == len(sentence_segs)
 
-    graph = prov_tracer.graph
-    graph.check_sanity()
+    prov_tracer.graph.check_sanity()
 
-    # check outer main graph
-    graph = prov_tracer.graph
-    graph.check_sanity()
+    # check outer main provenance
+    for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
+        uppercased_seg_prov = prov_tracer.get_prov(uppercased_seg.id)
+        # operation is pipeline operation
+        assert uppercased_seg_prov.op_desc == pipeline.description
+        # uppercased segment has corresponding sentence as source
+        assert uppercased_seg_prov.source_data_items == [sentence_seg]
+
+    # check inner sub provenance
+    sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.id)
 
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
-        uppercased_node = graph.get_node(uppercased_seg.id)
-        # operation id is of pipeline operation
-        assert uppercased_node.operation_id == pipeline.id
-        # uppercased node has corresponding sentence as source
-        assert uppercased_node.source_ids == [sentence_seg.id]
+        uppercased_seg_prov = sub_tracer.get_prov(uppercased_seg.id)
+        # operation is inner uppercaser operation
+        assert uppercased_seg_prov.op_desc == uppercaser.description
+        # uppercased segment has corresponding prefixed segment as source
+        assert len(uppercased_seg_prov.source_data_items) == 1
+        prefixed_seg = uppercased_seg_prov.source_data_items[0]
 
-    # check inner sub graph
-    sub_graph = graph.get_sub_graph(pipeline.id)
-
-    for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
-        uppercased_node = sub_graph.get_node(uppercased_seg.id)
-        # operation id is of inner uppercaser operation
-        assert uppercased_node.operation_id == uppercaser.id
-        # uppercased node has corresponding prefixed segment as source
-        assert len(uppercased_node.source_ids) == 1
-        prefixed_seg_id = uppercased_node.source_ids[0]
-
-        prefixed_node = sub_graph.get_node(prefixed_seg_id)
-        # operation id is of inner prefixer operation
-        assert prefixed_node.operation_id == prefixer.id
-        # prefixed node has corresponding sentence as source
-        assert prefixed_node.source_ids == [sentence_seg.id]
+        prefixed_seg_prov = sub_tracer.get_prov(prefixed_seg.id)
+        # operation is inner prefixer operation
+        assert prefixed_seg_prov.op_desc == prefixer.description
+        # prefixed segment has corresponding sentence as source
+        assert prefixed_seg_prov.source_data_items == [sentence_seg]
 
 
 def test_step_with_attributes():
@@ -251,33 +244,32 @@ def test_step_with_attributes():
     uppercased_segs = pipeline.run(sentence_segs)
     assert len(uppercased_segs) == len(sentence_segs)
 
-    # check outer main graph
-    graph = prov_tracer.graph
-    graph.check_sanity()
+    prov_tracer.graph.check_sanity()
 
+    # check outer main provenance
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
         attrs = uppercased_seg.get_attrs()
         assert len(attrs) == 1
         attr = attrs[0]
-        attr_node = graph.get_node(attr.id)
-        # operation id is of outer pipeline operation
-        assert attr_node.operation_id == pipeline.id
-        # attribute node has corresponding sentence segment as source
+        attr_prov = prov_tracer.get_prov(attr.id)
+        # operation is outer pipeline operation
+        assert attr_prov.op_desc == pipeline.description
+        # attribute has corresponding sentence segment as source
         # (because it is what was given as input to the pipeline operation)
-        assert attr_node.source_ids == [sentence_seg.id]
+        assert attr_prov.source_data_items == [sentence_seg]
 
-    # check inner sub graph
-    sub_graph = graph.get_sub_graph(pipeline.id)
+    # check inner sub provenance
+    sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.id)
 
     for uppercased_seg in uppercased_segs:
         attrs = uppercased_seg.get_attrs()
         assert len(attrs) == 1
         attr = attrs[0]
-        attr_node = sub_graph.get_node(attr.id)
-        # operation id is of inner attribute adder operation
-        assert attr_node.operation_id == attribute_adder.id
-        # attribute node has corresponding uppercased segment as source
-        assert attr_node.source_ids == [uppercased_seg.id]
+        attr_prov = sub_tracer.get_prov(attr.id)
+        # operation is inner attribute adder operation
+        assert attr_prov.op_desc == attribute_adder.description
+        # attribute has corresponding uppercased segment as source
+        assert attr_prov.source_data_items == [uppercased_seg]
 
 
 def test_nested_pipeline():
@@ -329,49 +321,48 @@ def test_nested_pipeline():
     output_segs = pipeline.run(sentence_segs)
     assert len(output_segs) == len(sentence_segs)
 
-    # check outer main graph
-    graph = prov_tracer.graph
-    graph.check_sanity()
+    prov_tracer.graph.check_sanity()
 
+    # check outer main provenance
     for output_seg, sentence_seg in zip(output_segs, sentence_segs):
-        output_node = graph.get_node(output_seg.id)
-        # operation id is of main pipeline operation
-        assert output_node.operation_id == pipeline.id
-        # uppercased node has corresponding sentence as source
-        assert output_node.source_ids == [sentence_seg.id]
+        output_seg_prov = prov_tracer.get_prov(output_seg.id)
+        # operation is main pipeline operation
+        assert output_seg_prov.op_desc == pipeline.description
+        # uppercased segment has corresponding sentence as source
+        assert output_seg_prov.source_data_items == [sentence_seg]
 
-    # check inner sub graph
-    sub_graph = graph.get_sub_graph(pipeline.id)
+    # check inner sub provenance
+    sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.id)
     for output_seg, sentence_seg in zip(output_segs, sentence_segs):
-        # node for result of sub pipeline
-        node = sub_graph.get_node(output_seg.id)
-        assert node.operation_id == sub_pipeline.id
+        # prov for result of sub pipeline
+        prov = sub_tracer.get_prov(output_seg.id)
+        assert prov.op_desc == sub_pipeline.description
 
-        # node for result of prefixer before sub pipeline
-        node = sub_graph.get_node(node.source_ids[0])
-        assert node.operation_id == prefixer_2.id
-        assert len(node.source_ids) == 1
+        # prov for result of prefixer before sub pipeline
+        prov = sub_tracer.get_prov(prov.source_data_items[0].id)
+        assert prov.op_desc == prefixer_2.description
+        assert len(prov.source_data_items) == 1
 
-        # stub node for input sentence segment
-        node = sub_graph.get_node(node.source_ids[0])
-        assert node.data_item_id == sentence_seg.id
-        assert node.operation_id is None
-        assert not node.source_ids
+        # stub prov for input sentence segment
+        prov = sub_tracer.get_prov(prov.source_data_items[0].id)
+        assert prov.data_item == sentence_seg
+        assert prov.op_desc is None
+        assert len(prov.source_data_items) == 0
 
-    # check innermost sub graph
-    sub_graph = sub_graph.get_sub_graph(sub_pipeline.id)
+    # check innermost sub provenance
+    sub_tracer = sub_tracer.get_sub_prov_tracer(sub_pipeline.id)
     for output_seg, sentence_seg in zip(output_segs, sentence_segs):
-        # node for result of prefixer inside sub pipeline
-        node = sub_graph.get_node(output_seg.id)
-        assert node.operation_id == prefixer_1.id
-        assert len(node.source_ids) == 1
+        # prov for result of prefixer inside sub pipeline
+        prov = sub_tracer.get_prov(output_seg.id)
+        assert prov.op_desc == prefixer_1.description
+        assert len(prov.source_data_items) == 1
 
-        # node for result of uppercaser inside sub pipeline
-        node = sub_graph.get_node(node.source_ids[0])
-        assert node.operation_id == uppercaser.id
-        assert len(node.source_ids) == 1
+        # prov for result of uppercaser inside sub pipeline
+        prov = sub_tracer.get_prov(prov.source_data_items[0].id)
+        assert prov.op_desc == uppercaser.description
+        assert len(prov.source_data_items) == 1
 
-        # stub node for result of prefixer before sub pipeline
-        node = sub_graph.get_node(node.source_ids[0])
-        assert node.operation_id is None
-        assert not node.source_ids
+        # stub prov for result of prefixer before sub pipeline
+        prov = sub_tracer.get_prov(prov.source_data_items[0].id)
+        assert prov.op_desc is None
+        assert len(prov.source_data_items) == 0
