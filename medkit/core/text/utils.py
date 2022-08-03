@@ -28,8 +28,9 @@ def clean_newline_character(
     text: str, spans: List[AnySpanType], keep_endlines: bool = False
 ) -> Tuple[str, List[AnySpanType]]:
     """Replace the newline character depending on its position in the text.
-    The endlines characters that are not suppressed can be either
-    kept as endlines, or replaced by spaces.
+    The endlines characters that are not suppressed can be either kept as
+    endlines, or replaced by spaces. This method combines :func:`replace_multiple_newline_after_sentence`
+    and :func:`replace_newline_inside_sentence`.
 
     Parameters
     ----------
@@ -38,11 +39,24 @@ def clean_newline_character(
     spans:
         Spans associated to the `text`
     keep_endlines:
-        If True, each endline is replaced by `.\\n`
-        If False, each endline is replaced by `.\\s`
+        Whether to keep the endlines as '.\\\\n' or replace them with '. '
+
     Returns
-    ------
+    -------
         The cleaned text and the list of spans updated
+
+    Examples
+    --------
+    >>> text = "This is\\n\\n\\ta sentence\\nAnother\\nsentence\\n\\nhere"
+    >>> spans = [Span(0, len(text))]
+    >>> text, spans = clean_newline_character(text, spans, keep_endlines=False)
+    >>> print(text)
+    This is a sentence. Another sentence here
+
+    >>> text, spans = clean_newline_character(text, spans, keep_endlines=True)
+    >>> print(text)
+    This is a sentence.
+    Another sentence here
 
     """
     text, spans = replace_multiple_newline_after_sentence(text, spans)
@@ -57,8 +71,26 @@ def clean_parentheses_eds(
     text: str, spans: List[AnySpanType]
 ) -> Tuple[str, List[AnySpanType]]:
     """Modify the text near the parentheses depending on its content.
-    The rules are adapted for French documents"""
+    The rules are adapted for French documents.
 
+    Examples
+    --------
+    >>> text = \"\"\"
+    ... Le test PCR est (-), pas de nouvelles.
+    ... L'examen d'aujourd'hui est (+).
+    ... Les bilans réalisés (biologique, métabolique en particulier à la recherche
+    ... de GAMT et X fragile) sont revenus négatifs.
+    ... Le patient a un traitement(debuté le 3/02).
+    ... \"\"\"
+    >>> spans = [Span(0,len(text))]
+    >>> text, spans = clean_parentheses_eds(text,spans)
+    >>> print(text)
+    Le test PCR est  negatif , pas de nouvelles.
+    L'examen d'aujourd'hui est  positif .
+    Les bilans réalisés sont revenus négatifs ; biologique, métabolique en particulier à la recherche
+    de GAMT et X fragile.
+    Le patient a un traitement,debuté le 3/02,.
+    """
     text, spans = _replace_text(text, spans, r"\(-\)", " negatif ", group=0)
     text, spans = _replace_text(text, spans, r"\(\+\)", " positif ", group=0)
 
@@ -71,7 +103,16 @@ def clean_multiple_whitespaces_in_sentence(
     text: str, spans: List[AnySpanType]
 ) -> Tuple[str, List[AnySpanType]]:
     """Replace multiple white-spaces between alphanumeric characters and
-    lowercase characters with a single whitespace"""
+    lowercase characters with a single whitespace
+
+    Example
+    -------
+    >>> text = "A   phrase    with  multiple   spaces     "
+    >>> spans = [Span(0, len(text))]
+    >>> text, spans = clean_multiple_whitespaces_in_sentence(text, spans)
+    >>> print(text)
+    A phrase with multiple spaces
+    """
     alphanums_chars = _UPPERCASE_CHARS + _LOWERCASE_CHARS + _NUMERIC_CHARS
     lowernums_chars = _LOWERCASE_CHARS + _NUMERIC_CHARS
 
@@ -87,7 +128,7 @@ def replace_point_after_keywords(
     strict: bool = False,
     replace_by: str = " ",
 ) -> Tuple[str, List[AnySpanType]]:
-    """Replace the character `.` after a keyword and update its span.
+    """Replace the character '.' after a keyword and update its span.
     Could be used to replace dots that indicate the title of a person (i.e. M. or Mrs.)
     or some dots that appear by mistake after `keywords`
 
@@ -109,6 +150,15 @@ def replace_point_after_keywords(
     ------
         The text with the replaced matches and the updated list of spans
 
+    Examples
+    --------
+    >>> text = "Le Dr. a un rdv. Mme. Bernand est venue à 14h"
+    >>> spans = [Span(0, len(text))]
+    >>> keywords = ["Dr","Mme"]
+    >>> text, spans = replace_point_after_keywords(text, spans, keywords,replace_by="")
+    >>> print(text)
+    Le Dr a un rdv. Mme Bernand est venue à 14h
+
     """
     # Create a list regex using '\b' to indicate that keyword is a word
     keywords_regexp = "|".join([rf"\b{keyword}" for keyword in keywords])
@@ -126,7 +176,7 @@ def replace_multiple_newline_after_sentence(
     text: str, spans: List[AnySpanType]
 ) -> Tuple[str, List[AnySpanType]]:
     """Replace multiple space characters between a newline
-    character `\\n` and a capital letter or a number with a single newline character.
+    character \\\\n and a capital letter or a number with a single newline character.
 
     Parameters
     ----------
@@ -149,7 +199,7 @@ def replace_multiple_newline_after_sentence(
 def replace_newline_inside_sentence(
     text: str, spans: List[AnySpanType]
 ) -> Tuple[str, List[AnySpanType]]:
-    """Replace the newline character `\\n` between lowercase letters
+    """Replace the newline character \\\\n between lowercase letters
     or punctuation marks with a space
 
     Parameters
@@ -251,8 +301,18 @@ def _replace_text(
 def replace_point_in_uppercase(
     text: str, spans: List[AnySpanType]
 ) -> Tuple[str, List[AnySpanType]]:
-    """Replace the character `.` between uppercase characters
-    with a space and update its span."""
+    """Replace the character '.' between uppercase characters
+    with a space and update its span.
+
+    Examples
+    --------
+    >>> text = "Abréviation ING.DRT or RTT.J"
+    >>> spans = [Span(0, len(text))]
+    >>> text, spans = replace_point_in_uppercase(text, spans)
+    >>> print(text)
+    Abréviation ING DRT or RTT J
+
+    """
     pattern = rf"[{_UPPERCASE_CHARS}](\.)[{_UPPERCASE_CHARS}]"
     text, spans = _replace_text(text, spans, pattern, " ", group=1)
     return text, spans
@@ -261,8 +321,17 @@ def replace_point_in_uppercase(
 def replace_point_in_numbers(
     text: str, spans: List[AnySpanType]
 ) -> Tuple[str, List[AnySpanType]]:
-    """Replace the character `.` between numbers
-    with the character `,` a space and update its span."""
+    """Replace the character '.' between numbers
+    with the character ',' a space and update its span.
+
+    Example
+    -------
+    >>> text = "La valeur est de 3.456."
+    >>> spans = [Span(0, len(text))]
+    >>> text, spans = replace_point_in_numbers(text, spans)
+    >>> print(text)
+    La valeur est de 3,456.
+    """
     pattern = rf"[{_NUMERIC_CHARS}](\.)[{_NUMERIC_CHARS}]"
     text, spans = _replace_text(text, spans, pattern, ",", group=1)
     return text, spans
@@ -271,8 +340,9 @@ def replace_point_in_numbers(
 def replace_point_before_keywords(
     text: str, spans: List[AnySpanType], keywords: List[str]
 ) -> Tuple[str, List[AnySpanType]]:
-    """Replace the character `.` before a keyword
-    with a space and update its span."""
+    """Replace the character '.' before a keyword
+    with a space and update its span.
+    """
     keywords_regexp = "|".join([rf"{keyword}\b" for keyword in keywords])
     pattern = rf"(\s\.\s*)(?:{keywords_regexp})"
     text, spans = _replace_text(text, spans, pattern, " ", group=1)
