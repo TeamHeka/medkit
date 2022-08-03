@@ -189,15 +189,14 @@ def test_prov(_mocked_requests):
     matcher.set_prov_tracer(prov_tracer)
 
     entity = matcher.run([sentence])[0]
-    graph = prov_tracer.graph
 
-    entity_node = graph.get_node(entity.id)
-    assert entity_node.data_item_id == entity.id
-    assert entity_node.operation_id == matcher.id
-    assert entity_node.source_ids == [sentence.id]
+    entity_prov = prov_tracer.get_prov(entity.id)
+    assert entity_prov.data_item == entity
+    assert entity_prov.op_desc == matcher.description
+    assert entity_prov.source_data_items == [sentence]
 
     attr = entity.get_attrs_by_label(_OUTPUT_LABEL)[0]
-    attr_node = graph.get_node(attr.id)
-    assert attr_node.data_item_id == attr.id
-    assert attr_node.operation_id == matcher.id
-    assert attr_node.source_ids == [sentence.id]
+    attr_prov = prov_tracer.get_prov(attr.id)
+    assert attr_prov.data_item == attr
+    assert attr_prov.op_desc == matcher.description
+    assert attr_prov.source_data_items == [sentence]

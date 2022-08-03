@@ -179,10 +179,9 @@ def test_prov():
     prov_tracer = ProvTracer()
     cleaner.set_prov_tracer(prov_tracer)
     clean_segments = cleaner.run([raw_segment])
-    graph = prov_tracer.graph
 
     clean_segment = clean_segments[0]
-    node_1 = graph.get_node(clean_segment.id)
-    assert node_1.data_item_id == clean_segment.id
-    assert node_1.operation_id == cleaner.id
-    assert node_1.source_ids == [raw_segment.id]
+    prov_1 = prov_tracer.get_prov(clean_segment.id)
+    assert prov_1.data_item == clean_segment
+    assert prov_1.op_desc == cleaner.description
+    assert prov_1.source_data_items == [raw_segment]

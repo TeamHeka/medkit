@@ -87,11 +87,10 @@ def test_prov():
     prov_tracer = ProvTracer()
     brat_converter.set_prov_tracer(prov_tracer)
     collection = brat_converter.load(dir_path="tests/data/brat")
-    graph = prov_tracer.graph
 
     doc = collection.documents[0]
     entity = doc.get_annotations_by_label("disease")[1]
-    node = graph.get_node(entity.id)
-    assert node.data_item_id == entity.id
-    assert node.operation_id == brat_converter.id
-    assert not node.source_ids
+    prov = prov_tracer.get_prov(entity.id)
+    assert prov.data_item == entity
+    assert prov.op_desc == brat_converter.description
+    assert len(prov.source_data_items) == 0

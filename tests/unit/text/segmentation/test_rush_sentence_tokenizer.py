@@ -80,16 +80,15 @@ def test_prov():
     prov_tracer = ProvTracer()
     tokenizer.set_prov_tracer(prov_tracer)
     sentences = tokenizer.run([clean_text_segment])
-    graph = prov_tracer.graph
 
     sentence_1 = sentences[0]
-    node_1 = graph.get_node(sentence_1.id)
-    assert node_1.data_item_id == sentence_1.id
-    assert node_1.operation_id == tokenizer.id
-    assert node_1.source_ids == [clean_text_segment.id]
+    prov_1 = prov_tracer.get_prov(sentence_1.id)
+    assert prov_1.data_item == sentence_1
+    assert prov_1.op_desc == tokenizer.description
+    assert prov_1.source_data_items == [clean_text_segment]
 
     sentence_2 = sentences[1]
-    node_2 = graph.get_node(sentence_2.id)
-    assert node_2.data_item_id == sentence_2.id
-    assert node_2.operation_id == tokenizer.id
-    assert node_2.source_ids == [clean_text_segment.id]
+    prov_2 = prov_tracer.get_prov(sentence_2.id)
+    assert prov_2.data_item == sentence_2
+    assert prov_2.op_desc == tokenizer.description
+    assert prov_2.source_data_items == [clean_text_segment]

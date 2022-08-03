@@ -143,9 +143,8 @@ def test_prov():
     relation_extractor.set_prov_tracer(prov_tracer)
     relation_extractor.run([medkit_doc])
     relation = medkit_doc.get_relations()[0]
-    graph = prov_tracer.graph
 
-    relation_node = graph.get_node(relation.id)
-    assert relation_node.data_item_id == relation.id
-    assert relation_node.operation_id == relation_extractor.id
-    assert relation_node.source_ids == [medkit_doc.raw_segment.id]
+    relation_prov = prov_tracer.get_prov(relation.id)
+    assert relation_prov.data_item == relation
+    assert relation_prov.op_desc == relation_extractor.description
+    assert relation_prov.source_data_items == [medkit_doc.raw_segment]
