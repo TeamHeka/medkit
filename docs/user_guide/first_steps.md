@@ -148,9 +148,9 @@ regexp_matcher = RegexpMatcher(rules=regexp_rules)
 
 ```{note}
 When `RegexpMatcher` is instantiated without any rules, it will use a set of
-default rules that where initially created to be used with documents from the
-APHP EDS. These rules are stored in the `regexp_matcher_default_rules.yml`
-file in the `medkit.text.ner` module.
+default rules that where initially created to be used with documents in french
+from the APHP EDS. These rules are stored in the
+`regexp_matcher_default_rules.yml` file in the `medkit.text.ner` module.
 
 You may also define your own rules in a `.yml` file. You can then load them
 using the `RegexpMatcher.load_rules()` static method and then pass then to the
