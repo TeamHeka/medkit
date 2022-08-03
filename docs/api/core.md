@@ -154,6 +154,7 @@ between medkit format and another one.
     :members:
 ```
 
+(api:core:pipeline)=
 ## Pipeline
 
 :::{seealso}
