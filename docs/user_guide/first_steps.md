@@ -200,7 +200,7 @@ neg_rules = [
     NegationDetectorRule(regexp=r"\bsans\b", exclusion_regexps=[r"\bsans\s*doute\b"]),
     NegationDetectorRule(regexp=r"\bne\s*semble\s*pas"),
 ]
-neg_detector = NegationDetector(output_label="negation", rules=neg_rules)
+neg_detector = NegationDetector(output_label="is_negated", rules=neg_rules)
 neg_detector.run(sentences)
 ```
 
@@ -210,18 +210,18 @@ default rules designed for documents from the EDS, stored in
 `negation_detector_default_rules.yml` inside `medkit.text.context`.
 ```
 
-And now, let's look at which sentence have been detected as containing negation:
+And now, let's look at which sentence have been detected as being negated:
 
 ```{code-cell} ipython3
 for sentence in sentences:
-    neg_attr = sentence.get_attrs_by_label("negation")[0]
+    neg_attr = sentence.get_attrs_by_label("is_negated")[0]
     if neg_attr.value:
         print(sentence.text)
 ```
 
 Our simple negation detector doesn't work so bad, but sometimes
 some part of the sentence has a negation and the other doesn't, and
-in that case the whole sentence gets flagged as having a negation.
+in that case the whole sentence gets flagged as being negated.
 
 To mitigate this, we can split each sentence into finer-grained segments called
 syntagmas. Medkit provide a {class}`~medkit.text.segmentation.SyntagmaTokenizer`
@@ -244,14 +244,14 @@ syntagmas = synt_tokenizer.run(sentences)
 neg_detector.run(syntagmas)
 
 for syntagma in syntagmas:
-    neg_attr = syntagma.get_attrs_by_label("negation")[0]
+    neg_attr = syntagma.get_attrs_by_label("is_negated")[0]
     if neg_attr.value:
         print(syntagma.text)
 ```
 
 That's a little better. We now have some information about negation attached to
-syntagmas, but our end goal is really to know, for each entity, wether it should
-be considered as "negated" or not. In more practical terms, we know have
+syntagmas, but our end goal is really to know, for each entity, whether it
+should be considered as negated or not. In more practical terms, we know have
 negation attributes attached to our syntagmas, but what we really want is to
 have negation attributes attached to entities.
 
@@ -266,12 +266,12 @@ syntagmas rather than from sentences, and using `attrs_to_copy` to copy negation
 attributes:
 
 ```{code-cell} ipython3
-regexp_matcher = RegexpMatcher(rules=regexp_rules, attrs_to_copy=["negation"])
+regexp_matcher = RegexpMatcher(rules=regexp_rules, attrs_to_copy=["is_negated"])
 entities = regexp_matcher.run(syntagmas)
 
 for entity in entities:
-    neg_attr = entity.get_attrs_by_label("negation")[0]
-    print(f"text='{entity.text}', label={entity.label}, negation={neg_attr.value}")
+    neg_attr = entity.get_attrs_by_label("is_negated")[0]
+    print(f"text='{entity.text}', label={entity.label}, is_negated={neg_attr.value}")
 ```
 
 We now have a negation `Attribute` for each entity!
