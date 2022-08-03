@@ -291,9 +291,9 @@ for entity in entities:
 
 The document and its entities can then be exported to supported external formats
 (cf {class}`~medkit.io.brat.BratOutputConverter`), or serialized in the medkit
-format. FIXME: This is not yet supported but there is an undocumented
-`TextDocument.to_dict()` method that will convert a document and its annotations
-to a json-serializable dict:
+format. This is not yet supported but will be in a later version. For now, there
+is an undocumented `TextDocument.to_dict()` method that will convert a document
+and its annotations to a json-serializable dict:
 
 ```{code-cell} ipython3
 :tags: [scroll-output]
