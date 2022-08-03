@@ -39,7 +39,7 @@ def clean_newline_character(
     spans:
         Spans associated to the `text`
     keep_endlines:
-        Whether to keep the endlines as \".\\\\n\" or replace them with \".\\\\s\"
+        Whether to keep the endlines as '.\\\\n' or replace them with '. '
 
     Returns
     -------
@@ -49,15 +49,14 @@ def clean_newline_character(
     --------
     >>> text = "This is\\n\\n\\ta sentence\\nAnother\\nsentence\\n\\nhere"
     >>> spans = [Span(0, len(text))]
-    >>> keep_endlines = False
-    >>> text, spans = clean_newline_character(text, spans, keep_endlines)
+    >>> text, spans = clean_newline_character(text, spans, keep_endlines=False)
     >>> print(text)
     This is a sentence. Another sentence here
 
-    >>> keep_endlines = True
-    >>> text, spans = clean_newline_character(text, spans, keep_endlines)
+    >>> text, spans = clean_newline_character(text, spans, keep_endlines=True)
     >>> print(text)
-    This is a sentence.\\nAnother sentence here
+    This is a sentence.
+    Another sentence here
 
     """
     text, spans = replace_multiple_newline_after_sentence(text, spans)
@@ -76,13 +75,13 @@ def clean_parentheses_eds(
 
     Examples
     --------
-    >>> text = '''
+    >>> text = \"\"\"
     ... Le test PCR est (-), pas de nouvelles.
     ... L'examen d'aujourd'hui est (+).
     ... Les bilans réalisés (biologique, métabolique en particulier à la recherche
     ... de GAMT et X fragile) sont revenus négatifs.
     ... Le patient a un traitement(debuté le 3/02).
-    ... '''
+    ... \"\"\"
     >>> spans = [Span(0,len(text))]
     >>> text, spans = clean_parentheses_eds(text,spans)
     >>> print(text)
@@ -106,7 +105,7 @@ def clean_multiple_whitespaces_in_sentence(
     """Replace multiple white-spaces between alphanumeric characters and
     lowercase characters with a single whitespace
 
-    Examples
+    Example
     -------
     >>> text = "A   phrase    with  multiple   spaces     "
     >>> spans = [Span(0, len(text))]
@@ -156,9 +155,7 @@ def replace_point_after_keywords(
     >>> text = "Le Dr. a un rdv. Mme. Bernand est venue à 14h"
     >>> spans = [Span(0, len(text))]
     >>> keywords = ["Dr","Mme"]
-    >>> strict = True
-    >>> replace_by = ""
-    >>> text, spans = replace_point_after_keywords(text, spans, keywords, strict, replace_by)
+    >>> text, spans = replace_point_after_keywords(text, spans, keywords,replace_by="")
     >>> print(text)
     Le Dr a un rdv. Mme Bernand est venue à 14h
 
@@ -304,7 +301,7 @@ def _replace_text(
 def replace_point_in_uppercase(
     text: str, spans: List[AnySpanType]
 ) -> Tuple[str, List[AnySpanType]]:
-    """Replace the character `.` between uppercase characters
+    """Replace the character '.' between uppercase characters
     with a space and update its span.
 
     Examples
@@ -324,16 +321,16 @@ def replace_point_in_uppercase(
 def replace_point_in_numbers(
     text: str, spans: List[AnySpanType]
 ) -> Tuple[str, List[AnySpanType]]:
-    """Replace the character `.` between numbers
-    with the character `,` a space and update its span.
+    """Replace the character '.' between numbers
+    with the character ',' a space and update its span.
 
-    Examples
-    --------
-    >>> text = "La valeur est de 3.456. Temp 23.45."
+    Example
+    -------
+    >>> text = "La valeur est de 3.456."
     >>> spans = [Span(0, len(text))]
     >>> text, spans = replace_point_in_numbers(text, spans)
     >>> print(text)
-    La valeur est de 3,456. Temp 23,45.
+    La valeur est de 3,456.
     """
     pattern = rf"[{_NUMERIC_CHARS}](\.)[{_NUMERIC_CHARS}]"
     text, spans = _replace_text(text, spans, pattern, ",", group=1)
