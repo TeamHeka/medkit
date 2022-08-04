@@ -59,6 +59,7 @@ def test_single_operation():
 
     # check inner sub provenance
     assert tracer.has_sub_prov_tracer(wrapper.id)
+    assert len(tracer.get_sub_prov_tracers()) == 1
     sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
     # must have prov for each input item and each output item
     assert len(sub_tracer.get_provs()) == len(input_items) + len(output_items)
@@ -393,3 +394,57 @@ def test_consecutive_calls():
     sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
     # must have prov for each input item, each intermediate item and each output item
     assert len(sub_tracer.get_provs()) == len(input_items) + 2 * len(output_items)
+
+
+class _NestedWrapper:
+    def __init__(self, prov_tracer):
+        self.id = generate_id()
+        self.prov_tracer = prov_tracer
+        self.sub_prov_tracer = ProvTracer(prov_tracer.store)
+        self.sub_wrapper_1 = _DoublePrefixerWrapper(self.sub_prov_tracer)
+        self.sub_wrapper_2 = _DoublePrefixerWrapper(self.sub_prov_tracer)
+        self.description = OperationDescription(id=self.id, name="NestedWrapper")
+
+    def run(self, input_items):
+        output_items = self.sub_wrapper_1.run(input_items)
+        output_items += self.sub_wrapper_2.run(input_items)
+
+        self.prov_tracer.add_prov_from_sub_tracer(
+            output_items, self.description, self.sub_prov_tracer
+        )
+
+        return output_items
+
+
+def test_nested():
+    """Composite operation using 2 composite operations"""
+    tracer = ProvTracer()
+    wrapper = _NestedWrapper(tracer)
+    input_items = get_text_items(2)
+    prefixed_items = wrapper.run(input_items)
+
+    tracer.graph.check_sanity()
+
+    # check outer main provenance
+    input_item = input_items[0]
+    prefixed_item = prefixed_items[0]
+    prov = tracer.get_prov(prefixed_item.id)
+    assert prov.op_desc == wrapper.description
+    assert prov.source_data_items == [input_item]
+
+    # check inner sub provenance
+    assert len(tracer.get_sub_prov_tracers()) == 1
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    prov = sub_tracer.get_prov(prefixed_item.id)
+    assert prov.op_desc == wrapper.sub_wrapper_1.description
+    assert prov.source_data_items == [input_item]
+
+    # check innermost "sub sub" provenance
+    assert len(sub_tracer.get_sub_prov_tracers()) == 2
+    sub_sub_tracer_1 = sub_tracer.get_sub_prov_tracer(wrapper.sub_wrapper_1.id)
+    prov = sub_sub_tracer_1.get_prov(prefixed_item.id)
+    assert prov.op_desc == wrapper.sub_wrapper_1.prefixer_2.description
+    intermediate_item = prov.source_data_items[0]
+    prov = sub_sub_tracer_1.get_prov(intermediate_item.id)
+    assert prov.op_desc == wrapper.sub_wrapper_1.prefixer_1.description
+    assert prov.source_data_items == [input_item]

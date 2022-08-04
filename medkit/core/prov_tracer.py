@@ -154,7 +154,7 @@ class ProvTracer:
                 if node.operation_id != op_desc.id:
                     raise RuntimeError(
                         "Trying to add provenance for sub graph for data item with id"
-                        " {data_item.id} that already has a node, but with different"
+                        f" {data_item.id} that already has a node, but with different"
                         " operation_id"
                     )
                 continue
