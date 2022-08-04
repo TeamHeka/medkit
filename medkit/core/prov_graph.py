@@ -11,13 +11,14 @@ class ProvNode:
     data_item_id: str
     operation_id: Optional[str]
     source_ids: List[str]
-    derived_ids: List[str] = dataclasses.field(default_factory=list)
+    derived_ids: List[str]
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
             data_item_id=self.data_item_id,
             operation_id=self.operation_id,
             source_ids=self.source_ids,
+            derived_ids=self.derived_ids,
         )
 
 
@@ -41,9 +42,41 @@ class ProvGraph:
     def get_node(self, data_item_id: str) -> ProvNode:
         return self._nodes_by_id[data_item_id]
 
-    def add_node(self, node: ProvNode):
-        assert node.data_item_id not in self._nodes_by_id
-        self._nodes_by_id[node.data_item_id] = node
+    def add_node(self, data_item_id: str, operation_id: str, source_ids: List[str]):
+        # add_node() can be called only once for a data item
+        # but a stub node with no operation may already existing if the data item
+        # was previously passed as a source
+        node = self._nodes_by_id.get(data_item_id)
+        if node is None:
+            node = ProvNode(
+                data_item_id=data_item_id,
+                operation_id=operation_id,
+                source_ids=source_ids,
+                derived_ids=[],
+            )
+            self._nodes_by_id[data_item_id] = node
+        else:
+            assert (
+                node.operation_id is None
+            ), f"Node with id {data_item_id} already added to graph"
+            node.operation_id = operation_id
+            assert len(node.source_ids) == 0  # stub node shouldn't have any source
+            node.source_ids = source_ids
+
+        # update derivation edges of source nodes
+        for source_id in source_ids:
+            source_node = self._nodes_by_id.get(source_id)
+            # if source item is unknown to graph,
+            # create stub node with no operation
+            if source_node is None:
+                source_node = ProvNode(
+                    source_id,
+                    operation_id=None,
+                    source_ids=[],
+                    derived_ids=[],
+                )
+                self._nodes_by_id[source_id] = source_node
+            source_node.derived_ids.append(data_item_id)
 
     def has_node(self, data_item_id: str) -> bool:
         return data_item_id in self._nodes_by_id
