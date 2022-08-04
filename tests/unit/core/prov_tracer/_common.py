@@ -21,7 +21,7 @@ class Generator:
 
         self.id = generate_id()
         self.prov_tracer = prov_tracer
-        self.description = OperationDescription(id=self.id, name="Merger")
+        self.description = OperationDescription(id=self.id, name="Generator")
 
     def generate(self, nb_items):
         items = get_text_items(nb_items)
@@ -38,7 +38,7 @@ class Prefixer:
 
         self.id = generate_id()
         self.prov_tracer = prov_tracer
-        self.description = OperationDescription(id=self.id, name="Merger")
+        self.description = OperationDescription(id=self.id, name="Prefixer")
 
     def prefix(self, items):
         prefixed_items = []
@@ -58,7 +58,7 @@ class Splitter:
 
         self.id = generate_id()
         self.prov_tracer = prov_tracer
-        self.description = OperationDescription(id=self.id, name="Merger")
+        self.description = OperationDescription(id=self.id, name="Splitter")
 
     def split(self, items):
         split_items = []
