@@ -1,7 +1,7 @@
 __all__ = ["save_prov_to_dot"]
 
 from pathlib import Path
-from typing import Callable, TextIO, Optional
+from typing import Callable, TextIO, Optional, Union
 
 from medkit.core import (
     OperationDescription,
@@ -16,7 +16,7 @@ from medkit.core import (
 def save_prov_to_dot(
     prov_graph: ProvGraph,
     store: Store,
-    file: Path,
+    file: Union[str, Path],
     data_item_formatter: Optional[Callable[[IdentifiableDataItem], str]] = None,
     op_formatter: Optional[Callable[[OperationDescription], str]] = None,
     max_sub_graph_depth: Optional[int] = None,
