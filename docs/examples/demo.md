@@ -266,16 +266,11 @@ dot_graph = output_dir / "prov.dot"
 
 # save prov graph to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
-with open(dot_graph, mode="w") as file:
-    save_prov_to_dot(
-        prov_graph,
-        store,
-        file,
-        data_item_formatter=lambda d: d.text
-        if isinstance(d, TextAnnotation)
-        else f"{d.label}:{d.value}",
-        op_formatter=lambda o: o.name,
-    )
+save_prov_to_dot(
+    prov_graph,
+    store,
+    dot_graph,
+)
 ```
 
 ```{code-cell} ipython3
@@ -407,12 +402,6 @@ from medkit.tools import save_prov_to_dot
 
 os.makedirs(output_dir, exist_ok=True)
 prov_graph = prov_builder.graph
-
-def data_item_formatter(d):
-    return d.text if isinstance(d, TextAnnotation) else f"{d.label}:{d.value}"
-
-def operation_formatter(o):
-    return o.name
 ```
 
 #### Basic information (graph depth = 0)
@@ -423,15 +412,12 @@ png_graph = output_dir / "prov.png"
 
 # save prov graph to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
-with open(dot_graph, mode="w") as file:
-    save_prov_to_dot(
-        prov_graph,
-        store,
-        file,
-        data_item_formatter,
-        operation_formatter,
-        max_sub_graph_depth=0,
-    )
+save_prov_to_dot(
+    prov_graph,
+    store,
+    dot_graph,
+    max_sub_graph_depth=0,
+)
 
 cmd = f"dot -Tpng {dot_graph} -o {png_graph}"
 os.system(cmd)
@@ -448,15 +434,12 @@ png_graph = output_dir / "prov_intermediate.png"
 
 # save prov graph to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
-with open(dot_graph, mode="w") as file:
-    save_prov_to_dot(
-        prov_graph,
-        store,
-        file,
-        data_item_formatter,
-        operation_formatter,
-        max_sub_graph_depth=1,
-    )
+save_prov_to_dot(
+    prov_graph,
+    store,
+    dot_graph,
+    max_sub_graph_depth=1,
+)
 
 cmd = f"dot -Tpng {dot_graph} -o {png_graph}"
 os.system(cmd)
@@ -473,15 +456,12 @@ png_graph = output_dir / "prov_full.png"
 
 # save prov graph to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
-with open(dot_graph, mode="w") as file:
-    save_prov_to_dot(
-        prov_graph,
-        store,
-        file,
-        data_item_formatter,
-        operation_formatter,
-        max_sub_graph_depth=2,
-    )
+save_prov_to_dot(
+    prov_graph,
+    store,
+    dot_graph,
+    max_sub_graph_depth=2,
+)
 
 cmd = f"dot -Tpng {dot_graph} -o {png_graph}"
 os.system(cmd)
