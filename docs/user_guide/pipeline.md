@@ -39,7 +39,7 @@ sent_tokenizer = SentenceTokenizer(
 )
 
 synt_tokenizer = SyntagmaTokenizer(
-    output_label="sentence",
+    output_label="syntagma",
     separators=[r"\bmais\b", r"\bet\b"],
 )
 
@@ -229,7 +229,7 @@ hyp_rules = [
     HypothesisDetectorRule(regexp=r"\bpense\b"),
     HypothesisDetectorRule(regexp=r"\semble\b"),
 ]
-hyp_detector = HypothesisDetector(output_label="hypothesis", rules=hyp_rules)
+hyp_detector = HypothesisDetector(output_label="is_hypothesis", rules=hyp_rules)
 ```
 
 We could just insert the hypothesis detector in the list of steps and
