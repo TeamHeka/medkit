@@ -141,7 +141,7 @@ this:
 
 ```{mermaid}
 :align: center
-graph TB
+graph LR
     A((?))
     B(normalizer)
     C(sent_tokenizer)
