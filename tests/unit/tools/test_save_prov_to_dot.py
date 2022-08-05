@@ -49,13 +49,7 @@ def test_basic(tmp_path):
 
     # export to dot
     dot_file = tmp_path / "prov.dot"
-    save_prov_to_dot(
-        prov_builder.graph,
-        prov_builder.store,
-        dot_file,
-        data_item_formatter=lambda a: f"{a.label}: {a.text}",
-        op_formatter=lambda o: o.name,
-    )
+    save_prov_to_dot(prov_builder.graph, prov_builder.store, dot_file)
     dot_text = dot_file.read_text()
 
     # check dot entries
@@ -76,6 +70,35 @@ def test_basic(tmp_path):
     )
 
 
+def test_custom_format(tmp_path):
+    """Custom data item and operation formatters"""
+    # build provenance
+    sentence_segment, syntagma_segment, entity = _get_segment_and_entity()
+    prov_builder = ProvBuilder()
+    _build_prov(prov_builder, sentence_segment, syntagma_segment, entity)
+
+    dot_file = tmp_path / "prov.dot"
+    save_prov_to_dot(
+        prov_builder.graph,
+        prov_builder.store,
+        dot_file,
+        # change formatting
+        data_item_formatters={Segment: lambda s: s.text},
+        op_formatter=lambda o: f"Operation: {o.name}",
+    )
+    dot_text = dot_file.read_text()
+
+    # check dot entries
+    # segments are formatted differently
+    assert f'"{sentence_segment.id}" [label="This is a sentence."];\n' in dot_text
+    # operations are formatted differently
+    assert (
+        f'"{sentence_segment.id}" -> "{syntagma_segment.id}"'
+        ' [label="Operation: SyntagmaTokenizer"];\n'
+        in dot_text
+    )
+
+
 def test_attrs(tmp_path):
     """Display attribute links"""
     # build provenance
@@ -85,13 +108,7 @@ def test_attrs(tmp_path):
 
     # export to dot
     dot_file = tmp_path / "prov.dot"
-    save_prov_to_dot(
-        prov_builder.graph,
-        prov_builder.store,
-        dot_file,
-        data_item_formatter=lambda a: f"{a.label}",
-        op_formatter=lambda o: o.name,
-    )
+    save_prov_to_dot(prov_builder.graph, prov_builder.store, dot_file)
     dot_text = dot_file.read_text()
 
     # check attribute link in dot entries
@@ -119,12 +136,7 @@ def test_sub_prov_graph(tmp_path):
     # render dot, not expanding sub graphs
     dot_file = tmp_path / "prov.dot"
     save_prov_to_dot(
-        prov_builder.graph,
-        prov_builder.store,
-        dot_file,
-        data_item_formatter=lambda a: f"{a.label}: {a.text}",
-        op_formatter=lambda o: o.name,
-        max_sub_graph_depth=0,
+        prov_builder.graph, prov_builder.store, dot_file, max_sub_graph_depth=0
     )
     dot_text = dot_file.read_text()
 
@@ -134,12 +146,7 @@ def test_sub_prov_graph(tmp_path):
     # render dot, expanding all sub graphs
     dot_file_full = tmp_path / "prov_full.dot"
     save_prov_to_dot(
-        prov_builder.graph,
-        prov_builder.store,
-        dot_file_full,
-        data_item_formatter=lambda a: f"{a.label}: {a.text}",
-        op_formatter=lambda o: o.name,
-        max_sub_graph_depth=None,
+        prov_builder.graph, prov_builder.store, dot_file_full, max_sub_graph_depth=None
     )
     dot_text_full = dot_file_full.read_text()
 

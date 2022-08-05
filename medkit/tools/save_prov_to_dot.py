@@ -1,7 +1,7 @@
 __all__ = ["save_prov_to_dot"]
 
 from pathlib import Path
-from typing import Callable, TextIO, Optional, Union
+from typing import Any, Callable, Dict, TextIO, Optional, Type, Union
 
 from medkit.core import (
     OperationDescription,
@@ -10,14 +10,16 @@ from medkit.core import (
     ProvNode,
     IdentifiableDataItem,
     IdentifiableDataItemWithAttrs,
+    Attribute,
 )
+from medkit.core.text import Segment
 
 
 def save_prov_to_dot(
     prov_graph: ProvGraph,
     store: Store,
     file: Union[str, Path],
-    data_item_formatter: Optional[Callable[[IdentifiableDataItem], str]] = None,
+    data_item_formatters: Optional[Dict[Type, Callable[[Any], str]]] = None,
     op_formatter: Optional[Callable[[OperationDescription], str]] = None,
     max_sub_graph_depth: Optional[int] = None,
     show_attr_links: bool = True,
@@ -34,10 +36,15 @@ def save_prov_to_dot(
         `prov_graph`.
     file:
         Path to the .dot file.
-    data_item_formatter:
-        Callback function returning the label to use for each data item.
+    data_item_formatters:
+        Dict mapping data items types with callback functions returning the text
+        to display for each data item of this type.
+        Some default formatters are available for common data item such as text
+        annotations. Use `data_item_formatters` to override them or to add support
+        for other types.
     op_formatter:
-        Callback function returning the label to use for each operation.
+        Callback function returning the text to display for each operation.
+        If none provided, the operation name is used.
     max_sub_graph_depth:
         When there are nested provenance sub graphs for some operations, how
         deep should we go when displaying the contents of these sub graphs.
@@ -50,7 +57,7 @@ def save_prov_to_dot(
         writer = _DotWriter(
             store,
             fp,
-            data_item_formatter,
+            data_item_formatters,
             op_formatter,
             max_sub_graph_depth,
             show_attr_links,
@@ -58,19 +65,28 @@ def save_prov_to_dot(
         writer.write_graph(prov_graph)
 
 
+_DEFAULT_DATA_ITEMS_FORMATTERS = {
+    Segment: lambda s: f"{s.label}: {s.text}",
+    Attribute: lambda a: f"{a.label}: {a.value}",
+}
+
+
 class _DotWriter:
     def __init__(
         self,
         store: Store,
         fp: TextIO,
-        data_item_formatter: Optional[Callable[[IdentifiableDataItem], str]],
+        data_item_formatters: Optional[Dict[Type, Callable[[Any], str]]],
         op_formatter: Optional[Callable[[OperationDescription], str]],
         max_sub_graph_depth: Optional[int],
         show_attr_links: bool = True,
     ):
+        if data_item_formatters is None:
+            data_item_formatters = {}
+
         self._store = store
         self._fp = fp
-        self._data_item_formatter = data_item_formatter
+        self._data_item_formatters = data_item_formatters
         self._op_formatter = op_formatter
         self._max_sub_graph_depth = max_sub_graph_depth
         self._show_attr_links = show_attr_links
@@ -101,11 +117,7 @@ class _DotWriter:
 
     def _write_node(self, node: ProvNode):
         data_item = self._store.get_data_item(node.data_item_id)
-        data_item_label = (
-            self._data_item_formatter(data_item)
-            if self._data_item_formatter is not None
-            else data_item.id
-        )
+        data_item_label = self._format_data_item(data_item)
         self._fp.write(f'"{data_item.id}" [label="{data_item_label}"];\n')
 
         if node.operation_id is not None:
@@ -113,7 +125,7 @@ class _DotWriter:
             op_label = (
                 self._op_formatter(op_desc)
                 if self._op_formatter is not None
-                else op_desc.id
+                else op_desc.name
             )
         else:
             op_label = "Unknown"
@@ -129,3 +141,16 @@ class _DotWriter:
                     f'"{data_item.id}" -> "{attr.id}" [style=dashed, color=grey,'
                     ' label="attr", fontcolor=grey];\n'
                 )
+
+    def _format_data_item(self, data_item: IdentifiableDataItem):
+        # must test first user-provided formatters then default
+        # (can't merge the two in same dict, this might create unexpected
+        # behavior when there a subtypes)
+        for formatters in [self._data_item_formatters, _DEFAULT_DATA_ITEMS_FORMATTERS]:
+            for type, formatter in formatters.items():
+                if isinstance(data_item, type):
+                    return formatter(data_item)
+        raise ValueError(
+            f"Found no formatter for data item with type {type(data_item)}, please"
+            " provide one"
+        )

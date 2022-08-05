@@ -270,10 +270,6 @@ save_prov_to_dot(
     prov_graph,
     store,
     dot_graph,
-    data_item_formatter=lambda d: d.text
-    if isinstance(d, TextAnnotation)
-    else f"{d.label}:{d.value}",
-    op_formatter=lambda o: o.name,
 )
 ```
 
@@ -406,12 +402,6 @@ from medkit.tools import save_prov_to_dot
 
 os.makedirs(output_dir, exist_ok=True)
 prov_graph = prov_builder.graph
-
-def data_item_formatter(d):
-    return d.text if isinstance(d, TextAnnotation) else f"{d.label}:{d.value}"
-
-def operation_formatter(o):
-    return o.name
 ```
 
 #### Basic information (graph depth = 0)
@@ -426,8 +416,6 @@ save_prov_to_dot(
     prov_graph,
     store,
     dot_graph,
-    data_item_formatter,
-    operation_formatter,
     max_sub_graph_depth=0,
 )
 
@@ -450,8 +438,6 @@ save_prov_to_dot(
     prov_graph,
     store,
     dot_graph,
-    data_item_formatter,
-    operation_formatter,
     max_sub_graph_depth=1,
 )
 
@@ -474,8 +460,6 @@ save_prov_to_dot(
     prov_graph,
     store,
     dot_graph,
-    data_item_formatter,
-    operation_formatter,
     max_sub_graph_depth=2,
 )
 
