@@ -33,6 +33,14 @@ quickumls = {version = "^1.4.0", optional = true}
 packaging = {version = "^21.3", optional = true}
 spacy = {version = "^3.4.0", optional = true}
 
+jupyter-book = {version = "^0.13.0", optional = true}
+matplotlib = {version = "^3.5.2", optional = true}
+# TODO: to be added for supporting `autodoc_typehints_format` when poetry 1.2
+# cf.https://github.com/sphinx-doc/sphinx/issues/10241
+# cf. https://python-poetry.org/docs/master/managing-dependencies/#dependency-groups
+# sphinx = {version = "^4.3.3", optional = true}
+sphinxcontrib-mermaid = {version = "^0.7.1", optional = true}
+sphinx-toolbox = {version = "^3.1.2", optional = true}
 
 
 [tool.poetry.dev-dependencies]
@@ -43,6 +51,15 @@ pytest-cov = "^3.0.0"
 pytest-mock = "^3.8.2"
 
 [tool.poetry.extras]
+docs = [
+    "jupyter-book",
+    "matplotlib",
+#    "sphinx",
+    "sphinxcontrib-mermaid",
+    "sphinx-toolbox",
+    "spacy"
+]
+
 hf-translator = [
     "sacremoses",  # needed by default model "Helsinki-NLP/opus-mt-fr-en"
     "torch",
