@@ -6,3 +6,4 @@ exclude =
     .env,
     .git,
     __pycache__
+    docs

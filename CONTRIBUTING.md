@@ -41,7 +41,25 @@ Running the command `black <path/to/file.py>` will auto-format the file. Running
 
 Note that every time a merge request is opened or updated, `black` and `flake8` will automatically be run on the codebase and will prevent it from being merged if an error is detected.
 
-TODO mention pre-commit hooks.
+As `flake8` may cause dependencies conflicts (importlib-metadata) with
+other libraries (e.g., sphinx), we use the linter tools in a separated
+environment using [pre-commit](https://pre-commit.com/) framework.
+
+The configuration file `.pre-commit-config.yaml` is at the project root.
+
+To run locally these tools, follow these instructions:
+```
+$ pre-commit install
+pre-commit installed at .git/hooks/pre-commit
+
+# To run on all project files
+$ pre-commit run --all-files
+
+# To run only on staged files
+$ pre-commit run
+```
+
+Note that the tool is launched before each commit on staged changes.
 
 ### Coding style
 
