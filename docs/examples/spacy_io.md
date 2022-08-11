@@ -31,43 +31,54 @@ Consider the following spacy document:
 
 ```{code-cell} ipython3
 import spacy
+from spacy.tokens import Span as SpacySpan
 
 # Load French tokenizer, tagger, parser and NER
 nlp = spacy.load("fr_core_news_sm")
 
-# Process a document 
-text = """Anna Euler habite à Brest. La patient a été transférée."""
+# Create a spacy document 
+text = """Parcours patient:
+Anna Euler habite à Brest. Elle a été transférée."""
 spacy_doc = nlp(text)
 
-# Add noun_chunk as a span group
-spacy_doc.spans["NOUN_CHUNKS"] = list(spacy_doc.noun_chunks)
+#  Spacy adds entities, here we add a span 'SECTION' as an example
+spacy_doc.spans["SECTION"] = [SpacySpan(spacy_doc, 0, 2, "header")]
+```
 
-# Find named entities
-print("Entities: ")
-for entity in spacy_doc.ents:
-    print(entity.text, entity.label_)
-    
-print("Span groups:\n", spacy_doc.spans)
+**Description of the spacy document**
+
+---
+* Entities
+---
+
+```{code-cell} ipython3
+from spacy import displacy
+
+displacy.render(spacy_doc, style="ent")
+```
+
+---
+* Spans
+---
+
+```{code-cell} ipython3
+displacy.render(spacy_doc, style="span",options={"spans_key": "SECTION"})
 
 ```
+
+The spacy document has **2** entities and **1** span groups called `SECTION`.
+
+Let's see how to convert this spacy doc in a `TextDocument` with annotations.
 
 ## Load spacy docs into a Collection of TextDocuments
 
-The class {class}`~medkit.text.spacy.SpacyInputConverter` is in charge of converting spacy Docs into a collection of TextDocuments. By default, since its parameters are set to `None`, it loads all entities, span groups and extension 
-attributes for each `SpacyDoc` object.
-
-You can choose the list of entities, spans or attributes of interest when configuring the input converter.
+The class {class}`~medkit.io.spacy.SpacyInputConverter` is in charge of converting spacy Docs into a collection of TextDocuments. By default, it loads all entities, span groups and extension  attributes for each SpacyDoc object, but you can use the `entities`, `span_groups` and `attrs` parameters to specify which items should be converted, based on their labels.
 
 ```{tip}
-You can set the provenance using:
-```python
-from medkit.core import ProvBuilder
+You can enable the provenance tracing using the method `set_prov_builder` with a {class}`~medkit.core.ProvBuilder` object.
 
-# Define Input Converter and set provenance builder
-prov_builder = ProvBuilder()
-spacy_input_converter = SpacyInputConverter()
-spacy_input_converter.set_prov_builder(prov_builder)
 ```
+
 
 ```{code-cell} ipython3
 from medkit.io.spacy import SpacyInputConverter
@@ -78,35 +89,48 @@ spacy_input_converter = SpacyInputConverter()
 # Load spacy doc into a collection of documents
 collection = spacy_input_converter.load([spacy_doc])
 medkit_doc = collection.documents[0]
-
-# Explore annotations
-print(f"The medkit doc has {len(medkit_doc.get_annotations())} annotations.")
-
 ```
+
+**Description of the resulting Text document**
++++
+
+```{code-cell} ipython3
+print(f"The medkit doc has {len(medkit_doc.get_annotations())} annotations.")
+print(f"The medkit doc has {len(medkit_doc.get_entities())} entities.")
+print(f"The medkit doc has {len(medkit_doc.get_annotations_by_label('SECTION'))} spans.")
+```
+
+**Visualizing Medkit annotations**
+
+As explained in other tutorials, we can view medkit annotations using `displacy`. 
+
+---
+* Entities loaded from spacy in medkit
+---
+
+```{code-cell} ipython3
+from medkit.text.spacy.displacy_utils import medkit_doc_to_displacy
+
+# getting entities in displacy format
+entities_data = medkit_doc_to_displacy(medkit_doc)
+displacy.render(entities_data, style="ent",manual=True)
+```
+
+---
+* Spans loaded from spacy in medkit
+---
 
 ```{code-cell} ipython3
 
-
-# Show info in entities
-print("\nEntities loaded from spacy in medkit: ")
-for ent in medkit_doc.get_entities():
-    print(ent.label, ent.spans,ent.text)
-
-# Show span groups
-noun_chunks = medkit_doc.get_annotations_by_label("NOUN_CHUNKS")
-
-print("\nSpan group loaded from spacy in medkit:")
-for noun in noun_chunks:
-    print(noun.label, noun.spans,noun.text)
-  
+# getting spans from 'SECTION' in displacy format
+# In this case, we display the original label from spacy 
+section_data = medkit_doc_to_displacy(medkit_doc,["SECTION"],lambda sp: sp.metadata["name"])
+displacy.render(section_data, style="ent",manual=True)
 ```
 
 ## Convert a collection of TextDocument to SpacyDocs
 
-Similarly it is possible to convert a list/Collection of TextDocument to Spacy using {class}`~medkit.text.spacy.SpacyOutputConverter`. You will need to provide an `nlp` object that tokenizes and generates the document with the raw text as reference.
-
-You can choose which medkit annotations and attributes to convert. Likewise, you can apply the nlp object to the converted documents with the `apply_nlp_spacy` parameter. 
-
+Similarly it is possible to convert a list/Collection of TextDocument to Spacy using {class}`~medkit.io.spacy.SpacyOutputConverter`. You will need to provide an `nlp` object that tokenizes and generates the document with the raw text as reference. By default, it converts all medkit annotations and attributes to Spacy, but you can use  `anns_labels` and `attrs` parameters to specify which items should be converted. 
 
 ```{code-cell} ipython3
 from medkit.io.spacy import SpacyOutputConverter
@@ -115,19 +139,31 @@ from medkit.io.spacy import SpacyOutputConverter
 spacy_output_converter = SpacyOutputConverter(nlp=nlp)
 
 # Convert a list of TextDocument 
-new_spacy_docs = spacy_output_converter.convert([medkit_doc])
-new_spacy_doc = new_spacy_docs[0]
+
+spacy_docs_medkit = spacy_output_converter.convert([medkit_doc])
+spacy_doc_medkit = spacy_docs_medkit[0]
 
 # Explore new spacy doc
-print("Text of spacy doc from TextDocument:\n",new_spacy_doc.text)
+print("Text of spacy doc from TextDocument:\n",spacy_doc_medkit.text)
 ```
 
+**Description of the resulting Spacy document**
+
+---
+* Entities exported to spacy
+---
+
 ```{code-cell} ipython3
-print("Entities: ")
-for entity in new_spacy_doc.ents:
-    print(entity.text, entity.label_)
-    
-print("Span groups:", new_spacy_doc.spans)
+displacy.render(spacy_doc_medkit, style="ent")
+```
+
+---
+* Spans exported to spacy
+---
+
+```{code-cell} ipython3
+displacy.render(spacy_doc_medkit, style="span",options={"spans_key": "SECTION"})
+
 ```
 :::{seealso}
 cf. [Spacy IO module](api:io:spacy).
