@@ -17,34 +17,36 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.7,<4.0" # Add <4.0 for smart-open
-flashtext = "^2.7"
-pyaml = "^21.10.1"
-requests = "^2.28.1"
-smart-open = "^5.2.1"
-typing-extensions = "^4.1.1"
-Unidecode = "^1.3.4"
+python = ">=3.7, <4.0"
+flashtext = "*"
+pyaml = "*"
+requests = "*"
+smart-open = "*"
+typing-extensions = "*"
+Unidecode = "*"
 
-transformers = {extras = ["sentencepiece", "torch"], version = "^4.20.1", optional = true}
-sacremoses = {version = "^0.0.53", optional = true}
+# optional (hf-translator)
+transformers = {extras = ["sentencepiece", "torch"], version = "^4.21", optional = true}
+sacremoses = {version = "*", optional = true}
 
-PyRuSH = {version = "^1.0.3", optional = true}
-quickumls = {version = "^1.4.0", optional = true}
-packaging = {version = "^21.3", optional = true}
-spacy = {version = "^3.4.0", optional = true}
+# optional (optional)
+PyRuSH = {version = "^1.0", optional = true}
+quickumls = {version = "^1.4", optional = true}
+packaging = {version = "*", optional = true}
+spacy = {version = "3.4", optional = true}
 
-jupyter-book = {version = "^0.13.0", optional = true}
-matplotlib = {version = "^3.5.2", optional = true}
-sphinx = {version = "^4.3.3", optional = true}
-sphinxcontrib-mermaid = {version = "^0.7.1", optional = true}
-sphinx-toolbox = {version = "^3.1.2", optional = true}
-
+#docs
+jupyter-book = {version = "^0.13", optional = true}
+matplotlib = {version = "*", optional = true}
+sphinx = {version = ">=4.3.3", optional = true}
+sphinxcontrib-mermaid = {version = "*", optional = true}
+sphinx-toolbox = {version = "*", optional = true}
 
 [tool.poetry.dev-dependencies]
-pytest = "^7.1.2"
-pytest-cov = "^3.0.0"
-pytest-mock = "^3.8.2"
-pre-commit = "^2.20.0"
+pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"
+pre-commit = "*"
 
 [tool.poetry.extras]
 docs = [
