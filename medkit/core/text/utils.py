@@ -113,11 +113,8 @@ def clean_multiple_whitespaces_in_sentence(
     >>> print(text)
     A phrase with multiple spaces
     """
-    alphanums_chars = _UPPERCASE_CHARS + _LOWERCASE_CHARS + _NUMERIC_CHARS
-    lowernums_chars = _LOWERCASE_CHARS + _NUMERIC_CHARS
-
-    pattern = rf"[{alphanums_chars},:](\s{{2,}})[{lowernums_chars}]"
-    text, spans = _replace_text(text, spans, pattern, " ", group=1)
+    pattern = r"([ \t]{2,})"
+    text, spans = _replace_text(text, spans, pattern, " ", group=0)
     return text, spans
 
 
