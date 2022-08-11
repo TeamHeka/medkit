@@ -184,6 +184,7 @@ def test_small_parentheses():
 
 
 def test_clean_multiple_whitespaces():
+    # Now this function replaces all whitespaces, without restriction
     text = (
         "All tests     biological,    and metabolic are negative"
         + " THIS     maybe   NOT"
@@ -191,7 +192,7 @@ def test_clean_multiple_whitespaces():
     spans = [Span(start=0, end=76)]
 
     text, spans = clean_multiple_whitespaces_in_sentence(text, spans)
-    assert text == "All tests biological, and metabolic are negative THIS maybe   NOT"
+    assert text == "All tests biological, and metabolic are negative THIS maybe NOT"
     assert spans == [
         Span(start=0, end=9),
         ModifiedSpan(length=1, replaced_spans=[Span(start=9, end=14)]),
@@ -199,7 +200,9 @@ def test_clean_multiple_whitespaces():
         ModifiedSpan(length=1, replaced_spans=[Span(start=25, end=29)]),
         Span(start=29, end=60),
         ModifiedSpan(length=1, replaced_spans=[Span(start=60, end=65)]),
-        Span(start=65, end=76),
+        Span(start=65, end=70),
+        ModifiedSpan(length=1, replaced_spans=[Span(start=70, end=73)]),
+        Span(start=73, end=76),
     ]
 
 
