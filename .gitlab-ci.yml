@@ -2,6 +2,9 @@ image: python:3.7
 
 variables:
   POETRY_HOME: /etc/poetry
+  # if cache is not already set for the branch, use the develop cache for
+  # retrieving poetry.lock
+  CACHE_FALLBACK_KEY: develop-protected
 
 # Trigger the pipeline on develop/main branches and all MRs (except develop merge to main)
 workflow:
