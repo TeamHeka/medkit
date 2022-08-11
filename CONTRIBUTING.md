@@ -112,13 +112,13 @@ Each test function should have a name like `test_<tested_module_or_class_or_func
 
 Documentation is available in `docs` folder.
 
-For building docs (another conda environment is available in `docs` folder).
-First you need to install [mamba](https://mamba.readthedocs.io/en/latest/user_guide/mamba.html):
+If you want to contribute, you need to setup your development environment
+(cf. [install guide](docs/user_guide/install.md)).
+
+Once your environment activated, you may build the documentation using:
 
 ```
 $ cd docs
-$ mamba env create -f environment.yml
-$ conda activate medkit-docs
 $ jb build .
 ```
 Then, html docs are generated in `docs/_build/html`.
