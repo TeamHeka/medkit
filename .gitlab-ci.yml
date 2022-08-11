@@ -56,7 +56,6 @@ setup_cache:
     policy: pull-push
   script:
     - *prepare_poetry_env
-    - poetry update --lock
     - poetry install -E optional -E hf-translator -E docs
     - source ./.venv/bin/activate
     - pip list
@@ -65,6 +64,20 @@ setup_cache:
     paths:
       - poetry.lock
   interruptible: true
+
+update_cache:
+  stage: .pre
+  tags:
+    - docker-cache
+  cache:
+    <<: *default_cache
+    policy: pull-push
+  script:
+    - *prepare_poetry_env
+    - poetry update
+  rules:
+    - changes:
+      - pyproject.toml
 
 .use_cache:
   tags:
