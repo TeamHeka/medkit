@@ -11,13 +11,14 @@ class ProvNode:
     data_item_id: str
     operation_id: Optional[str]
     source_ids: List[str]
-    derived_ids: List[str] = dataclasses.field(default_factory=list)
+    derived_ids: List[str]
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
             data_item_id=self.data_item_id,
             operation_id=self.operation_id,
             source_ids=self.source_ids,
+            derived_ids=self.derived_ids,
         )
 
 
@@ -41,9 +42,75 @@ class ProvGraph:
     def get_node(self, data_item_id: str) -> ProvNode:
         return self._nodes_by_id[data_item_id]
 
-    def add_node(self, node: ProvNode):
-        assert node.data_item_id not in self._nodes_by_id
-        self._nodes_by_id[node.data_item_id] = node
+    def add_node(self, data_item_id: str, operation_id: str, source_ids: List[str]):
+        """Create a node describing how a data item was created.
+
+        Parameters
+        ----------
+        data_item_id:
+            Id of the data item that was created.
+        operation_id:
+            Id of the operation that created the data item.
+        source_ids:
+            Id of pre-existing data items from which the data item was derived
+            (if any). If these source data items don't have corresponding nodes,
+            "stub" nodes (nodes with no `operation_id` and no `source_ids`) are
+            created. It allows us to know how a data item was used even if we
+            don't know how it was created.
+        """
+
+        node = self._nodes_by_id.get(data_item_id)
+        # 2 different cases may occur:
+        # - there is no node for data_item_id. This is the most straightforward
+        #   case, we just create a node with the provided operation_id and
+        #   source_ids;
+        # - there is already a node for data_item_id. Even though add_node()
+        #   should only be called only once for a data item, a "stub" node (a
+        #   node with no operation_id and no source_ids) may already exists if
+        #   data_item_id was used as a source_id in a previous call to
+        #   add_node(). In this case, we update the existing node by setting its
+        #   operation_id and source_ids to the provided values.
+        if node is None:
+            # no node exist for the data item, we just have to create one
+            node = ProvNode(
+                data_item_id=data_item_id,
+                operation_id=operation_id,
+                source_ids=source_ids,
+                derived_ids=[],
+            )
+            self._nodes_by_id[data_item_id] = node
+        else:
+            # a node already exists for the data item. this is valid only if the
+            # node is a "stub" node, otherwise it probably means that add_node()
+            # has been called twice with the same data_item_id
+            assert (
+                node.operation_id is None
+            ), f"Node with id {data_item_id} already added to graph"
+            # check consistency of stub node: operation_id should be None, and
+            # source_ids should be empty
+            assert len(node.source_ids) == 0, (
+                "Inconsistent values for stub node: operation_id is None but source_ids"
+                " is not empty"
+            )
+            # we are now sure that the node is a stub node and that operation_id
+            # and source_ids are empty and can be set to the provided values
+            node.operation_id = operation_id
+            node.source_ids = source_ids
+
+        # update derivation edges of source nodes
+        for source_id in source_ids:
+            source_node = self._nodes_by_id.get(source_id)
+            # if source item is unknown to graph,
+            # create stub node with no operation
+            if source_node is None:
+                source_node = ProvNode(
+                    source_id,
+                    operation_id=None,
+                    source_ids=[],
+                    derived_ids=[],
+                )
+                self._nodes_by_id[source_id] = source_node
+            source_node.derived_ids.append(data_item_id)
 
     def has_node(self, data_item_id: str) -> bool:
         return data_item_id in self._nodes_by_id

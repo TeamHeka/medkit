@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from medkit.core.data_item import IdentifiableDataItem
 from medkit.core.operation_desc import OperationDescription
-from medkit.core.prov_graph import ProvGraph, ProvNode
+from medkit.core.prov_graph import ProvGraph
 from medkit.core.store import Store, DictStore
 
 
@@ -31,28 +31,13 @@ class ProvBuilder:
 
         self.store.store_data_item(data_item)
         self.store.store_op_desc(op_desc)
-
-        source_ids = [s.id for s in source_data_items]
-        node = ProvNode(data_item.id, op_desc.id, source_ids)
-        self.graph.add_node(node)
-
-        # add derivation edges
+        # add source data items to store
         for source_data_item in source_data_items:
-            source_id = source_data_item.id
-            # create stub node for unknown source id
-            if not self.graph.has_node(source_id):
-                source_node = ProvNode(
-                    source_id,
-                    operation_id=None,
-                    source_ids=[],
-                    derived_ids=[data_item.id],
-                )
-                self.graph.add_node(source_node)
-            else:
-                source_node = self.graph.get_node(source_id)
-                source_node.derived_ids.append(data_item.id)
-            # add source data item to store
             self.store.store_data_item(source_data_item)
+
+        # add node to graph
+        source_ids = [s.id for s in source_data_items]
+        self.graph.add_node(data_item.id, op_desc.id, source_ids)
 
     def add_prov_from_sub_graph(
         self,
@@ -106,20 +91,4 @@ class ProvBuilder:
             queue.extend(id for id in sub_graph_node.source_ids if id not in seen)
 
         # add new node on main graph for group operation
-        group_node = ProvNode(data_item_id, operation_id, source_ids)
-        self.graph.add_node(group_node)
-
-        # add derivation edges
-        for source_id in source_ids:
-            # create stub node for unknown source id
-            if not self.graph.has_node(source_id):
-                source_node = ProvNode(
-                    source_id,
-                    operation_id=None,
-                    source_ids=[],
-                    derived_ids=[data_item_id],
-                )
-                self.graph.add_node(source_node)
-            else:
-                source_node = self.graph.get_node(source_id)
-                source_node.derived_ids.append(data_item_id)
+        self.graph.add_node(data_item_id, operation_id, source_ids)

@@ -6,59 +6,183 @@ from medkit.core.prov_graph import ProvGraph, ProvNode
 
 def test_basic():
     """Basic usage"""
-    node_1 = ProvNode(
-        data_item_id=generate_id(), operation_id=generate_id(), source_ids=[]
-    )
-    node_2 = ProvNode(
-        data_item_id=generate_id(),
-        operation_id=generate_id(),
-        source_ids=[node_1.data_item_id],
-    )
-    node_1.derived_ids.append(node_2.data_item_id)
-    graph = ProvGraph([node_1, node_2])
-
-    assert graph.get_nodes() == [node_1, node_2]
-    assert graph.has_node(node_1.data_item_id)
-    assert graph.get_node(node_1.data_item_id) == node_1
-    fake_id = generate_id()
-    assert not graph.has_node(fake_id)
-
-    node_3 = ProvNode(data_item_id=generate_id(), operation_id=None, source_ids=[])
-    graph.add_node(node_3)
-    assert graph.get_nodes() == [node_1, node_2, node_3]
-    assert graph.has_node(node_3.data_item_id)
-    assert graph.get_node(node_3.data_item_id) == node_3
-
-
-def test_empty_graph():
-    """Empty graph"""
     graph = ProvGraph()
-    assert not graph.get_nodes()
-    fake_id = generate_id()
-    assert not graph.has_node(fake_id)
+
+    # add 1st node
+    data_item_id_1 = generate_id()
+    op_id_1 = generate_id()
+    graph.add_node(data_item_id_1, op_id_1, source_ids=[])
+
+    # add 2d node with same operation as 1st node
+    data_item_id_2 = generate_id()
+    graph.add_node(data_item_id_2, op_id_1, source_ids=[])
+
+    # add 3rd node with 1st node as source
+    data_item_id_3 = generate_id()
+    op_id_2 = generate_id()
+    graph.add_node(data_item_id_3, op_id_2, source_ids=[data_item_id_1])
+
+    # retrieve all nodes and check them
+    nodes = graph.get_nodes()
+    assert len(nodes) == 3
+    node_1, node_2, node_3 = nodes
+
+    assert node_1.data_item_id == data_item_id_1
+    assert node_1.operation_id == op_id_1
+    assert len(node_1.source_ids) == 0
+    # 3rd node was automatically added to derived items of 1st node
+    assert node_1.derived_ids == [data_item_id_3]
+
+    assert node_2.data_item_id == data_item_id_2
+    assert node_2.operation_id == op_id_1
+    assert len(node_2.source_ids) == 0
+    assert len(node_2.derived_ids) == 0
+
+    assert node_3.data_item_id == data_item_id_3
+    assert node_3.operation_id == op_id_2
+    assert node_3.source_ids == [data_item_id_1]
+    assert len(node_3.derived_ids) == 0
+
+    # test other node accessors
+    assert graph.has_node(data_item_id_1)
+    assert graph.get_node(data_item_id_1) == node_1
+    non_existent_id = generate_id()
+    assert not graph.has_node(non_existent_id)
+
+
+def test_multiple_derived():
+    """More complicated derivations"""
+    graph = ProvGraph()
+
+    # add 1st and 2d node
+    data_item_id_1 = generate_id()
+    graph.add_node(
+        data_item_id_1,
+        operation_id=generate_id(),
+        source_ids=[],
+    )
+    data_item_id_2 = generate_id()
+    graph.add_node(
+        data_item_id_2,
+        operation_id=generate_id(),
+        source_ids=[],
+    )
+
+    # add 3d node derived from 1st and 2d
+    data_item_id_3 = generate_id()
+    graph.add_node(
+        data_item_id_3,
+        operation_id=generate_id(),
+        source_ids=[data_item_id_1, data_item_id_2],
+    )
+
+    # add 4th node derived from 1st
+    data_item_id_4 = generate_id()
+    graph.add_node(
+        data_item_id_4,
+        operation_id=generate_id(),
+        source_ids=[data_item_id_1],
+    )
+
+    # check source/derived for all nodes
+    node_1 = graph.get_node(data_item_id_1)
+    assert len(node_1.source_ids) == 0
+    assert node_1.derived_ids == [data_item_id_3, data_item_id_4]
+
+    node_2 = graph.get_node(data_item_id_2)
+    assert len(node_2.source_ids) == 0
+    assert node_2.derived_ids == [data_item_id_3]
+
+    node_3 = graph.get_node(data_item_id_3)
+    assert node_3.source_ids == [data_item_id_1, data_item_id_2]
+    assert len(node_3.derived_ids) == 0
+
+    node_4 = graph.get_node(data_item_id_4)
+    assert node_4.source_ids == [data_item_id_1]
+    assert len(node_4.derived_ids) == 0
+
+
+def test_stub_node():
+    """Handling of stub nodes for unknown data items"""
+    graph = ProvGraph()
+
+    # add node created from unknown data item
+    data_item_1 = generate_id()
+    data_item_2 = generate_id()
+    graph.add_node(
+        data_item_1,
+        operation_id=generate_id(),
+        source_ids=[data_item_2],
+    )
+
+    node_1 = graph.get_node(data_item_1)
+    assert node_1.source_ids == [data_item_2]
+
+    # stub node automatically created
+    node_2 = graph.get_node(data_item_2)
+    assert node_2.operation_id is None
+    assert node_2.source_ids == []
+    assert node_2.derived_ids == [data_item_1]
+
+    # create node for previously unknown data item
+    op_id = generate_id()
+    graph.add_node(
+        data_item_2,
+        operation_id=op_id,
+        source_ids=[],
+    )
+    node_2 = graph.get_node(data_item_2)
+    assert node_2.operation_id == op_id
+    assert node_2.source_ids == []
+    assert node_2.derived_ids == [data_item_1]
+
+
+def test_init_from_nodes():
+    """Initialize a graph with a list of nodes"""
+    data_item_id_1 = generate_id()
+    data_item_id_2 = generate_id()
+
+    node_1 = ProvNode(
+        data_item_id=data_item_id_1,
+        operation_id=generate_id(),
+        source_ids=[],
+        derived_ids=[data_item_id_2],
+    )
+
+    node_2 = ProvNode(
+        data_item_id=data_item_id_2,
+        operation_id=generate_id(),
+        source_ids=[data_item_id_1],
+        derived_ids=[],
+    )
+
+    graph = ProvGraph(nodes=[node_1, node_2])
+    assert graph.get_nodes() == [node_1, node_2]
 
 
 def _gen_simple_graph():
     graph = ProvGraph()
 
-    node_1 = ProvNode(
-        data_item_id=generate_id(), operation_id=generate_id(), source_ids=[]
-    )
-    graph.add_node(node_1)
-
-    node_2 = ProvNode(
-        data_item_id=generate_id(),
+    data_item_id_1 = generate_id()
+    graph.add_node(
+        data_item_id=data_item_id_1,
         operation_id=generate_id(),
-        source_ids=[node_1.data_item_id],
+        source_ids=[],
     )
-    graph.add_node(node_2)
 
-    node_3 = ProvNode(
-        data_item_id=generate_id(),
+    data_item_id_2 = generate_id()
+    graph.add_node(
+        data_item_id=data_item_id_2,
         operation_id=generate_id(),
-        source_ids=[node_2.data_item_id],
+        source_ids=[data_item_id_1],
     )
-    graph.add_node(node_3)
+
+    data_item_id_3 = generate_id()
+    graph.add_node(
+        data_item_id=data_item_id_3,
+        operation_id=generate_id(),
+        source_ids=[data_item_id_2],
+    )
 
     return graph
 
@@ -175,10 +299,16 @@ def test_flatten_recursive():
 def test_sanity_check():
     """Sanity check of graphs"""
     node_1 = ProvNode(
-        data_item_id=generate_id(), operation_id=generate_id(), source_ids=[]
+        data_item_id=generate_id(),
+        operation_id=generate_id(),
+        source_ids=[],
+        derived_ids=[],
     )
     node_2 = ProvNode(
-        data_item_id=generate_id(), operation_id=generate_id(), source_ids=[]
+        data_item_id=generate_id(),
+        operation_id=generate_id(),
+        source_ids=[],
+        derived_ids=[],
     )
     node_1.source_ids.append(node_2.data_item_id)
     node_2.derived_ids.append(node_1.data_item_id)
@@ -188,7 +318,10 @@ def test_sanity_check():
 
     # node with sources but no operation
     node_3 = ProvNode(
-        data_item_id=generate_id(), operation_id=None, source_ids=[node_2.data_item_id]
+        data_item_id=generate_id(),
+        operation_id=None,
+        source_ids=[node_2.data_item_id],
+        derived_ids=[],
     )
     graph_2 = ProvGraph([node_3])
     with pytest.raises(
@@ -201,6 +334,7 @@ def test_sanity_check():
         data_item_id=generate_id(),
         operation_id=generate_id(),
         source_ids=[generate_id()],
+        derived_ids=[],
     )
     graph_3 = ProvGraph([node_4])
     with pytest.raises(
