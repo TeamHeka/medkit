@@ -60,7 +60,7 @@ class ProvTracer:
     information from this internal sub-provenance tracer into the main
     provenance tracer that was provided to them.
 
-    This will build sub-provenance information, than can then be retrieved
+    This will build sub-provenance information, than can be retrieved later
     through :meth:`~.get_sub_prov_tracer` or :meth:`~.get_sub_prov_tracers`. The
     inner operations of a composite operation can themselves be composite
     operations, leading to a tree-like structure of nested provenance tracers.
@@ -73,8 +73,7 @@ class ProvTracer:
         Parameters
         ----------
         store:
-            Store into which to store all traced data items of which we are tracing the
-            provenance.
+            Store that will contain all traced data items.
         """
         if store is None:
             store = DictStore()
@@ -189,8 +188,9 @@ class ProvTracer:
         """Check if the provenance tracer has provenance information about a
         specific data item.
 
-        NB:  this will return `False` if we have provenance info about a data
-        item but only in a sub-provenance tracer.
+        .. note::
+            This will return `False` if we have provenance info about a data
+            item but only in a sub-provenance tracer.
 
         Parameters
         ----------
@@ -224,7 +224,8 @@ class ProvTracer:
     def get_provs(self) -> List[Prov]:
         """Return all provenance information about all data items known to the tracer.
 
-        NB:  nested provenance info from sub-provenance tracers will not be returned.
+        .. note::
+            Nested provenance info from sub-provenance tracers will not be returned.
 
         Returns
         -------
@@ -237,9 +238,10 @@ class ProvTracer:
         """Check if the provenance tracer has a sub-provenance tracer for a
         specific composite operation (such as a pipeline).
 
-        NB:  this will return `False` if there is a sub-provenance tracer for
-        the operation but that is not a direct child (i.e. that is deeper in the
-        hierarchy).
+        .. note::
+            This will return `False` if there is a sub-provenance tracer for
+            the operation but that is not a direct child (i.e. that is deeper
+            in the hierarchy).
 
         Parameters
         -----------
@@ -275,8 +277,9 @@ class ProvTracer:
         """
         Return all sub-provenance tracers of the provenance tracer.
 
-        NB:  this will not return sub-provenance tracers that are not direct
-        children of this tracer (i.e. that are deeper in the hierarchy).
+        .. note::
+            This will not return sub-provenance tracers that are not direct
+            children of this tracer (i.e. that are deeper in the hierarchy).
 
         Returns
         -------
