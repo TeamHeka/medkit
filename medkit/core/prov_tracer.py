@@ -60,7 +60,7 @@ class ProvTracer:
     information from this internal sub-provenance tracer into the main
     provenance tracer that was provided to them.
 
-    This will build sub-provenance information, than can be retrieved later
+    This will build sub-provenance information, that can be retrieved later
     through :meth:`~.get_sub_prov_tracer` or :meth:`~.get_sub_prov_tracers`. The
     inner operations of a composite operation can themselves be composite
     operations, leading to a tree-like structure of nested provenance tracers.
