@@ -113,8 +113,8 @@ class SyntagmaTokenizer(SegmentationOperation):
                 text=text,
             )
 
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     syntagma, self.description, source_data_items=[segment]
                 )
 

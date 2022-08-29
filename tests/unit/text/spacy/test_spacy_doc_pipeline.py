@@ -4,7 +4,7 @@ import spacy
 from spacy.tokens import Doc
 from spacy.tokens import Span as SpacySpan
 
-from medkit.core import ProvBuilder
+from medkit.core import ProvTracer
 from medkit.core.text import Entity, Span, TextDocument
 from medkit.text.spacy import SpacyDocPipeline
 
@@ -148,8 +148,8 @@ def test_prov(nlp_spacy_modified):
     # created a docpipeline using the new nlp object
     # by default params are None, transfer all information
     spacydoc_pipeline = SpacyDocPipeline(nlp=nlp)
-    prov_builder = ProvBuilder()
-    spacydoc_pipeline.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    spacydoc_pipeline.set_prov_tracer(prov_tracer)
 
     # create original annotations
     medkit_doc = _get_doc()
@@ -159,26 +159,25 @@ def test_prov(nlp_spacy_modified):
     raw_segment = medkit_doc.raw_segment
 
     # check new entity
-    graph = prov_builder.graph
     entity = medkit_doc.get_annotations_by_label("DATE")[0]
-    node = graph.get_node(entity.id)
-    assert node.data_item_id == entity.id
-    assert node.operation_id == spacydoc_pipeline.id
-    assert node.source_ids == [raw_segment.id]
+    entity_prov = prov_tracer.get_prov(entity.id)
+    assert entity_prov.data_item == entity
+    assert entity_prov.op_desc == spacydoc_pipeline.description
+    assert entity_prov.source_data_items == [raw_segment]
 
     attribute = entity.get_attrs()[0]
-    attr = graph.get_node(attribute.id)
-    assert attr.data_item_id == attribute.id
-    assert attr.operation_id == spacydoc_pipeline.id
+    attr_prov = prov_tracer.get_prov(attribute.id)
+    assert attr_prov.data_item == attribute
+    assert attr_prov.op_desc == spacydoc_pipeline.description
     # it is a new entity, medkit object origin was raw_ann
-    assert attr.source_ids == [raw_segment.id]
+    assert attr_prov.source_data_items == [raw_segment]
 
     # check new attr entity
     entity = medkit_doc.get_annotations_by_label("disease")[0]
 
     attribute = entity.get_attrs()[0]
-    attr = graph.get_node(attribute.id)
-    assert attr.data_item_id == attribute.id
-    assert attr.operation_id == spacydoc_pipeline.id
+    attr_prov = prov_tracer.get_prov(attribute.id)
+    assert attr_prov.data_item == attribute
+    assert attr_prov.op_desc == spacydoc_pipeline.description
     # it is a medkit entity, medkit object origin was entity
-    assert attr.source_ids == [entity.id]
+    assert attr_prov.source_data_items == [entity]

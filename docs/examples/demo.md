@@ -178,13 +178,13 @@ displacy.render(ex, style="ent", manual="True")
 
 ## Pipeline example with provenance
 
-### Initialize store and provenance builder
+### Initialize store and provenance tracing
 
 ```{code-cell} ipython3
-from medkit.core import DictStore, ProvBuilder
+from medkit.core import DictStore, ProvTracer
 
 store = DictStore()
-prov_builder = ProvBuilder(store)
+prov_tracer = ProvTracer(store)
 ```
 
 ### Get data
@@ -231,11 +231,11 @@ pipeline = Pipeline(steps, input_keys=["full_text"], output_keys=["entities"])
 ```
 
 ```{warning}
-Do not forget to enable provenance builder for the pipeline.
+Do not forget to enable provenance tracing for the pipeline.
 ```
 
 ```{code-cell} ipython3
-pipeline.set_prov_builder(prov_builder)
+pipeline.set_prov_tracer(prov_tracer)
 ```
 
 ### Run annotation pipeline on each document
@@ -261,14 +261,12 @@ from medkit.core.text import TextAnnotation
 from medkit.tools import save_prov_to_dot
 
 os.makedirs(output_dir, exist_ok=True)
-prov_graph = prov_builder.graph
 dot_graph = output_dir / "prov.dot"
 
-# save prov graph to dot file
+# save provenance to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
 save_prov_to_dot(
-    prov_graph,
-    store,
+    prov_tracer,
     dot_graph,
 )
 ```
@@ -287,13 +285,13 @@ Image(png_file)
 
 ## Pipeline example with different provenance granularity
 
-### Initialize store and provenance builder
+### Initialize store and provenance tracing
 
 ```{code-cell} ipython3
-from medkit.core import DictStore, ProvBuilder
+from medkit.core import DictStore, ProvTracer
 
 store = DictStore()
-prov_builder = ProvBuilder(store)
+prov_tracer = ProvTracer(store)
 ```
 
 ### Get data
@@ -369,11 +367,11 @@ pipeline = Pipeline(steps, input_keys=["full_text"], output_keys=["entities"])
 ```
 
 ```{warning}
-Do not forget to enable provenance builder for the pipeline.
+Do not forget to enable provenance tracing for the pipeline.
 ```
 
 ```{code-cell} ipython3
-pipeline.set_prov_builder(prov_builder)
+pipeline.set_prov_tracer(prov_tracer)
 ```
 
 ### Run annotation pipeline on each document
@@ -401,7 +399,6 @@ from medkit.core.text import TextAnnotation
 from medkit.tools import save_prov_to_dot
 
 os.makedirs(output_dir, exist_ok=True)
-prov_graph = prov_builder.graph
 ```
 
 #### Basic information (graph depth = 0)
@@ -410,13 +407,12 @@ prov_graph = prov_builder.graph
 dot_graph = output_dir / "prov.dot"
 png_graph = output_dir / "prov.png"
 
-# save prov graph to dot file
+# save provenance to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
 save_prov_to_dot(
-    prov_graph,
-    store,
+    prov_tracer,
     dot_graph,
-    max_sub_graph_depth=0,
+    max_sub_prov_depth=0,
 )
 
 cmd = f"dot -Tpng {dot_graph} -o {png_graph}"
@@ -432,13 +428,12 @@ Image(png_graph)
 dot_graph = output_dir / "prov_intermediate.dot"
 png_graph = output_dir / "prov_intermediate.png"
 
-# save prov graph to dot file
+# save provenance to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
 save_prov_to_dot(
-    prov_graph,
-    store,
+    prov_tracer,
     dot_graph,
-    max_sub_graph_depth=1,
+    max_sub_prov_depth=1,
 )
 
 cmd = f"dot -Tpng {dot_graph} -o {png_graph}"
@@ -454,13 +449,12 @@ Image(png_graph)
 dot_graph = output_dir / "prov_full.dot"
 png_graph = output_dir / "prov_full.png"
 
-# save prov graph to dot file
+# save provenance to dot file
 # (generate pgn with dot -Tpng prov.dot -o prov.png)
 save_prov_to_dot(
-    prov_graph,
-    store,
+    prov_tracer,
     dot_graph,
-    max_sub_graph_depth=2,
+    max_sub_prov_depth=2,
 )
 
 cmd = f"dot -Tpng {dot_graph} -o {png_graph}"

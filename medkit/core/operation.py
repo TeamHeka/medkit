@@ -9,7 +9,7 @@ from typing import List, Type, TypeVar, Union
 from medkit.core.document import Collection, Document
 from medkit.core.id import generate_id
 from medkit.core.operation_desc import OperationDescription
-from medkit.core.prov_builder import ProvBuilder
+from medkit.core.prov_tracer import ProvTracer
 
 C = TypeVar("C", bound="Operation")
 
@@ -19,7 +19,7 @@ class Operation(abc.ABC):
 
     id: str
     _description: OperationDescription = None
-    _prov_builder: ProvBuilder = None
+    _prov_tracer: ProvTracer = None
 
     @abc.abstractmethod
     def __init__(self, op_id=None, **kwargs):
@@ -50,16 +50,16 @@ class Operation(abc.ABC):
             id=self.id, name=self.__class__.__name__, config=kwargs
         )
 
-    def set_prov_builder(self, prov_builder: ProvBuilder):
+    def set_prov_tracer(self, prov_tracer: ProvTracer):
         """
         Enable provenance tracing.
 
         Parameters
         ----------
-        prov_builder:
-            The provenance builder used to trace the provenance.
+        prov_tracer:
+            The provenance tracer used to trace the provenance.
         """
-        self._prov_builder = prov_builder
+        self._prov_tracer = prov_tracer
 
     @property
     def description(self) -> OperationDescription:

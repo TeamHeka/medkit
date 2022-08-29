@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import spacy.cli
 
-from medkit.core import Attribute, ProvBuilder
+from medkit.core import Attribute, ProvTracer
 from medkit.core.text import Segment, Span
 from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher
 
@@ -203,19 +203,18 @@ def test_prov():
 
     umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
 
-    prov_builder = ProvBuilder()
-    umls_matcher.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    umls_matcher.set_prov_tracer(prov_tracer)
     entities = umls_matcher.run([sentence])
-    graph = prov_builder.graph
 
     entity = entities[0]
-    entity_node = graph.get_node(entity.id)
-    assert entity_node.data_item_id == entity.id
-    assert entity_node.operation_id == umls_matcher.id
-    assert entity_node.source_ids == [sentence.id]
+    entity_prov = prov_tracer.get_prov(entity.id)
+    assert entity_prov.data_item == entity
+    assert entity_prov.op_desc == umls_matcher.description
+    assert entity_prov.source_data_items == [sentence]
 
     attr = entity.get_attrs_by_label("umls")[0]
-    attr_node = graph.get_node(attr.id)
-    assert attr_node.data_item_id == attr.id
-    assert attr_node.operation_id == umls_matcher.id
-    assert attr_node.source_ids == [sentence.id]
+    attr_prov = prov_tracer.get_prov(attr.id)
+    assert attr_prov.data_item == attr
+    assert attr_prov.op_desc == umls_matcher.description
+    assert attr_prov.source_data_items == [sentence]

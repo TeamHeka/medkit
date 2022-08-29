@@ -19,7 +19,7 @@ from medkit.core import (
     InputConverter,
     OutputConverter,
     Store,
-    ProvBuilder,
+    ProvTracer,
     generate_id,
     OperationDescription,
 )
@@ -43,14 +43,14 @@ class BratInputConverter(InputConverter):
 
         self.id = op_id
         self.store: Optional[Store] = store
-        self._prov_builder: Optional[ProvBuilder] = None
+        self._prov_tracer: Optional[ProvTracer] = None
 
     @property
     def description(self) -> OperationDescription:
         return OperationDescription(id=self.id, name=self.__class__.__name__)
 
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
+    def set_prov_tracer(self, prov_tracer: ProvTracer):
+        self._prov_tracer = prov_tracer
 
     def load(
         self,
@@ -159,8 +159,8 @@ class BratInputConverter(InputConverter):
                 metadata=dict(brat_id=brat_entity.id),
             )
             anns_by_brat_id[brat_entity.id] = entity
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     entity, self.description, source_data_items=[]
                 )
 
@@ -172,8 +172,8 @@ class BratInputConverter(InputConverter):
                 metadata=dict(brat_id=brat_relation.id),
             )
             anns_by_brat_id[brat_relation.id] = relation
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     relation, self.description, source_data_items=[]
                 )
 
@@ -184,8 +184,8 @@ class BratInputConverter(InputConverter):
                 metadata=dict(brat_id=brat_attribute.id),
             )
             anns_by_brat_id[brat_attribute.target].add_attr(attribute)
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     attribute, self.description, source_data_items=[]
                 )
 

@@ -1,6 +1,6 @@
 from medkit.core import (
     generate_id,
-    ProvBuilder,
+    ProvTracer,
     OperationDescription,
     Attribute,
 )
@@ -21,21 +21,21 @@ def _get_segment_and_entity(with_attr=False):
     return sentence_segment, syntagma_segment, entity
 
 
-def _build_prov(prov_builder, sentence_segment, syntagma_segment, entity):
+def _build_prov(prov_tracer, sentence_segment, syntagma_segment, entity):
     tokenizer_desc = OperationDescription(name="SyntagmaTokenizer", id=generate_id())
-    prov_builder.add_prov(
+    prov_tracer.add_prov(
         syntagma_segment, tokenizer_desc, source_data_items=[sentence_segment]
     )
 
     matcher_desc = OperationDescription(name="EntityMatcher", id=generate_id())
-    prov_builder.add_prov(entity, matcher_desc, source_data_items=[syntagma_segment])
+    prov_tracer.add_prov(entity, matcher_desc, source_data_items=[syntagma_segment])
 
     for attr in entity.get_attrs():
         # add attribute to entity
         neg_detector_desc = OperationDescription(
             name="NegationDetector", id=generate_id()
         )
-        prov_builder.add_prov(
+        prov_tracer.add_prov(
             attr, neg_detector_desc, source_data_items=[syntagma_segment]
         )
 
@@ -44,12 +44,12 @@ def test_basic(tmp_path):
     """Basic usage"""
     # build provenance
     sentence_segment, syntagma_segment, entity = _get_segment_and_entity()
-    prov_builder = ProvBuilder()
-    _build_prov(prov_builder, sentence_segment, syntagma_segment, entity)
+    prov_tracer = ProvTracer()
+    _build_prov(prov_tracer, sentence_segment, syntagma_segment, entity)
 
     # export to dot
     dot_file = tmp_path / "prov.dot"
-    save_prov_to_dot(prov_builder.graph, prov_builder.store, dot_file)
+    save_prov_to_dot(prov_tracer, dot_file)
     dot_text = dot_file.read_text()
 
     # check dot entries
@@ -74,13 +74,12 @@ def test_custom_format(tmp_path):
     """Custom data item and operation formatters"""
     # build provenance
     sentence_segment, syntagma_segment, entity = _get_segment_and_entity()
-    prov_builder = ProvBuilder()
-    _build_prov(prov_builder, sentence_segment, syntagma_segment, entity)
+    prov_tracer = ProvTracer()
+    _build_prov(prov_tracer, sentence_segment, syntagma_segment, entity)
 
     dot_file = tmp_path / "prov.dot"
     save_prov_to_dot(
-        prov_builder.graph,
-        prov_builder.store,
+        prov_tracer,
         dot_file,
         # change formatting
         data_item_formatters={Segment: lambda s: s.text},
@@ -103,12 +102,12 @@ def test_attrs(tmp_path):
     """Display attribute links"""
     # build provenance
     sentence_segment, syntagma_segment, entity = _get_segment_and_entity(with_attr=True)
-    prov_builder = ProvBuilder()
-    _build_prov(prov_builder, sentence_segment, syntagma_segment, entity)
+    prov_tracer = ProvTracer()
+    _build_prov(prov_tracer, sentence_segment, syntagma_segment, entity)
 
     # export to dot
     dot_file = tmp_path / "prov.dot"
-    save_prov_to_dot(prov_builder.graph, prov_builder.store, dot_file)
+    save_prov_to_dot(prov_tracer, dot_file)
     dot_text = dot_file.read_text()
 
     # check attribute link in dot entries
@@ -120,37 +119,33 @@ def test_attrs(tmp_path):
     )
 
 
-def test_sub_prov_graph(tmp_path):
-    """Handling of provenance sub graphs"""
-    prov_builder = ProvBuilder()
+def test_sub_prov(tmp_path):
+    """Handling of nested provenance tracers"""
+    prov_tracer = ProvTracer()
 
     # build provenance for inner graph
     sentence_segment, syntagma_segment, entity = _get_segment_and_entity()
-    sub_prov_builder = ProvBuilder(store=prov_builder.store)
-    _build_prov(sub_prov_builder, sentence_segment, syntagma_segment, entity)
+    sub_prov_tracer = ProvTracer(store=prov_tracer.store)
+    _build_prov(sub_prov_tracer, sentence_segment, syntagma_segment, entity)
 
     # wrap it in outer pipeline graph
     pipeline_desc = OperationDescription(name="Pipeline", id=generate_id())
-    prov_builder.add_prov_from_sub_graph([entity], pipeline_desc, sub_prov_builder)
+    prov_tracer.add_prov_from_sub_tracer([entity], pipeline_desc, sub_prov_tracer)
 
-    # render dot, not expanding sub graphs
+    # render dot, not expanding sub provenance
     dot_file = tmp_path / "prov.dot"
-    save_prov_to_dot(
-        prov_builder.graph, prov_builder.store, dot_file, max_sub_graph_depth=0
-    )
+    save_prov_to_dot(prov_tracer, dot_file, max_sub_prov_depth=0)
     dot_text = dot_file.read_text()
 
     # must have a dot entry for outer pipeline operation
     assert f'"{sentence_segment.id}" -> "{entity.id}" [label="Pipeline"];\n' in dot_text
 
-    # render dot, expanding all sub graphs
+    # render dot, expanding all sub provenance
     dot_file_full = tmp_path / "prov_full.dot"
-    save_prov_to_dot(
-        prov_builder.graph, prov_builder.store, dot_file_full, max_sub_graph_depth=None
-    )
+    save_prov_to_dot(prov_tracer, dot_file_full, max_sub_prov_depth=None)
     dot_text_full = dot_file_full.read_text()
 
-    # must have a dot entry for inner operations in sub graphs
+    # must have a dot entry for inner operations in sub provenance
     assert (
         f'"{sentence_segment.id}" -> "{syntagma_segment.id}"'
         ' [label="SyntagmaTokenizer"];\n'

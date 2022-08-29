@@ -135,11 +135,11 @@ class DucklingMatcher(NEROperation):
             )
             entity.add_attr(norm_attr)
 
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     entity, self.description, source_data_items=[segment]
                 )
-                self._prov_builder.add_prov(
+                self._prov_tracer.add_prov(
                     norm_attr, self.description, source_data_items=[segment]
                 )
 

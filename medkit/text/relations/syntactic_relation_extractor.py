@@ -235,8 +235,8 @@ class SyntacticRelationExtractor(DocOperation):
     ):
         for relation in relations:
             medkit_doc.add_annotation(relation)
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     relation,
                     self.description,
                     source_data_items=[medkit_doc.raw_segment],

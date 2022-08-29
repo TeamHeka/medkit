@@ -16,49 +16,49 @@ def get_text_items(nb_items):
 
 
 class Generator:
-    def __init__(self, prov_builder=None):
+    def __init__(self, prov_tracer=None):
         """Mock operation generating text items"""
 
         self.id = generate_id()
-        self.prov_builder = prov_builder
-        self.description = OperationDescription(id=self.id, name="Merger")
+        self.prov_tracer = prov_tracer
+        self.description = OperationDescription(id=self.id, name="Generator")
 
     def generate(self, nb_items):
         items = get_text_items(nb_items)
 
-        if self.prov_builder is not None:
+        if self.prov_tracer is not None:
             for item in items:
-                self.prov_builder.add_prov(item, self.description, source_data_items=[])
+                self.prov_tracer.add_prov(item, self.description, source_data_items=[])
         return items
 
 
 class Prefixer:
-    def __init__(self, prov_builder=None):
+    def __init__(self, prov_tracer=None):
         """Mock operation prefixing items"""
 
         self.id = generate_id()
-        self.prov_builder = prov_builder
-        self.description = OperationDescription(id=self.id, name="Merger")
+        self.prov_tracer = prov_tracer
+        self.description = OperationDescription(id=self.id, name="Prefixer")
 
     def prefix(self, items):
         prefixed_items = []
         for item in items:
             prefixed_item = TextItem("Hello! " + item.text)
             prefixed_items.append(prefixed_item)
-            if self.prov_builder is not None:
-                self.prov_builder.add_prov(
+            if self.prov_tracer is not None:
+                self.prov_tracer.add_prov(
                     prefixed_item, self.description, source_data_items=[item]
                 )
         return prefixed_items
 
 
 class Splitter:
-    def __init__(self, prov_builder=None):
+    def __init__(self, prov_tracer=None):
         """Mock operation splitting items"""
 
         self.id = generate_id()
-        self.prov_builder = prov_builder
-        self.description = OperationDescription(id=self.id, name="Merger")
+        self.prov_tracer = prov_tracer
+        self.description = OperationDescription(id=self.id, name="Splitter")
 
     def split(self, items):
         split_items = []
@@ -69,11 +69,11 @@ class Splitter:
             right_item = TextItem(item.text[half:])
             split_items.append(right_item)
 
-            if self.prov_builder is not None:
-                self.prov_builder.add_prov(
+            if self.prov_tracer is not None:
+                self.prov_tracer.add_prov(
                     left_item, self.description, source_data_items=[item]
                 )
-                self.prov_builder.add_prov(
+                self.prov_tracer.add_prov(
                     right_item, self.description, source_data_items=[item]
                 )
         return split_items
@@ -82,16 +82,16 @@ class Splitter:
 class Merger:
     """Mock operation merging items"""
 
-    def __init__(self, prov_builder=None):
+    def __init__(self, prov_tracer=None):
         self.id = generate_id()
-        self.prov_builder = prov_builder
+        self.prov_tracer = prov_tracer
         self.description = OperationDescription(id=self.id, name="Merger")
 
     def merge(self, items):
         text = "".join(s.text for s in items)
         merged_item = TextItem(text)
-        if self.prov_builder is not None:
-            self.prov_builder.add_prov(
+        if self.prov_tracer is not None:
+            self.prov_tracer.add_prov(
                 merged_item, self.description, source_data_items=items
             )
         return merged_item

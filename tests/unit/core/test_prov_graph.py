@@ -1,7 +1,7 @@
 import pytest
 
 from medkit.core import generate_id
-from medkit.core.prov_graph import ProvGraph, ProvNode
+from medkit.core._prov_graph import ProvGraph, ProvNode
 
 
 def test_basic():

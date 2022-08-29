@@ -253,8 +253,8 @@ class HypothesisDetector(ContextOperation):
         else:
             hyp_attr = Attribute(label=self.output_label, value=False)
 
-        if self._prov_builder is not None:
-            self._prov_builder.add_prov(
+        if self._prov_tracer is not None:
+            self._prov_tracer.add_prov(
                 hyp_attr, self.description, source_data_items=[segment]
             )
 

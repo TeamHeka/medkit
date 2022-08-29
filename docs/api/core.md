@@ -235,17 +235,12 @@ This work is still under development. It may be changed in the future.
 :::
 
 ```{eval-rst}
-.. autoclass:: medkit.core::ProvBuilder
+.. autoclass:: medkit.core::ProvTracer
     :members:
 ```
 
 ```{eval-rst}
-.. autoclass:: medkit.core::ProvGraph
-    :members:
-```
-
-```{eval-rst}
-.. autoclass:: medkit.core::ProvNode
+.. autoclass:: medkit.core::Prov
     :members:
 ```
 
