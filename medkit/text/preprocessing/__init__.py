@@ -35,7 +35,7 @@ FRACTION_RULES = [
         ("\u215C", "3/8"),
         ("\u215D", "5/8"),
         ("\u215E", "7/8"),
-        ("\u2189", "0"),
+        ("\u2189", "0/3"),
     ]
 ]
 #: Normalizer rules for non-standard spaces
@@ -73,32 +73,35 @@ SPECIAL_CHARS_RULES = [
         ("\u00A9", ""),  # copyright
         ("\u00AE", ""),  # registered
         ("\u2122", ""),  # trade
-        ("°C", "Celsius"),
-        ("°F", "Fahrenheit"),
-        ("°", " "),  # replace degree symbol
-        ("\u2026", ""),  # horizontal ellipsis
+        ("\u2026", "..."),  # horizontal ellipsis
     ]
 ]
 
 #: Normalizer quotation marks
-# remove double quotation marks
+# replace double quotation marks
 # replace single quotation marks
 QUOTATION_RULES = [
     NormalizerRule(*rule)
     for rule in [
-        ("»", ""),  # remove double quotation marks
-        ("«", ""),  # remove double quotation marks
-        ("\u0022", ""),
-        ("\u201C", ""),
-        ("\u201D", ""),
-        ("\u201E", ""),
-        ("\u201F", ""),
-        ("\u2039", ""),
-        ("\u203A", ""),
+        ("»", "\u0022"),  # normalize double quotation marks
+        ("«", "\u0022"),  # replace double quotation marks
+        ("\u201C", "\u0022"),
+        ("\u201D", "\u0022"),
+        ("\u201E", "\u0022"),
+        ("\u201F", "\u0022"),
+        ("\u2039", "\u0022"),
+        ("\u203A", "\u0022"),
+        ("\u02F5", "\u0022"),
+        ("\u02F6", "\u0022"),
+        ("\u02DD", "\u0022"),
+        ("\uFF02", "\u0022"),
         ("\u201A", ""),  # single low quotation (remove)
         ("\u2018", "'"),  # left side single quotation
         ("\u2019", "'"),  # right side single quotation
         ("\u201B", "'"),  # single high reverse quotation
-        ("`", "'"),  # grave accent
+        ("\u02CA", "'"),  # grave accent
+        ("\u0060", "'"),
+        ("\u02CB", "'"),  # acute accent
+        ("\u00B4", "'"),
     ]
 ]
