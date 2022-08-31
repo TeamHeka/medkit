@@ -66,35 +66,39 @@ SPACE_RULES = [
     ]
 ]
 
-#: Normalizer special chars
-SPECIAL_CHARS_RULES = [
+#: Normalizer rules for sign chars
+SIGN_RULES = [
     NormalizerRule(*rule)
     for rule in [
         ("\u00A9", ""),  # copyright
         ("\u00AE", ""),  # registered
         ("\u2122", ""),  # trade
-        ("\u2026", "..."),  # horizontal ellipsis
     ]
 ]
 
+#: Normalizer rules for dot chars
+DOT_RULES = [
+    NormalizerRule(*rule)
+    for rule in [("\u2026", "..."), ("\u22EF", "...")]  # horizontal ellipsis
+]
+
 #: Normalizer quotation marks
-# replace double quotation marks
-# replace single quotation marks
+# replace double and single quotation marks
 QUOTATION_RULES = [
     NormalizerRule(*rule)
     for rule in [
-        ("»", "\u0022"),  # normalize double quotation marks
-        ("«", "\u0022"),  # replace double quotation marks
-        ("\u201C", "\u0022"),
-        ("\u201D", "\u0022"),
-        ("\u201E", "\u0022"),
-        ("\u201F", "\u0022"),
-        ("\u2039", "\u0022"),
-        ("\u203A", "\u0022"),
-        ("\u02F5", "\u0022"),
-        ("\u02F6", "\u0022"),
-        ("\u02DD", "\u0022"),
-        ("\uFF02", "\u0022"),
+        ("»", '"'),  # normalize double quotation marks
+        ("«", '"'),  # replace double quotation marks
+        ("\u201C", '"'),
+        ("\u201D", '"'),
+        ("\u201E", '"'),
+        ("\u201F", '"'),
+        ("\u2039", '"'),
+        ("\u203A", '"'),
+        ("\u02F5", '"'),
+        ("\u02F6", '"'),
+        ("\u02DD", '"'),
+        ("\uFF02", '"'),
         ("\u201A", ""),  # single low quotation (remove)
         ("\u2018", "'"),  # left side single quotation
         ("\u2019", "'"),  # right side single quotation
