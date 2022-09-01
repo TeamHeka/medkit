@@ -69,7 +69,10 @@ TEST_DEFAULT_CONFIG = [
                 replaced_spans=[Span(start=10, end=13), Span(start=13, end=20)],
             ),
             Span(start=20, end=27),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=27, end=30)]),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=27, end=29), Span(start=29, end=30)],
+            ),
             Span(start=30, end=36),
             ModifiedSpan(length=1, replaced_spans=[Span(start=36, end=40)]),
             Span(start=40, end=45),
@@ -113,6 +116,7 @@ def test_default_cleaner(text, expected_text, expected_spans):
 TEST_PARAMS_CONFIG = [
     (
         EDSCleaner(keep_endlines=True),
+<<<<<<< HEAD
         (
             "Le patient\n\n\n       reviens. Nom patient"
             " probleme.\n\nTraitement :\n\n\n à dose curative dès cet appel."
@@ -121,17 +125,26 @@ TEST_PARAMS_CONFIG = [
             "Le patient reviens. Nom patient probleme..\nTraitement : à dose"
             " curative dès cet appel."
         ),
+=======
+        "Le patient\n\n\n  reviens. Nom patient"
+        " probleme.\n\nTraitement :\n\n\n à dose curative dès cet appel.",
+        "Le patient reviens. Nom patient probleme..\nTraitement : à dose curative dès"
+        " cet appel.",
+>>>>>>> In EDSCleaner, update to clean all whitespaces and fix unit tests
         [
             Span(start=0, end=10),
             ModifiedSpan(
                 length=1,
-                replaced_spans=[Span(start=10, end=13), Span(start=13, end=20)],
+                replaced_spans=[Span(start=10, end=13), Span(start=13, end=15)],
             ),
-            Span(start=20, end=50),
-            ModifiedSpan(length=2, replaced_spans=[Span(start=50, end=52)]),
-            Span(start=52, end=64),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=64, end=68)]),
-            Span(start=68, end=98),
+            Span(start=15, end=45),
+            ModifiedSpan(length=2, replaced_spans=[Span(start=45, end=47)]),
+            Span(start=47, end=59),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=59, end=62), Span(start=62, end=63)],
+            ),
+            Span(start=63, end=93),
         ],
     ),
     (
@@ -146,11 +159,17 @@ TEST_PARAMS_CONFIG = [
         ),
         [
             Span(start=0, end=10),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=10, end=13)]),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=10, end=13)],
+            ),
             Span(start=13, end=43),
             ModifiedSpan(length=2, replaced_spans=[Span(start=43, end=45)]),
             Span(start=45, end=57),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=57, end=61)]),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=57, end=60), Span(start=60, end=61)],
+            ),
             Span(start=61, end=91),
         ],
     ),
@@ -168,20 +187,32 @@ TEST_PARAMS_CONFIG = [
             Span(start=0, end=15),
             ModifiedSpan(length=1, replaced_spans=[Span(start=15, end=16)]),
             Span(start=16, end=69),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=69, end=73)]),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=69, end=72), Span(start=72, end=73)],
+            ),
             Span(start=73, end=103),
         ],
     ),
     (  # whitespaces are removed now
         EDSCleaner(handle_points_eds=False),
+<<<<<<< HEAD
         (
             "Nom patient : la Mme. Marie Du \n\npont, date le     .24 avril .    pour"
             " un probleme"
         ),
         "Nom patient : la Mme. Marie Du  pont, date le .24 avril . pour un probleme",
+=======
+        "Nom patient : la Mme. Marie Du \n\npont, date le     .24 avril .    pour un"
+        " probleme",
+        "Nom patient : la Mme. Marie Du pont, date le .24 avril . pour un probleme",
+>>>>>>> In EDSCleaner, update to clean all whitespaces and fix unit tests
         [
-            Span(start=0, end=31),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=31, end=33)]),
+            Span(start=0, end=30),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=30, end=31), Span(start=31, end=33)],
+            ),
             Span(start=33, end=46),
             ModifiedSpan(length=1, replaced_spans=[Span(start=46, end=51)]),
             Span(start=51, end=62),

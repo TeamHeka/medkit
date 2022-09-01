@@ -118,10 +118,11 @@ class EDSCleaner(Operation):
         text, spans = utils.replace_point_in_numbers(text, spans)
 
         # modify newline character
-        text, spans = utils.clean_multiple_whitespaces_in_sentence(text, spans)
         text, spans = utils.clean_newline_character(
             text=text, spans=spans, keep_endlines=self.keep_endlines
         )
+        # modify all whitespaces characters
+        text, spans = utils.clean_multiple_whitespaces_in_sentence(text, spans)
 
         # modify parentheses using predefined rules for french documents
         if self.handle_parentheses_eds:
