@@ -187,7 +187,7 @@ def replace_multiple_newline_after_sentence(
         The cleaned text and the list of spans updated
 
     """
-    pattern = rf"(?P<blanks>\r?\n[\t\r\n\t\s]*)[{_NUMERIC_CHARS}{_UPPERCASE_CHARS}]"
+    pattern = rf"(?P<blanks>\r?\n[\r\n]*)[\t\s]*[{_NUMERIC_CHARS}{_UPPERCASE_CHARS}]"
     replace_by = "\n"
     text, spans = _replace_text(text, spans, pattern, repl=replace_by, group="blanks")
     return text, spans
@@ -211,7 +211,7 @@ def replace_newline_inside_sentence(
         The cleaned text and the list of spans updated
 
     """
-    pattern = rf"(?P<blanks>\r?\n[\t\r\n\t\s]*)[{_LOWERCASE_CHARS}{_PUNCT_CHARS}]"
+    pattern = rf"(?P<blanks>\r?\n[\r\n]*)[\t\s]*[{_LOWERCASE_CHARS}{_PUNCT_CHARS}]"
     replace_by = " "
     text, spans = _replace_text(text, spans, pattern, repl=replace_by, group="blanks")
     return text, spans

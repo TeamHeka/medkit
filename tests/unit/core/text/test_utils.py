@@ -59,28 +59,28 @@ def test_replace_point_after_keywords_non_strict():
 
 
 def test_replace_multiple_endlines():
-    text = "This is\n\ntest\n\t\nAnother\nphrase."
-    spans = [Span(0, 31)]
+    text = "This is\n\ntest\n\n\n  Another\nphrase."
+    spans = [Span(0, 33)]
     text, spans = replace_multiple_newline_after_sentence(text, spans)
-    assert text == "This is\n\ntest\nAnother\nphrase."
+    assert text == "This is\n\ntest\n  Another\nphrase."
     assert spans == [
         Span(start=0, end=13),
         ModifiedSpan(length=1, replaced_spans=[Span(start=13, end=16)]),
-        Span(start=16, end=31),
+        Span(start=16, end=33),
     ]
 
 
 def test_replace_newline_inside_sentence():
-    text = "This is\n\n\ta test\nAnother\nphrase."
-    spans = [Span(0, 32)]
+    text = "This is\n\n\ta test\n\nAnother\nphrase."
+    spans = [Span(0, 33)]
     text, spans = replace_newline_inside_sentence(text, spans)
-    assert text == "This is a test\nAnother phrase."
+    assert text == "This is \ta test\n\nAnother phrase."
     assert spans == [
         Span(start=0, end=7),
-        ModifiedSpan(length=1, replaced_spans=[Span(start=7, end=10)]),
-        Span(start=10, end=24),
-        ModifiedSpan(length=1, replaced_spans=[Span(start=24, end=25)]),
-        Span(start=25, end=32),
+        ModifiedSpan(length=1, replaced_spans=[Span(start=7, end=9)]),
+        Span(start=9, end=25),
+        ModifiedSpan(length=1, replaced_spans=[Span(start=25, end=26)]),
+        Span(start=26, end=33),
     ]
 
 
@@ -88,11 +88,11 @@ def test_clean_newline_character_keep_endline():
     text = "This is\n\n\ttest\nAnother\nphrase\n\n?"
     spans = [Span(0, 32)]
     text, spans = clean_newline_character(text, spans, keep_endlines=True)
-    assert text == "This is test.\nAnother phrase ?"
+    assert text == "This is \ttest.\nAnother phrase ?"
     assert spans == [
         Span(start=0, end=7),
-        ModifiedSpan(length=1, replaced_spans=[Span(start=7, end=10)]),
-        Span(start=10, end=14),
+        ModifiedSpan(length=1, replaced_spans=[Span(start=7, end=9)]),
+        Span(start=9, end=14),
         ModifiedSpan(length=2, replaced_spans=[Span(start=14, end=15)]),
         Span(start=15, end=22),
         ModifiedSpan(length=1, replaced_spans=[Span(start=22, end=23)]),
@@ -106,11 +106,11 @@ def test_clean_newline_character_non_keep_endline():
     text = "This is\n\n\ttest\nAnother\nphrase\n\n?"
     spans = [Span(0, 32)]
     text, spans = clean_newline_character(text, spans, keep_endlines=False)
-    assert text == "This is test. Another phrase ?"
+    assert text == "This is \ttest. Another phrase ?"
     assert spans == [
         Span(start=0, end=7),
-        ModifiedSpan(length=1, replaced_spans=[Span(start=7, end=10)]),
-        Span(start=10, end=14),
+        ModifiedSpan(length=1, replaced_spans=[Span(start=7, end=9)]),
+        Span(start=9, end=14),
         ModifiedSpan(length=2, replaced_spans=[Span(start=14, end=15)]),
         Span(start=15, end=22),
         ModifiedSpan(length=1, replaced_spans=[Span(start=22, end=23)]),
