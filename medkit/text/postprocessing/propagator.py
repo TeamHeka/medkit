@@ -66,7 +66,7 @@ class AttributePropagator(ContextOperation):
                 for child in nested[parent]:
                     self._propagate_attribute(target=child.data, attr=attr)
 
-    def _compute_interval_tree(self, segments: Segment) -> IntervalTree:
+    def _compute_nested_segments(self, segments: Segment) -> IntervalTree:
 
         t = IntervalTree()
 
