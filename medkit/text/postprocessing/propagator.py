@@ -49,7 +49,23 @@ class AttributePropagator(ContextOperation):
             List of segments to be included in the propagation operation (sources and targets)
         """
 
-        nested = self._compute_nested_segments(segments)
+        t = IntervalTree()
+
+        for segment in segments:
+            normalized_spans = span_utils.normalize_spans(segment.spans)
+            if not normalized_spans:
+                continue
+
+            # merge close spans
+
+            print(normalized_spans)
+            t.addi(
+                min([s.start for s in normalized_spans]),
+                max([s.end for s in normalized_spans]),
+                data=segment,
+            )
+
+        nested = t.find_nested()
 
         for parent in nested.keys():
             attrs_to_propagate = [
@@ -64,22 +80,6 @@ class AttributePropagator(ContextOperation):
             for attr in attrs_to_propagate:
                 for child in nested[parent]:
                     self._propagate_attribute(target=child.data, attr=attr)
-
-    def _compute_nested_segments(self, segments: Segment) -> IntervalTree:
-        t = IntervalTree()
-
-        for segment in segments:
-            normalized_spans = span_utils.normalize_spans(segment.spans)
-            if not normalized_spans:
-                continue
-
-            t.addi(
-                min([s.start for s in normalized_spans]),
-                max([s.end for s in normalized_spans]),
-                data=segment,
-            )
-
-        return t.find_nested()
 
     def _propagate_attribute(self, target: Segment, attr: Attribute):
         target_attr = Attribute(
