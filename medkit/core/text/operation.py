@@ -38,10 +38,11 @@ class SegmentationOperation(Operation):
     def run(self, segments: List[Segment]) -> List[Segment]:
         raise NotImplementedError
 
+
 class PropagationOperation(Operation):
     """
     Abstract operation for propagating information between annotations.
-    It uses a list of annotations as input and propagates pieces of information from one annotation to anoher. 
+    It uses a list of annotations as input and propagates pieces of information from one annotation to anoher.
     """
 
     @abc.abstractmethod
