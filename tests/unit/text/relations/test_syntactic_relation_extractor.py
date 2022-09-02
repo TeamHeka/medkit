@@ -41,6 +41,7 @@ TEST_CONFIG = (
     (["maladie", "level"], ["maladie"], ["level"], [["maladie", "level"]]),
     (["maladie", "level"], ["maladie"], None, [["maladie", "level"]]),
     (["maladie", "level"], ["level"], None, [["level", "maladie"]]),
+    (None, ["grade"], None, [["grade", "maladie"]]),
 )
 
 
@@ -53,6 +54,7 @@ TEST_CONFIG = (
         "between_maladie_level_source_target_not_none",
         "between_maladie_level_source_not_none",
         "between_level_maladie_source_not_none",
+        "all_entities_only_grade_relations",
     ],
 )
 def test_relation_extractor(

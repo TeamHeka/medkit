@@ -103,6 +103,7 @@ class SyntacticRelationExtractor(DocOperation):
         self.entities_source = entities_source
         self.entities_target = entities_target
         self.relation_label = relation_label
+        self._context = [*self.entities_source, *self.entities_target]
 
     def run(self, documents: List[TextDocument]):
         """Add relations to each document from `documents`
@@ -220,6 +221,11 @@ class SyntacticRelationExtractor(DocOperation):
                 f" `{target.text}`. Source or target entity has not been detected by"
                 " medkit but spacy pipeline, and it is not supported by this module."
             )
+            return None
+
+        if self._context and not (
+            source.label_ in self._context or target.label_ in self._context
+        ):  # the relation has no entities in the context of interest
             return None
 
         relation = Relation(
