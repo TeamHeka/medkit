@@ -117,6 +117,17 @@ For using Quick UMLS Matcher, you need to install `quickumls` and `six`.
     :members:
 ```
 
+### Hugging Face Entity Matcher
+
+:::{important}
+`HFEntityMatcher` needs additional dependencies that can be installed with `pip install medkit[hf-entity-matcher]`
+:::
+
+```{eval-rst}
+.. automodule:: medkit.text.ner.hf_entity_matcher
+    :members:
+```
+
 ## Spacy modules
 
 This section lists operations and utilities related to spacy. They are part of
