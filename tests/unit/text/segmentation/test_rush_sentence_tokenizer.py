@@ -7,8 +7,10 @@ from medkit.text.segmentation.rush_sentence_tokenizer import RushSentenceTokeniz
 
 TEST_CONFIG = [
     (
-        "Sentence testing the dot. Newlines\ndo not split. Test"
-        " interrogation? Semicolon; and exclamation marks! do not split",
+        (
+            "Sentence testing the dot. Newlines\ndo not split. Test"
+            " interrogation? Semicolon; and exclamation marks! do not split"
+        ),
         RushSentenceTokenizer(),
         [
             (

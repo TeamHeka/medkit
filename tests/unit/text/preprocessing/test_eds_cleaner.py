@@ -6,8 +6,10 @@ from medkit.text.preprocessing.eds_cleaner import EDSCleaner
 
 TEST_DEFAULT_CONFIG = [
     (
-        "Nom patient : la Mme. Marie Dupont, date le     .24 avril .    pour un"
-        " probleme",
+        (
+            "Nom patient : la Mme. Marie Dupont, date le     .24 avril .    pour un"
+            " probleme"
+        ),
         "Nom patient : la Mme  Marie Dupont, date le 24 avril pour un probleme",
         [
             Span(start=0, end=20),
@@ -20,10 +22,14 @@ TEST_DEFAULT_CONFIG = [
         ],
     ),
     (
-        "Traitement : (N.B. : absence de notion de la prescription d'une HBPM)\n\n\n à"
-        " dose curative dès cet appel.",
-        "Traitement : à dose curative dès cet appel ; N B. : absence de notion de la"
-        " prescription d'une HBPM.",
+        (
+            "Traitement : (N.B. : absence de notion de la prescription d'une"
+            " HBPM)\n\n\n à dose curative dès cet appel."
+        ),
+        (
+            "Traitement : à dose curative dès cet appel ; N B. : absence de notion de"
+            " la prescription d'une HBPM."
+        ),
         [
             Span(start=0, end=12),
             ModifiedSpan(length=1, replaced_spans=[]),
@@ -96,10 +102,14 @@ def test_default_cleaner(text, expected_text, expected_spans):
 TEST_PARAMS_CONFIG = [
     (
         EDSCleaner(keep_endlines=True),
-        "Le patient\n\n\n       reviens. Nom patient"
-        " probleme.\n\nTraitement :\n\n\n à dose curative dès cet appel.",
-        "Le patient reviens. Nom patient probleme..\nTraitement : à dose"
-        " curative dès cet appel.",
+        (
+            "Le patient\n\n\n       reviens. Nom patient"
+            " probleme.\n\nTraitement :\n\n\n à dose curative dès cet appel."
+        ),
+        (
+            "Le patient reviens. Nom patient probleme..\nTraitement : à dose"
+            " curative dès cet appel."
+        ),
         [
             Span(start=0, end=10),
             ModifiedSpan(length=1, replaced_spans=[Span(start=10, end=20)]),
@@ -112,10 +122,14 @@ TEST_PARAMS_CONFIG = [
     ),
     (
         EDSCleaner(keep_endlines=False),
-        "Le patient\n\n\n       reviens. Nom patient"
-        " probleme.\n\nTraitement :\n\n\n à dose curative dès cet appel.",
-        "Le patient reviens. Nom patient probleme.. Traitement : à dose curative dès"
-        " cet appel.",
+        (
+            "Le patient\n\n\n       reviens. Nom patient"
+            " probleme.\n\nTraitement :\n\n\n à dose curative dès cet appel."
+        ),
+        (
+            "Le patient reviens. Nom patient probleme.. Traitement : à dose curative"
+            " dès cet appel."
+        ),
         [
             Span(start=0, end=10),
             ModifiedSpan(length=1, replaced_spans=[Span(start=10, end=20)]),
@@ -128,10 +142,14 @@ TEST_PARAMS_CONFIG = [
     ),
     (
         EDSCleaner(handle_parentheses_eds=False),
-        "Traitement : (N.B. : absence de notion de la prescription d'une HBPM)\n\n\n à"
-        " dose curative dès cet appel.",
-        "Traitement : (N B. : absence de notion de la prescription d'une HBPM) à dose"
-        " curative dès cet appel.",
+        (
+            "Traitement : (N.B. : absence de notion de la prescription d'une"
+            " HBPM)\n\n\n à dose curative dès cet appel."
+        ),
+        (
+            "Traitement : (N B. : absence de notion de la prescription d'une HBPM) à"
+            " dose curative dès cet appel."
+        ),
         [
             Span(start=0, end=15),
             ModifiedSpan(length=1, replaced_spans=[Span(start=15, end=16)]),
@@ -142,10 +160,14 @@ TEST_PARAMS_CONFIG = [
     ),
     (
         EDSCleaner(handle_points_eds=False),
-        "Nom patient : la Mme. Marie Du  \n\npont, date le     .24 avril .    pour un"
-        " probleme",
-        "Nom patient : la Mme. Marie Du pont, date le     .24 avril .    pour un"
-        " probleme",
+        (
+            "Nom patient : la Mme. Marie Du  \n\npont, date le     .24 avril .    pour"
+            " un probleme"
+        ),
+        (
+            "Nom patient : la Mme. Marie Du pont, date le     .24 avril .    pour un"
+            " probleme"
+        ),
         [
             Span(start=0, end=30),
             ModifiedSpan(length=1, replaced_spans=[Span(start=30, end=34)]),
