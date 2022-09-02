@@ -56,7 +56,7 @@ setup_cache:
     policy: pull-push
   script:
     - *prepare_poetry_env
-    - poetry install -E optional -E hf-translator -E docs
+    - poetry install -E optional -E docs
     - source .venv/bin/activate
     - pip list
   artifacts:

@@ -43,7 +43,7 @@ poetry install
 
 If you want to also install the extras dependencies, you may use:
 ```shell
-poetry install -E optional -E hf-translators
+poetry install -E optional
 ```
 
 For documentation:

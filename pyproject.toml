@@ -68,7 +68,12 @@ optional = [
     "PyRush",
     "packaging",  # needed to check quickumls version
     "quickumls",
-    "spacy"
+    "spacy",
+    # hf-translator dependencies
+    "sacremoses",  # needed by default model "Helsinki-NLP/opus-mt-fr-en"
+    "sentencepiece",
+    "torch",
+    "transformers"
 ]
 
 # Waiting for --all-extras (https://github.com/python-poetry/poetry/pull/5452)
