@@ -1,13 +1,88 @@
+[tool.poetry]
+name = "medkit"
+version = "0.1.0"
+description = "A Python library for a learning health system"
+readme = "README.md"
+repository = "https://gitlab.inria.fr/heka/medkit/"
+documentation = "https://heka.gitlabpages.inria.fr/medkit/"
+authors = ["HeKA Research Team"]
+license = "MIT"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Medical Science Apps."
+]
+
+[tool.poetry.dependencies]
+python = ">=3.7, <4.0"
+flashtext = "*"
+pyaml = "*"
+requests = "*"
+smart-open = "*"
+typing-extensions = "*"
+Unidecode = "*"
+
+# optional
+packaging = {version = "*", optional = true}
+PyRuSH = {version = "^1.0", optional = true}
+quickumls = {version = "^1.4", optional = true}
+sacremoses = {version = "*", optional = true}
+sentencepiece = {version = "*", optional = true}
+spacy = {version = "^3.4", optional = true}
+torch = {version ="^1.0", optional = true}
+transformers = {version = "^4.21", optional = true}
+
+#docs
+jupyter-book = {version = "^0.13", optional = true}
+matplotlib = {version = "*", optional = true}
+sphinx = {version = ">=4.3.3", optional = true}
+sphinxcontrib-mermaid = {version = "*", optional = true}
+sphinx-toolbox = {version = "*", optional = true}
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+pytest-cov = "*"
+pytest-mock = "*"
+pre-commit = "*"
+
+[tool.poetry.extras]
+docs = [
+    "jupyter-book",
+    "matplotlib",
+    "sphinx",
+    "sphinxcontrib-mermaid",
+    "sphinx-toolbox",
+    "spacy"
+]
+
+hf-translator = [
+    "sacremoses",  # needed by default model "Helsinki-NLP/opus-mt-fr-en"
+    "sentencepiece",
+    "torch",
+    "transformers"
+]
+optional = [
+    "PyRush",
+    "packaging",  # needed to check quickumls version
+    "quickumls",
+    "spacy",
+    # hf-translator dependencies
+    "sacremoses",  # needed by default model "Helsinki-NLP/opus-mt-fr-en"
+    "sentencepiece",
+    "torch",
+    "transformers"
+]
+
+# Waiting for --all-extras (https://github.com/python-poetry/poetry/pull/5452)
+
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools_scm]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.black]
 line-length = 88
 preview = true
-extend-exclude = ".env"
+extend-exclude = ".venv"
