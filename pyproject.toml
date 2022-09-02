@@ -25,15 +25,15 @@ smart-open = "*"
 typing-extensions = "*"
 Unidecode = "*"
 
-# optional (hf-translator)
-transformers = {extras = ["sentencepiece", "torch"], version = "^4.21", optional = true}
-sacremoses = {version = "*", optional = true}
-
-# optional (optional)
+# optional
+packaging = {version = "*", optional = true}
 PyRuSH = {version = "^1.0", optional = true}
 quickumls = {version = "^1.4", optional = true}
-packaging = {version = "*", optional = true}
-spacy = {version = "3.4", optional = true}
+sacremoses = {version = "*", optional = true}
+sentencepiece = {version = "*", optional = true}
+spacy = {version = "^3.4", optional = true}
+torch = {version ="^1.0", optional = true}
+transformers = {version = "^4.21", optional = true}
 
 #docs
 jupyter-book = {version = "^0.13", optional = true}
@@ -60,6 +60,8 @@ docs = [
 
 hf-translator = [
     "sacremoses",  # needed by default model "Helsinki-NLP/opus-mt-fr-en"
+    "sentencepiece",
+    "torch",
     "transformers"
 ]
 optional = [
