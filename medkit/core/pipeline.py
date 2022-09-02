@@ -76,11 +76,14 @@ class PipelineStep:
         For each output of `operation`, the key used to pass output annotations
         to the next Pipeline step. Can be empty if `operation` doesn't return
         new annotations.
+    aggregate_input_keys:
+        If True, all the annotations from multiple input keys are aggregated in a single list. Defaults to False
     """
 
     operation: PipelineCompatibleOperation
     input_keys: List[str]
     output_keys: List[str]
+    aggregate_input_keys: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         operation = (
@@ -92,6 +95,7 @@ class PipelineStep:
             operation=operation,
             input_keys=self.input_keys,
             output_keys=self.output_keys,
+            aggregate_input_keys=self.aggregate_input_keys,
         )
 
 
@@ -233,6 +237,10 @@ class Pipeline:
                     )
                 raise RuntimeError(message)
             all_input_data.append(input_data)
+        if step.aggregate_input_keys:
+            all_input_data = [
+                [ann for input_key_data in all_input_data for ann in input_key_data]
+            ]
 
         # call operation
         all_output_data = step.operation.run(*all_input_data)
