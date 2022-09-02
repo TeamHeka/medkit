@@ -104,7 +104,8 @@ class _AttributeAdder:
 
 
 def test_single_step():
-    """Minimalist doc pipeline with only one step, retrieving input annotations from doc"""
+    """Minimalist doc pipeline with only one step, retrieving input annotations from doc
+    """
     uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step = PipelineStep(
         operation=uppercaser,

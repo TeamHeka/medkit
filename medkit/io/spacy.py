@@ -14,7 +14,8 @@ from medkit.text.spacy.spacy_utils import (
 
 
 class SpacyInputConverter:
-    """Class in charge of converting spacy documents into a collection of TextDocuments."""
+    """Class in charge of converting spacy documents into a collection of TextDocuments.
+    """
 
     def __init__(
         self,
