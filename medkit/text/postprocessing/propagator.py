@@ -52,7 +52,6 @@ class AttributePropagator(ContextOperation):
         nested = self._compute_nested_segments(segments)
 
         for parent in nested.keys():
-
             attrs_to_propagate = [
                 attr
                 for attr in parent.data.get_attrs()
@@ -67,11 +66,9 @@ class AttributePropagator(ContextOperation):
                     self._propagate_attribute(target=child.data, attr=attr)
 
     def _compute_nested_segments(self, segments: Segment) -> IntervalTree:
-
         t = IntervalTree()
 
         for segment in segments:
-
             normalized_spans = span_utils.normalize_spans(segment.spans)
             if not normalized_spans:
                 continue
@@ -85,7 +82,6 @@ class AttributePropagator(ContextOperation):
         return t.find_nested()
 
     def _propagate_attribute(self, target: Segment, attr: Attribute):
-
         target_attr = Attribute(
             label=attr.label, value=attr.value, metadata=attr.metadata
         )
