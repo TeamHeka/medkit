@@ -471,3 +471,26 @@ def test_sanity_check():
         Exception, match="Step input key UPPERCASE is not available yet at this step"
     ):
         pipeline_5.check_sanity()
+
+
+def test_input_aggregation():
+    """Step aggregating data for multiple keys and passing it to one input"""
+    step = PipelineStep(
+        operation=_Uppercaser(),
+        input_keys=["SENTENCE_1", "SENTENCE_2"],
+        output_keys=["UPPERCASE"],
+        aggregate_input_keys=True,
+    )
+
+    pipeline = Pipeline(
+        steps=[step], input_keys=["SENTENCE_1", "SENTENCE_2"], output_keys=["UPPERCASE"]
+    )
+
+    sentence_segs_1 = _get_sentence_segments()
+    sentence_segs_2 = _get_sentence_segments()
+    uppercased_segs = pipeline.run(sentence_segs_1, sentence_segs_2)
+
+    # operation was properly called to generate new data item
+    assert [a.text.upper() for a in sentence_segs_1 + sentence_segs_2] == [
+        a.text for a in uppercased_segs
+    ]
