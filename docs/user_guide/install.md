@@ -54,7 +54,7 @@ poetry install -E docs
 Then, a `.venv` folder is created at the root of the project. To activate the
 virtual environment:
 ```shell
-source ./.venv/bin/activate
+source .venv/bin/activate
 ```
 
 To make sure everything is set up properly, you may run the tests :

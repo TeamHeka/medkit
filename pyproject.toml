@@ -78,4 +78,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 line-length = 88
 preview = true
-extend-exclude = ".env"
+extend-exclude = ".venv"

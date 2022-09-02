@@ -57,7 +57,7 @@ setup_cache:
   script:
     - *prepare_poetry_env
     - poetry install -E optional -E hf-translator -E docs
-    - source ./.venv/bin/activate
+    - source .venv/bin/activate
     - pip list
   artifacts:
     expose_as: "Poetry lock file"
@@ -91,7 +91,7 @@ linting:
   stage: test
   extends: .use_cache
   before_script:
-    - source ./.venv/bin/activate
+    - source .venv/bin/activate
     - pre-commit install
   script:
     - echo "Executing linting..."
@@ -107,7 +107,7 @@ unit_tests:
   extends: .use_cache
   before_script:
     - *install_gcc
-    - source ./.venv/bin/activate
+    - source .venv/bin/activate
   script:
     - echo "Executing unit tests..."
     - coverage run -m pytest -v --junit-xml=report.xml tests/unit
@@ -131,7 +131,7 @@ large_tests:
   stage: test
   extends: .use_cache
   before_script:
-    - source ./.venv/bin/activate
+    - source .venv/bin/activate
   script:
     - echo "Executing large tests..."
     - pytest -v tests/large
@@ -144,7 +144,7 @@ doc-test:
   extends: .use_cache
   before_script:
     - *install_doc_packages
-    - source ./.venv/bin/activate
+    - source .venv/bin/activate
   script:
     - echo "Building docs..."
     - jb build docs
@@ -178,7 +178,7 @@ doc-release:
   extends: .use_cache
   before_script:
     - *install_doc_packages
-    - source ./.venv/bin/activate
+    - source .venv/bin/activate
   script:
     - jb build docs
     - mv docs/_build/jupyter_execute .
