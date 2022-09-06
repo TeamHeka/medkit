@@ -6,6 +6,7 @@ parts:
   - file: user_guide/install
   - file: user_guide/first_steps
   - file: user_guide/pipeline
+  - file: user_guide/provenance
   - file: user_guide/module
 - caption: Examples
   chapters:
