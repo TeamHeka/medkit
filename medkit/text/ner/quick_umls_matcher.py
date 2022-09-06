@@ -1,13 +1,13 @@
 __all__ = ["QuickUMLSMatcher"]
 
-from packaging.version import parse as parse_version
 from pathlib import Path
 from typing import Dict, Iterator, List, NamedTuple, Optional, Union
-from typing_extensions import Literal
-
-from quickumls import QuickUMLS
 import quickumls.about
 import quickumls.constants
+from packaging.version import parse as parse_version
+from quickumls import QuickUMLS
+from smart_open import open
+from typing_extensions import Literal
 
 from medkit.core.text import Entity, NEROperation, Segment, span_utils
 from medkit.text.ner.umls_normalization import UMLSNormalization
@@ -35,6 +35,12 @@ class _QuickUMLSInstall(NamedTuple):
     language: str
     lowercase: bool
     normalize_unicode: bool
+
+
+# Note: The semantic groups provide a partition of the UMLS Metathesaurus
+# for 99.5% of the concepts.
+# Source: UMLS project
+_PATH_UMLS_GROUPS = Path(__file__).parent / "umls_semgroups_v04.txt"
 
 
 class QuickUMLSMatcher(NEROperation):
@@ -75,6 +81,7 @@ class QuickUMLSMatcher(NEROperation):
     """
 
     _install_paths: Dict[_QuickUMLSInstall, str] = {}
+    _semgroups_umls: Dict[str, str] = {}
 
     @classmethod
     def add_install(
@@ -134,6 +141,14 @@ class QuickUMLSMatcher(NEROperation):
             )
         return path
 
+    @classmethod
+    def _load_semgroups_information(cls):
+        semgroups = dict()
+        for line in open(_PATH_UMLS_GROUPS):
+            label, _, semtype, _ = line.split("|")
+            semgroups[semtype] = label
+        cls._semgroups_umls = semgroups
+
     def __init__(
         self,
         version: str,
@@ -146,6 +161,7 @@ class QuickUMLSMatcher(NEROperation):
         similarity: Literal["dice", "jaccard", "cosine", "overlap"] = "jaccard",
         accepted_semtypes: List[str] = quickumls.constants.ACCEPTED_SEMTYPES,
         attrs_to_copy: Optional[List[str]] = None,
+        output_label: Optional[str] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
     ):
@@ -180,6 +196,9 @@ class QuickUMLSMatcher(NEROperation):
             Labels of the attributes that should be copied from the source segment
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
+        output_label:
+            Optional output label of the detected entities. By default, By default,
+            the corresponding semantic group is used.
         name:
             Name describing the matcher (defaults to the class name)
         uid:
@@ -205,6 +224,7 @@ class QuickUMLSMatcher(NEROperation):
         self.window = window
         self.accepted_semtypes = accepted_semtypes
         self.attrs_to_copy = attrs_to_copy
+        self.output_label = output_label
 
         path_to_install = self._get_path_to_install(
             version, language, lowercase, normalize_unicode
@@ -222,6 +242,8 @@ class QuickUMLSMatcher(NEROperation):
             and self._matcher.to_lowercase_flag == lowercase
             and self._matcher.normalize_unicode_flag == normalize_unicode
         ), "Inconsistent QuickUMLS install flags"
+
+        self._load_semgroups_information()
 
     def run(self, segments: List[Segment]) -> List[Entity]:
         """Return entities (with UMLS normalization attributes) for each match in `segments`
@@ -256,9 +278,15 @@ class QuickUMLSMatcher(NEROperation):
             text, spans = span_utils.extract(
                 segment.text, segment.spans, [(match["start"], match["end"])]
             )
+            semtypes = list(match["semtypes"])
 
+            label = (
+                self._semgroups_umls[semtypes[0]]
+                if self.output_label is None
+                else self.output_label
+            )
             entity = Entity(
-                label=match["term"],
+                label=label,
                 text=text,
                 spans=spans,
             )
