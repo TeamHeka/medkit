@@ -22,15 +22,30 @@ class Document(Generic[AnnotationType]):
         metadata: Optional[Dict[str, Any]] = None,
         store: Optional[Store] = None,
     ):
+        """
+        Parameters
+        ----------
+        doc_id:
+            Id of the document in UUID format. Auto-generated if none provided
+        metadata:
+            Metadata of the document
+        store:
+            Optional shared store to hold the document annotations. If none provided,
+            an internal store will be used.
+        """
         if doc_id is None:
             doc_id = generate_id()
         if metadata is None:
             metadata = {}
         if store is None:
             store = DictStore()
+            has_shared_store = False
+        else:
+            has_shared_store = True
 
         self.id: str = doc_id
         self.store: Store = store
+        self.has_shared_store = has_shared_store
         self.annotation_ids: Set[str] = set()
         self.annotation_ids_by_label: Dict[str, List[str]] = {}
         self.annotation_ids_by_key: Dict[str, List[str]] = {}

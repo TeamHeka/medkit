@@ -1,4 +1,4 @@
-from medkit.core import Annotation
+from medkit.core import Annotation, DictStore
 from medkit.core.document import Document
 
 
@@ -42,3 +42,15 @@ def test_keys():
     assert doc.get_annotations_by_key("regexp_matches") == [ann_2]
     assert doc.get_annotations_by_key("umls_matches") == [ann_3]
     assert doc.get_annotations_by_label("misc") == []
+
+
+def test_store():
+    """Init doc with own private store or shared store"""
+
+    doc_1 = Document()
+    assert doc_1.has_shared_store is False
+
+    store = DictStore()
+    doc_2 = Document(store=store)
+    assert doc_2.store is store
+    assert doc_2.has_shared_store is True
