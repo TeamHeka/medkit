@@ -46,6 +46,7 @@ sphinx:
       - pandas
       - PyRuSH
       - spacy
+    autodoc_member_order: 'bysource'
 
   extra_extensions:
   - 'sphinx.ext.autodoc'

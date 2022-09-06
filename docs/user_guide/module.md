@@ -69,7 +69,7 @@ To ensure that all extracted information correspond to a part of original
 text, each annotation holds a list of spans. This spans correspond to the 
 location in the raw document.
 
-For more information, you can refer to [API documentation](api:core:span).
+For more information, you can refer to [API documentation](api:core-text:span).
 A set of utils functions have been implemented to help you to keep span 
 information all along your processing pipeline.
 
