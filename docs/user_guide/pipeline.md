@@ -368,5 +368,4 @@ have seen how to transform an annotation-level `Pipeline` into a document-level
 If you have more questions about pipelines or wonder how to build more complex
 flows, you may want to take a look at the [pipeline API
 docs](api:core:pipeline). If you are interested in the advantages of pipelines
-as regard provenance tracing, you may read the provenance tracing tutorial.
-TODO: add link when available.
+as regard provenance tracing, you may read the [provenance tracing tutorial](provenance.md).

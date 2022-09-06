@@ -330,5 +330,5 @@ rule-based, but there are many more available in medkit, including model-based
 NER operations. You can learn about them in the [API reference](../api/text.md).
 
 That's a good first overview of what you can do with medkit! To dive in further,
-you might be interested in how to encapsulate all these operations in a
-pipeline. TODO: add link to pipeline tutorial when available.
+you might be interested in [how to encapsulate all these operations in a
+pipeline](pipeline.md).
