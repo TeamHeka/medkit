@@ -10,7 +10,6 @@ parts:
   - file: user_guide/module
 - caption: Examples
   chapters:
-  - file: examples/demo
   - file: examples/spans
 - caption: API reference
   chapters:
