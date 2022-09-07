@@ -37,7 +37,7 @@ def load_umls(
     languages: Optional[List[str]] = None,
     show_progress: bool = False,
 ) -> Iterator[UMLSEntry]:
-    """Load all terms and assocated CUIs found in a UMLS MRCONSO.RRF file
+    """Load all terms and associated CUIs found in a UMLS MRCONSO.RRF file
 
     Params
     ------
