@@ -97,10 +97,10 @@ class QuickUMLSMatcher(NEROperation):
         language:
             The language flag passed to the install command, for instance "ENG"
         lowercase:
-            Wether the --lowercase flag was passed to the install command
+            Whether the --lowercase flag was passed to the install command
             (concepts are lowercased to increase recall)
         normalize_unicode:
-            Wether the --normalize-unicode flag was passed to the install command
+            Whether the --normalize-unicode flag was passed to the install command
             (non-ASCII chars in concepts are converted to the closest ASCII chars)
         """
         install = _QuickUMLSInstall(version, language, lowercase, normalize_unicode)
@@ -159,10 +159,10 @@ class QuickUMLSMatcher(NEROperation):
             Language flag of the QuickUMLS install to use, for instance "ENG".
             Will be used to decide with QuickUMLS to use
         lowercase:
-            Wether to use a QuickUMLS install with lowercased concepts
+            Whether to use a QuickUMLS install with lowercased concepts
             Will be used to decide with QuickUMLS to use
         normalize_unicode:
-            Wether to use a QuickUMLS install with non-ASCII chars concepts
+            Whether to use a QuickUMLS install with non-ASCII chars concepts
             converted to the closest ASCII chars.
             Will be used to decide with QuickUMLS to use
         overlapping:

@@ -39,9 +39,9 @@ class HypothesisDetectorRule:
     id:
         Unique identifier of the rule to store in the metadata of the entities
     case_sensitive:
-        Wether to ignore case when running `regexp and `exclusion_regexs`
+        Whether to ignore case when running `regexp and `exclusion_regexs`
     unicode_sensitive:
-        Wether to replace all non-ASCII chars by the closest ASCII chars
+        Whether to replace all non-ASCII chars by the closest ASCII chars
         on input text before runing `regexp and `exclusion_regexs`.
         If True, then `regexp and `exclusion_regexs` shouldn't contain
         non-ASCII chars because they would never be matched.
