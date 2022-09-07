@@ -4,7 +4,7 @@ __all__ = ["AudioBuffer", "FileAudioBuffer", "MemoryAudioBuffer"]
 
 import abc
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import numpy as np
 import soundfile as sf
@@ -100,6 +100,15 @@ class AudioBuffer(abc.ABC):
         )
         return self.trim(start, end)
 
+    @abc.abstractmethod
+    def to_dict(self) -> Dict[str, Any]:
+        pass
+
+    @classmethod
+    @abc.abstractmethod
+    def from_dict(cls, data: Dict[str, Any]) -> AudioBuffer:
+        pass
+
 
 class FileAudioBuffer(AudioBuffer):
     """Audio buffer giving access to audio files stored on the filesystem
@@ -176,6 +185,22 @@ class FileAudioBuffer(AudioBuffer):
         assert new_trim_start <= new_trim_end
         return FileAudioBuffer(self.path, new_trim_start, new_trim_end, self._sf_info)
 
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            class_name=self.__class__.__name__,
+            path=self.path,
+            trim_start=self._trim_start,
+            trim_end=self._trim_end,
+        )
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> FileAudioBuffer:
+        return cls(
+            path=data["path"],
+            trim_start=data["trim_start"],
+            trim_end=data["trim_end"],
+        )
+
 
 class MemoryAudioBuffer(AudioBuffer):
     """Audio buffer giving acces to signals stored in memory
@@ -216,3 +241,55 @@ class MemoryAudioBuffer(AudioBuffer):
             end = self.nb_samples
         assert start <= end
         return MemoryAudioBuffer(self._signal[:, start:end], self.sample_rate)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            # serialize back to PlaceholderAudioBuffer because signal is not kept
+            class_name="PlaceholderAudioBuffer",
+            sample_rate=self.sample_rate,
+            nb_samples=self.nb_samples,
+            nb_channels=self.nb_channels,
+        )
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> MemoryAudioBuffer:
+        raise NotImplementedError("MemoryAudioBuffer can't be reinstantiated from dict")
+
+
+class PlaceholderAudioBuffer(AudioBuffer):
+    """Placeholder representing a MemoryAudioBuffer for which we have lost the actual signal.
+
+    This class is only here so that MemoryAudioBuffer objects can be converted
+    into json/yaml serializable dicts and then unserialized, but no further
+    processing can be performed since the actual signal is not saved. Calling
+    :meth`~read()` or :meth`~.trim()` will raise.
+    """
+
+    def __init__(self, sample_rate: int, nb_samples: int, nb_channels: int):
+        super().__init__(sample_rate, nb_samples, nb_channels)
+
+    def read(self, copy: bool = False) -> np.ndarray:
+        raise NotImplementedError(
+            "Cannot call read() on a PlaceholderAudioBuffer, signal is unknown"
+        )
+
+    def trim(self, start: Optional[int], end: Optional[int]) -> AudioBuffer:
+        raise NotImplementedError(
+            "Cannot call trim() on a PlaceholderAudioBuffer, signal is unknown"
+        )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            class_name=self.__class__.__name__,
+            sample_rate=self.sample_rate,
+            nb_samples=self.nb_samples,
+            nb_channels=self.nb_channels,
+        )
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> PlaceholderAudioBuffer:
+        return cls(
+            sample_rate=data["sample_rate"],
+            nb_samples=data["nb_samples"],
+            nb_channels=data["nb_channels"],
+        )

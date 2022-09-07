@@ -6,7 +6,11 @@ from typing import Any, Dict, List, Optional
 
 from medkit.core.annotation import Annotation, Attribute
 from medkit.core.audio.span import Span
-from medkit.core.audio.audio_buffer import AudioBuffer
+from medkit.core.audio.audio_buffer import (
+    AudioBuffer,
+    FileAudioBuffer,
+    PlaceholderAudioBuffer,
+)
 
 
 class AudioAnnotation(Annotation):
@@ -21,6 +25,11 @@ class AudioAnnotation(Annotation):
         metadata: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(label=label, attrs=attrs, ann_id=ann_id, metadata=metadata)
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data.update(span=self.span.to_dict(), audio=self.audio.to_dict())
+        return data
 
 
 class Segment(AudioAnnotation):
@@ -59,3 +68,29 @@ class Segment(AudioAnnotation):
 
         self.span = span
         self.audio = audio
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data.update(span=self.span.to_dict(), audio=self.audio.to_dict())
+        return data
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]):
+        span = Span.from_dict(data["span"])
+
+        if data["audio"]["class_name"] == "FileAudioBuffer":
+            audio = FileAudioBuffer.from_dict(data["audio"])
+        else:
+            assert data["audio"]["class_name"] == "PlaceholderAudioBuffer"
+            audio = PlaceholderAudioBuffer.from_dict(data["audio"])
+
+        attrs = [Attribute.from_dict(a) for a in data["attrs"]]
+
+        return cls(
+            label=data["label"],
+            span=span,
+            audio=audio,
+            attrs=attrs,
+            ann_id=data["id"],
+            metadata=data["metadata"],
+        )

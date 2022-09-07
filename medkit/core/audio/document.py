@@ -10,7 +10,11 @@ from medkit.core.document import Document
 from medkit.core.store import Store
 from medkit.core.audio.annotation import AudioAnnotation, Segment
 from medkit.core.audio.span import Span
-from medkit.core.audio.audio_buffer import AudioBuffer
+from medkit.core.audio.audio_buffer import (
+    AudioBuffer,
+    FileAudioBuffer,
+    PlaceholderAudioBuffer,
+)
 
 
 class AudioDocument(Document[AudioAnnotation]):
@@ -94,3 +98,29 @@ class AudioDocument(Document[AudioAnnotation]):
         if self.raw_segment is not None and annotation_id == self.raw_segment.id:
             return self.raw_segment
         return super().get_annotation_by_id(annotation_id)
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data.update(audio=self.audio.to_dict())
+        return data
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> AudioDocument:
+        if data["audio"]["class_name"] == "FileAudioBuffer":
+            audio = FileAudioBuffer.from_dict(data["audio"])
+        else:
+            assert data["audio"]["class_name"] == "PlaceholderAudioBuffer"
+            audio = PlaceholderAudioBuffer.from_dict(data["audio"])
+
+        annotations = [Segment.from_dict(ann_data) for ann_data in data["annotations"]]
+
+        doc = cls(
+            doc_id=data["id"],
+            audio=audio,
+            metadata=data["metadata"],
+        )
+
+        for annotation in annotations:
+            doc.add_annotation(annotation)
+
+        return doc
