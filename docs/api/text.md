@@ -102,7 +102,8 @@ This section lists text annotators for detecting entities. They are part of
 ### Quick UMLS Matcher
 
 :::{important}
-For using Quick UMLS Matcher, you need to install `quickumls` and `six`.
+`QuickUMLSMatcher` needs additional dependencies that can be installed with `pip
+install medkit[quick-umls-matcher]`
 :::
 
 ```{eval-rst}

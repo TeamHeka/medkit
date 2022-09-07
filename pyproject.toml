@@ -74,25 +74,30 @@ hf-translator = [
     "torch",
     "transformers"
 ]
+quick-umls = [
+    "packaging",  # needed to check quickumls version
+    "quickumls",
+]
+rush-sentence-tokenizer = ["PyRush"]
+spacy = ["spacy"]
 umls-coder-normalizer = [
     "feather-format",
     "pandas",
     "torch",
     "transformers",
 ]
+
 optional = [
+    "feather-format",
+    "packaging",
+    "pandas",
     "PyRush",
-    "packaging",  # needed to check quickumls version
     "quickumls",
-    "spacy",
-    # hf-translator dependencies
-    "sacremoses",  # needed by default model "Helsinki-NLP/opus-mt-fr-en"
+    "sacremoses",
     "sentencepiece",
+    "spacy",
     "torch",
     "transformers",
-    # umls-coder-normalizer dependencies
-    "feather-format",
-    "pandas",
 ]
 
 # Waiting for --all-extras (https://github.com/python-poetry/poetry/pull/5452)
