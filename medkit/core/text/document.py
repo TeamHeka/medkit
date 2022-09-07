@@ -154,7 +154,7 @@ class TextDocument(Document[TextAnnotation]):
 
         Returns
         -------
-        List[Segment]:
+        List[~medkit.core.text.Segment]:
             Segments in document
         """
         return [self.get_annotation_by_id(id) for id in self._segment_ids]

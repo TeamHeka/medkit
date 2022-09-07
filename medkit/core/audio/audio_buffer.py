@@ -1,0 +1,218 @@
+from __future__ import annotations
+
+__all__ = ["AudioBuffer", "FileAudioBuffer", "MemoryAudioBuffer"]
+
+import abc
+from pathlib import Path
+from typing import Any, Optional, Union
+
+import numpy as np
+import soundfile as sf
+
+
+class AudioBuffer(abc.ABC):
+    """Audio buffer base class. Gives access to raw audio samples."""
+
+    @abc.abstractmethod
+    def __init__(self, sample_rate: int, nb_samples: int, nb_channels: int):
+        """
+        Parameters
+        ----------
+        sample_rate:
+            Sample rate of the signal, in samples per second.
+        nb_samples:
+            Duration of the signal in samples.
+        nb_channels:
+            Number of channels in the signal.
+        """
+        self.sample_rate = sample_rate
+        self.nb_samples = nb_samples
+        self.nb_channels = nb_channels
+
+    @property
+    def duration(self) -> float:
+        """Duration of the signal in seconds."""
+        return self.nb_samples / self.sample_rate
+
+    @abc.abstractmethod
+    def read(self, copy: bool = False) -> np.ndarray:
+        """Return the signal in the audio buffer.
+
+        Parameters
+        ----------
+        copy:
+            If `True`, the returned array will be a copy that can be safely mutated.
+
+        Returns
+        -------
+        np.ndarray:
+            Raw audio samples
+        """
+        pass
+
+    @abc.abstractmethod
+    def trim(self, start: Optional[int], end: Optional[int]) -> AudioBuffer:
+        """Return a new audio buffer pointing to portion of the signal in the original buffer,
+        using boundaries in samples.
+
+        Parameters
+        ----------
+        start:
+            Start sample of the new buffer (defaults to `0`).
+        end:
+            End sample of the new buffer, excluded (default to full duration).
+
+        Returns
+        -------
+        AudioBuffer:
+            Trimmed audio buffer with new start and end samples, of same type as
+            original audio buffer.
+        """
+        pass
+
+    def trim_duration(
+        self, start_time: Optional[float] = None, end_time: Optional[float] = None
+    ) -> AudioBuffer:
+        """Return a new audio buffer pointing to a portion of the signal in the original buffer,
+        using boundaries in seconds. Since `start_time` and `end_time` are in seconds, the exact
+        trim boundaries will be rounded to the nearest sample and will therefore depend on the sampling
+        rate.
+
+        Parameters
+        ----------
+        start_time:
+            Start time of the new buffer (defaults to `0.0`).
+        end_time:
+            End time of thew new buffer, excluded (default to full duration).
+
+        Returns
+        -------
+        AudioBuffer:
+            Trimmed audio buffer with new start and end samples, of same type as
+            original audio buffer.
+        """
+        assert end_time is None or end_time <= self.duration
+        start = round(start_time * self.sample_rate) if start_time is not None else None
+        end = (
+            min(round(end_time * self.sample_rate), self.nb_samples)
+            if end_time is not None
+            else None
+        )
+        return self.trim(start, end)
+
+
+class FileAudioBuffer(AudioBuffer):
+    """Audio buffer giving access to audio files stored on the filesystem
+    (to use when manipulating unmodified raw audio)."""
+
+    def __init__(
+        self,
+        path: Union[str, Path],
+        trim_start: Optional[int] = None,
+        trim_end: Optional[int] = None,
+        sf_info: Optional[Any] = None,
+    ):
+        """
+        Parameters
+        ----------
+        path:
+            Path to the audio file.
+        trim_start:
+            First sample of audio file to consider.
+        trim_end:
+            First sample of audio file to exclude.
+        sf_info:
+            Optional metadata dict returned by soundfile.
+        """
+        path = Path(path)
+        if sf_info is None:
+            sf_info = sf.info(path)
+
+        assert trim_start is None or 0 <= trim_start <= sf_info.frames
+        assert trim_end is None or 0 <= trim_end <= sf_info.frames
+
+        if trim_start is None:
+            trim_start = 0
+        if trim_end is None:
+            trim_end = sf_info.frames
+
+        sample_rate = sf_info.samplerate
+        nb_samples = trim_end - trim_start
+        nb_channels = sf_info.channels
+
+        super().__init__(
+            sample_rate=sample_rate, nb_samples=nb_samples, nb_channels=nb_channels
+        )
+
+        self.path = path
+        self._trim_end = trim_end
+        self._trim_start = trim_start
+        self._sf_info = sf_info
+
+    def read(self, copy: bool = False) -> np.ndarray:
+        signal, _ = sf.read(
+            self.path,
+            start=self._trim_start,
+            stop=self._trim_end,
+            always_2d=True,
+            dtype=np.float32,
+        )
+        return signal.T
+
+    def trim(
+        self, start: Optional[int] = None, end: Optional[int] = None
+    ) -> AudioBuffer:
+        assert start is None or 0 <= start <= self.nb_samples
+        assert end is None or 0 <= end <= self.nb_samples
+
+        if start is not None:
+            new_trim_start = self._trim_start + start
+        else:
+            new_trim_start = self._trim_start
+        if end is not None:
+            new_trim_end = self._trim_start + end
+        else:
+            new_trim_end = self._trim_end
+        assert new_trim_start <= new_trim_end
+        return FileAudioBuffer(self.path, new_trim_start, new_trim_end, self._sf_info)
+
+
+class MemoryAudioBuffer(AudioBuffer):
+    """Audio buffer giving acces to signals stored in memory
+    (to use when reading/writing a modified audio signal)."""
+
+    def __init__(self, signal: np.ndarray, sample_rate: int):
+        """
+        Parameters
+        ----------
+        signal:
+            Samples constituting the audio signal, with shape `(nb_channel, nb_samples)`.
+        sample_rate:
+            Sample rate of the signal, in samples per second.
+        """
+        nb_channels, nb_samples = signal.shape
+
+        super().__init__(
+            sample_rate=sample_rate, nb_samples=nb_samples, nb_channels=nb_channels
+        )
+
+        self._signal = signal
+
+    def read(self, copy: bool = False) -> np.ndarray:
+        if copy:
+            return self._signal.copy()
+        else:
+            return self._signal
+
+    def trim(
+        self, start: Optional[int] = None, end: Optional[int] = None
+    ) -> AudioBuffer:
+        assert start is None or 0 <= start <= self.nb_samples
+        assert end is None or 0 <= end <= self.nb_samples
+
+        if start is None:
+            start = 0
+        if end is None:
+            end = self.nb_samples
+        assert start <= end
+        return MemoryAudioBuffer(self._signal[:, start:end], self.sample_rate)

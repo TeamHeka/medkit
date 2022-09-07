@@ -95,7 +95,7 @@ class EDSCleaner(Operation):
 
         Returns
         -------
-        List[Segment]:
+        List[~medkit.core.text.Segment]:
             List of cleaned segments.
         """
         return [

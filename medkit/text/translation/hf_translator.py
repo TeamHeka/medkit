@@ -126,7 +126,7 @@ class HFTranslator(Operation):
 
         Returns
         -------
-        List[Segment]:
+        List[~medkit.core.text.Segment]:
             Translated segments (with spans referring to words in original text, for translated
             words that have been aligned to original words)
         """
