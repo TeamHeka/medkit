@@ -1,8 +1,11 @@
 import pytest
 
-from medkit.core import Attribute, ProvTracer
-from medkit.core.text import Segment, Span
-from medkit.text.ner.hf_entity_matcher import HFEntityMatcher
+pytest.importorskip(modname="torch", reason="torch is not installed")
+pytest.importorskip(modname="transformers", reason="transformers is not installed")
+
+from medkit.core import Attribute, ProvTracer  # noqa: E402
+from medkit.core.text import Segment, Span  # noqa: E402
+from medkit.text.ner.hf_entity_matcher import HFEntityMatcher  # noqa: E402
 
 
 _MODEL = "samrawal/bert-base-uncased_clinical-ner"

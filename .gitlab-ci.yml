@@ -110,7 +110,7 @@ unit_tests:
     - source .venv/bin/activate
   script:
     - echo "Executing unit tests..."
-    - coverage run -m pytest -v --junit-xml=report.xml tests/unit
+    - coverage run -m pytest -rsv --junit-xml=report.xml tests/unit
     - coverage report
     - coverage xml
   coverage: '/^TOTAL.+?(\d+\%)$/'

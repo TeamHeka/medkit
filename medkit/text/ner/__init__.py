@@ -16,15 +16,20 @@ from .regexp_matcher import (
     RegexpMetadata,
 )
 
+# -----------------------------------------------------
+# Import optional modules if dependencies are installed
+# -----------------------------------------------------
+
+# quick_umls module
 _packaging_is_available = importlib.util.find_spec("packaging") is not None
 _quickumls_is_available = importlib.util.find_spec("quickumls") is not None
-_six_is_available = importlib.util.find_spec("six") is not None
-if _packaging_is_available and _quickumls_is_available and _six_is_available:
+if _packaging_is_available and _quickumls_is_available:
     # fmt: off
     from .quick_umls_matcher import QuickUMLSMatcher  # noqa: F401
     __all__.append("QuickUMLSMatcher")
     # fmt: on
 
+# HF entity matcher
 _torch_is_available = importlib.util.find_spec("torch") is not None
 _transformers_is_available = importlib.util.find_spec("transformers") is not None
 if _torch_is_available and _transformers_is_available:
