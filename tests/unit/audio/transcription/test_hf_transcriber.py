@@ -1,10 +1,14 @@
-from pathlib import Path
-
-import numpy as np
 import pytest
 
-from medkit.core.audio import FileAudioBuffer, MemoryAudioBuffer
-from medkit.audio.transcription.hf_transcriber import HFTranscriber
+pytest.importorskip(modname="torchaudio", reason="torchaudio is not installed")
+pytest.importorskip(modname="transformers", reason="transformers is not installed")
+
+from pathlib import Path  # noqa: E402
+
+import numpy as np  # noqa: E402
+
+from medkit.core.audio import FileAudioBuffer, MemoryAudioBuffer  # noqa: E402
+from medkit.audio.transcription.hf_transcriber import HFTranscriber  # noqa: E402
 
 
 _PATH_TO_VOICE_FILE = Path(__file__).parent / ".." / "resources" / "voice.ogg"

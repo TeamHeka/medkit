@@ -1,9 +1,13 @@
-import numpy as np
+import pytest
 
-from medkit.audio.preprocessing.resampler import Resampler
-from medkit.core import ProvTracer
-from medkit.core.audio import Segment, Span, MemoryAudioBuffer
-from tests.audio_utils import generate_sin_signal
+pytest.importorskip(modname="resampy", reason="resampy is not installed")
+
+import numpy as np  # noqa: E402
+
+from medkit.audio.preprocessing.resampler import Resampler  # noqa: E402
+from medkit.core import ProvTracer  # noqa: E402
+from medkit.core.audio import Segment, Span, MemoryAudioBuffer  # noqa: E402
+from tests.audio_utils import generate_sin_signal  # noqa: E402
 
 
 _OUTPUT_LABEL = "downmixed"
