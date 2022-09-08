@@ -19,9 +19,11 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.7.1, <4.0"
 flashtext = "*"
+numpy = "*"
 pyaml = "*"
 requests = "*"
 smart-open = "*"
+soundfile = "*"
 tqdm = "*"
 typing-extensions = "*"
 Unidecode = "*"
@@ -35,11 +37,14 @@ pandas = [
 ]
 PyRuSH = {version = "^1.0", optional = true}
 quickumls = {version = "^1.4", optional = true}
+resampy = {version = "^0.4", optional = true}
 sacremoses = {version = "*", optional = true}
 sentencepiece = {version = "*", optional = true}
 spacy = {version = "^3.4", optional = true}
 torch = {version ="^1.0", optional = true}
+torchaudio = {version ="^0.12", optional = true}
 transformers = {version = "^4.21", optional = true}
+webrtcvad = {version = "^2.0", optional = true}
 
 #docs
 jupyter-book = {version = "^0.13", optional = true}
@@ -68,6 +73,10 @@ hf-entity-matcher = [
     "torch",
     "transformers",
 ]
+hf-transcriber = [
+    "torchaudio",
+    "transformers"
+]
 hf-translator = [
     "sacremoses",  # needed by default model "Helsinki-NLP/opus-mt-fr-en"
     "sentencepiece",
@@ -78,6 +87,7 @@ quick-umls = [
     "packaging",  # needed to check quickumls version
     "quickumls",
 ]
+resampler = ["resampy"]
 rush-sentence-tokenizer = ["PyRush"]
 spacy = ["spacy"]
 umls-coder-normalizer = [
@@ -86,6 +96,7 @@ umls-coder-normalizer = [
     "torch",
     "transformers",
 ]
+webrtc-voice-detector = ["webrtcvad"]
 
 optional = [
     "feather-format",
@@ -93,11 +104,14 @@ optional = [
     "pandas",
     "PyRush",
     "quickumls",
+    "resampy",
     "sacremoses",
     "sentencepiece",
     "spacy",
     "torch",
+    "torchaudio",
     "transformers",
+    "webrtcvad",
 ]
 
 # Waiting for --all-extras (https://github.com/python-poetry/poetry/pull/5452)

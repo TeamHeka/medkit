@@ -68,7 +68,7 @@ class Normalizer(Operation):
 
         Returns
         -------
-        List[Segment]
+        List[~medkit.core.text.Segment]:
             List of normalized segments
         """
         return [

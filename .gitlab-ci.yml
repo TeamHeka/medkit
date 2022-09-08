@@ -36,13 +36,13 @@ cache: &default_cache
   - poetry env use python3.7
   - poetry env info
 
-.install_gcc: &install_gcc
+.install_test_packages: &install_test_packages
   - DEBIAN_FRONTEND=noninteractive apt-get update
-  - DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++
+  - DEBIAN_FRONTEND=noninteractive apt-get install -y gcc g++ libsndfile1
 
 .install_doc_packages: &install_doc_packages
   - DEBIAN_FRONTEND=noninteractive apt update
-  - DEBIAN_FRONTEND=noninteractive apt install -y graphviz
+  - DEBIAN_FRONTEND=noninteractive apt install -y graphviz libsndfile1
 
 # ------- Jobs declaration --------
 
@@ -106,7 +106,7 @@ unit_tests:
   stage: test
   extends: .use_cache
   before_script:
-    - *install_gcc
+    - *install_test_packages
     - source .venv/bin/activate
   script:
     - echo "Executing unit tests..."

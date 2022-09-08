@@ -40,12 +40,14 @@ sphinx:
     autodoc_typehints_format: 'short'
     autodoc_member_order: 'bysource'
     autodoc_mock_imports:
+      - resampy
       - torch
       - transformers
       - quickumls
       - pandas
       - PyRuSH
       - spacy
+    autodoc_member_order: 'bysource'
 
   extra_extensions:
   - 'sphinx.ext.autodoc'

@@ -60,7 +60,7 @@ def extract_anns_and_attrs_from_spacy_doc(
 
     Returns
     -------
-    annotations: List[Segment]
+    annotations: List[~medkit.core.text.Segment]
         Segments extracted from the spacy Doc object
     attributes_by_ann: Dict[str, List[Attribute]]]
         Attributes extracted for each annotation, the key is a medkit id

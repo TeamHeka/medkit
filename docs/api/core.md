@@ -10,10 +10,10 @@ The `Document` class allows medkit to:
 
 The `Document` class is an abstract class which will be inherited by
 different modalities (e.g., text, audio, images, ...).
-For the time being, only `TextDocument` has been implemented.
+`TextDocument` and `AudioDocument` derive `Document` for text and audio usecases.
 
 ```{eval-rst}
-.. autoclasstree:: medkit.core.text.document medkit.core.document
+.. autoclasstree:: medkit.core.text.document medkit.core.document medkit.core.audio.document
     :strict:
     :namespace: medkit.core
     :align: center
@@ -26,10 +26,9 @@ For the time being, only `TextDocument` has been implemented.
 ```
 
 ```{eval-rst}
-.. autoclass:: medkit.core.text::TextDocument
-    :members:
-    :inherited-members:
-```
+.. autotypevar:: medkit.core.document::AnnotationType
+    :no-type:
+ ```
 
 The `Collection` class is under construction.
 
@@ -38,26 +37,22 @@ The `Collection` class is under construction.
     :members:
 ```
 
+
 ### Annotation
 
 The `Annotation` abstract class provides common methods for every
 annotation type.
 An annotation may contain a list of [Attributes](api:core:attribute).
 
-For the time being, we have several text annotation classes, each one with
-its own data structure.
+We have several text and audio annotation classes in respectively `medkit.core.text` and `medkit.core.audio`,
+each one with its own data structure.
 
 ```{eval-rst}
-.. autoclasstree:: medkit.core.text.annotation medkit.core.annotation
+.. autoclasstree:: medkit.core.annotation medkit.core.text.annotation medkit.core.audio.annotation
     :strict:
     :namespace: medkit.core
     :align: center
-    :caption: Text annotation hierarchy
-```
-
-```{eval-rst}
-.. autotypevar:: medkit.core.document::AnnotationType
-    :no-type:
+    :caption: Annotation hierarchy (TODO: fix this schema to remove the audio/text Segment confusion)
 ```
 
 ```{eval-rst}
@@ -65,45 +60,28 @@ its own data structure.
     :members:
 ```
 
-```{eval-rst}
-.. autoclass:: medkit.core.text::TextAnnotation
-    :members:
-```
-
-```{eval-rst}
-.. autoclass:: medkit.core.text::Segment
-    :members:
-```
-
-```{eval-rst}
-.. autoclass:: medkit.core.text::Entity
-    :members:
-```
-
-```{eval-rst}
-.. autoclass:: medkit.core.text::Relation
-```
-
 (api:core:attribute)=
 ```{eval-rst}
 .. autoclass:: medkit.core::Attribute
     :members:
 ```
+
 (api:core:operations)=
 ## Operations
 
 The medkit `Operation` abstract class groups all necessary methods for
 being compatible with medkit processing pipeline and provenance.
 
-We have defined different sub-classes depending on the nature of the operation.
+We have defined different sub-classes depending on the nature of the operation,
+including text-specific and audio-specific operations in `medkit.core.text` and `medkit.core.audio`.
 Here is a graph representing this hierarchy:
 
 ```{eval-rst}
-.. autoclasstree:: medkit.core.operation medkit.core.text.operation
+.. autoclasstree:: medkit.core.operation medkit.core.text.operation medkit.core.audio.operation
     :strict:
     :namespace: medkit.core
     :align: center
-    :caption: Operation hierarchy
+    :caption: Operation hierarchy (TODO: fix this schema to remove confusion between audio/text operations)
 ```
 
 For all operations inheriting from `Operation` abstract class, these 4 lines
@@ -126,16 +104,6 @@ Each operation is described as follows:
 
 ```{eval-rst}
 .. autoclass:: medkit.core::OperationDescription
-    :members:
-```
-
-### Specific to text
-
-Some abstract sub-classes have been defined for text to ease the
-development of text operations according to `run` operations.
-
-```{eval-rst}
-.. automodule:: medkit.core.text.operation
     :members:
 ```
 
@@ -177,42 +145,6 @@ The `DocPipeline` class allows to run a pipeline on a list of documents.
 
 ```{eval-rst}
 .. autoclass:: medkit.core::DocPipeline
-    :members:
-```
-
-(api:core:span)=
-## Span (specific to text)
-
-```{eval-rst}
-.. autoclass:: medkit.core.text::Span
-```
-
-```{eval-rst}
-.. autoclass:: medkit.core.text::ModifiedSpan
-    :members:
-```
-
-### Span utilities
-
-:::{seealso}
-cf. [spans notebook example](../examples/spans).
-:::
-
-```{eval-rst}
-.. automodule:: medkit.core.text.span_utils
-    :members:
-```
-
-### Text utilities
-
-These utilities have some preconfigured patterns for preprocessing text documents without destruction. They are not really supposed to be used directly, but rather inside a cleaning operation.
-
-:::{seealso}
- Medkit provides the {class}`~medkit.text.preprocessing.eds_cleaner.EDSCleaner` class that combines all these utilities to clean french documents (related to EDS documents coming from PDF).
-:::
-
-```{eval-rst}
-.. automodule:: medkit.core.text.utils
     :members:
 ```
 

@@ -24,9 +24,7 @@ class TextAnnotation(Annotation):
         ann_id: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ):
-        return super().__init__(
-            label=label, attrs=attrs, ann_id=ann_id, metadata=metadata
-        )
+        super().__init__(label=label, attrs=attrs, ann_id=ann_id, metadata=metadata)
 
 
 class Segment(TextAnnotation):
@@ -46,7 +44,7 @@ class Segment(TextAnnotation):
         ----------
         label: str
             The label for this annotation (e.g., SENTENCE)
-        spans: List[Span]
+        spans:
             The annotation span
         text: str
             The annotation text
@@ -109,7 +107,7 @@ class Entity(Segment):
         ----------
         label: str
             The entity label
-        spans: List[Span]
+        spans:
             The entity span
         text: str
             The entity text
