@@ -116,21 +116,14 @@ def test_default_cleaner(text, expected_text, expected_spans):
 TEST_PARAMS_CONFIG = [
     (
         EDSCleaner(keep_endlines=True),
-<<<<<<< HEAD
         (
-            "Le patient\n\n\n       reviens. Nom patient"
+            "Le patient\n\n\n  reviens. Nom patient"
             " probleme.\n\nTraitement :\n\n\n à dose curative dès cet appel."
         ),
         (
-            "Le patient reviens. Nom patient probleme..\nTraitement : à dose"
-            " curative dès cet appel."
+            "Le patient reviens. Nom patient probleme..\nTraitement : à dose curative"
+            " dès cet appel."
         ),
-=======
-        "Le patient\n\n\n  reviens. Nom patient"
-        " probleme.\n\nTraitement :\n\n\n à dose curative dès cet appel.",
-        "Le patient reviens. Nom patient probleme..\nTraitement : à dose curative dès"
-        " cet appel.",
->>>>>>> In EDSCleaner, update to clean all whitespaces and fix unit tests
         [
             Span(start=0, end=10),
             ModifiedSpan(
@@ -196,17 +189,11 @@ TEST_PARAMS_CONFIG = [
     ),
     (  # whitespaces are removed now
         EDSCleaner(handle_points_eds=False),
-<<<<<<< HEAD
         (
             "Nom patient : la Mme. Marie Du \n\npont, date le     .24 avril .    pour"
             " un probleme"
         ),
-        "Nom patient : la Mme. Marie Du  pont, date le .24 avril . pour un probleme",
-=======
-        "Nom patient : la Mme. Marie Du \n\npont, date le     .24 avril .    pour un"
-        " probleme",
         "Nom patient : la Mme. Marie Du pont, date le .24 avril . pour un probleme",
->>>>>>> In EDSCleaner, update to clean all whitespaces and fix unit tests
         [
             Span(start=0, end=30),
             ModifiedSpan(
