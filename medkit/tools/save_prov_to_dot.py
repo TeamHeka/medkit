@@ -44,7 +44,7 @@ def save_prov_to_dot(
         When there are nested provenance tracers for some operations, how
         deep should we go when displaying their contents.
     show_attr_links:
-        Wether to show links between attributes and the data items they are
+        Whether to show links between attributes and the data items they are
         attached to (not strictly provenance but can make things easier to
         understand).
     """

@@ -24,8 +24,7 @@ from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher
 #
 # The various QuickUMLS install generated are kept
 # at tests/text/ner/quick_umls_installs.
-# The sample database is kept at tests/text/ner/quick_umls_installs/sample_umls_data
-# for reference but it is not directly used.
+# The sample database is kept at tests/unit/text/ner/sample_umls_data.
 
 _PATH_TO_QUICK_UMLS_INSTALLS = Path(__file__).parent / "quick_umls_installs"
 _PATH_TO_QUICK_UMLS_INSTALL_EN = _PATH_TO_QUICK_UMLS_INSTALLS / "en"

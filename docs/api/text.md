@@ -102,7 +102,8 @@ This section lists text annotators for detecting entities. They are part of
 ### Quick UMLS Matcher
 
 :::{important}
-For using Quick UMLS Matcher, you need to install `quickumls` and `six`.
+`QuickUMLSMatcher` needs additional dependencies that can be installed with `pip
+install medkit[quick-umls-matcher]`
 :::
 
 ```{eval-rst}
@@ -125,6 +126,20 @@ For using Quick UMLS Matcher, you need to install `quickumls` and `six`.
 
 ```{eval-rst}
 .. automodule:: medkit.text.ner.hf_entity_matcher
+    :members:
+```
+
+### UMLS Coder Normalizer
+
+This operation is not an entity matcher per-say but a normalizer that will add normalization
+attributes to pre-existing entities.
+
+:::{important}
+`UMLSCoderNormalizer` needs additional dependencies that can be installed with `pip install medkit[umls-coder-normalizer]`
+:::
+
+```{eval-rst}
+.. automodule:: medkit.text.ner.umls_coder_normalizer
     :members:
 ```
 
