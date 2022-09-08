@@ -1,12 +1,13 @@
 import pytest
 
-import spacy
-from spacy.tokens import Span as SpacySpan
+spacy = pytest.importorskip(modname="spacy", reason="spacy is not installed")
 
-from medkit.core import ProvTracer, Collection
-from medkit.core.text import Entity, Span, TextDocument
-from medkit.io.spacy import SpacyInputConverter
-from medkit.text.spacy.spacy_utils import _define_attrs_extensions
+from spacy.tokens import Span as SpacySpan  # noqa: E402
+
+from medkit.core import ProvTracer, Collection  # noqa: E402
+from medkit.core.text import Entity, Span, TextDocument  # noqa: E402
+from medkit.io.spacy import SpacyInputConverter  # noqa: E402
+from medkit.text.spacy.spacy_utils import _define_attrs_extensions  # noqa: E402
 
 
 @pytest.fixture(scope="module")

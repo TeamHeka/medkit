@@ -7,7 +7,11 @@ from .section_tokenizer import SectionTokenizer
 from .sentence_tokenizer import SentenceTokenizer
 from .syntagma_tokenizer import SyntagmaTokenizer
 
+# -----------------------------------------------------
+# Import optional modules if dependencies are installed
+# -----------------------------------------------------
 
+# Rush sentence tokenizer module
 _pyrush_is_available = importlib.util.find_spec("PyRuSH") is not None
 if _pyrush_is_available:
     # fmt: off
