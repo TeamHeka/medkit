@@ -11,7 +11,7 @@ kernelspec:
   name: python3
 ---
 
-# Loading and saving in Brat Format
+# Brat integration
 
 +++
 
@@ -46,8 +46,7 @@ print(Path("./input/brat/doc_01.ann").read_text())
 To load Brat Files, medkit provides the {class}`~medkit.io.brat.BratInputConverter` class. This converter returns a `Collection` of `TextDocument`. 
 
 ```{tip}
-You can enable the provenance tracing using the method `set_prov_builder` with a {class}`~medkit.core.ProvBuilder` object.
-
+You can enable provenance tracing by assigning a {class}`~medkit.core.ProvTracer` object to the BratInputConverter with the `set_prov_tracer()` method.
 ```
 
 ```{code-cell} ipython3
@@ -83,11 +82,12 @@ To save a Collection or list of `TextDocument` in Brat format, you can use {clas
 
 You can choose which medkit annotations and attributes to keep in the resulting Brat collection. By default, since its `anns_labels` and `attrs` are set to `None`, all annotations and attributes will be in the generated file. 
 
+If you also want to include the segments in the brat collection, the parameter `ignore_segments` can be set to `False`.
 +++
 
 **Automatic configuration of annotations**
 +++
-Brat is actually controlling the configuration with text-based configuration files. It uses four types, but only the annotation types configuration is necessary (cf: [brat configuration](https://brat.nlplab.org/configuration.html)).
+> Brat is actually controlling the configuration with text-based configuration files. It uses four types, but only the annotation types configuration is necessary (cf: [brat configuration](https://brat.nlplab.org/configuration.html)).
 
 To facilitate integration and ensure correct visualisation, medkit automatically generates an `annotation.conf` for each collection.
  

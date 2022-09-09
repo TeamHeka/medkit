@@ -11,11 +11,13 @@ kernelspec:
   name: python3
 ---
 
-# Cleaning text without destruction
+# How to clean text using an Operation
 
 +++
 
-This example will show you how to use the class {class}`~medkit.text.preprocessing.eds_cleaner.EDSCleaner` class. A cleanup operation inspired by documents with formatting problems given previous conversion processes. 
+Medkit allows us to transform and clean up text without destroying the original text. We could, for example, implement a set of clean-up steps within the `run` method of an operation to pre-process raw text.
+
+In this example, we will use a predefined {class}`~medkit.text.preprocessing.eds_cleaner.EDSCleaner` operation to show how a cleaning process works in medkit. This operation is inspired by french documents with formatting problems given previous conversion processes. 
 
 ## Loading a text to clean
 
@@ -36,13 +38,19 @@ As we note, the text has:
 - multiple newlines characters;
 - long parentheses and numbers in English format.
 
-This complicates text segmentation, it may be a good idea to clean up the text before segmenting or creating annotations.
+This complicates text segmentation of the text, it may be a good idea to clean up the text before segmenting or creating annotations.
   
-## Using EDSCleaner to clean the document
+## Using EDSCleaner operation
 
-When a `TextDocument` is created, medkit creates a `raw_segment` that stores the raw text of the document. That is the segment on which we run the cleanup operation.
+As mentioned before, you can create your own custom cleanup operation. In this case, we use the predefined operation for a french document (coming from the EDS) to format the document.
 
-In this case, we initialize the `EDS_cleaner` with `keep_endlines=True` to facilitate the visualization. Otherwise, the output segment would be a plain text with no newlines `(\n)` characters. 
+The main idea is to transform the `raw_segment` and keep track of the modifications made by the operation. That segment is defined using the span of the text.
+
+**A span in medkit**
+> In medkit the span of an annotation is a list of simple spans {class}`~medkit.core.text.Span`  or modified spans {class}`~medkit.core.text.ModifiedSpan`. With this mechanism, we keep track of the modifications and can return to the original version whenever we want.
+
+The `EDSCleaner` is configurable, we initialize `keep_endlines=True` to facilitate the visualization. Otherwise, the output segment would be a plain text with no newlines `(\n)` characters. 
+
 
 ```{code-cell} ipython3
 from medkit.text.preprocessing import EDSCleaner
@@ -54,35 +62,33 @@ print(clean_segment.text)
 
 ```
 
-The class works on `Segments`. In the `run` method it performs various operations to delete or change characters of interest. By default it performs these operations:
+The class works on `Segments`. In the `run` method it performs several operations to delete or change characters of interest. By default it performs these operations:
 
-* Changes points between uppercase letters by space
+* Changes points between uppercase letters to spaces
 * Changes points between numbers to commas
-* Clears multiple spaces and newline characters.
+* Deletes multiple newline characters.
+* Deletes multiple whitespaces. 
 
 ```{note}
 There are two special operations that process parentheses and dots near French keywords such as Dr., Mme. and others. To enable/disable these operations you can use `handle_parentheses_eds` and `handle_points_eds`.
 ```
-```{seealso}
-For further information on the utilities used in this class, see {class}`~medkit.core.text.utils`
 
-``` 
 ## Extract text from the clean text
 
-Now that we have a clean text, we can run an operation on the new segment. We can detect the sentences, for example.
+Now that we have a **clean segment**, we can run an operation on the new segment. We can detect the sentences, for example.
 
 
 ```{code-cell} ipython3
 from medkit.text.segmentation import SentenceTokenizer
 
-sentences = SentenceTokenizer().run([clean_segment])
-for i,sent in enumerate(sentences):
-  print(f"[{i}]:{sent.text!r}\n")
+sentences = SentenceTokenizer(punct_chars = (".","\n")).run([clean_segment])
+for sent in sentences:
+  print(f"{sent.text!r}")
 ```
 
 **A created sentence in detail**
 
-The span of each generated sentence contains the modifications made by *eds_cleaner*. Let's look at the second sentence:  
+The span of each generated sentence contains the modifications made by *eds_cleaner* object. Let's look at the second sentence:  
 
 
 ```{code-cell} ipython3
@@ -91,9 +97,11 @@ print(f"text={sentence.text!r}")
 print("spans=\n","\n".join(f"{sp}" for sp in sentence.spans))
 ```
 
+We see a combination of `Span` and `ModifiedSpan` indicating that something changed in the text. The sentence starts at the character (56:`M`) and then the character (57:`.`) is a ModifiedSpan because it was replaced by a single space.
+
 ## Displaying in the original text
 
-Since the sentence contains the information from the original span, it will always be possible to go back and display the information in the raw text. 
+Since the sentence contains the information from the original spans, it will always be possible to go back and display the information in the raw text. 
 
 To get the original span, we can use {func}`~medkit.core.text.span_utils.normalize_spans`. Next, we can extract the raw text using {func}`~medkit.core.text.span_utils.extract`. 
 
@@ -105,6 +113,10 @@ extrated_text, spans = extract(raw_segment.text,raw_segment.spans,spans_sentence
 print(f"Sentence in the raw version:\n \"{extrated_text}\"")
 ```
 
-Medkit combines these utilities to transform text and extract information without losing the raw text.  
+That's how an operation transform text and extract information without losing the raw text.  
 
+```{seealso}
+For further information on the utilities used in this class, see {class}`~medkit.core.text.utils`. 
+To see more examples of span operations [here](../examples/spans)
 
+``` 

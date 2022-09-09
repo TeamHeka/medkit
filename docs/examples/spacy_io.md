@@ -11,11 +11,13 @@ kernelspec:
   name: python3
 ---
 
-# Loading and converting from Spacy
+# Spacy integration
 
 +++
 
 [spaCy](https://spacy.io/) is a library for advanced Natural Language Processing in Python. Medkit can load spacy documents with entities, attributes (custom extensions) and groups of spans. The module is configurable according to use cases. 
+
+We use some spacy concepts in this example, more information can be found in the official spacy documentation.
 
 ```{note}
 For this example, you should download the french spacy model. You can download it using:
@@ -43,6 +45,17 @@ spacy_doc = nlp(text)
 
 #  Spacy adds entities, here we add a span 'SECTION' as an example
 spacy_doc.spans["SECTION"] = [SpacySpan(spacy_doc, 0, 2, "header")]
+
+# Adding a custom attribute in spacy
+# We could add information to the entity 'LOC' for example
+# In spacy, we need to set the extension before change its value
+if not SpacySpan.has_extension("country"):
+  SpacySpan.set_extension("country", default=None)
+
+# add the country in the 'LOC' entity
+for e in spacy_doc.ents:
+  if e.label_ == 'LOC':
+    e._.set("country", 'France')
 ```
 
 **Description of the spacy document**
@@ -67,6 +80,7 @@ displacy.render(spacy_doc, style="span",options={"spans_key": "SECTION"})
 ```
 
 The spacy document has **2** entities and **1** span groups called `SECTION`.
+The entity 'LOC' has **1** attribute called `country`.
 
 Let's see how to convert this spacy doc in a `TextDocument` with annotations.
 
@@ -75,8 +89,7 @@ Let's see how to convert this spacy doc in a `TextDocument` with annotations.
 The class {class}`~medkit.io.spacy.SpacyInputConverter` is in charge of converting spacy Docs into a collection of TextDocuments. By default, it loads all entities, span groups and extension  attributes for each SpacyDoc object, but you can use the `entities`, `span_groups` and `attrs` parameters to specify which items should be converted, based on their labels.
 
 ```{tip}
-You can enable the provenance tracing using the method `set_prov_builder` with a {class}`~medkit.core.ProvBuilder` object.
-
+You can enable provenance tracing by assigning a {class}`~medkit.core.ProvTracer` object to the SpacyInputConverter with the `set_prov_tracer()` method.
 ```
 
 
@@ -97,12 +110,20 @@ medkit_doc = collection.documents[0]
 ```{code-cell} ipython3
 print(f"The medkit doc has {len(medkit_doc.get_annotations())} annotations.")
 print(f"The medkit doc has {len(medkit_doc.get_entities())} entities.")
-print(f"The medkit doc has {len(medkit_doc.get_annotations_by_label('SECTION'))} spans.")
+print(f"The medkit doc has {len(medkit_doc.get_segments())} segment.")
 ```
-
+**What about 'LOC' entity?**
+```{code-cell} ipython3
+entity = medkit_doc.get_annotations_by_label('LOC')[0]
+attribute = entity.get_attrs_by_label("country")
+print(f"Entity label={entity.label}, Entity text={entity.text}")
+print("Attributes loaded from spacy")
+print(f"The attr `country` was loaded? : {attribute != []}")
+print(attribute)
+```
 **Visualizing Medkit annotations**
 
-As explained in other tutorials, we can view medkit annotations using `displacy`. 
+As explained in other tutorials, we can display medkit annotations using `displacy`, a visualizer developed by Spacy. You can use the {func}`~medkit.text.spacy.displacy_utils.medkit_doc_to_displacy` function to format medkit annotations.
 
 ---
 * Entities loaded from spacy in medkit
@@ -140,31 +161,44 @@ spacy_output_converter = SpacyOutputConverter(nlp=nlp)
 
 # Convert a list of TextDocument 
 
-spacy_docs_medkit = spacy_output_converter.convert([medkit_doc])
-spacy_doc_medkit = spacy_docs_medkit[0]
+spacy_docs = spacy_output_converter.convert([medkit_doc])
+spacy_doc_v2 = spacy_docs[0]
 
 # Explore new spacy doc
-print("Text of spacy doc from TextDocument:\n",spacy_doc_medkit.text)
+print("Text of spacy doc from TextDocument:\n",spacy_doc_v2.text)
 ```
 
 **Description of the resulting Spacy document**
 
 ---
-* Entities exported to spacy
+* Entities imported from medkit
 ---
 
 ```{code-cell} ipython3
-displacy.render(spacy_doc_medkit, style="ent")
+displacy.render(spacy_doc_v2, style="ent")
 ```
 
 ---
-* Spans exported to spacy
+* Spans imported from medkit
 ---
 
 ```{code-cell} ipython3
-displacy.render(spacy_doc_medkit, style="span",options={"spans_key": "SECTION"})
+displacy.render(spacy_doc_v2, style="span",options={"spans_key": "SECTION"})
 
 ```
+
+**What about 'LOC' entity?**
+```{code-cell} ipython3
+entity = [e for e in spacy_doc_v2.ents if e.label_ == 'LOC'][0]
+attribute = entity._.get('country')
+print(f"Entity label={entity.label_}. Entity text={entity.text}")
+print("Attributes imported from medkit")
+print(f"The attr `country` was imported? : {attribute is not None}, value={entity._.get('country')}")
+```
+
 :::{seealso}
 cf. [Spacy IO module](api:io:spacy).
+
+Medkit has more components related to spacy, you may see Spacy text module.
+
 :::
