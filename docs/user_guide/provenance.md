@@ -18,7 +18,7 @@ kernelspec:
 Provenance tracing is still under development and may be changed in the future.
 ```
 
-One of the main features of medkit is its the tracing of provenance information.
+One of the main features of medkit is the tracing of provenance information.
 When used, medkit is able to tell how each annotation was created, that is to
 say:
 - the operation that generated it;
@@ -234,7 +234,7 @@ for prov in pipeline_prov_tracer.get_provs():
 
 Although the order of each `Prov` returned by `get_provs()` isn't the order of
 creation of the annotations themselves, we can see the details of what happened
-in the pipeline: 2 sentences where derived from the raw text by the
+in the pipeline: 2 sentences were derived from the raw text by the
 `SentenceTokenizer`, then one entity was derived from one of the sentences by
 the `RegexpMatcher`.
 
@@ -315,7 +315,7 @@ pipeline_steps = [
 pipeline = Pipeline(pipeline_steps, input_keys=["full_text"], output_keys=["entities"])
 ```
 
-Running the pipeline gives us 2 entity with negation attributes:
+Running the pipeline gives us 2 entities with negation attributes:
 
 ```{code-cell} ipython3
 prov_tracer = ProvTracer()
@@ -329,7 +329,7 @@ for entity in entities:
 
 At the outer-most level, the provenance tells us that the main pipeline created
 2 entities and 2 attributes. Intermediary data items (sentences) and operations
-(`SentenceTokenizer`, `NegationDetector`, `RegexpMatcher`) are abstracted away.
+(`SentenceTokenizer`, `NegationDetector`, `RegexpMatcher`) are hidden .
 
 ```{code-cell} ipython3
 ---
@@ -391,11 +391,11 @@ them, using which data as input.
 
 We have also seen how, when using pipelines and sub-pipelines, the provenance
 information in a `ProvTracer` will be composed, the same way that our processing
-graph is. This allows us to later should the level of details that we want to
+graph is. This allows us to later display the level of details that we want to
 see when inspecting provenance.
 
 Finally, we have seen how the `save_prov_to_dot()` helper function can be used
-to quick visualize the provenance information gathered. For more advanced
+to quickly visualize the captured provenance information. For more advanced
 provenance usage, you may want to look at the [provenance API
 docs](api:core:provenance). The source code of `save_prov_to_dot()` can also
 serve as a reference on how to use it.
