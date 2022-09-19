@@ -43,12 +43,12 @@ poetry install
 
 If you want to also install the extras dependencies, you may use:
 ```shell
-poetry install -E optional
+poetry install --all-extras
 ```
 
 For documentation:
 ```shell
-poetry install -E docs
+poetry install --with docs
 ```
 
 Then, a `.venv` folder is created at the root of the project. To activate the
