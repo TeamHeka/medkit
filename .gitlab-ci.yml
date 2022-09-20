@@ -167,6 +167,7 @@ release:
   extends: .use_cache
   script:
     - *prepare_poetry_env
+    - poetry self add "poetry-dynamic-versioning[plugin]"
     - poetry build
     - poetry config repositories.gitlab "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi"
     - poetry publish -r gitlab -u gitlab-ci-token -p ${CI_JOB_TOKEN}
