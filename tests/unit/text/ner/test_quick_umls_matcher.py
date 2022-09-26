@@ -1,11 +1,19 @@
 from pathlib import Path
 
 import pytest
-import spacy.cli
 
-from medkit.core import Attribute, ProvBuilder
-from medkit.core.text import Segment, Span
-from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher
+packaging = pytest.importorskip(
+    modname="packaging", reason="packaging is not installed"
+)
+quickumls = pytest.importorskip(
+    modname="quickumls", reason="quickumls is not installed"
+)
+
+import spacy.cli  # noqa: E402
+
+from medkit.core import Attribute, ProvTracer  # noqa: E402
+from medkit.core.text import Segment, Span  # noqa: E402
+from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher  # noqa: E402
 
 # QuickUMLSMatcher is a wrapper around 3d-party quickumls.core.QuickUMLS,
 # which requires a QuickUMLS install to work. A QuickUMLS install can be
@@ -24,8 +32,7 @@ from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher
 #
 # The various QuickUMLS install generated are kept
 # at tests/text/ner/quick_umls_installs.
-# The sample database is kept at tests/text/ner/quick_umls_installs/sample_umls_data
-# for reference but it is not directly used.
+# The sample database is kept at tests/unit/text/ner/sample_umls_data.
 
 _PATH_TO_QUICK_UMLS_INSTALLS = Path(__file__).parent / "quick_umls_installs"
 _PATH_TO_QUICK_UMLS_INSTALL_EN = _PATH_TO_QUICK_UMLS_INSTALLS / "en"
@@ -90,8 +97,9 @@ def test_single_match():
     assert entity.spans == [Span(16, 22)]
 
     # normalization attribute
-    assert len(entity.attrs) == 1
-    attr = entity.attrs[0]
+    attrs = entity.get_attrs_by_label("umls")
+    assert len(attrs) == 1
+    attr = attrs[0]
     assert attr.label == "umls"
     assert attr.value == _ASTHMA_CUI
     assert attr.metadata["version"] == "2021AB"
@@ -113,8 +121,7 @@ def test_multiple_matches():
     assert entity_1.text == "type 1 diabetes"
     assert entity_1.spans == [Span(27, 42)]
 
-    attr_1 = entity_1.attrs[0]
-    assert attr_1.label == "umls"
+    attr_1 = entity_1.get_attrs_by_label("umls")[0]
     assert attr_1.value == _DIABETES_CUI
 
     # 2d entity (asthma)
@@ -123,8 +130,7 @@ def test_multiple_matches():
     assert entity_2.text == "asthma"
     assert entity_2.spans == [Span(16, 22)]
 
-    attr_2 = entity_2.attrs[0]
-    assert attr_2.label == "umls"
+    attr_2 = entity_2.get_attrs_by_label("umls")[0]
     assert attr_2.value == _ASTHMA_CUI
 
 
@@ -140,8 +146,7 @@ def test_language():
     assert entity.text == "Asthme"
 
     # normalization attribute, same CUI as in english
-    attr = entity.attrs[0]
-    assert attr.label == "umls"
+    attr = entity.get_attrs_by_label("umls")[0]
     assert attr.value == _ASTHMA_CUI
 
 
@@ -175,15 +180,16 @@ def test_ambiguous_match():
     # 1 normalization attribute is created
     assert len(entities) == 1
     entity = entities[0]
-    assert len(entity.attrs) == 1
+    attrs = entity.get_attrs_by_label("umls")
+    assert len(attrs) == 1
 
 
 def test_attrs_to_copy():
     sentence = _get_sentence_segment("The patient has asthma.")
     # copied attribute
-    sentence.attrs.append(Attribute(label="negation", value=True))
+    sentence.add_attr(Attribute(label="negation", value=True))
     # uncopied attribute
-    sentence.attrs.append(Attribute(label="hypothesis", value=True))
+    sentence.add_attr(Attribute(label="hypothesis", value=True))
 
     umls_matcher = QuickUMLSMatcher(
         version="2021AB",
@@ -192,11 +198,11 @@ def test_attrs_to_copy():
     )
     entity = umls_matcher.run([sentence])[0]
 
-    non_norm_attrs = [a for a in entity.attrs if a.label != "umls"]
+    assert len(entity.get_attrs_by_label("umls")) == 1
     # only negation attribute was copied
-    assert len(non_norm_attrs) == 1
-    attr = non_norm_attrs[0]
-    assert attr.label == "negation" and attr.value is True
+    neg_attrs = entity.get_attrs_by_label("negation")
+    assert len(neg_attrs) == 1 and neg_attrs[0].value is True
+    assert len(entity.get_attrs_by_label("hypothesis")) == 0
 
 
 def test_prov():
@@ -204,19 +210,18 @@ def test_prov():
 
     umls_matcher = QuickUMLSMatcher(version="2021AB", language="ENG")
 
-    prov_builder = ProvBuilder()
-    umls_matcher.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    umls_matcher.set_prov_tracer(prov_tracer)
     entities = umls_matcher.run([sentence])
-    graph = prov_builder.graph
 
     entity = entities[0]
-    entity_node = graph.get_node(entity.id)
-    assert entity_node.data_item_id == entity.id
-    assert entity_node.operation_id == umls_matcher.id
-    assert entity_node.source_ids == [sentence.id]
+    entity_prov = prov_tracer.get_prov(entity.id)
+    assert entity_prov.data_item == entity
+    assert entity_prov.op_desc == umls_matcher.description
+    assert entity_prov.source_data_items == [sentence]
 
-    attr = entity.attrs[0]
-    attr_node = graph.get_node(attr.id)
-    assert attr_node.data_item_id == attr.id
-    assert attr_node.operation_id == umls_matcher.id
-    assert attr_node.source_ids == [sentence.id]
+    attr = entity.get_attrs_by_label("umls")[0]
+    attr_prov = prov_tracer.get_prov(attr.id)
+    assert attr_prov.data_item == attr
+    assert attr_prov.op_desc == umls_matcher.description
+    assert attr_prov.source_data_items == [sentence]

@@ -1,6 +1,6 @@
 import logging
 
-from medkit.core import Attribute, ProvBuilder
+from medkit.core import Attribute, ProvTracer
 from medkit.core.text import Segment, Span
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
@@ -108,8 +108,9 @@ def test_normalization():
     entity = entities[0]
     assert entity.label == "Diabetes"
 
-    assert len(entity.attrs) == 1
-    attr = entity.attrs[0]
+    attrs = entity.get_attrs_by_label("umls")
+    assert len(attrs) == 1
+    attr = attrs[0]
     assert attr.label == "umls"
     assert attr.value == "C0011849"
 
@@ -200,9 +201,9 @@ def test_unicode_sensitive_on():
 def test_attrs_to_copy():
     sentence = _get_sentence_segment()
     # copied attribute
-    sentence.attrs.append(Attribute(label="negation", value=True))
+    sentence.add_attr(Attribute(label="negation", value=True))
     # uncopied attribute
-    sentence.attrs.append(Attribute(label="hypothesis", value=True))
+    sentence.add_attr(Attribute(label="hypothesis", value=True))
 
     rule = RegexpMatcherRule(label="Diabetes", regexp="diabetes")
 
@@ -213,9 +214,9 @@ def test_attrs_to_copy():
     entity = matcher.run([sentence])[0]
 
     # only negation attribute was copied
-    assert len(entity.attrs) == 1
-    attr = entity.attrs[0]
-    assert attr.label == "negation" and attr.value is True
+    neg_attrs = entity.get_attrs_by_label("negation")
+    assert len(neg_attrs) == 1 and neg_attrs[0].value is True
+    assert len(entity.get_attrs_by_label("hypothesis")) == 0
 
 
 def test_default_rules():
@@ -235,19 +236,18 @@ def test_prov():
     )
     matcher = RegexpMatcher(rules=[rule])
 
-    prov_builder = ProvBuilder()
-    matcher.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    matcher.set_prov_tracer(prov_tracer)
     entities = matcher.run([sentence])
-    graph = prov_builder.graph
 
     entity = entities[0]
-    entity_node = graph.get_node(entity.id)
-    assert entity_node.data_item_id == entity.id
-    assert entity_node.operation_id == matcher.id
-    assert entity_node.source_ids == [sentence.id]
+    entity_prov = prov_tracer.get_prov(entity.id)
+    assert entity_prov.data_item == entity
+    assert entity_prov.op_desc == matcher.description
+    assert entity_prov.source_data_items == [sentence]
 
-    attr = entity.attrs[0]
-    attr_node = graph.get_node(attr.id)
-    assert attr_node.data_item_id == attr.id
-    assert attr_node.operation_id == matcher.id
-    assert attr_node.source_ids == [sentence.id]
+    attr = entity.get_attrs_by_label("umls")[0]
+    attr_prov = prov_tracer.get_prov(attr.id)
+    assert attr_prov.data_item == attr
+    assert attr_prov.op_desc == matcher.description
+    assert attr_prov.source_data_items == [sentence]

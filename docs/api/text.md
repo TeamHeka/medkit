@@ -45,7 +45,7 @@ section_tokenizer = SectionTokenizer.get_example()
 syntagma_tokenizer = SyntagmaTokenizer.get_example()
 ```
 
-For sentence tokenizer, you have an example in [demo example](../examples/demo)
+For sentence tokenizer, you have an example in the [first steps tutorial](../user_guide/first_steps)
 :::
 
 ```{eval-rst}
@@ -102,7 +102,8 @@ This section lists text annotators for detecting entities. They are part of
 ### Quick UMLS Matcher
 
 :::{important}
-For using Quick UMLS Matcher, you need to install `quickumls` and `six`.
+`QuickUMLSMatcher` needs additional dependencies that can be installed with `pip
+install medkit[quick-umls-matcher]`
 :::
 
 ```{eval-rst}
@@ -117,13 +118,70 @@ For using Quick UMLS Matcher, you need to install `quickumls` and `six`.
     :members:
 ```
 
-## Spacy operation modules
+### Hugging Face Entity Matcher
 
-This section lists operations related to spacy. Thay are part of
+:::{important}
+`HFEntityMatcher` needs additional dependencies that can be installed with `pip install medkit[hf-entity-matcher]`
+:::
+
+```{eval-rst}
+.. automodule:: medkit.text.ner.hf_entity_matcher
+    :members:
+```
+
+### UMLS Coder Normalizer
+
+This operation is not an entity matcher per-say but a normalizer that will add normalization
+attributes to pre-existing entities.
+
+:::{important}
+`UMLSCoderNormalizer` needs additional dependencies that can be installed with `pip install medkit[umls-coder-normalizer]`
+:::
+
+```{eval-rst}
+.. automodule:: medkit.text.ner.umls_coder_normalizer
+    :members:
+```
+
+## Spacy modules
+
+This section lists operations and utilities related to spacy. They are part of
 `medkit.text.spacy` module.
 For using this python module, you need to install [spacy](https://spacy.io/).
 
+### Spacy annotation-level pipeline
+
 ```{eval-rst}
-.. automodule:: medkit.text.spacy
+.. automodule:: medkit.text.spacy.pipeline
+    :members:
+```
+
+### Spacy document-level pipeline
+
+```{eval-rst}
+.. automodule:: medkit.text.spacy.doc_pipeline
+    :members:
+```
+
+### Displacy helpers
+
+```{eval-rst}
+.. automodule:: medkit.text.spacy.displacy_utils
+    :members:
+```
+
+## Translation operations
+
+This section lists operations related to translation. They are part of
+`medkit.text.translation` module.
+
+### HuggingFace Translator
+
+:::{important}
+`HFTranslator` needs additional dependencies that can be installed with `pip install medkit[hf-translator]`
+:::
+
+```{eval-rst}
+.. automodule:: medkit.text.translation
     :members:
 ```

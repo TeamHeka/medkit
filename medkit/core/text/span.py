@@ -33,6 +33,11 @@ class Span(NamedTuple):
     def to_dict(self) -> Dict[str, Any]:
         return dict(start=self.start, end=self.end)
 
+    def overlaps(self, other: Span):
+        """Test if 2 spans reference at least one character in common"""
+
+        return (self.start < other.end) and (self.end > other.start)
+
 
 @dataclasses.dataclass
 class ModifiedSpan:

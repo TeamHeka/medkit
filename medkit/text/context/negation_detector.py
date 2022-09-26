@@ -157,14 +157,32 @@ class NegationDetector(ContextOperation):
         for segment in segments:
             neg_attr = self._detect_negation_in_segment(segment)
             if neg_attr is not None:
-                segment.attrs.append(neg_attr)
+                segment.add_attr(neg_attr)
 
     def _detect_negation_in_segment(self, segment: Segment) -> Optional[Attribute]:
-        # skip empty segment
-        if self._non_empty_text_pattern.search(segment.text) is None:
+        rule_id = self._find_matching_rule(segment.text)
+        if rule_id is not None:
+            neg_attr = Attribute(
+                label=self.output_label,
+                value=True,
+                metadata=NegationMetadata(rule_id=rule_id),
+            )
+        else:
+            neg_attr = Attribute(label=self.output_label, value=False)
+
+        if self._prov_tracer is not None:
+            self._prov_tracer.add_prov(
+                neg_attr, self.description, source_data_items=[segment]
+            )
+
+        return neg_attr
+
+    def _find_matching_rule(self, text: str) -> Optional[Union[str, int]]:
+        # skip empty text
+        if self._non_empty_text_pattern.search(text) is None:
             return None
 
-        text_unicode = segment.text
+        text_unicode = text
         text_ascii = None
 
         if self._has_non_unicode_sensitive_rule:
@@ -184,35 +202,17 @@ class NegationDetector(ContextOperation):
                 text_ascii = text_unicode
 
         # try all rules until we have a match
-        is_negated = False
         for rule_index, rule in enumerate(self.rules):
             pattern = self._patterns[rule_index]
             exclusion_pattern = self._exclusion_patterns[rule_index]
             text = text_unicode if rule.unicode_sensitive else text_ascii
             if pattern.search(text) is not None:
                 if exclusion_pattern is None or exclusion_pattern.search(text) is None:
-                    is_negated = True
-                    break
+                    # return the rule id or the rule index if no id has been set
+                    rule_id = rule.id if rule.id is not None else rule_index
+                    return rule_id
 
-        if is_negated:
-            rule_id = rule.id if rule.id is not None else rule_index
-            neg_attr = Attribute(
-                label=self.output_label,
-                value=True,
-                metadata=NegationMetadata(rule_id=rule_id),
-            )
-        else:
-            neg_attr = Attribute(
-                label=self.output_label,
-                value=False,
-            )
-
-        if self._prov_builder is not None:
-            self._prov_builder.add_prov(
-                neg_attr, self.description, source_data_items=[segment]
-            )
-
-        return neg_attr
+        return None
 
     @staticmethod
     def load_rules(path_to_rules) -> List[NegationDetectorRule]:

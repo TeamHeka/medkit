@@ -17,9 +17,8 @@ __all__ = [
     "PipelineCompatibleOperation",
     "DescribableOperation",
     "ProvCompatibleOperation",
-    "ProvBuilder",
-    "ProvGraph",
-    "ProvNode",
+    "ProvTracer",
+    "Prov",
     "Store",
     "DictStore",
 ]
@@ -39,6 +38,5 @@ from .pipeline import (
     DescribableOperation,
     ProvCompatibleOperation,
 )
-from .prov_builder import ProvBuilder
-from .prov_graph import ProvGraph, ProvNode
+from .prov_tracer import ProvTracer, Prov
 from .store import Store, DictStore

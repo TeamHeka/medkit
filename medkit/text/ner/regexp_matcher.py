@@ -264,7 +264,16 @@ class RegexpMatcher(NEROperation):
             rule_id = rule.id if rule.id is not None else rule_index
             metadata = RegexpMetadata(rule_id=rule_id, version=rule.version)
 
-            attrs = [a for a in segment.attrs if a.label in self.attrs_to_copy]
+            entity = Entity(
+                label=rule.label,
+                text=text,
+                spans=spans,
+                metadata=metadata,
+            )
+
+            for label in self.attrs_to_copy:
+                for attr in segment.get_attrs_by_label(label):
+                    entity.add_attr(attr)
 
             # create normalization attributes for each normalization descriptor
             # of the rule
@@ -279,22 +288,15 @@ class RegexpMatcher(NEROperation):
                 )
                 for norm in rule.normalizations
             ]
-            attrs += norm_attrs
+            for norm_attr in norm_attrs:
+                entity.add_attr(norm_attr)
 
-            entity = Entity(
-                label=rule.label,
-                text=text,
-                spans=spans,
-                attrs=attrs,
-                metadata=metadata,
-            )
-
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     entity, self.description, source_data_items=[segment]
                 )
                 for norm_attr in norm_attrs:
-                    self._prov_builder.add_prov(
+                    self._prov_tracer.add_prov(
                         norm_attr, self.description, source_data_items=[segment]
                     )
 

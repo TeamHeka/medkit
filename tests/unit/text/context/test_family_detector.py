@@ -1,6 +1,6 @@
 import logging
 
-from medkit.core import ProvBuilder
+from medkit.core import ProvTracer
 from medkit.core.text import Segment, Span
 from medkit.text.context.family_detector import FamilyDetector, FamilyDetectorRule
 
@@ -29,16 +29,17 @@ def test_single_rule():
     detector.run(syntagmas)
 
     # 1st syntagma has family ref
-    assert len(syntagmas[0].attrs) == 1
-    attr_1 = syntagmas[0].attrs[0]
+    attrs_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)
+    assert len(attrs_1) == 1
+    attr_1 = attrs_1[0]
     assert attr_1.label == _OUTPUT_LABEL
     assert attr_1.value is True
     assert attr_1.metadata["rule_id"] == "id_fam_father"
 
     # 2nd syntagma has no family ref
-    assert len(syntagmas[1].attrs) == 1
-    attr_2 = syntagmas[1].attrs[0]
-    assert attr_2.label == _OUTPUT_LABEL
+    attrs_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)
+    assert len(attrs_2) == 1
+    attr_2 = attrs_2[0]
     assert attr_2.value is False
     assert not attr_2.metadata
 
@@ -53,14 +54,12 @@ def test_multiple_rules():
     detector.run(syntagmas)
 
     # 1st syntagma has family ref, matched by 1st rule
-    assert len(syntagmas[0].attrs) == 1
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is True
     assert attr_1.metadata["rule_id"] == "id_fam_father"
 
     # 2nd syntagma also has family ref, matched by 2nd rule
-    assert len(syntagmas[1].attrs) == 1
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is True
     assert attr_2.metadata["rule_id"] == "id_fam_mother"
 
@@ -75,11 +74,9 @@ def test_multiple_rules_no_id():
     detector.run(syntagmas)
 
     # attributes have corresponding rule index as rule_id metadata
-    assert len(syntagmas[0].attrs) == 1
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.metadata["rule_id"] == 0
-    assert len(syntagmas[1].attrs) == 1
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.metadata["rule_id"] == 1
 
 
@@ -98,11 +95,11 @@ def test_exclusions():
     detector.run(syntagmas)
 
     # 1st syntagma has family ref
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is True
 
     # 2nd syntagma doesn't have family ref because of exclusion
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is False
 
 
@@ -116,9 +113,9 @@ def test_case_sensitive_on_off():
     detector.run(syntagmas)
 
     # both syntagmas have family refs
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is True
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is True
 
 
@@ -132,9 +129,9 @@ def test_case_sensitive_on():
     detector.run(syntagmas)
 
     # only 2nd syntagma has negation
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is False
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is True
 
 
@@ -148,9 +145,9 @@ def test_unicode_sensitive_off(caplog):
     detector.run(syntagmas)
 
     # both syntagmas have family refs
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is True
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is True
 
     syntagmas_with_ligatures = _get_syntagma_segments(["Sœur non covidée"])
@@ -171,10 +168,22 @@ def test_unicode_sensitive_on():
     detector.run(syntagmas)
 
     # only 2nd syntagma has family ref
-    attr_1 = syntagmas[0].attrs[0]
+    attr_1 = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_1.value is False
-    attr_2 = syntagmas[1].attrs[0]
+    attr_2 = syntagmas[1].get_attrs_by_label(_OUTPUT_LABEL)[0]
     assert attr_2.value is True
+
+
+def test_empty_segment():
+    """Make sure an attribute is created with False value even for empty segments"""
+
+    syntagmas = _get_syntagma_segments(["", " .", "21."])
+    rule = FamilyDetectorRule(id="id_fam_father", regexp=r"\bfather\b")
+    detector = FamilyDetector(output_label=_OUTPUT_LABEL, rules=[rule])
+    detector.run(syntagmas)
+    for syntagma in syntagmas:
+        attrs = syntagma.get_attrs_by_label(_OUTPUT_LABEL)
+        assert len(attrs) == 1 and attrs[0].value is False
 
 
 def test_prov():
@@ -183,16 +192,15 @@ def test_prov():
     rule = FamilyDetectorRule(regexp=r"^no\b")
     detector = FamilyDetector(output_label=_OUTPUT_LABEL, rules=[rule])
 
-    prov_builder = ProvBuilder()
-    detector.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    detector.set_prov_tracer(prov_tracer)
     detector.run(syntagmas)
-    graph = prov_builder.graph
 
-    attr_1 = syntagmas[0].attrs[0]
-    node_1 = graph.get_node(attr_1.id)
-    assert node_1.data_item_id == attr_1.id
-    assert node_1.operation_id == detector.id
-    assert node_1.source_ids == [syntagmas[0].id]
+    attr = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
+    prov = prov_tracer.get_prov(attr.id)
+    assert prov.data_item == attr
+    assert prov.op_desc == detector.description
+    assert prov.source_data_items == [syntagmas[0]]
 
 
 # fmt: off
@@ -235,9 +243,7 @@ def test_default_rules():
     for i in range(len(_TEST_DATA)):
         _, is_family_ref = _TEST_DATA[i]
         syntagma = syntagmas[i]
-        assert len(syntagma.attrs) == 1
-        attr = syntagma.attrs[0]
-        assert attr.label == _OUTPUT_LABEL
+        attr = syntagma.get_attrs_by_label(_OUTPUT_LABEL)[0]
 
         if is_family_ref:
             assert (

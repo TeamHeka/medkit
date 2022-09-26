@@ -69,7 +69,7 @@ To ensure that all extracted information correspond to a part of original
 text, each annotation holds a list of spans. This spans correspond to the 
 location in the raw document.
 
-For more information, you can refer to [API documentation](api:core:span).
+For more information, you can refer to [API documentation](api:core-text:span).
 A set of utils functions have been implemented to help you to keep span 
 information all along your processing pipeline.
 
@@ -115,7 +115,7 @@ class MyTokenizer(SegmentationOperation):
         return (new_segment1, new_segment2)
 ```
 
-## 4. Make your operation support data provenance builder
+## 4. Make your operation support data provenance tracing
 
 Data provenance is a core concept of medkit.
 It ensures the traceability of the extracted information by providing the 
@@ -140,13 +140,13 @@ class MyTokenizer(SegmentationOperation):
         ...
         
         # save the provenance data for this operation
-        if self._prov_builder is not None:
-            self._prov_builder.add_prov(
+        if self._prov_tracer is not None:
+            self._prov_tracer.add_prov(
                 data_item=new_segment1,
                 op_desc=self.description,
                 source_data_items= [segment]
             )
-        if self._prov_builder.add_prov(
+        if self._prov_tracer.add_prov(
                 data_item=new_segment2,
                 op_desc=self.description,
                 source_data_items= [segment]

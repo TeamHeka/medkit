@@ -19,7 +19,7 @@ from medkit.core import (
     InputConverter,
     OutputConverter,
     Store,
-    ProvBuilder,
+    ProvTracer,
     generate_id,
     OperationDescription,
 )
@@ -43,14 +43,14 @@ class BratInputConverter(InputConverter):
 
         self.id = op_id
         self.store: Optional[Store] = store
-        self._prov_builder: Optional[ProvBuilder] = None
+        self._prov_tracer: Optional[ProvTracer] = None
 
     @property
     def description(self) -> OperationDescription:
         return OperationDescription(id=self.id, name=self.__class__.__name__)
 
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
+    def set_prov_tracer(self, prov_tracer: ProvTracer):
+        self._prov_tracer = prov_tracer
 
     def load(
         self,
@@ -159,8 +159,8 @@ class BratInputConverter(InputConverter):
                 metadata=dict(brat_id=brat_entity.id),
             )
             anns_by_brat_id[brat_entity.id] = entity
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     entity, self.description, source_data_items=[]
                 )
 
@@ -172,8 +172,8 @@ class BratInputConverter(InputConverter):
                 metadata=dict(brat_id=brat_relation.id),
             )
             anns_by_brat_id[brat_relation.id] = relation
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     relation, self.description, source_data_items=[]
                 )
 
@@ -183,9 +183,9 @@ class BratInputConverter(InputConverter):
                 value=brat_attribute.value,
                 metadata=dict(brat_id=brat_attribute.id),
             )
-            anns_by_brat_id[brat_attribute.target].attrs.append(attribute)
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            anns_by_brat_id[brat_attribute.target].add_attr(attribute)
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     attribute, self.description, source_data_items=[]
                 )
 
@@ -380,28 +380,35 @@ class BratOutputConverter(OutputConverter):
             nb_segment += 1
 
             # include selected attributes
-            for attr in medkit_segment.attrs:
-                if self.attrs is None or attr.label in self.attrs:
-                    value = attr.value
+            if self.attrs is None:
+                attrs = medkit_segment.get_attrs()
+            else:
+                attrs = [
+                    a
+                    for label in self.attrs
+                    for a in medkit_segment.get_attrs_by_label(label)
+                ]
+            for attr in attrs:
+                value = attr.value
 
-                    if isinstance(value, bool) and not value:
-                        # in brat 'False' means the attributes does not exist
-                        continue
+                if isinstance(value, bool) and not value:
+                    # in brat 'False' means the attributes does not exist
+                    continue
 
-                    try:
-                        brat_attr, attr_config = self._convert_attribute_to_brat(
-                            label=attr.label,
-                            value=value,
-                            nb_attribute=nb_attribute,
-                            target_brat_id=brat_entity.id,
-                            is_from_entity=True,
-                        )
-                        anns_by_medkit_id[attr.id] = brat_attr
-                        config.add_attribute_type(attr_config)
-                        nb_attribute += 1
+                try:
+                    brat_attr, attr_config = self._convert_attribute_to_brat(
+                        label=attr.label,
+                        value=value,
+                        nb_attribute=nb_attribute,
+                        target_brat_id=brat_entity.id,
+                        is_from_entity=True,
+                    )
+                    anns_by_medkit_id[attr.id] = brat_attr
+                    config.add_attribute_type(attr_config)
+                    nb_attribute += 1
 
-                    except TypeError as err:
-                        logger.warning(f"Ignore attribute {attr.id}. {err}")
+                except TypeError as err:
+                    logger.warning(f"Ignore attribute {attr.id}. {err}")
 
         for medkit_relation in relations:
             try:
@@ -416,26 +423,34 @@ class BratOutputConverter(OutputConverter):
                 continue
 
             # Note: it seems that brat does not support attributes for relations
-            for attr in medkit_relation.attrs:
-                if self.attrs is None or attr.label in self.attrs:
-                    value = attr.value
+            # include selected attributes
+            if self.attrs is None:
+                attrs = medkit_relation.get_attrs()
+            else:
+                attrs = [
+                    a
+                    for label in self.attrs
+                    for a in medkit_relation.get_attrs_by_label(label)
+                ]
+            for attr in attrs:
+                value = attr.value
 
-                    if isinstance(value, bool) and not value:
-                        continue
+                if isinstance(value, bool) and not value:
+                    continue
 
-                    try:
-                        brat_attr, attr_config = self._convert_attribute_to_brat(
-                            label=attr.label,
-                            value=value,
-                            nb_attribute=nb_attribute,
-                            target_brat_id=brat_relation.id,
-                            is_from_entity=False,
-                        )
-                        anns_by_medkit_id[attr.id] = brat_attr
-                        config.add_attribute_type(attr_config)
-                        nb_attribute += 1
-                    except TypeError as err:
-                        logger.warning(f"Ignore attribute {attr.id}. {err}")
+                try:
+                    brat_attr, attr_config = self._convert_attribute_to_brat(
+                        label=attr.label,
+                        value=value,
+                        nb_attribute=nb_attribute,
+                        target_brat_id=brat_relation.id,
+                        is_from_entity=False,
+                    )
+                    anns_by_medkit_id[attr.id] = brat_attr
+                    config.add_attribute_type(attr_config)
+                    nb_attribute += 1
+                except TypeError as err:
+                    logger.warning(f"Ignore attribute {attr.id}. {err}")
 
         return anns_by_medkit_id.values()
 

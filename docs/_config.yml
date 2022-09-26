@@ -38,13 +38,16 @@ sphinx:
     autodoc_typehints: 'both'
     autodoc_typehints_description_target: 'documented'
     autodoc_typehints_format: 'short'
+    autodoc_member_order: 'bysource'
     autodoc_mock_imports:
+      - resampy
       - torch
-      - transformers[sentencepiece]
+      - transformers
       - quickumls
-      - six # needed for quickumls, workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/pull/80
+      - pandas
       - PyRuSH
       - spacy
+    autodoc_member_order: 'bysource'
 
   extra_extensions:
   - 'sphinx.ext.autodoc'

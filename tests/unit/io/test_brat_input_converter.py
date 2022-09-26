@@ -1,4 +1,4 @@
-from medkit.core import ProvBuilder
+from medkit.core import ProvTracer
 from medkit.core.text import Span
 from medkit.core.text.document import TextDocument
 from medkit.io.brat import BratInputConverter
@@ -47,8 +47,9 @@ def test_load():
     assert entity_1.metadata.get("brat_id") == "T4"
 
     # check attribute
-    assert len(entity_1.attrs) == 1
-    attr = entity_1.attrs[0]
+    attrs = entity_1.get_attrs()
+    assert len(attrs) == 1
+    attr = attrs[0]
     assert attr.label == "antecedent"
     assert attr.value is None
     assert attr.metadata.get("brat_id") == "A3"
@@ -83,14 +84,13 @@ def test_load_no_anns():
 
 def test_prov():
     brat_converter = BratInputConverter()
-    prov_builder = ProvBuilder()
-    brat_converter.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    brat_converter.set_prov_tracer(prov_tracer)
     collection = brat_converter.load(dir_path="tests/data/brat")
-    graph = prov_builder.graph
 
     doc = collection.documents[0]
     entity = doc.get_annotations_by_label("disease")[1]
-    node = graph.get_node(entity.id)
-    assert node.data_item_id == entity.id
-    assert node.operation_id == brat_converter.id
-    assert not node.source_ids
+    prov = prov_tracer.get_prov(entity.id)
+    assert prov.data_item == entity
+    assert prov.op_desc == brat_converter.description
+    assert len(prov.source_data_items) == 0

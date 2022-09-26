@@ -1,10 +1,12 @@
 __all__ = ["QuickUMLSMatcher"]
 
+from packaging.version import parse as parse_version
 from pathlib import Path
 from typing import Dict, Iterator, List, NamedTuple, Optional, Union
 from typing_extensions import Literal
 
 from quickumls import QuickUMLS
+import quickumls.about
 import quickumls.constants
 
 from medkit.core import Attribute
@@ -12,9 +14,20 @@ from medkit.core.text import Entity, NEROperation, Segment, span_utils
 
 
 # workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/issues/68
-for key, value in quickumls.constants.SPACY_LANGUAGE_MAP.items():
-    ext = "_core_web_sm" if value == "en" else "_core_news_sm"
-    quickumls.constants.SPACY_LANGUAGE_MAP[key] = value + ext
+_spacy_language_map_fixed = False
+
+
+def _fix_spacy_language_map():
+    global _spacy_language_map_fixed
+    if _spacy_language_map_fixed:
+        return
+
+    if parse_version(quickumls.about.__version__) < parse_version("1.4.1"):
+        for key, value in quickumls.constants.SPACY_LANGUAGE_MAP.items():
+            ext = "_core_web_sm" if value == "en" else "_core_news_sm"
+            quickumls.constants.SPACY_LANGUAGE_MAP[key] = value + ext
+
+    _spacy_language_map_fixed = True
 
 
 class _QuickUMLSInstall(NamedTuple):
@@ -84,10 +97,10 @@ class QuickUMLSMatcher(NEROperation):
         language:
             The language flag passed to the install command, for instance "ENG"
         lowercase:
-            Wether the --lowercase flag was passed to the install command
+            Whether the --lowercase flag was passed to the install command
             (concepts are lowercased to increase recall)
         normalize_unicode:
-            Wether the --normalize-unicode flag was passed to the install command
+            Whether the --normalize-unicode flag was passed to the install command
             (non-ASCII chars in concepts are converted to the closest ASCII chars)
         """
         install = _QuickUMLSInstall(version, language, lowercase, normalize_unicode)
@@ -146,10 +159,10 @@ class QuickUMLSMatcher(NEROperation):
             Language flag of the QuickUMLS install to use, for instance "ENG".
             Will be used to decide with QuickUMLS to use
         lowercase:
-            Wether to use a QuickUMLS install with lowercased concepts
+            Whether to use a QuickUMLS install with lowercased concepts
             Will be used to decide with QuickUMLS to use
         normalize_unicode:
-            Wether to use a QuickUMLS install with non-ASCII chars concepts
+            Whether to use a QuickUMLS install with non-ASCII chars concepts
             converted to the closest ASCII chars.
             Will be used to decide with QuickUMLS to use
         overlapping:
@@ -167,6 +180,8 @@ class QuickUMLSMatcher(NEROperation):
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
         """
+        _fix_spacy_language_map()
+
         # Pass all arguments to super (remove self)
         init_args = locals()
         init_args.pop("self")
@@ -233,7 +248,15 @@ class QuickUMLSMatcher(NEROperation):
                 segment.text, segment.spans, [(match["start"], match["end"])]
             )
 
-            attrs = [a for a in segment.attrs if a.label in self.attrs_to_copy]
+            entity = Entity(
+                label=match["term"],
+                text=text,
+                spans=spans,
+            )
+
+            for label in self.attrs_to_copy:
+                for attr in segment.get_attrs_by_label(label):
+                    entity.add_attr(attr)
 
             # TODO force now we consider the version, score and semtypes
             # to be just extra informational metadata
@@ -248,20 +271,13 @@ class QuickUMLSMatcher(NEROperation):
                     sem_types=list(match["semtypes"]),
                 ),
             )
-            attrs.append(norm_attr)
+            entity.add_attr(norm_attr)
 
-            entity = Entity(
-                label=match["term"],
-                text=text,
-                spans=spans,
-                attrs=attrs,
-            )
-
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     entity, self.description, source_data_items=[segment]
                 )
-                self._prov_builder.add_prov(
+                self._prov_tracer.add_prov(
                     norm_attr, self.description, source_data_items=[segment]
                 )
 

@@ -4,13 +4,18 @@ parts:
 - caption: User Guide
   chapters:
   - file: user_guide/install
+  - file: user_guide/first_steps
+  - file: user_guide/pipeline
+  - file: user_guide/provenance
   - file: user_guide/module
 - caption: Examples
   chapters:
-  - file: examples/demo
   - file: examples/spans
 - caption: API reference
   chapters:
   - file: api/core.rst
+  - file: api/core_text.rst
   - file: api/text.rst
+  - file: api/core_audio.rst
+  - file: api/audio.rst
   - file: api/io.rst

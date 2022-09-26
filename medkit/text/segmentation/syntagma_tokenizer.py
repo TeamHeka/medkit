@@ -82,7 +82,7 @@ class SyntagmaTokenizer(SegmentationOperation):
             + "|".join(self.separators)
             + "|$)"  # including the last syntagma without end separator
         )
-        pattern = re.compile(regex_rule)
+        pattern = re.compile(regex_rule, flags=re.DOTALL)
 
         sep_exists = False
         start = 0
@@ -113,8 +113,8 @@ class SyntagmaTokenizer(SegmentationOperation):
                 text=text,
             )
 
-            if self._prov_builder is not None:
-                self._prov_builder.add_prov(
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
                     syntagma, self.description, source_data_items=[segment]
                 )
 

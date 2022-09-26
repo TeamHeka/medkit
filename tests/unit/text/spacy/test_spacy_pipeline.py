@@ -1,7 +1,7 @@
 import pytest
 import spacy
 from spacy.tokens import Span as SpacySpan, Doc
-from medkit.core import ProvBuilder
+from medkit.core import ProvTracer
 from medkit.core.text import Span, Entity, Segment
 from medkit.text.spacy import SpacyPipeline
 
@@ -53,43 +53,41 @@ def test_default_spacy_pipeline(nlp_spacy_modified):
     # original segment does not have entities, nlp from spacy adds 2 entities
     assert len(new_segments) == 2
     assert all(isinstance(seg, Entity) for seg in new_segments)
-    assert all(len(seg.attrs) == 1 for seg in new_segments)
+    assert all(len(seg.get_attrs()) == 1 for seg in new_segments)
 
     ent = new_segments[0]
     assert ent.label == "PERSON"
     assert ent.text == "Marie Dupont"
-    assert ent.attrs[0].label == "has_numbers"
-    assert not ent.attrs[0].value
+    attr = ent.get_attrs_by_label("has_numbers")[0]
+    assert not attr.value
 
     ent = new_segments[1]
     assert ent.label == "DATE"
     assert ent.text == "2012"
-    assert ent.attrs[0].label == "has_numbers"
-    assert ent.attrs[0].value
+    attr = ent.get_attrs_by_label("has_numbers")[0]
+    assert attr.value
 
 
 def test_prov(nlp_spacy_modified):
-    prov_builder = ProvBuilder()
+    prov_tracer = ProvTracer()
 
     segment = _get_segment()
-    # set provenance builder
+    # set provenance tracer
     pipe = SpacyPipeline(nlp=nlp_spacy_modified)
-    pipe.set_prov_builder(prov_builder)
+    pipe.set_prov_tracer(prov_tracer)
 
     # execute the pipeline
     new_segments = pipe.run([segment])
 
-    graph = prov_builder.graph
-
     # check new entity
     entity = new_segments[0]
-    node = graph.get_node(entity.id)
-    assert node.data_item_id == entity.id
-    assert node.operation_id == pipe.id
-    assert node.source_ids == [segment.id]
+    entity_prov = prov_tracer.get_prov(entity.id)
+    assert entity_prov.data_item == entity
+    assert entity_prov.op_desc == pipe.description
+    assert entity_prov.source_data_items == [segment]
 
-    attribute = entity.attrs[0]
-    attr = graph.get_node(attribute.id)
-    assert attr.data_item_id == attribute.id
-    assert attr.operation_id == pipe.id
-    assert attr.source_ids == [segment.id]
+    attribute = entity.get_attrs()[0]
+    attr_prov = prov_tracer.get_prov(attribute.id)
+    assert attr_prov.data_item == attribute
+    assert attr_prov.op_desc == pipe.description
+    assert attr_prov.source_data_items == [segment]

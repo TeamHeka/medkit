@@ -1,8 +1,11 @@
 import pytest
-import spacy.cli
-from medkit.core.prov_builder import ProvBuilder
-from medkit.text.relations import SyntacticRelationExtractor
-from medkit.core.text import TextDocument, Entity, Span, Relation
+
+pytest.importorskip(modname="spacy", reason="spacy is not installed")
+
+import spacy.cli  # noqa: E402
+from medkit.core.prov_tracer import ProvTracer  # noqa: E402
+from medkit.text.relations import SyntacticRelationExtractor  # noqa: E402
+from medkit.core.text import TextDocument, Entity, Span, Relation  # noqa: E402
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -139,13 +142,12 @@ def test_prov():
         entities_source=["maladie"],
         relation_label="has_level",
     )
-    prov_builder = ProvBuilder()
-    relation_extractor.set_prov_builder(prov_builder)
+    prov_tracer = ProvTracer()
+    relation_extractor.set_prov_tracer(prov_tracer)
     relation_extractor.run([medkit_doc])
     relation = medkit_doc.get_relations()[0]
-    graph = prov_builder.graph
 
-    relation_node = graph.get_node(relation.id)
-    assert relation_node.data_item_id == relation.id
-    assert relation_node.operation_id == relation_extractor.id
-    assert relation_node.source_ids == [medkit_doc.raw_segment.id]
+    relation_prov = prov_tracer.get_prov(relation.id)
+    assert relation_prov.data_item == relation
+    assert relation_prov.op_desc == relation_extractor.description
+    assert relation_prov.source_data_items == [medkit_doc.raw_segment]

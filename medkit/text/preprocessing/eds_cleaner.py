@@ -95,7 +95,7 @@ class EDSCleaner(Operation):
 
         Returns
         -------
-        List[Segment]:
+        List[~medkit.core.text.Segment]:
             List of cleaned segments.
         """
         return [
@@ -151,8 +151,8 @@ class EDSCleaner(Operation):
         # create ann with the clean text
         clean_text = Segment(label=self.output_label, spans=spans, text=text)
 
-        if self._prov_builder is not None:
-            self._prov_builder.add_prov(
+        if self._prov_tracer is not None:
+            self._prov_tracer.add_prov(
                 clean_text, self.description, source_data_items=[segment]
             )
 

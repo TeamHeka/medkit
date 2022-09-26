@@ -5,7 +5,7 @@ from typing import List, Optional, Union
 from spacy import Language
 from spacy.tokens import Doc
 
-from medkit.core import Collection, OperationDescription, ProvBuilder, generate_id
+from medkit.core import Collection, OperationDescription, ProvTracer, generate_id
 from medkit.core.text import TextDocument
 from medkit.text.spacy.spacy_utils import (
     build_spacy_doc_from_medkit_doc,
@@ -47,7 +47,7 @@ class SpacyInputConverter:
             op_id = generate_id()
 
         self.id = op_id
-        self._prov_builder: Optional[ProvBuilder] = None
+        self._prov_tracer: Optional[ProvTracer] = None
 
         self.entities = entities
         self.span_groups = span_groups
@@ -65,8 +65,8 @@ class SpacyInputConverter:
             id=self.id, name=self.__class__.__name__, config=config
         )
 
-    def set_prov_builder(self, prov_builder: ProvBuilder):
-        self._prov_builder = prov_builder
+    def set_prov_tracer(self, prov_tracer: ProvTracer):
+        self._prov_tracer = prov_tracer
 
     def load(self, spacy_docs: List[Doc]) -> Collection:
         """
@@ -111,17 +111,17 @@ class SpacyInputConverter:
 
         # add annotations
         for ann in annotations:
-            if self._prov_builder is not None:
+            if self._prov_tracer is not None:
                 # the input converter does not know the source data item
-                self._prov_builder.add_prov(ann, self.description, source_data_items=[])
+                self._prov_tracer.add_prov(ann, self.description, source_data_items=[])
 
             if ann.id in attributes_by_ann.keys():
                 attrs = attributes_by_ann[ann.id]
                 for attr in attrs:
-                    ann.attrs.append(attr)
-                    if self._prov_builder is not None:
+                    ann.add_attr(attr)
+                    if self._prov_tracer is not None:
                         # the input converter does not know the source data item
-                        self._prov_builder.add_prov(
+                        self._prov_tracer.add_prov(
                             attr, self.description, source_data_items=[]
                         )
         return annotations
@@ -166,7 +166,7 @@ class SpacyOutputConverter:
             op_id = generate_id()
 
         self.id = op_id
-        self._prov_builder: Optional[ProvBuilder] = None
+        self._prov_tracer: Optional[ProvTracer] = None
 
         self.nlp = nlp
         self.labels_anns = labels_anns

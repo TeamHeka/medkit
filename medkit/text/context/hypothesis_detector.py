@@ -8,9 +8,10 @@ __all__ = [
 ]
 
 import dataclasses
+import logging
 from pathlib import Path
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 from typing_extensions import Literal, TypedDict
 import unidecode
 
@@ -19,6 +20,7 @@ import yaml
 from medkit.core import Attribute
 from medkit.core.text import ContextOperation, Segment
 
+logger = logging.getLogger(__name__)
 
 _PATH_TO_EXAMPLE_RULES = Path(__file__).parent / "hypothesis_detector_example_rules.yml"
 _PATH_TO_EXAMPLE_VERBS = Path(__file__).parent / "hypothesis_detector_example_verbs.yml"
@@ -37,9 +39,9 @@ class HypothesisDetectorRule:
     id:
         Unique identifier of the rule to store in the metadata of the entities
     case_sensitive:
-        Wether to ignore case when running `regexp and `exclusion_regexs`
+        Whether to ignore case when running `regexp and `exclusion_regexs`
     unicode_sensitive:
-        Wether to replace all non-ASCII chars by the closest ASCII chars
+        Whether to replace all non-ASCII chars by the closest ASCII chars
         on input text before runing `regexp and `exclusion_regexs`.
         If True, then `regexp and `exclusion_regexs` shouldn't contain
         non-ASCII chars because they would never be matched.
@@ -218,67 +220,88 @@ class HypothesisDetector(ContextOperation):
         for segment in segments:
             hyp_attr = self._detect_hypothesis_in_segment(segment)
             if hyp_attr is not None:
-                segment.attrs.append(hyp_attr)
+                segment.add_attr(hyp_attr)
 
     def _detect_hypothesis_in_segment(self, segment: Segment) -> Optional[Attribute]:
-        # skip empty segment
-        if self._non_empty_text_pattern.search(segment.text) is None:
-            return None
+        matched_verb = None
+        rule_id = None
 
-        is_hypothesis = False
-        metadata = None
+        text = segment.text
+        # skip empty segments or segments too long
+        if (
+            len(text) <= self.max_length
+            and self._non_empty_text_pattern.search(text) is not None
+        ):
+            # match by verb first
+            matched_verb = self._find_matching_verb(segment.text)
+            # then match by rule if no verb match
+            if not matched_verb:
+                rule_id = self._find_matching_rule(segment.text)
 
-        if len(segment.text) <= self.max_length:
-            text_unicode = segment.text
-            if self._has_non_unicode_sensitive_rule:
-                # If there exists one rule which is not unicode-sensitive
-                text_ascii = unidecode.unidecode(text_unicode)
-                # Verify that text length is conserved
-                if len(text_ascii) != len(
-                    text_unicode
-                ):  # if text conversion had changed its length
-                    raise ValueError(
-                        "Lengths of unicode text and generated ascii text are"
-                        " different. Please, pre-process input text before running"
-                        f" RegexpMatcher\n\nUnicode:{text_unicode} (length:"
-                        f" {len(text_unicode)})\nAscii: {text_ascii} (length:"
-                        f" {len(text_ascii)})\n"
-                    )
-            for verb, verb_pattern in self._patterns_by_verb.items():
-                if verb_pattern.search(text_unicode):
-                    metadata = HypothesisVerbMetadata(type="verb", matched_verb=verb)
-                    is_hypothesis = True
-                    break
-            else:
-                for rule_index, rule in enumerate(self.rules):
-                    pattern = self._patterns[rule_index]
-                    exclusion_pattern = self._exclusion_patterns[rule_index]
+        if matched_verb is not None:
+            hyp_attr = Attribute(
+                label=self.output_label,
+                value=True,
+                metadata=HypothesisRuleMetadata(type="verb", matched_verb=matched_verb),
+            )
+        elif rule_id is not None:
+            hyp_attr = Attribute(
+                label=self.output_label,
+                value=True,
+                metadata=HypothesisRuleMetadata(type="rule", rule_id=rule_id),
+            )
+        else:
+            hyp_attr = Attribute(label=self.output_label, value=False)
 
-                    text = text_unicode if rule.unicode_sensitive else text_ascii
-                    if pattern.search(text) is not None:
-                        if (
-                            exclusion_pattern is None
-                            or exclusion_pattern.search(text) is None
-                        ):
-                            is_hypothesis = True
-                            rule_id = rule.id if rule.id is not None else rule_index
-                            metadata = HypothesisRuleMetadata(
-                                type="verb", rule_id=rule_id
-                            )
-                            break
-
-        hyp_attr = Attribute(
-            label=self.output_label,
-            value=is_hypothesis,
-            metadata=metadata,
-        )
-
-        if self._prov_builder is not None:
-            self._prov_builder.add_prov(
+        if self._prov_tracer is not None:
+            self._prov_tracer.add_prov(
                 hyp_attr, self.description, source_data_items=[segment]
             )
 
         return hyp_attr
+
+    def _find_matching_verb(self, text: str) -> Optional[str]:
+        for verb, verb_pattern in self._patterns_by_verb.items():
+            if verb_pattern.search(text):
+                return verb
+        return None
+
+    def _find_matching_rule(self, text: str) -> Optional[Union[str, int]]:
+        # skip empty text
+        if self._non_empty_text_pattern.search(text) is None:
+            return None
+
+        text_unicode = text
+        text_ascii = None
+
+        if self._has_non_unicode_sensitive_rule:
+            # If there exists one rule which is not unicode-sensitive
+            text_ascii = unidecode.unidecode(text_unicode)
+            # Verify that text length is conserved
+            if len(text_ascii) != len(
+                text_unicode
+            ):  # if text conversion had changed its length
+                logger.warning(
+                    "Lengths of unicode text and generated ascii text are different. "
+                    "Please, pre-process input text before running NegationDetector\n\n"
+                    f"Unicode:{text_unicode} (length: {len(text_unicode)})\n"
+                    f"Ascii: {text_ascii} (length: {len(text_ascii)})\n"
+                )
+                # Fallback on unicode text
+                text_ascii = text_unicode
+
+        # try all rules until we have a match
+        for rule_index, rule in enumerate(self.rules):
+            pattern = self._patterns[rule_index]
+            exclusion_pattern = self._exclusion_patterns[rule_index]
+            text = text_unicode if rule.unicode_sensitive else text_ascii
+            if pattern.search(text) is not None:
+                if exclusion_pattern is None or exclusion_pattern.search(text) is None:
+                    # return the rule id or the rule index if no id has been set
+                    rule_id = rule.id if rule.id is not None else rule_index
+                    return rule_id
+
+        return None
 
     @staticmethod
     def load_verbs(path_to_verbs) -> Dict[str, Dict[str, Dict[str, List[str]]]]:
