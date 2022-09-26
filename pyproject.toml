@@ -46,28 +46,24 @@ torchaudio = {version ="^0.12", optional = true}
 transformers = {version = "^4.21", optional = true}
 webrtcvad = {version = "^2.0", optional = true}
 
-#docs
-jupyter-book = {version = "^0.13", optional = true}
-matplotlib = {version = "*", optional = true}
-sphinx = {version = ">=4.3.3", optional = true}
-sphinxcontrib-mermaid = {version = "*", optional = true}
-sphinx-toolbox = {version = "*", optional = true}
-
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "*"
 pytest-cov = "*"
 pytest-mock = "*"
 pre-commit = "*"
 
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+jupyter-book = "^0.13"
+matplotlib = "*"
+spacy = "^3.4"
+sphinx = ">=4.3.3"
+sphinxcontrib-mermaid = "*"
+sphinx-toolbox = "*"
+
 [tool.poetry.extras]
-docs = [
-    "jupyter-book",
-    "matplotlib",
-    "sphinx",
-    "sphinxcontrib-mermaid",
-    "sphinx-toolbox",
-    "spacy"
-]
 
 hf-entity-matcher = [
     "torch",
@@ -97,24 +93,6 @@ umls-coder-normalizer = [
     "transformers",
 ]
 webrtc-voice-detector = ["webrtcvad"]
-
-optional = [
-    "feather-format",
-    "packaging",
-    "pandas",
-    "PyRush",
-    "quickumls",
-    "resampy",
-    "sacremoses",
-    "sentencepiece",
-    "spacy",
-    "torch",
-    "torchaudio",
-    "transformers",
-    "webrtcvad",
-]
-
-# Waiting for --all-extras (https://github.com/python-poetry/poetry/pull/5452)
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
