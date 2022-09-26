@@ -45,7 +45,7 @@ section_tokenizer = SectionTokenizer.get_example()
 syntagma_tokenizer = SyntagmaTokenizer.get_example()
 ```
 
-For sentence tokenizer, you have an example in [demo example](../examples/demo)
+For sentence tokenizer, you have an example in the [first steps tutorial](../user_guide/first_steps)
 :::
 
 ```{eval-rst}

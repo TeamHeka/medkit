@@ -126,7 +126,7 @@ between medkit format and another one.
 ## Pipeline
 
 :::{seealso}
-To see an example of pipeline usage, you may refer to [demo](../examples/demo).
+To see an example of pipeline usage, you may refer to the [pipeline tutorial](../user_guide/pipeline).
 :::
 
 ```{eval-rst}
@@ -157,7 +157,7 @@ With this mechanism, we will be able to provide the provenance information
 about a generated data.
 
 :::{important}
-Please refer to [demo example](../examples/demo) and ["how to make your own
+Please refer to the [provenance tutorial](../user_guide/provenance) and ["how to make your own
 module"](../user_guide/module) to know what you have to do to enable
 provenance.
 :::

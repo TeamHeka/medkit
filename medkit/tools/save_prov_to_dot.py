@@ -111,6 +111,7 @@ class _DotWriter:
     def _write_prov(self, prov: Prov):
         data_item = prov.data_item
         data_item_label = self._format_data_item(data_item)
+        data_item_label = self._escape_quotes(data_item_label)
         self._fp.write(f'"{data_item.id}" [label="{data_item_label}"];\n')
 
         if prov.op_desc is not None:
@@ -119,6 +120,7 @@ class _DotWriter:
                 if self._op_formatter is not None
                 else prov.op_desc.name
             )
+            op_label = self._escape_quotes(op_label)
         else:
             op_label = "Unknown"
         for source_data_item in prov.source_data_items:
@@ -148,3 +150,7 @@ class _DotWriter:
             f"Found no formatter for data item with type {type(data_item)}, please"
             " provide one"
         )
+
+    @staticmethod
+    def _escape_quotes(text):
+        return text.replace('"', "\\\r")

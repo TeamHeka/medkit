@@ -105,9 +105,9 @@ flows into smaller units handling a subpart of the processing. This also makes
 it possible to reuse a pipeline for different projects, for instance by
 regrouping common preprocessing steps.
 
-If you are interested in provenance tracking (knowing how each annotation was
-generated) (TODO: add link to tutorial when reading), then it can also be easier
-to handle that with a pipeline.
+If you are interested in [provenance tracing](provenance.md) (knowing how each
+annotation was generated), then it can also be easier to handle that with a
+pipeline.
 
 Finally, in the future of medkit the scope of pipelines might be expanded to
 handle more things such as batching, parallelization, and maybe training of
@@ -368,5 +368,4 @@ have seen how to transform an annotation-level `Pipeline` into a document-level
 If you have more questions about pipelines or wonder how to build more complex
 flows, you may want to take a look at the [pipeline API
 docs](api:core:pipeline). If you are interested in the advantages of pipelines
-as regard provenance tracing, you may read the provenance tracing tutorial.
-TODO: add link when available.
+as regard provenance tracing, you may read the [provenance tracing tutorial](provenance.md).
