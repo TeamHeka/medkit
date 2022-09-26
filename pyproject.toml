@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "medkit"
-version = "0.1.0"
+version = "0.0.0"
 description = "A Python library for a learning health system"
 readme = "README.md"
 repository = "https://gitlab.inria.fr/heka/medkit/"
@@ -95,10 +95,18 @@ umls-coder-normalizer = [
 webrtc-voice-detector = ["webrtcvad"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
+build-backend = "poetry-dynamic_versioning.backend"
 
 [tool.black]
 line-length = 88
 preview = true
 extend-exclude = ".venv"
+
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+dirty = true
+tag-branch = "main"
+pattern = "(?P<base>\\d+(\\.\\d+)*)"
+style = "semver"

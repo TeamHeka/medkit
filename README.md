@@ -1,9 +1,25 @@
-# MedKit
+# medkit
 
-[![Latest Release](https://gitlab.inria.fr/heka/medkit/-/badges/release.svg)](https://gitlab.inria.fr/heka/medkit/-/releases)
+medkit is a toolkit for a learning health system, developed by the [HeKA research team](https://team.inria.fr/heka).
 
-| Branches | Pipeline | Coverage | 
-|:---------|:---------|:---------|
-| Develop  | [![pipeline status](https://gitlab.inria.fr/heka/medkit/badges/develop/pipeline.svg)](https://gitlab.inria.fr/heka/medkit/-/commits/develop) | [![coverage report](https://gitlab.inria.fr/heka/medkit/badges/develop/coverage.svg)](https://gitlab.inria.fr/heka/medkit/-/commits/develop) |
+This python library aims at:
+* (1) facilitating the manipulation of healthcare data of various modalities (e.g., structured, text, audio data) for the extraction of relevant features and
+* (2) developing supervised models from these various modalities for decision support in healthcare. 
 
-A Python library for a learning health system.
+## Getting started
+
+To get started with medkit, follow the installation instructions described in our [documentation website](https://heka.gitlabpages.inria.fr/medkit/index.html).
+This website also contains tutorials and examples that you can use for starting with medkit. 
+
+## Contributing
+
+We're still working for stabilizing source code and completing documentation, so that we'll be able to open it soon 
+
+However, we would already be happy to get your inputs ! 
+
+Please contact us if you want to contribute, whether it's:
+* reporting a bug, 
+* discussing the current state of the code, 
+* submitting a fix, 
+* proposing new features, 
+* or contributing to documentation, ...
