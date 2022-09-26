@@ -56,28 +56,16 @@ setup_cache:
     policy: pull-push
   script:
     - *prepare_poetry_env
+    - poetry lock --check || poetry lock --no-update
     - poetry install --with=docs --all-extras --sync
     - source .venv/bin/activate
     - pip list
   artifacts:
+    when: always
     expose_as: "Poetry lock file"
     paths:
       - poetry.lock
   interruptible: true
-
-update_cache:
-  stage: .pre
-  tags:
-    - docker-cache
-  cache:
-    <<: *default_cache
-    policy: pull-push
-  script:
-    - *prepare_poetry_env
-    - poetry lock --no-update
-  rules:
-    - changes:
-      - pyproject.toml
 
 .use_cache:
   tags:
