@@ -41,8 +41,8 @@ TEST_CONFIG = [
         _TEXT,
         [
             ("Sentence testing the dot.", [Span(start=0, end=25)]),
-            ("We are testing the carriage return\r", [Span(start=26, end=61)]),
-            ("this is the newline\n", [Span(start=61, end=81)]),
+            ("We are testing the carriage return", [Span(start=26, end=60)]),
+            ("this is the newline", [Span(start=61, end=80)]),
             ("Test interrogation ?", [Span(start=82, end=102)]),
             ("Now, testing semicolon;", [Span(start=103, end=126)]),
             ("Exclamation!", [Span(start=126, end=138)]),
@@ -76,13 +76,25 @@ TEST_CONFIG = [
             ("This is a trailing sentence with no punct", [Span(start=20, end=61)]),
         ],
     ),
+    # sentence ending with both punct and newline, keep only punct
+    (
+        SentenceTokenizer(keep_punct=True),
+        "This is a sentence ending with punct and newline.\nThis is another sentence.",
+        [
+            (
+                "This is a sentence ending with punct and newline.",
+                [Span(start=0, end=49)],
+            ),
+            ("This is another sentence.", [Span(start=50, end=75)]),
+        ],
+    ),
 ]
 
 
 @pytest.mark.parametrize(
     "sentence_tokenizer,text,expected_sentences",
     TEST_CONFIG,
-    ids=["default", "keep_punct", "multiline", "trailing"],
+    ids=["default", "keep_punct", "multiline", "trailing", "punct_and_newline"],
 )
 def test_run(sentence_tokenizer, text, expected_sentences):
     clean_text_segment = _get_clean_text_segment(text)
