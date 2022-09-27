@@ -107,6 +107,6 @@ extend-exclude = ".venv"
 enable = true
 vcs = "git"
 dirty = true
-tag-branch = "main"
 pattern = "(?P<base>\\d+(\\.\\d+)*)"
+latest-tag = true
 style = "semver"
