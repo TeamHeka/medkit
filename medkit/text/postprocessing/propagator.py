@@ -1,10 +1,8 @@
-from __future__ import annotations
-
 __all__ = ["AttributePropagator"]
 
 from typing import Dict, List, Optional
 from intervaltree import IntervalTree
-
+from medkit.core.annotation import Attribute
 from medkit.core.text import Segment, span_utils, ContextOperation
 
 
@@ -53,10 +51,10 @@ class AttributePropagator(ContextOperation):
             if len(attrs_to_propagate) == 0:
                 continue
 
-            # copy the attribute from source to target
+            # create a new attr in target from the source attr
             for attr in attrs_to_propagate:
                 for child in children:
-                    child.add_attr(attr)
+                    self._propagate_attr(attr=attr, target=child)
 
     def _compute_nested_segments(
         self, source_segments, target_segments: Segment
@@ -67,6 +65,7 @@ class AttributePropagator(ContextOperation):
 
             if not normalized_spans:
                 continue
+
             tree.addi(
                 normalized_spans[0].start,
                 normalized_spans[-1].end,
@@ -83,3 +82,15 @@ class AttributePropagator(ContextOperation):
             start, end = normalized_spans[0].start, normalized_spans[-1].end
             nested[segment] = [child.data for child in tree.overlap(start, end)]
         return nested
+
+    def _propagate_attr(self, attr: Attribute, target: Segment):
+        target_attr = Attribute(
+            label=attr.label, value=attr.value, metadata=attr.metadata
+        )
+
+        target.add_attr(target_attr)
+
+        if self._prov_tracer is not None:
+            self._prov_tracer.add_prov(
+                target_attr, self.description, source_data_items=[attr]
+            )
