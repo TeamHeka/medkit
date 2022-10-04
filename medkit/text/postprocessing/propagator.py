@@ -2,12 +2,13 @@ __all__ = ["AttributePropagator"]
 
 from typing import Dict, List, Optional
 from intervaltree import IntervalTree
-from medkit.core.annotation import Attribute
-from medkit.core.text import Segment, span_utils, ContextOperation
+from medkit.core import Attribute, Operation
+from medkit.core.text import Segment, span_utils
 
 
-class AttributePropagator(ContextOperation):
-    """Annotator used to propagate attributes from a segment to a nested segment."""
+class AttributePropagator(Operation):
+    """Annotator used to propagate attributes from source segments
+    to nested segments."""
 
     def __init__(
         self,
@@ -30,7 +31,7 @@ class AttributePropagator(ContextOperation):
         super().__init__(**init_args)
 
     def run(self, source_segments: List[Segment], target_segments: List[Segment]):
-        """Add attributes from a source segment to all nested segments
+        """Add attributes from a source segments to all nested segments
 
         Parameters
         ----------
@@ -57,7 +58,7 @@ class AttributePropagator(ContextOperation):
                     self._propagate_attr(attr=attr, target=child)
 
     def _compute_nested_segments(
-        self, source_segments, target_segments: Segment
+        self, source_segments: List[Segment], target_segments: List[Segment]
     ) -> IntervalTree:
         tree = IntervalTree()
         for segment in target_segments:
