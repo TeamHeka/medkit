@@ -22,7 +22,7 @@ class AttributePropagator(Operation):
         attr_labels:
             List of the labels of the attributes to propagate
         op_id:
-            Identifier of the detector
+            Identifier of the propagator
         """
         self.attr_labels = attr_labels
         # Pass all arguments to super (remove self)
