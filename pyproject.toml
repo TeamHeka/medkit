@@ -6,6 +6,10 @@ readme = "README.md"
 repository = "https://gitlab.inria.fr/heka/medkit/"
 documentation = "https://heka.gitlabpages.inria.fr/medkit/"
 authors = ["HeKA Research Team"]
+maintainers = [
+    "medkit-maintainers <medkit-maintainers@inria.fr>"
+]
+
 license = "MIT"
 classifiers = [
     "Development Status :: 3 - Alpha",
