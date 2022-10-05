@@ -1,61 +1,101 @@
-from medkit.core.text import Segment, Span
-from medkit.text.ner import RegexpMatcher, RegexpMatcherRule
-from medkit.text.context import NegationDetector, FamilyDetector
-from medkit.text.segmentation import SyntagmaTokenizer, SentenceTokenizer
+from medkit.core import Attribute, ProvTracer
+from medkit.core.text import Segment, TextDocument
+from medkit.core.text.span_utils import extract
 from medkit.text.postprocessing import AttributePropagator
 
 
+def _extract_segment(segment, ranges, label):
+    text, spans = extract(segment.text, segment.spans, ranges)
+    return Segment(label=label, spans=spans, text=text)
+
+
+def _get_doc():
+    text = (
+        """Sa mère présente douleurs abdominales mais le patient n'a pas une maladie."""
+    )
+    doc = TextDocument(text)
+    sentence = _extract_segment(doc.raw_segment, [(0, 73)], "sentence")
+    syntagme_0 = _extract_segment(sentence, [(0, 37)], "syntagme")
+    syntagme_1 = _extract_segment(sentence, [(37, 73)], "syntagme")
+    # add is_family in sentence
+    sentence.add_attr(Attribute(label="is_family", value=True))
+    # add is_negated in syntagmes
+    syntagme_0.add_attr(Attribute(label="is_negated", value=False))
+    syntagme_1.add_attr(Attribute(label="is_negated", value=True))
+
+    # create entities (target)
+    target_0 = _extract_segment(doc.raw_segment, [(17, 37)], "disease")
+    target_1 = _extract_segment(doc.raw_segment, [(66, 73)], "disease")
+
+    for ann in [sentence, syntagme_0, syntagme_1, target_0, target_1]:
+        doc.add_annotation(ann)
+    return doc
+
+
 def test_default_without_pipeline():
-    text = """
-        Pas de maladie. Le patient présente une maladie de grade 3.
-        Son mère présente douleurs abdominales de grade 1.
-        Pas de toux mais le patient a une maladie.
- """
+    doc = _get_doc()
+    sentences = doc.get_annotations_by_label("sentence")
+    syntagmes = doc.get_annotations_by_label("syntagme")
+    targets = doc.get_annotations_by_label("disease")
 
-    raw_text = Segment(label="raw_text", text=text, spans=[Span(0, len(text))])
-    sentences = SentenceTokenizer().run([raw_text])
+    # check no attrs in targets
+    assert all(not target.get_attrs() for target in targets)
 
-    # detecting negation in syntagmes
-    syntagmes = SyntagmaTokenizer.get_example().run(sentences)
-    NegationDetector(output_label="is_negated").run(syntagmes)
+    # define attr propagator
+    propagator_1 = AttributePropagator(attr_labels=["is_family"])
+    propagator_2 = AttributePropagator(attr_labels=["is_negated"])
 
-    # detecting family in sentences
-    FamilyDetector(output_label="is_family").run(sentences)
+    # is_family was 'detected' in sentences
+    propagator_1.run(sentences, targets)
+    # is_negated was 'detected' in syntagmes
+    propagator_2.run(syntagmes, targets)
 
-    # detecting entities in sentences
-    rules = [
-        RegexpMatcherRule(
-            id="id_regexp_maladie",
-            label="DISEASE",
-            regexp="maladie|toux|douleurs abdominales",
-            version="1",
-        ),
-        RegexpMatcherRule(
-            id="id_regexp_grade",
-            label="GRADE",
-            regexp="grade [0-9]",
-            version="1",
-        ),
-    ]
-    matcher = RegexpMatcher(rules=rules)
-    entities = matcher.run(sentences)
+    # check new attrs
+    assert all(len(target.get_attrs()) == 2 for target in targets)
 
-    # testing attribute propagator
-    propagator_1 = AttributePropagator(attr_labels=["is_negated"])
-    propagator_1.run(syntagmes, entities)
+    # check first target
+    target = targets[0]
+    negated = target.get_attrs_by_label("is_negated")[0]
+    family = target.get_attrs_by_label("is_family")[0]
+    assert not negated.value
+    assert family.value
 
-    propagator_2 = AttributePropagator(attr_labels=["is_family"])
-    propagator_2.run(sentences, entities)
+    # check second target
+    target = targets[1]
+    negated = target.get_attrs_by_label("is_negated")[0]
+    family = target.get_attrs_by_label("is_family")[0]
+    assert negated.value
+    assert family.value
 
-    expected_is_negated = [True, False, False, False, False, True, False]
-    expected_is_family = [False, False, False, True, True, False, False]
 
-    entities = sorted(entities, key=lambda sp: sp.spans[0].start)
+def test_provenance():
+    doc = _get_doc()
+    sentences = doc.get_annotations_by_label("sentence")
+    syntagmes = doc.get_annotations_by_label("syntagme")
+    targets = doc.get_annotations_by_label("disease")
 
-    for ent, expected_negation, expected_family in zip(
-        entities, expected_is_negated, expected_is_family
-    ):
-        is_negated = ent.get_attrs_by_label("is_negated")[0].value
-        is_family = ent.get_attrs_by_label("is_family")[0].value
-        assert is_negated is expected_negation
-        assert is_family is expected_family
+    prov_tracer = ProvTracer()
+    propagator_1 = AttributePropagator(attr_labels=["is_family"])
+    propagator_2 = AttributePropagator(attr_labels=["is_negated"])
+    propagator_1.set_prov_tracer(prov_tracer)
+    propagator_2.set_prov_tracer(prov_tracer)
+
+    # is_family was 'detected' in sentences
+    propagator_1.run(sentences, targets)
+    # is_negated was 'detected' in syntagmes
+    propagator_2.run(syntagmes, targets)
+
+    sentence_attr_1 = sentences[0].get_attrs_by_label("is_family")[0]
+    syntagme_attr_2 = syntagmes[0].get_attrs_by_label("is_negated")[0]
+    attr_1 = targets[0].get_attrs_by_label("is_family")[0]
+    attr_2 = targets[0].get_attrs_by_label("is_negated")[0]
+
+    attr_1_prov = prov_tracer.get_prov(attr_1.id)
+    assert attr_1_prov.data_item == attr_1
+    assert attr_1_prov.op_desc == propagator_1.description
+    assert attr_1_prov.source_data_items == [sentence_attr_1]
+
+    attr_2_prov = prov_tracer.get_prov(attr_2.id)
+    assert attr_2_prov.data_item == attr_2
+    assert attr_2_prov.op_desc == propagator_2.description
+    assert attr_2_prov.source_data_items == [syntagme_attr_2]
