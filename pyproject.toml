@@ -98,9 +98,28 @@ umls-coder-normalizer = [
 ]
 webrtc-voice-detector = ["webrtcvad"]
 
+## 'optional' groups dependencies from all extras for pip install <medkit-package>[optional]
+## for poetry, you can use `poetry install --all-extras`
+
+optional = [
+    "feather-format",
+    "packaging",
+    "pandas",
+    "PyRuSH",
+    "quickumls",
+    "resampy",
+    "sacremoses",
+    "sentencepiece",
+    "spacy",
+    "torch",
+    "torchaudio",
+    "transformers",
+    "webrtcvad",
+]
+
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
-build-backend = "poetry-dynamic_versioning.backend"
+build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.black]
 line-length = 88
