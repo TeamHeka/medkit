@@ -29,16 +29,20 @@ class SyntacticRelationExtractor(DocOperation):
     of the words of an entity to determine whether a dependency exists
     between the entities.
 
-    Each TextDocument is converted to a spacy doc with the selected entities.
-    By default, all entities are transferred and the source and target of the relations
-    depends on the syntactic dependency.
+    Each TextDocument is converted to a spacy doc with the entities of interest.
+    The source or target of the relations can be defined using their labels.
+    This generates a 'context' of valid relations, i.e. relations that contain
+    at least one label of interest will be generated.
+
+    If the source and target are well defined (neither is None), only entities within
+    the context will be transferred to the document and therefore, only relations
+    containing such entities will be generated.
     """
 
     def __init__(
         self,
         name_spacy_model: Union[str, Path] = DefaultConfig.name_spacy_model,
         relation_label: str = DefaultConfig.relation_label,
-        entities_labels: Optional[List[str]] = None,
         entities_source: Optional[List[str]] = None,
         entities_target: Optional[List[str]] = None,
         op_id: Optional[str] = None,
@@ -54,9 +58,6 @@ class SyntacticRelationExtractor(DocOperation):
             in which relations should be found.
         relation_label: str
             Label of identified relations
-        entities_labels: Optional[List[str]]
-            Labels of medkit entities on which relations are to be identified.
-            If `None` (default) relations are identified in all entities of a TextDocument
         entities_source: List[str]
             Labels of medkit entities defined as source of the relation.
             If `None` (default) the source is the syntactic source.
@@ -70,7 +71,6 @@ class SyntacticRelationExtractor(DocOperation):
         ------
         ValueError
             If the spacy model defined by `name_spacy_model` does not parse a document
-            or if entities source/target are not in `entities_label`
         """
         # Pass all arguments to super (remove self)
         init_args = locals()
@@ -82,13 +82,6 @@ class SyntacticRelationExtractor(DocOperation):
         if entities_target is None:
             entities_target = []
 
-        # check coherence between labels
-        if entities_labels is not None:
-            if not all(
-                source in entities_labels for source in entities_source
-            ) or not all(target in entities_labels for target in entities_target):
-                raise ValueError("Entities source/target must be in `entities_labels`")
-
         # load nlp object and validate it
         nlp = spacy.load(name_spacy_model, exclude=["tagger", "ner", "lemmatizer"])
         if not nlp("X").has_annotation("DEP"):
@@ -99,11 +92,20 @@ class SyntacticRelationExtractor(DocOperation):
 
         self._nlp = nlp
         self.name_spacy_model = name_spacy_model
-        self.entities_labels = entities_labels
         self.entities_source = entities_source
         self.entities_target = entities_target
         self.relation_label = relation_label
         self._context = [*self.entities_source, *self.entities_target]
+
+        # when the context is well defined (source and target are not none),
+        # the context is used to select the entities in the document.
+        # Otherwise, all entities are transferred and source/target
+        # depends on the syntax of the relation
+        # c.f build_spacy_doc_from_medkit_doc
+        if self.entities_source and self.entities_target:
+            self._entities_labels = self._context
+        else:
+            self._entities_labels = None
 
     def run(self, documents: List[TextDocument]):
         """Add relations to each document from `documents`
@@ -119,7 +121,7 @@ class SyntacticRelationExtractor(DocOperation):
             spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(
                 nlp=self._nlp,
                 medkit_doc=medkit_doc,
-                labels_anns=self.entities_labels,
+                labels_anns=self._entities_labels,
                 attrs=[],
                 include_medkit_info=True,
             )

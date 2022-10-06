@@ -36,34 +36,31 @@ def _get_medkit_doc():
 
 
 TEST_CONFIG = (
-    (None, None, None, [["maladie", "grade"], ["level", "maladie"]]),
-    (["maladie"], ["maladie"], None, []),
-    (["maladie", "level"], ["maladie"], ["level"], [["maladie", "level"]]),
-    (["maladie", "level"], ["maladie"], None, [["maladie", "level"]]),
-    (["maladie", "level"], ["level"], None, [["level", "maladie"]]),
-    (None, ["grade"], None, [["grade", "maladie"]]),
+    (None, None, [["maladie", "grade"], ["level", "maladie"]]),
+    (["maladie"], ["maladie"], []),
+    (["maladie"], ["level"], [["maladie", "level"]]),
+    (["maladie"], None, [["maladie", "grade"], ["maladie", "level"]]),
+    (["level"], None, [["level", "maladie"]]),
+    (None, ["grade"], [["maladie", "grade"]]),
 )
 
 
 @pytest.mark.parametrize(
-    "entities_labels,entities_source,entities_target,exp_source_target",
+    "entities_source,entities_target,exp_source_target",
     TEST_CONFIG,
     ids=[
         "between_all_entities",
-        "between_maladie",
-        "between_maladie_level_source_target_not_none",
-        "between_maladie_level_source_not_none",
-        "between_level_maladie_source_not_none",
-        "all_entities_only_grade_relations",
+        "between_maladie_maladie",
+        "between_maladie_level_source_target_defined",
+        "between_maladie_as_source",
+        "between_level_as_source",
+        "only_grade_relations",
     ],
 )
-def test_relation_extractor(
-    entities_labels, entities_source, entities_target, exp_source_target
-):
+def test_relation_extractor(entities_source, entities_target, exp_source_target):
     medkit_doc = _get_medkit_doc()
     relation_extractor = SyntacticRelationExtractor(
         name_spacy_model="fr_core_news_sm",
-        entities_labels=entities_labels,
         entities_source=entities_source,
         entities_target=entities_target,
         relation_label="syntactic_dep",
@@ -90,11 +87,6 @@ def test_exceptions_init():
             name_spacy_model="xx_sent_ud_sm",
         )
 
-    with pytest.raises(ValueError, match="source/target must be in `entities_labels`"):
-        SyntacticRelationExtractor(
-            entities_labels=[], entities_source=["label1"], entities_target=["label2"]
-        )
-
 
 @spacy.Language.component(
     "entity_without_id",
@@ -116,7 +108,6 @@ def test_entities_without_medkit_id(caplog, tmp_path):
     medkit_doc = _get_medkit_doc()
     relation_extractor = SyntacticRelationExtractor(
         name_spacy_model=model_path,
-        entities_labels=None,
         entities_source=["maladie"],
         entities_target=None,
         relation_label="has_level",
@@ -140,8 +131,8 @@ def test_prov():
     medkit_doc = _get_medkit_doc()
     relation_extractor = SyntacticRelationExtractor(
         name_spacy_model="fr_core_news_sm",
-        entities_labels=["maladie", "level"],
         entities_source=["maladie"],
+        entities_target=["level"],
         relation_label="has_level",
     )
     prov_tracer = ProvTracer()
