@@ -23,22 +23,24 @@ class DefaultConfig:
 class SyntacticRelationExtractor(DocOperation):
     """Extractor of syntactic relations between entities in a TextDocument.
     The relation relies on the dependency parser from a spacy pipeline.
-
     A transition-based dependency parser defines a dependency tag for each
     token (word) in a document. This relation extractor uses syntactic neighbours
     of the words of an entity to determine whether a dependency exists
     between the entities.
 
-    Each TextDocument is converted to a spacy doc with the selected entities.
-    By default, all entities are transferred and the source and target of the relations
-    depends on the syntactic dependency.
+    Each TextDocument is converted to a spacy doc with the entities of interest.
+    The labels of entities to be used as sources and targets of the relation
+    are provided by the user, but it is also possible to not restrict the labels
+    of sources and/or target entities. If neither the source label nor the
+    target labels are provided, the 'SyntacticRelationExtractor' will detect
+    relations among all entities in the document, and the order of the relation
+    will be the syntactic order.
     """
 
     def __init__(
         self,
         name_spacy_model: Union[str, Path] = DefaultConfig.name_spacy_model,
         relation_label: str = DefaultConfig.relation_label,
-        entities_labels: Optional[List[str]] = None,
         entities_source: Optional[List[str]] = None,
         entities_target: Optional[List[str]] = None,
         op_id: Optional[str] = None,
@@ -54,15 +56,12 @@ class SyntacticRelationExtractor(DocOperation):
             in which relations should be found.
         relation_label: str
             Label of identified relations
-        entities_labels: Optional[List[str]]
-            Labels of medkit entities on which relations are to be identified.
-            If `None` (default) relations are identified in all entities of a TextDocument
         entities_source: List[str]
-            Labels of medkit entities defined as source of the relation.
-            If `None` (default) the source is the syntactic source.
+            Labels of medkit entities to use as source of the relation.
+            If `None`, any entity can be used as source.
         entities_target: List[str]
-            Labels of medkit entities defined as target of the relation.
-            If `None` (default) the target is the syntactic target.
+            Labels of medkit entities to use as target of the relation.
+            If `None`, any entity can be used as target.
         op_id:
             Identifier of the relation extractor
 
@@ -70,24 +69,11 @@ class SyntacticRelationExtractor(DocOperation):
         ------
         ValueError
             If the spacy model defined by `name_spacy_model` does not parse a document
-            or if entities source/target are not in `entities_label`
         """
         # Pass all arguments to super (remove self)
         init_args = locals()
         init_args.pop("self")
         super().__init__(**init_args)
-
-        if entities_source is None:
-            entities_source = []
-        if entities_target is None:
-            entities_target = []
-
-        # check coherence between labels
-        if entities_labels is not None:
-            if not all(
-                source in entities_labels for source in entities_source
-            ) or not all(target in entities_labels for target in entities_target):
-                raise ValueError("Entities source/target must be in `entities_labels`")
 
         # load nlp object and validate it
         nlp = spacy.load(name_spacy_model, exclude=["tagger", "ner", "lemmatizer"])
@@ -99,10 +85,14 @@ class SyntacticRelationExtractor(DocOperation):
 
         self._nlp = nlp
         self.name_spacy_model = name_spacy_model
-        self.entities_labels = entities_labels
         self.entities_source = entities_source
         self.entities_target = entities_target
         self.relation_label = relation_label
+        # entities transferred to the equivalent spacy doc
+        if self.entities_source and self.entities_target:
+            self._entities_labels = self.entities_source + self.entities_target
+        else:
+            self._entities_labels = None
 
     def run(self, documents: List[TextDocument]):
         """Add relations to each document from `documents`
@@ -118,7 +108,7 @@ class SyntacticRelationExtractor(DocOperation):
             spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(
                 nlp=self._nlp,
                 medkit_doc=medkit_doc,
-                labels_anns=self.entities_labels,
+                labels_anns=self._entities_labels,
                 attrs=[],
                 include_medkit_info=True,
             )
@@ -181,9 +171,8 @@ class SyntacticRelationExtractor(DocOperation):
 
     def _define_source_target(self, source: SpacySpan, target: SpacySpan):
         # change whether origin or target is predefined by the user
-        if (
-            source.label_ in self.entities_target
-            or target.label_ in self.entities_source
+        if (self.entities_target and source.label_ in self.entities_target) or (
+            self.entities_source and target.label_ in self.entities_source
         ):
             return target, source
         return source, target
@@ -209,6 +198,11 @@ class SyntacticRelationExtractor(DocOperation):
             The Relation object representing the spacy relation
 
         """
+        # ignore the relation because it has no entities of interest
+        if self.entities_source and source.label_ not in self.entities_source:
+            return None
+        if self.entities_target and target.label_ not in self.entities_target:
+            return None
 
         attribute_medkit_id = spacy_utils._ATTR_MEDKIT_ID
         source_id = source._.get(attribute_medkit_id)
