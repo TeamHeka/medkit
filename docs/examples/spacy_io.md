@@ -15,9 +15,9 @@ kernelspec:
 
 +++
 
-[spaCy](https://spacy.io/) is a library for advanced Natural Language Processing in Python. Medkit can load spacy documents with entities, attributes (custom extensions) and groups of spans. The module is configurable according to use cases. 
+[spaCy](https://spacy.io/) is a library for advanced Natural Language Processing in Python. Medkit supports Spacy in input/output conversion as well as annotator. Medkit can load spacy documents with **entities**, **attributes** (custom extensions) and groups of **spans** and convert medkit documents to spacy docs easily.
 
-We use some spacy concepts in this example, more information can be found in the official spacy documentation.
+In this example, we will show how to import spacy documents into medkit and how to convert medkit documents into Spacy documents. We use some spacy concepts, more information can be found in the official spacy documentation.
 
 ```{note}
 For this example, you should download the french spacy model. You can download it using:
@@ -79,7 +79,7 @@ displacy.render(spacy_doc, style="span",options={"spans_key": "SECTION"})
 
 ```
 
-The spacy document has **2** entities and **1** span groups called `SECTION`.
+The spacy document has **2** entities and **1** span group called `SECTION`.
 The entity 'LOC' has **1** attribute called `country`.
 
 Let's see how to convert this spacy doc in a `TextDocument` with annotations.
@@ -96,7 +96,7 @@ You can enable provenance tracing by assigning a {class}`~medkit.core.ProvTracer
 ```{code-cell} ipython3
 from medkit.io.spacy import SpacyInputConverter
 
-# Define Input Converter 
+# Define default Input Converter 
 spacy_input_converter = SpacyInputConverter()
 
 # Load spacy doc into a collection of documents

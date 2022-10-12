@@ -15,14 +15,15 @@ kernelspec:
 
 +++
 
-Brat is a web-based tool for text annotation. Brat uses the [standoff format](https://brat.nlplab.org/standoff.html).
+Brat is a web-based tool for text annotation that uses the [standoff format](https://brat.nlplab.org/standoff.html). Medkit supports input-output conversion of Brat files with the following annotations types:
 
-Medkit supports the following types of brat annotations:
 - Entities 
 - Relations
 - Attributes
 
 Annotations with other types are ignored in the conversion process.
+
+In this example, we will show how to import Brat annotated files into medkit and how to convert medkit documents into Brat annotated collections.
 
 Consider this text file: 
 
@@ -80,7 +81,7 @@ for entity in medkit_doc.get_entities():
 
 To save a Collection or list of `TextDocument` in Brat format, you can use {class}`~medkit.io.brat.BratOutputConverter`.
 
-You can choose which medkit annotations and attributes to keep in the resulting Brat collection. By default, since its `anns_labels` and `attrs` are set to `None`, all annotations and attributes will be in the generated file. 
+You can choose which medkit **annotations** and **attributes** to keep in the resulting Brat collection. By default, since its `anns_labels` and `attrs` are set to `None`, all annotations and attributes will be in the generated file. 
 
 If you also want to include the segments in the brat collection, the parameter `ignore_segments` can be set to `False`.
 +++

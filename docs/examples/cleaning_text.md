@@ -81,7 +81,7 @@ Now that we have a **clean segment**, we can run an operation on the new segment
 ```{code-cell} ipython3
 from medkit.text.segmentation import SentenceTokenizer
 
-sentences = SentenceTokenizer(punct_chars = (".","\n")).run([clean_segment])
+sentences = SentenceTokenizer().run([clean_segment])
 for sent in sentences:
   print(f"{sent.text!r}")
 ```
@@ -103,17 +103,17 @@ We see a combination of `Span` and `ModifiedSpan` indicating that something chan
 
 Since the sentence contains the information from the original spans, it will always be possible to go back and display the information in the raw text. 
 
-To get the original span, we can use {func}`~medkit.core.text.span_utils.normalize_spans`. Next, we can extract the raw text using {func}`~medkit.core.text.span_utils.extract`. 
+To get the original spans, we can use {func}`~medkit.core.text.span_utils.normalize_spans`. Next, we can extract the raw text using {func}`~medkit.core.text.span_utils.extract`. 
 
 ```{code-cell} ipython3
 from medkit.core.text.span_utils import normalize_spans, extract
 
 spans_sentence = normalize_spans(sentence.spans)
 extrated_text, spans = extract(raw_segment.text,raw_segment.spans,spans_sentence)
-print(f"Sentence in the raw version:\n \"{extrated_text}\"")
+print(f"- Sentence in the ORIGINAL version:\n \"{extrated_text}\"")
 ```
 
-That's how an operation transform text and extract information without losing the raw text.  
+That's how an operation transforms text and extracts information without losing the raw text.  
 
 ```{seealso}
 For further information on the utilities used in this class, see {class}`~medkit.core.text.utils`. 
