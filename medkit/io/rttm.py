@@ -171,9 +171,10 @@ class RTTMInputConverter(InputConverter):
         rttm_file = Path(rttm_file)
         audio_file = Path(audio_file)
 
-        turn_segments = self.load_turns(rttm_file, audio_file)
-
+        rows = self._load_rows(rttm_file)
         full_audio = FileAudioBuffer(path=audio_file)
+        turn_segments = [self._build_turn_segment(row, full_audio) for row in rows]
+
         doc = AudioDocument(audio=full_audio, store=self.store)
         for turn_segment in turn_segments:
             doc.add_annotation(turn_segment)
@@ -202,6 +203,13 @@ class RTTMInputConverter(InputConverter):
         rttm_file = Path(rttm_file)
         audio_file = Path(audio_file)
 
+        rows = self._load_rows(rttm_file)
+        full_audio = FileAudioBuffer(path=audio_file)
+        turn_segments = [self._build_turn_segment(row, full_audio) for row in rows]
+        return turn_segments
+
+    @staticmethod
+    def _load_rows(rttm_file: Path):
         with open(rttm_file) as fp:
             csv_reader = csv.DictReader(fp, fieldnames=_RTTM_FIELDS, delimiter=" ")
             rows = [r for r in csv_reader]
@@ -213,9 +221,7 @@ class RTTMInputConverter(InputConverter):
                 " file_id or <NA>"
             )
 
-        full_audio = FileAudioBuffer(path=audio_file)
-        turn_segments = [self._build_turn_segment(row, full_audio) for row in rows]
-        return turn_segments
+        return rows
 
     def _build_turn_segment(
         self, row: Dict[str, Any], full_audio: FileAudioBuffer
