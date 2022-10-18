@@ -31,6 +31,7 @@ _RTTM_FIELDS = [
     "na_2",
     "speaker_name",
     "na_3",
+    "na_4",
 ]
 
 
@@ -376,5 +377,6 @@ class RTTMOutputConverter(OutputConverter):
             "na_2": "<NA>",
             "speaker_name": speaker_attr.value,
             "na_3": "<NA>",
+            "na_4": "<NA>",
         }
         return row
