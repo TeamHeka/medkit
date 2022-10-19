@@ -1,3 +1,3 @@
 __all__ = ["AttributeDuplicator"]
 
-from .propagator import AttributeDuplicator
+from .attribute_duplicator import AttributeDuplicator
