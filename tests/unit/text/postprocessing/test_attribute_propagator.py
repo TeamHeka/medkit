@@ -1,11 +1,11 @@
 from medkit.core import Attribute, ProvTracer
 from medkit.core.text import Segment, TextDocument
-from medkit.core.text.span_utils import extract
-from medkit.text.postprocessing import AttributePropagator
+from medkit.core.text import span_utils
+from medkit.text.postprocessing import AttributeDuplicator
 
 
 def _extract_segment(segment, ranges, label):
-    text, spans = extract(segment.text, segment.spans, ranges)
+    text, spans = span_utils.extract(segment.text, segment.spans, ranges)
     return Segment(label=label, spans=spans, text=text)
 
 
@@ -32,7 +32,7 @@ def _get_doc():
     return doc
 
 
-def test_default_without_pipeline():
+def test_default_attribute_duplicator():
     doc = _get_doc()
     sentences = doc.get_annotations_by_label("sentence")
     syntagmes = doc.get_annotations_by_label("syntagme")
@@ -42,8 +42,8 @@ def test_default_without_pipeline():
     assert all(not target.get_attrs() for target in targets)
 
     # define attr propagator
-    propagator_1 = AttributePropagator(attr_labels=["is_family"])
-    propagator_2 = AttributePropagator(attr_labels=["is_negated"])
+    propagator_1 = AttributeDuplicator(attr_labels=["is_family"])
+    propagator_2 = AttributeDuplicator(attr_labels=["is_negated"])
 
     # is_family was 'detected' in sentences
     propagator_1.run(sentences, targets)
@@ -75,8 +75,8 @@ def test_provenance():
     targets = doc.get_annotations_by_label("disease")
 
     prov_tracer = ProvTracer()
-    propagator_1 = AttributePropagator(attr_labels=["is_family"])
-    propagator_2 = AttributePropagator(attr_labels=["is_negated"])
+    propagator_1 = AttributeDuplicator(attr_labels=["is_family"])
+    propagator_2 = AttributeDuplicator(attr_labels=["is_negated"])
     propagator_1.set_prov_tracer(prov_tracer)
     propagator_2.set_prov_tracer(prov_tracer)
 
