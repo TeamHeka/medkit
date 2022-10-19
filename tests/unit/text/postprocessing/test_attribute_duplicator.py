@@ -19,6 +19,8 @@ def _get_doc():
     syntagme_1 = _extract_segment(sentence, [(37, 73)], "syntagme")
     # add is_family in sentence
     sentence.add_attr(Attribute(label="is_family", value=True))
+    sentence.add_attr(Attribute(label="family_trigger", value="Mother"))
+
     # add is_negated in syntagmes
     syntagme_0.add_attr(Attribute(label="is_negated", value=False))
     syntagme_1.add_attr(Attribute(label="is_negated", value=True))
@@ -41,7 +43,7 @@ def test_default_attribute_duplicator():
     # check no attrs in targets
     assert all(not target.get_attrs() for target in targets)
 
-    # define attr propagator
+    # define attr duplicators
     propagator_1 = AttributeDuplicator(attr_labels=["is_family"])
     propagator_2 = AttributeDuplicator(attr_labels=["is_negated"])
 
@@ -57,6 +59,7 @@ def test_default_attribute_duplicator():
     target = targets[0]
     negated = target.get_attrs_by_label("is_negated")[0]
     family = target.get_attrs_by_label("is_family")[0]
+    assert len(target.get_attrs_by_label("family_trigger")) == 0
     assert not negated.value
     assert family.value
 
@@ -64,8 +67,37 @@ def test_default_attribute_duplicator():
     target = targets[1]
     negated = target.get_attrs_by_label("is_negated")[0]
     family = target.get_attrs_by_label("is_family")[0]
+    assert len(target.get_attrs_by_label("family_trigger")) == 0
     assert negated.value
     assert family.value
+
+
+def test_duplicate_several_attrs():
+    doc = _get_doc()
+    sentences = doc.get_annotations_by_label("sentence")
+    targets = doc.get_annotations_by_label("disease")
+
+    # check no attrs in targets
+    assert all(not target.get_attrs() for target in targets)
+
+    # define attr duplicator
+    propagator = AttributeDuplicator(attr_labels=["is_family", "family_trigger"])
+    # attrs were 'detected' in sentences
+    propagator.run(sentences, targets)
+
+    # check new attrs
+    attr_src_family = sentences[0].get_attrs_by_label("is_family")[0]
+    attr_src_family_trigger = sentences[0].get_attrs_by_label("family_trigger")[0]
+
+    assert all(len(target.get_attrs()) == 2 for target in targets)
+    for target in targets:
+        assert len(target.get_attrs_by_label("is_negated")) == 0
+        family = target.get_attrs_by_label("is_family")[0]
+        family_trigger = target.get_attrs_by_label("family_trigger")[0]
+        assert family.value == attr_src_family.value
+        assert family_trigger.value == attr_src_family_trigger.value == "Mother"
+        assert family.id != attr_src_family.id
+        assert family_trigger.id != attr_src_family_trigger.id
 
 
 def test_provenance():
