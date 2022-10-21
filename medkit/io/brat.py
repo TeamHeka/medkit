@@ -1,4 +1,5 @@
 __all__ = ["BratInputConverter", "BratOutputConverter"]
+import re
 import logging
 from pathlib import Path
 from typing import List, Optional, Tuple, Union, ValuesView, Dict
@@ -23,8 +24,7 @@ from medkit.core import (
     generate_id,
     OperationDescription,
 )
-from medkit.core.text import Entity, Relation, Segment, Span, TextDocument
-from medkit.core.text.span_utils import normalize_spans
+from medkit.core.text import Entity, Relation, Segment, Span, TextDocument, span_utils
 
 
 TEXT_EXT = ".txt"
@@ -292,23 +292,29 @@ class BratOutputConverter(OutputConverter):
         config = BratAnnConfiguration(self.top_values_by_attr)
 
         for i, medkit_doc in enumerate(docs):
-            doc_id = medkit_doc.uid if doc_names is None else doc_names[i]
             text = medkit_doc.text
+            doc_id = medkit_doc.uid if doc_names is None else doc_names[i]
 
-            if text is not None:
-                text_path = dir_path / f"{doc_id}{TEXT_EXT}"
-                text_path.write_text(text, encoding="utf-8")
+            if text is None:
+                logger.warning(f"The medkit doc {doc_id} has no text, it was ignored.")
+                continue
 
+            # convert medkit anns to brat format
             segments, relations = self._get_anns_from_medkit_doc(medkit_doc)
-            brat_anns = self._convert_medkit_anns_to_brat(segments, relations, config)
+            brat_anns = self._convert_medkit_anns_to_brat(
+                segments, relations, config, text
+            )
 
+            # save text file
+            text_path = dir_path / f"{doc_id}{TEXT_EXT}"
+            text_path.write_text(text, encoding="utf-8")
             # save ann file
             ann_path = dir_path / f"{doc_id}{ANN_EXT}"
             brat_str = "".join(f"{brat_ann.to_str()}" for brat_ann in brat_anns)
             ann_path.write_text(brat_str, encoding="utf-8")
 
         if self.create_config:
-            # save configuration file
+            # save configuration file by collection or list of documents
             conf_path = dir_path / ANN_CONF_FILE
             conf_path.write_text(config.to_str(), encoding="utf-8")
 
@@ -343,7 +349,6 @@ class BratOutputConverter(OutputConverter):
                 segments.append(ann)
             elif isinstance(ann, Relation):
                 relations.append(ann)
-
         return segments, relations
 
     def _convert_medkit_anns_to_brat(
@@ -351,6 +356,7 @@ class BratOutputConverter(OutputConverter):
         segments: List[Segment],
         relations: List[Relation],
         config: BratAnnConfiguration,
+        raw_text: str,
     ) -> Tuple[ValuesView[Union[BratEntity, BratAttribute, BratRelation]]]:
         """
         Convert Segments, Relations and Attributes into brat data structures
@@ -364,6 +370,8 @@ class BratOutputConverter(OutputConverter):
         config:
             Optional `BratAnnConfiguration` structure, this object is updated
             with the types of the generated Brat annotations.
+        raw_text:
+            Text of reference to get the original text of the annotations
         Returns
         -------
         BratAnnotations
@@ -374,7 +382,9 @@ class BratOutputConverter(OutputConverter):
 
         # First convert segments then relations including its attributes
         for medkit_segment in segments:
-            brat_entity = self._convert_segment_to_brat(medkit_segment, nb_segment)
+            brat_entity = self._convert_segment_to_brat(
+                medkit_segment, nb_segment, raw_text
+            )
             anns_by_medkit_id[medkit_segment.uid] = brat_entity
             config.add_entity_type(brat_entity.type)
             nb_segment += 1
@@ -454,8 +464,20 @@ class BratOutputConverter(OutputConverter):
 
         return anns_by_medkit_id.values()
 
-    @staticmethod
-    def _convert_segment_to_brat(segment: Segment, nb_segment: int) -> BratEntity:
+    def _ensure_text_and_spans(self, segment: Segment, raw_text: str):
+        """Ensure consistency between `raw_text` and `segment.text`"""
+        # normalize and extract from raw_text
+        segment_spans = span_utils.normalize_spans(segment.spans)
+        text = "".join(raw_text[sp.start : sp.end] for sp in segment_spans)
+        # remove multiple whitespaces because they are not supported by Brat
+        pattern = r"(?P<blanks>\s{2,})"
+        ranges = [(match.span("blanks")) for match in re.finditer(pattern, text)]
+        text, spans = span_utils.remove(text, segment_spans, ranges)
+        return text, spans
+
+    def _convert_segment_to_brat(
+        self, segment: Segment, nb_segment: int, raw_text: str
+    ) -> BratEntity:
         """
         Get a brat entity from a medkit segment
 
@@ -465,7 +487,8 @@ class BratOutputConverter(OutputConverter):
             A medkit segment to convert into brat format
         nb_segment:
             The current counter of brat segments
-
+        raw_text:
+            Text of reference to get the original text of the segment
         Returns
         -------
         BratEntity
@@ -475,8 +498,9 @@ class BratOutputConverter(OutputConverter):
         brat_id = f"T{nb_segment}"
         # brat does not support spaces in labels
         type = segment.label.replace(" ", "_")
+        text, _spans = self._ensure_text_and_spans(segment, raw_text)
+        spans = tuple((span.start, span.end) for span in _spans)
         text = segment.text
-        spans = tuple((span.start, span.end) for span in normalize_spans(segment.spans))
         return BratEntity(brat_id, type, spans, text)
 
     @staticmethod
