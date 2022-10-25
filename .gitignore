@@ -14,7 +14,7 @@ Thumbs.db
 .venv/
 
 # Poetry
-poetry.lock
+# poetry.lock
 .cache/
 
 # Byte-compiled / optimized / DLL files
