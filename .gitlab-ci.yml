@@ -2,9 +2,6 @@ image: python:3.7
 
 variables:
   POETRY_HOME: /etc/poetry
-  # if cache is not already set for the branch, use the develop cache for
-  # retrieving poetry.lock
-  CACHE_FALLBACK_KEY: develop-protected
 
 # Trigger the pipeline on develop/main branches and all MRs (except develop merge to main)
 workflow:
@@ -22,9 +19,10 @@ stages:
 
 # Define a default cache using CACHE_KEY variable
 cache: &default_cache
-  key: $CI_COMMIT_REF_NAME
+  key:
+    files:
+      - poetry.lock
   paths:
-    - poetry.lock
     - .venv
   policy: pull
 
@@ -47,6 +45,9 @@ cache: &default_cache
 # ------- Jobs declaration --------
 
 # Set up cache for all pipeline jobs
+# If poetry.lock needs to be updated:
+# - the job fails
+# - the poetry.lock file to commit is exposed as artifact
 setup_cache:
   stage: setup
   tags:
@@ -56,13 +57,14 @@ setup_cache:
     policy: pull-push
   script:
     - *prepare_poetry_env
-    - poetry lock --check || poetry lock --no-update
+    - poetry lock --check || FAILED=true
+    - if [ $FAILED ]; then poetry lock --no-update; exit 1; fi # update lock file if check fails
     - poetry install --with=docs --all-extras --sync
     - source .venv/bin/activate
     - pip list
   artifacts:
-    when: always
-    expose_as: "Poetry lock file"
+    when: on_failure
+    expose_as: "Poetry lock file to commit"
     paths:
       - poetry.lock
   interruptible: true
