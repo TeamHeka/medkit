@@ -21,3 +21,11 @@ if _torchaudio_is_available and _transformers_is_available:
     from .hf_transcriber import HFTranscriber  # noqa: F401
     __all__.append("HFTranscriber")
     # fmt: on
+
+_torch_is_available = importlib.util.find_spec("torch") is not None
+_speechbrain_is_available = importlib.util.find_spec("speechbrain") is not None
+if _speechbrain_is_available and _torch_is_available and _transformers_is_available:
+    # fmt: off
+    from .sb_transcriber import SBTranscriber  # noqa: F401
+    __all__.append("SBTranscriber")
+    # fmt: on

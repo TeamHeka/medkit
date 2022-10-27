@@ -77,3 +77,14 @@ into `TranscribedDocument` instances (subclas of `TextDocument`). The actual con
 .. automodule:: medkit.audio.transcription.hf_transcriber
     :members:
 ```
+
+### SBTranscriber
+
+```{important}
+`SBTranscriber` needs additional dependencies that can be installed with `pip install medkit[sb-transcriber]`
+```
+
+```{eval-rst}
+.. automodule:: medkit.audio.transcription.sb_transcriber
+    :members:
+```
