@@ -27,12 +27,14 @@ class HFTranscriber:
         Parameters
         ----------
         model:
-            Name of the ASR model on the Hugging Face models hub.
-            Must be a model compatible with the `AutomaticSpeechRecognitionPipeline` transformers class.
+            Name of the ASR model on the Hugging Face models hub. Must be a
+            model compatible with the `AutomaticSpeechRecognitionPipeline`
+            transformers class.
         add_trailing_dot:
-            If `True`, a dot will be add at the end of each transcription text.
+            If `True`, a dot will be added at the end of each transcription text.
         capitalize:
-            It `True`, the first letter of each transcription text will be uppercased.
+            It `True`, the first letter of each transcription text will be
+            uppercased and the rest lowercased.
         device:
             Device to use for pytorch models. Follows the Hugging Face convention
             (`-1` for cpu and device number for gpu, for instance `0` for "cuda:0")
