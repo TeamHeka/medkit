@@ -40,7 +40,7 @@ def test_batch(transcriber):
     # generate batch of different audios by duplicating signal every other time
     audios = []
     short_signal = _AUDIO.read()
-    long_signal = np.concatenate((short_signal, short_signal))
+    long_signal = np.concatenate((short_signal, short_signal), axis=1)
     for i in range(10):
         signal = short_signal if i % 2 else long_signal
         audio = MemoryAudioBuffer(signal, _AUDIO.sample_rate)
