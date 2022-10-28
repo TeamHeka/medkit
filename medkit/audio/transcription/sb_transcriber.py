@@ -33,9 +33,9 @@ class SBTranscriber:
         model:
             Name of the model on the Hugging Face models hub, or local path.
         needs_decoder:
-            Whether the model should be used the speechbrain `EncoderDecoderASR`
-            class or the `EncoderASR` class. If unsure, check the code snippets
-            on the model card on the hub.
+            Whether the model should be used with the speechbrain
+            `EncoderDecoderASR` class or the `EncoderASR` class. If unsure,
+            check the code snippets on the model card on the hub.
         add_trailing_dot:
             If `True`, a dot will be added at the end of each transcription text.
         capitalize:
