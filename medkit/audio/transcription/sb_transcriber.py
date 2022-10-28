@@ -42,7 +42,7 @@ class SBTranscriber:
             It `True`, the first letter of each transcription text will be
             uppercased and the rest lowercased.
         cache_dir:
-            Directory where to store the downloaded model. If none provided,
+            Directory where to store the downloaded model. If `None`,
             speechbrain will use "pretrained_models/" and "model_checkpoints/"
             directories in the current working directory.
         device:
