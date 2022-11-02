@@ -1,4 +1,4 @@
-__all__ = ["SBTranscriber"]
+__all__ = ["SBTranscriberFunction"]
 
 from pathlib import Path
 from typing import List, Optional, Union
@@ -7,11 +7,11 @@ import speechbrain as sb
 
 from medkit.core.audio import AudioBuffer
 import medkit.core.utils
-from medkit.audio.transcription.doc_transcriber import AudioTranscriberDescription
+from medkit.audio.transcription.doc_transcriber import TranscriberFunctionDescription
 
 
-class SBTranscriber:
-    """Audio transcriber based on a SpeechBrain model.
+class SBTranscriberFunction:
+    """Transcriber function based on a SpeechBrain model.
 
     To be used within a
     :class:`~medkit.audio.transcription.doc_transcriber.DocTranscriber`
@@ -75,7 +75,7 @@ class SBTranscriber:
         self._sample_rate = self._asr.audio_normalizer.sample_rate
 
     @property
-    def description(self) -> AudioTranscriberDescription:
+    def description(self) -> TranscriberFunctionDescription:
         config = dict(
             model_name=self.model_name,
             has_decoder=self.has_decoder,
@@ -85,16 +85,18 @@ class SBTranscriber:
             device=self.device,
             batch_size=self.batch_size,
         )
-        return AudioTranscriberDescription(name=self.__class__.__name__, config=config)
+        return TranscriberFunctionDescription(
+            name=self.__class__.__name__, config=config
+        )
 
-    def run(self, audios: List[AudioBuffer]) -> List[str]:
+    def transcribe(self, audios: List[AudioBuffer]) -> List[str]:
         if not all(a.sample_rate == self._sample_rate for a in audios):
             raise ValueError(
-                "SBTranscriber received audio buffers with incompatible sample rates"
-                f" (model expected {self._sample_rate} Hz)"
+                "SBTranscriberFunction received audio buffers with incompatible sample"
+                f" rates (model expected {self._sample_rate} Hz)"
             )
         if not all(a.nb_channels == 1 for a in audios):
-            raise ValueError("SBTranscriber only supports mono audio buffers")
+            raise ValueError("SBTranscriberFunction only supports mono audio buffers")
 
         texts = []
         for batched_audios in medkit.core.utils.batch_list(audios, self.batch_size):

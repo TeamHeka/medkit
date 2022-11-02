@@ -1466,8 +1466,8 @@ python-versions = ">=3.8"
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
     {version = ">=1.20.3", markers = "python_version < \"3.10\""},
+    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
 ]
 python-dateutil = ">=2.8.1"
 pytz = ">=2020.1"
@@ -3082,13 +3082,13 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 
 [extras]
 hf-entity-matcher = ["torch", "transformers"]
-hf-transcriber = ["torchaudio", "transformers"]
+hf-transcriber-function = ["torchaudio", "transformers"]
 hf-translator = ["sacremoses", "sentencepiece", "torch", "transformers"]
 optional = ["feather-format", "packaging", "pandas", "pandas", "PyRuSH", "quickumls", "resampy", "sacremoses", "sentencepiece", "spacy", "torch", "torchaudio", "transformers", "webrtcvad"]
 quick-umls = ["packaging", "quickumls"]
 resampler = ["resampy"]
 rush-sentence-tokenizer = ["PyRuSH"]
-sb-transcriber = ["speechbrain", "torch", "transformers"]
+sb-transcriber-function = ["speechbrain", "torch", "transformers"]
 spacy = ["spacy"]
 umls-coder-normalizer = ["feather-format", "pandas", "pandas", "torch", "transformers"]
 webrtc-voice-detector = ["webrtcvad"]
@@ -3096,7 +3096,7 @@ webrtc-voice-detector = ["webrtcvad"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.1, <4.0"
-content-hash = "0f73a38ffd5f9e9f9f53a6e73558e71a3d6e9ef615209f30fcb8b14459c81851"
+content-hash = "4f25957d27ca89060dae3cc6b2cf8bf43ea62760d503f67c2baa6bc58f68f454"
 
 [metadata.files]
 alabaster = [
@@ -4518,10 +4518,12 @@ pyrsistent = [
 ]
 pyrush = [
     {file = "PyRuSH-1.0.7-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:fb6110e9e2469ec90e4c9e3b6d3212c83e0c4ef8a606832cf8d49f1fe1c9a52b"},
+    {file = "PyRuSH-1.0.7-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:3a69cc0cb4a25a55306d852bc1c551a7e7fd6a34d812694f15b79d428b0cb9f0"},
     {file = "PyRuSH-1.0.7-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:23f64514d5f0cd629aecf0d27cb7408f0ec91b3c300734a01e69e3276660dac7"},
     {file = "PyRuSH-1.0.7-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:018a936b043310bbd44ad2641648cd1d0f309983a4cf012d17798d0adb58bd55"},
     {file = "PyRuSH-1.0.7-cp310-cp310-win_amd64.whl", hash = "sha256:4449700da064e12d8f24fdb8693b154147a453b9936f9e8bf689f85dc23f733c"},
     {file = "PyRuSH-1.0.7-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:69d424a6904f24937a17bb17655295f873ed40376eb96d8546b8e249a96f2b16"},
+    {file = "PyRuSH-1.0.7-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:ca8891154c894235f55d032dab7209e4ad933131ca324d5bca5c06d309e7844c"},
     {file = "PyRuSH-1.0.7-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c59adfb6fe94a78bc27dd2616e61fb2dac1471602895b92fa8eaa5c20784cd6"},
     {file = "PyRuSH-1.0.7-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:01237fd3dbe1125be69bf1652a8f3cdda5d90ac6f41f8b5fbb694389b7bf4a3a"},
     {file = "PyRuSH-1.0.7-cp311-cp311-win_amd64.whl", hash = "sha256:f131f1340d495006673d7d153f741df3cdf81324fbed8b9172e47f9f97a82600"},
@@ -4534,10 +4536,12 @@ pyrush = [
     {file = "PyRuSH-1.0.7-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:41cf65e3c5d2091d497a566db5d3f29c1f6059638033c72d9492653ad3e9db7b"},
     {file = "PyRuSH-1.0.7-cp37-cp37m-win_amd64.whl", hash = "sha256:9852a85f5bf00ef2676ccc7cadc5c18d4da36ebe005b0a97a9576d6793008c74"},
     {file = "PyRuSH-1.0.7-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:b0464ca44d8f0f2af70beca8921cb799f7f97c4fd61f016372c26f1e7135f236"},
+    {file = "PyRuSH-1.0.7-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:667637b9990832195f32bdd37239ce8152b3eea981989b402cc381b1972b045a"},
     {file = "PyRuSH-1.0.7-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:62c7f569b37d4b5b9bf0d6f6dcbd2ac430575f8cd6079a709d4af32465a0b001"},
     {file = "PyRuSH-1.0.7-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:352b94ea2f3d6f62fa0cea5dcc3b10440cebbad4b919a0ca72da23abe4297c94"},
     {file = "PyRuSH-1.0.7-cp38-cp38-win_amd64.whl", hash = "sha256:996b35ce2025451b6da83211841129b3552f5eb795f2fc8b2743221a0343e22f"},
     {file = "PyRuSH-1.0.7-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:3e14702e67435f4c201bed86c5a8c0ec56360c9e285d31a685ed8136bca03643"},
+    {file = "PyRuSH-1.0.7-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:578e4a02fd2fbc4be728d4b44580da88fcd26722cd036b8735531db7471905a7"},
     {file = "PyRuSH-1.0.7-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f99cb99d3b44a1ebb74294316fab5ce40850338ef3489fa6678ad33fcc815a27"},
     {file = "PyRuSH-1.0.7-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:a47768eca84104a92f857121105e3cb13e2e8144585bb63d35dbbc7c18920222"},
     {file = "PyRuSH-1.0.7-cp39-cp39-win_amd64.whl", hash = "sha256:9927406efd63f4e357fe0750e925ce52eef7f959446a9a46937e8843d36593db"},

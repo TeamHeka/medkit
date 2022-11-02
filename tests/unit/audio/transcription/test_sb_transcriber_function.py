@@ -8,7 +8,7 @@ import numpy as np  # noqa: E402
 import torch  # noqa: E402
 
 from medkit.core.audio import MemoryAudioBuffer  # noqa: E402
-from medkit.audio.transcription import SBTranscriber  # noqa: E402
+from medkit.audio.transcription import SBTranscriberFunction  # noqa: E402
 
 _MOCK_MODEL_NAME = "mock-model"
 _SAMPLE_RATE = 16000
@@ -64,21 +64,23 @@ def _gen_audio(nb_samples):
 def test_basic():
     """Basic behavior"""
 
-    transcriber = SBTranscriber(model=_MOCK_MODEL_NAME, needs_decoder=False)
-    texts = transcriber.run([_gen_audio(1000), _gen_audio(2000)])
+    transcriber_func = SBTranscriberFunction(
+        model=_MOCK_MODEL_NAME, needs_decoder=False
+    )
+    texts = transcriber_func.transcribe([_gen_audio(1000), _gen_audio(2000)])
     assert texts == ["Audio has 1000 samples.", "Audio has 2000 samples."]
 
 
 def test_test_no_formatting():
     """No reformatting of transcribed text (raw text as returned by speechbrain ASR)"""
 
-    transcriber = SBTranscriber(
+    transcriber_func = SBTranscriberFunction(
         model=_MOCK_MODEL_NAME,
         needs_decoder=False,
         add_trailing_dot=False,
         capitalize=False,
     )
-    texts = transcriber.run([_gen_audio(1000)])
+    texts = transcriber_func.transcribe([_gen_audio(1000)])
     assert texts == ["AUDIO HAS 1000 SAMPLES"]
 
 
@@ -95,11 +97,11 @@ def test_batch(batch_size):
         expected_text = _TEXT_TEMPLATE.format(nb_samples).capitalize() + "."
         expected_texts.append(expected_text)
 
-    transcriber = SBTranscriber(
+    transcriber_func = SBTranscriberFunction(
         model=_MOCK_MODEL_NAME,
         needs_decoder=False,
         batch_size=batch_size,
     )
 
-    texts = transcriber.run(audios)
+    texts = transcriber_func.transcribe(audios)
     assert texts == expected_texts

@@ -1,4 +1,4 @@
-__all__ = ["HFTranscriber"]
+__all__ = ["HFTranscriberFunction"]
 
 from typing import List
 
@@ -6,11 +6,11 @@ import transformers
 from transformers import AutomaticSpeechRecognitionPipeline
 
 from medkit.core.audio import AudioBuffer
-from medkit.audio.transcription.doc_transcriber import AudioTranscriberDescription
+from medkit.audio.transcription.doc_transcriber import TranscriberFunctionDescription
 
 
-class HFTranscriber:
-    """Audio transcriber based on a Hugging Face transformers model.
+class HFTranscriberFunction:
+    """Transcriber function based on a Hugging Face transformers model.
 
     To be used within a
     :class:`~medkit.audio.transcription.doc_transcriber.DocTranscriber`
@@ -48,7 +48,7 @@ class HFTranscriber:
         if not task == "automatic-speech-recognition":
             raise ValueError(
                 f"Model {self.model_name} is not associated to a speech"
-                " recognition task and cannot be use with HFTranscriber"
+                " recognition task and cannot be use with HFTranscriberFunction"
             )
 
         self._pipeline = transformers.pipeline(
@@ -60,16 +60,18 @@ class HFTranscriber:
         )
 
     @property
-    def description(self) -> AudioTranscriberDescription:
+    def description(self) -> TranscriberFunctionDescription:
         config = dict(
             model_name=self.model_name,
             add_trailing_dot=self.add_trailing_dot,
             capitalize=self.capitalize,
             device=self.device,
         )
-        return AudioTranscriberDescription(name=self.__class__.__name__, config=config)
+        return TranscriberFunctionDescription(
+            name=self.__class__.__name__, config=config
+        )
 
-    def run(self, audios: List[AudioBuffer]) -> List[str]:
+    def transcribe(self, audios: List[AudioBuffer]) -> List[str]:
         audio_dicts_gen = (
             {
                 "raw": audio.read().reshape((-1,)),

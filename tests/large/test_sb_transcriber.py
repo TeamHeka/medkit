@@ -7,7 +7,7 @@ pytest.importorskip(modname="speechbrain", reason="speechbrain is not installed"
 import numpy as np  # noqa: E402
 
 from medkit.core.audio import FileAudioBuffer, MemoryAudioBuffer  # noqa: E402
-from medkit.audio.transcription import SBTranscriber  # noqa: E402
+from medkit.audio.transcription import SBTranscriberFunction  # noqa: E402
 
 
 _MODEL = "speechbrain/asr-wav2vec2-commonvoice-en"
@@ -18,8 +18,8 @@ _EXPECTED_TEXT = "Hello this is my voice i m speaking to you."
 def test_basic():
     """Basic behavior"""
 
-    transcriber = SBTranscriber(model=_MODEL, needs_decoder=True)
-    texts = transcriber.run([_AUDIO])
+    transcriber_func = SBTranscriberFunction(model=_MODEL, needs_decoder=True)
+    texts = transcriber_func.transcribe([_AUDIO])
     assert texts == [_EXPECTED_TEXT]
 
 
@@ -27,7 +27,7 @@ def test_basic():
 def test_batch(batch_size):
     """Various batch sizes (smallest, half, exact number of items, more than)"""
 
-    transcriber = SBTranscriber(
+    transcriber_func = SBTranscriberFunction(
         model=_MODEL,
         needs_decoder=True,
         batch_size=batch_size,
@@ -43,9 +43,9 @@ def test_batch(batch_size):
         audios.append(audio)
 
     # transcribe batch of audios
-    texts = transcriber.run(audios)
+    texts = transcriber_func.transcribe(audios)
     assert len(texts) == len(audios)
 
     for audio, text in zip(audios, texts):
-        expected_text = transcriber.run([audio])[0]
+        expected_text = transcriber_func.transcribe([audio])[0]
         assert text == expected_text

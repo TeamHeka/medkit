@@ -1,7 +1,7 @@
 from medkit.audio.transcription.doc_transcriber import (
     DocTranscriber,
-    AudioTranscriber,
-    AudioTranscriberDescription,
+    TranscriberFunction,
+    TranscriberFunctionDescription,
 )
 from medkit.core import Attribute, ProvTracer, DictStore
 from medkit.core.audio import (
@@ -18,11 +18,11 @@ _AUDIO_LABEL = "speech"
 _TEXT_LABEL = "section"
 
 
-class _MockAudioTranscriber(AudioTranscriber):
+class _MockTranscriberFunction(TranscriberFunction):
     def __init__(self) -> None:
         self.count = 0
 
-    def run(self, audios):
+    def transcribe(self, audios):
         texts = []
         for _ in audios:
             self.count += 1
@@ -31,7 +31,7 @@ class _MockAudioTranscriber(AudioTranscriber):
         return texts
 
     def description(self):
-        return AudioTranscriberDescription("AudioTranscriber")
+        return TranscriberFunctionDescription("TranscriberFunc")
 
 
 def _get_audio_segment(audio_span):
@@ -62,7 +62,7 @@ def test_basic():
     doc_transcriber = DocTranscriber(
         input_label=_AUDIO_LABEL,
         output_label=_TEXT_LABEL,
-        transcriber=_MockAudioTranscriber(),
+        transcriber_func=_MockTranscriberFunction(),
     )
     text_docs = doc_transcriber.run(audio_docs)
     assert len(text_docs) == len(audio_docs)
@@ -126,7 +126,7 @@ def test_prov():
     doc_transcriber = DocTranscriber(
         input_label=_AUDIO_LABEL,
         output_label=_TEXT_LABEL,
-        transcriber=_MockAudioTranscriber(),
+        transcriber_func=_MockTranscriberFunction(),
     )
     prov_tracer = ProvTracer()
     doc_transcriber.set_prov_tracer(prov_tracer)
@@ -167,7 +167,7 @@ def test_attrs_to_copy():
     doc_transcriber = DocTranscriber(
         input_label=_AUDIO_LABEL,
         output_label=_TEXT_LABEL,
-        transcriber=_MockAudioTranscriber(),
+        transcriber_func=_MockTranscriberFunction(),
         attrs_to_copy=["speaker"],
     )
     text_doc = doc_transcriber.run([audio_doc])[0]
@@ -207,7 +207,7 @@ def test_custom_full_text():
     doc_transcriber = _CustomDocTranscriber(
         input_label=_AUDIO_LABEL,
         output_label=_TEXT_LABEL,
-        transcriber=_MockAudioTranscriber(),
+        transcriber_func=_MockTranscriberFunction(),
     )
     text_doc = doc_transcriber.run([audio_doc])[0]
 
@@ -234,7 +234,7 @@ def test_store():
     doc_transcriber = DocTranscriber(
         input_label=_AUDIO_LABEL,
         output_label=_TEXT_LABEL,
-        transcriber=_MockAudioTranscriber(),
+        transcriber_func=_MockTranscriberFunction(),
     )
     text_docs = doc_transcriber.run([audio_doc_1, audio_doc_2])
 

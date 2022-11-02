@@ -74,7 +74,7 @@ hf-entity-matcher = [
     "torch",
     "transformers",
 ]
-hf-transcriber = [
+hf-transcriber-function = [
     "torchaudio",
     "transformers"
 ]
@@ -90,7 +90,7 @@ quick-umls = [
 ]
 resampler = ["resampy"]
 rush-sentence-tokenizer = ["PyRush"]
-sb-transcriber = [
+sb-transcriber-function = [
     "speechbrain",
     "torch",
     "transformers",

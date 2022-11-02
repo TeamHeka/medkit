@@ -50,8 +50,11 @@ This section lists audio segmentation operations. They are part of the
 This section lists operations and other components to use to perform audio transcription.
 They are part of the `medkit.audio.transcription` module.
 
-`DocTranscriber` is the operation handling the transformation of `AudioDocument` instances
-into `TranscribedDocument` instances (subclas of `TextDocument`). The actual conversion from text to audio is delegated to components complying with the `AudioTranscriber` protocol. `HFTranscriber` is such an implementation of `AudioTranscriber`, using a HuggingFace transformer model.
+`DocTranscriber` is the operation handling the transformation of `AudioDocument`
+instances into `TranscribedDocument` instances (subclas of `TextDocument`). The
+actual conversion from text to audio is delegated to components complying with
+the `TranscriberFunction` protocol. `HFTranscriberFunction` is such an
+implementation of `TranscriberFunction`, using a HuggingFace transformer model.
 
 ### DocTranscriber
 
@@ -67,24 +70,26 @@ into `TranscribedDocument` instances (subclas of `TextDocument`). The actual con
     :members:
 ```
 
-### HFTranscriber
+### HFTranscriberFunction
 
 ```{important}
-`HFTranscriber` needs additional dependencies that can be installed with `pip install medkit[hf-transcriber]`
+`HFTranscriberFunction` needs additional dependencies that can be installed with
+`pip install medkit[hf-transcriber-function]`
 ```
 
 ```{eval-rst}
-.. automodule:: medkit.audio.transcription.hf_transcriber
+.. automodule:: medkit.audio.transcription.hf_transcriber_function
     :members:
 ```
 
-### SBTranscriber
+### SBTranscriberFunction
 
 ```{important}
-`SBTranscriber` needs additional dependencies that can be installed with `pip install medkit[sb-transcriber]`
+`SBTranscriberFunction` needs additional dependencies that can be installed with
+`pip install medkit[sb-transcriber-function]`
 ```
 
 ```{eval-rst}
-.. automodule:: medkit.audio.transcription.sb_transcriber
+.. automodule:: medkit.audio.transcription.sb_transcriber_function
     :members:
 ```
