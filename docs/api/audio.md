@@ -53,8 +53,9 @@ They are part of the `medkit.audio.transcription` module.
 `DocTranscriber` is the operation handling the transformation of `AudioDocument`
 instances into `TranscribedDocument` instances (subclas of `TextDocument`). The
 actual conversion from text to audio is delegated to components complying with
-the `TranscriberFunction` protocol. `HFTranscriberFunction` is such an
-implementation of `TranscriberFunction`, using a HuggingFace transformer model.
+the `TranscriberFunction` protocol. `HFTranscriberFunction` and
+`SBTranscriberFunction` are implementations of `TranscriberFunction`, allowing
+to use HuggingFace transformer models and speechbrain models respectively.
 
 ### DocTranscriber
 
