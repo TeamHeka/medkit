@@ -6,7 +6,10 @@ import numpy as np
 def _check_len_labels(*all_labels):
     lengths = set(len(labels) for labels in all_labels)
     if len(lengths) > 1:
-        raise ValueError("The lists have different sizes")
+        raise ValueError(
+            f"The lists have different sizes. The lists found have {lengths} as their"
+            " lengths"
+        )
 
 
 def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
@@ -19,7 +22,7 @@ def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
     It could be defined in terms of numbers of agreements and number of classified items.
 
     .. math::
-        \\kappa = (n_a - n_e) / (n - n_e)
+        \\kappa = \\frac{n_a - n_e}{n - n_e}
 
     where :math:`n_a` is the number of agreements, :math:`n_e` is the sum of
     agreements by chance and :math:`n` is the number of classified items [2].
@@ -67,3 +70,140 @@ def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
 
     kappa = (n_agreements - n_expected) / (n_items - n_expected)
     return kappa
+
+
+def _get_values_by_unit_matrix(
+    reliability_data: np.ndarray, labels_set: np.ndarray
+) -> np.ndarray:
+    """
+    Return the label counts given the annotators_data.
+
+    Parameters
+    ----------
+    reliability_data : ndarray, with shape (m_annotators, n_samples)
+        numpy array with labels given to `n_samples` by `m_annotators`
+        The missing labels are represented with `None`.
+
+    labels_set : ndarray, with shape (n_labels,)
+        Possible labels the item can take.
+
+    Returns
+    -------
+    values_by_unit : ndarray, with shape (n_labels, n_samples)
+        Number of annotators that assigned a certain label by annotation.
+        Where `n_labels` is the number of possible labels and `n_samples`
+        is the number of annotations.
+    """
+    ann_data_expanded = np.expand_dims(reliability_data, 2)
+    return np.sum(ann_data_expanded == labels_set, axis=0).T
+
+
+def _compute_observed_disagreement(values_by_unit_matrix: np.ndarray) -> float:
+    """
+    Return the observed disagreement given values-by-unit matrix.
+
+    Parameters
+    ----------
+    values_by_unit_matrix : ndarray, with shape (n_labels, n_samples)
+        Count of annotators that assigned a certain label by annotation.
+
+    Returns
+    -------
+    do : float
+        observed disagreement among labels assigned to annotations
+    """
+    # select only units with disagreement
+    # units with more than two assigned values
+    units_to_keep = np.count_nonzero(values_by_unit_matrix, 0) > 1
+    matrix_disagreement = values_by_unit_matrix[:, units_to_keep]
+    total_by_unit = matrix_disagreement.sum(0)
+    do = 0
+    for u, unit in enumerate(matrix_disagreement.T):
+        unit = unit[unit > 0]
+        for n in range(0, len(unit)):
+            # only nominal weight is supported in this function
+            p_unit = np.dot(unit[n], unit[n + 1 :]) / (total_by_unit[u] - 1)
+            do += np.sum(p_unit)
+    return do
+
+
+def _compute_expected_disagreement(values_by_unit_matrix: np.ndarray) -> float:
+    """
+    Return the expected disagreement given values-by-unit matrix.
+
+    Parameters
+    ----------
+     ----------
+    values_by_unit_matrix : ndarray, with shape (n_labels, n_samples)
+        Count of annotators that assigned a certain label by annotation.
+
+    Returns
+    -------
+    de : float
+        expected disagreement annotators will have by chance
+    """
+    # all units with at least 1 value
+    paried_units = values_by_unit_matrix.sum(0) > 1
+    total_by_value = values_by_unit_matrix[:, paried_units].sum(1)
+
+    de = 0
+    # only nominal weight is supported in this function
+    for n_c in range(0, len(total_by_value) - 1):
+        de += np.sum(np.dot(total_by_value[n_c], total_by_value[n_c + 1 :]))
+    return de
+
+
+def krippendorff_alpha(all_annotators_data: List[List[Union[None, str, int]]]) -> float:
+    """
+    Compute Krippendorff's alpha: a coefficient of agreement among many
+    annotators.
+
+    This coefficient is a generalization of several reliability indices.
+    The general form is:
+
+    .. math::
+        \\alpha = 1 - \\frac{D_o}{D_e}
+
+    where :math:`D_o` is the observed disagreement among labels assigned to
+    units or annotations and :math:`D_e` is the disagreement between annotators
+    attributable to chance. The arguments of the disagreement measures are values
+    in coincidence matrices.
+
+    This function implements the general computational form proposed in [3],
+    but only supports binaire or nominal labels.
+
+    #TODO: fix link to references section
+
+    Parameters
+    ----------
+    all_annotators_data : array_like, (m_annotators,n_samples)
+        Reliability_data, list or array of labels given to `n_samples` by `m_annotators`.
+        Missing labels are represented with `None`
+
+    Returns
+    -------
+    alpha : float
+        The alpha coefficient, a number between 0 and 1.
+        A value of 0 indicates the absence of reliability, and
+        a value of 1 indicates perfect reliability.
+
+    References
+    ----------
+    .. [3] K. Krippendorff, “Computing Krippendorff's alpha-reliability,”
+            ScholarlyCommons, 25-Jan-2011, pp. 8-10. [Online].
+            Available: https://repository.upenn.edu/asc_papers/43/.
+    """
+    _check_len_labels(*all_annotators_data)
+
+    all_annotators_data = np.asarray(all_annotators_data)
+    labels_set = [cat for cat in set(all_annotators_data.flatten()) if cat is not None]
+
+    assert len(labels_set) > 1, "There must be more than one label in annotators data"
+
+    values_count = _get_values_by_unit_matrix(all_annotators_data, labels_set)
+    do = _compute_observed_disagreement(values_count)
+    de = _compute_expected_disagreement(values_count)
+    total_paried_values = np.sum(values_count[:, values_count.sum(0) > 1])
+
+    alpha = 1 - (total_paried_values - 1) * (do / de)
+    return alpha
