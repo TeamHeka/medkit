@@ -51,7 +51,7 @@ This section lists operations and other components to use to perform audio trans
 They are part of the `medkit.audio.transcription` module.
 
 `DocTranscriber` is the operation handling the transformation of `AudioDocument`
-instances into `TranscribedDocument` instances (subclas of `TextDocument`). The
+instances into `TranscribedDocument` instances (subclass of `TextDocument`). The
 actual conversion from text to audio is delegated to components complying with
 the `TranscriberFunction` protocol. `HFTranscriberFunction` and
 `SBTranscriberFunction` are implementations of `TranscriberFunction`, allowing
