@@ -15,7 +15,7 @@ from medkit.audio.segmentation.webrtc_voice_detector import (  # noqa: E402
 )
 from tests.audio_utils import generate_silence, signals_are_equal  # noqa: E402
 
-_PATH_TO_VOICE_FILE = Path(__file__).parent / ".." / "resources" / "voice.ogg"
+_PATH_TO_VOICE_FILE = Path("tests/data/audio/voice.ogg")
 _OUTPUT_LABEL = "voice"
 _SPAN_OFFSET = 10.0
 _DETECTION_MARGIN = 0.5

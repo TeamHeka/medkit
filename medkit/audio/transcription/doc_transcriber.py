@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["DocTranscriber", "AudioTranscriber", "AudioTranscriberDescription"]
+__all__ = ["DocTranscriber", "TranscriberFunction", "TranscriberFunctionDescription"]
 
 import dataclasses
 from typing import Any, Dict, List, Optional
@@ -12,14 +12,14 @@ from medkit.core.audio import AudioDocument, AudioBuffer, Segment as AudioSegmen
 from medkit.core.text import Segment as TextSegment, Span as TextSpan
 
 
-class AudioTranscriber(Protocol):
+class TranscriberFunction(Protocol):
     """Protocol for components in charge of the actual speech-to-text transcription
     to use with :class:`~.DocTranscriber`"""
 
     """Description of the transcriber"""
-    description: AudioTranscriberDescription
+    description: TranscriberFunctionDescription
 
-    def run(self, audios: List[AudioBuffer]) -> List[str]:
+    def transcribe(self, audios: List[AudioBuffer]) -> List[str]:
         """Convert audio buffers into strings by performing speech-to-text.
 
         Parameters
@@ -36,14 +36,14 @@ class AudioTranscriber(Protocol):
 
 
 @dataclasses.dataclass
-class AudioTranscriberDescription:
-    """Description of a specific instance of an audio transcriber (similarly to
+class TranscriberFunctionDescription:
+    """Description of a specific instance of a transcriber function (similarly to
     :class:`~medkit.core.operation_desc.OperationDescription`).
 
     Parameters
     ----------
     name:
-        The name of the transcriber (typically the class name).
+        The name of the transcriber function (typically the class name).
     config:
         The specific configuration of the instance.
     """
@@ -80,7 +80,7 @@ class DocTranscriber(Operation):
     audio document uses its own private store, then the text document will also
     have its own private store.
 
-    The actual transcription task is delegated to an :class:`~.AudioTranscriber`
+    The actual transcription task is delegated to a :class:`~.TranscriberFunction`
     that must be provided.
     """
 
@@ -88,7 +88,7 @@ class DocTranscriber(Operation):
         self,
         input_label: str,
         output_label: str,
-        transcriber: AudioTranscriber,
+        transcriber_func: TranscriberFunction,
         attrs_to_copy: Optional[List[str]] = None,
         op_id: Optional[str] = None,
     ):
@@ -99,9 +99,9 @@ class DocTranscriber(Operation):
             Label of audio segments that should be transcribed.
         output_label:
             Label of generated text segments.
-        transcriber:
-            Transcription component in charge of actually transforming each audio signal
-            into text.
+        transcriber_func:
+            Transcription component in charge of actually transforming each
+            audio signal into text.
         attrs_to_copy:
             Labels of attributes that should be copied from the original audio segments
             to the transcribed text segments.
@@ -119,7 +119,7 @@ class DocTranscriber(Operation):
 
         self.input_label = input_label
         self.output_label = output_label
-        self.transcriber = transcriber
+        self.transcriber_func = transcriber_func
         self.attrs_to_copy = attrs_to_copy
 
     def run(self, audio_docs: List[AudioDocument]) -> List[TranscribedDocument]:
@@ -142,7 +142,7 @@ class DocTranscriber(Operation):
         audio_segs = audio_doc.get_annotations_by_label(self.input_label)
         # transcribe them to text
         audios = [seg.audio for seg in audio_segs]
-        texts = self.transcriber.run(audios)
+        texts = self.transcriber_func.transcribe(audios)
 
         # rebuild full text and segments from transcribed texts
         full_text = ""

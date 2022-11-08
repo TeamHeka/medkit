@@ -5,7 +5,7 @@ __all__ = ["HFTranslator"]
 from collections import defaultdict
 import dataclasses
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Tuple, Union
+from typing import Dict, Iterator, List, Tuple, Union
 
 import torch
 import transformers
@@ -13,6 +13,7 @@ from transformers import TranslationPipeline, BertModel, BertTokenizerFast
 
 from medkit.core import Operation
 from medkit.core.text import Segment, ModifiedSpan, span_utils
+import medkit.core.utils
 
 
 @dataclasses.dataclass(frozen=True)
@@ -269,8 +270,12 @@ class _Aligner:
         ), "Must have same number of source and target texts"
 
         aligments = []
-        source_text_batches_iter = _batchify(source_texts, self._batch_size)
-        target_text_batches_iter = _batchify(target_texts, self._batch_size)
+        source_text_batches_iter = medkit.core.utils.batch_list(
+            source_texts, self._batch_size
+        )
+        target_text_batches_iter = medkit.core.utils.batch_list(
+            target_texts, self._batch_size
+        )
         for source_text_batch, target_text_batch in zip(
             source_text_batches_iter, target_text_batches_iter
         ):
@@ -359,8 +364,3 @@ class _Aligner:
             target_ranges.sort()
 
         return word_alignment
-
-
-def _batchify(list: List[Any], batch_size: int) -> Iterator[List[Any]]:
-    for i in range(0, len(list), batch_size):
-        yield list[i : i + batch_size]

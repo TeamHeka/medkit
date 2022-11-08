@@ -43,6 +43,7 @@ sphinx:
     autodoc_mock_imports:
       - resampy
       - torch
+      - torchaudio
       - transformers
       - quickumls
       - pandas

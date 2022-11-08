@@ -12,6 +12,7 @@ import yaml
 
 from medkit.core import Operation, Attribute
 from medkit.core.text import Entity
+import medkit.core.utils
 from medkit.text.ner.umls_utils import (
     load_umls,
     preprocess_term_to_match,
@@ -235,7 +236,7 @@ class UMLSCoderNormalizer(Operation):
             umls_embeddings_files = sorted(
                 self.cache_dir.glob(f"*{_UMLS_EMBEDDINGS_FILE_EXT}")
             )
-            for files in _batchify_list(
+            for files in medkit.core.utils.batch_list(
                 umls_embeddings_files, self.nb_umls_embeddings_chunks
             ):
                 umls_embeddings = self._load_umls_embeddings(files)
@@ -339,7 +340,7 @@ class UMLSCoderNormalizer(Operation):
         if show_progress:
             print("Loading UMLS entries and computing embeddings...")
         for i, chunk_entries in enumerate(
-            _batchify_iter(entries_iter, _UMLS_EMBEDDINGS_CHUNK_SIZE)
+            medkit.core.utils.batch_iter(entries_iter, _UMLS_EMBEDDINGS_CHUNK_SIZE)
         ):
             # get preprocess version of each term for matching
             terms_to_match = [
@@ -429,20 +430,3 @@ class _EmbeddingsPipeline(FeatureExtractionPipeline):
             norm = torch.norm(embeddings, p=2, dim=1, keepdim=True).clamp(min=self._EPS)
             embeddings = embeddings / norm
         return embeddings
-
-
-def _batchify_iter(iter: Iterator[Any], batch_size: int) -> Iterator[List[Any]]:
-    while True:
-        batch = []
-        for _ in range(batch_size):
-            try:
-                batch.append(next(iter))
-            except StopIteration:
-                yield batch
-                return
-        yield batch
-
-
-def _batchify_list(list: List[Any], batch_size: int) -> Iterator[List[Any]]:
-    for i in range(0, len(list), batch_size):
-        yield list[i : i + batch_size]

@@ -45,6 +45,7 @@ resampy = {version = "^0.4", optional = true}
 sacremoses = {version = "*", optional = true}
 sentencepiece = {version = "*", optional = true}
 spacy = {version = "^3.4", optional = true}
+speechbrain = {version = "^0.5", optional = true}
 torch = {version ="^1.0", optional = true}
 torchaudio = {version ="^0.12", optional = true}
 transformers = {version = "^4.21", optional = true}
@@ -73,7 +74,7 @@ hf-entity-matcher = [
     "torch",
     "transformers",
 ]
-hf-transcriber = [
+hf-transcriber-function = [
     "torchaudio",
     "transformers"
 ]
@@ -89,6 +90,11 @@ quick-umls = [
 ]
 resampler = ["resampy"]
 rush-sentence-tokenizer = ["PyRush"]
+sb-transcriber-function = [
+    "speechbrain",
+    "torch",
+    "transformers",
+]
 spacy = ["spacy"]
 umls-coder-normalizer = [
     "feather-format",

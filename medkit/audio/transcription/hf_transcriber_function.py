@@ -1,4 +1,4 @@
-__all__ = ["HFTranscriber"]
+__all__ = ["HFTranscriberFunction"]
 
 from typing import List
 
@@ -6,11 +6,11 @@ import transformers
 from transformers import AutomaticSpeechRecognitionPipeline
 
 from medkit.core.audio import AudioBuffer
-from medkit.audio.transcription.doc_transcriber import AudioTranscriberDescription
+from medkit.audio.transcription.doc_transcriber import TranscriberFunctionDescription
 
 
-class HFTranscriber:
-    """Audio transcriber based on a Hugging Face transformers model.
+class HFTranscriberFunction:
+    """Transcriber function based on a Hugging Face transformers model.
 
     To be used within a
     :class:`~medkit.audio.transcription.doc_transcriber.DocTranscriber`
@@ -27,12 +27,14 @@ class HFTranscriber:
         Parameters
         ----------
         model:
-            Name of the ASR model on the Hugging Face models hub.
-            Must be a model compatible with the `AutomaticSpeechRecognitionPipeline` transformers class.
+            Name of the ASR model on the Hugging Face models hub. Must be a
+            model compatible with the `AutomaticSpeechRecognitionPipeline`
+            transformers class.
         add_trailing_dot:
-            If `True`, a dot will be add at the end of each transcription text.
+            If `True`, a dot will be added at the end of each transcription text.
         capitalize:
-            It `True`, the first letter of each transcription text will be uppercased.
+            It `True`, the first letter of each transcription text will be
+            uppercased and the rest lowercased.
         device:
             Device to use for pytorch models. Follows the Hugging Face convention
             (`-1` for cpu and device number for gpu, for instance `0` for "cuda:0")
@@ -46,7 +48,7 @@ class HFTranscriber:
         if not task == "automatic-speech-recognition":
             raise ValueError(
                 f"Model {self.model_name} is not associated to a speech"
-                " recognition task and cannot be use with HFTranscriber"
+                " recognition task and cannot be use with HFTranscriberFunction"
             )
 
         self._pipeline = transformers.pipeline(
@@ -58,16 +60,18 @@ class HFTranscriber:
         )
 
     @property
-    def description(self) -> AudioTranscriberDescription:
+    def description(self) -> TranscriberFunctionDescription:
         config = dict(
             model_name=self.model_name,
             add_trailing_dot=self.add_trailing_dot,
             capitalize=self.capitalize,
             device=self.device,
         )
-        return AudioTranscriberDescription(name=self.__class__.__name__, config=config)
+        return TranscriberFunctionDescription(
+            name=self.__class__.__name__, config=config
+        )
 
-    def run(self, audios: List[AudioBuffer]) -> List[str]:
+    def transcribe(self, audios: List[AudioBuffer]) -> List[str]:
         audio_dicts_gen = (
             {
                 "raw": audio.read().reshape((-1,)),
