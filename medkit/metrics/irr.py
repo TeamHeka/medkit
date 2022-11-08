@@ -17,7 +17,7 @@ def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
     Compute Cohen's kappa: a coefficient of agreement between two annotators.
 
     This function computes Cohen's kappa [1] for qualitative data. It measures
-    the agreement between two annotators who classify `n` items in `C` labels.
+    the agreement between two annotators who classify `n` items in `n_labels`.
 
     It could be defined in terms of numbers of agreements and number of classified items.
 
@@ -42,6 +42,11 @@ def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
         A value of 0 indicates no aggrement between annotators, and
         a value of 1 indicates perfect agreement. This coefficient is
         sensitive to imbalanced data.
+
+    Raises
+    ------
+    ValueError
+        Raise if `y1` or `y2` differs in size
 
     References
     ----------
@@ -117,6 +122,7 @@ def _compute_observed_disagreement(values_by_unit_matrix: np.ndarray) -> float:
     units_to_keep = np.count_nonzero(values_by_unit_matrix, 0) > 1
     matrix_disagreement = values_by_unit_matrix[:, units_to_keep]
     total_by_unit = matrix_disagreement.sum(0)
+
     do = 0
     for u, unit in enumerate(matrix_disagreement.T):
         unit = unit[unit > 0]
@@ -133,7 +139,6 @@ def _compute_expected_disagreement(values_by_unit_matrix: np.ndarray) -> float:
 
     Parameters
     ----------
-     ----------
     values_by_unit_matrix : ndarray, with shape (n_labels, n_samples)
         Count of annotators that assigned a certain label by annotation.
 
@@ -187,11 +192,28 @@ def krippendorff_alpha(all_annotators_data: List[List[Union[None, str, int]]]) -
         A value of 0 indicates the absence of reliability, and
         a value of 1 indicates perfect reliability.
 
+    Raises
+    ------
+    ValueError
+        Raise if any list of labels within `all_annotators_data` differs in size
+    AssertionError
+        Raise if `all_annotators_data` has only one label to be compared
+
     References
     ----------
     .. [3] K. Krippendorff, “Computing Krippendorff's alpha-reliability,”
             ScholarlyCommons, 25-Jan-2011, pp. 8-10. [Online].
-            Available: https://repository.upenn.edu/asc_papers/43/.
+            Available: https://repository.upenn.edu/asc_papers/43/
+
+    Examples
+    --------
+    Three annotators labelled six items. Some labels are missing.
+
+    >>> annotator_A = ['yes','yes','no','no','yes',None]
+    >>> annotator_B = [None,'yes','no','yes','yes','no']
+    >>> annotator_C = ['yes','no','no','yes','yes',None]
+    >>> krippendorff_alpha([annotator_A,annotator_B,annotator_C])
+    0.42222222222222217
     """
     _check_len_labels(*all_annotators_data)
 
