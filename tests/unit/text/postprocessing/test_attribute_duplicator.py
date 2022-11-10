@@ -44,13 +44,13 @@ def test_default_attribute_duplicator():
     assert all(not target.get_attrs() for target in targets)
 
     # define attr duplicators
-    propagator_1 = AttributeDuplicator(attr_labels=["is_family"])
-    propagator_2 = AttributeDuplicator(attr_labels=["is_negated"])
+    duplicator_1 = AttributeDuplicator(attr_labels=["is_family"])
+    duplicator_2 = AttributeDuplicator(attr_labels=["is_negated"])
 
     # is_family was 'detected' in sentences
-    propagator_1.run(sentences, targets)
+    duplicator_1.run(sentences, targets)
     # is_negated was 'detected' in syntagmes
-    propagator_2.run(syntagmes, targets)
+    duplicator_2.run(syntagmes, targets)
 
     # check new attrs
     assert all(len(target.get_attrs()) == 2 for target in targets)
@@ -72,7 +72,7 @@ def test_default_attribute_duplicator():
     assert family.value
 
 
-def test_duplicate_several_attrs():
+def test_duplicate_a_list_of_attrs_labels():
     doc = _get_doc()
     sentences = doc.get_annotations_by_label("sentence")
     targets = doc.get_annotations_by_label("disease")
@@ -106,16 +106,16 @@ def test_provenance():
     targets = doc.get_annotations_by_label("disease")
 
     prov_tracer = ProvTracer()
-    propagator_1 = AttributeDuplicator(attr_labels=["is_family"])
-    propagator_1.set_prov_tracer(prov_tracer)
+    duplicator_1 = AttributeDuplicator(attr_labels=["is_family"])
+    duplicator_1.set_prov_tracer(prov_tracer)
 
     # is_family was 'detected' in sentences
-    propagator_1.run(sentences, targets)
+    duplicator_1.run(sentences, targets)
 
     sentence_attr_1 = sentences[0].get_attrs_by_label("is_family")[0]
     attr_1 = targets[0].get_attrs_by_label("is_family")[0]
 
     attr_1_prov = prov_tracer.get_prov(attr_1.id)
     assert attr_1_prov.data_item == attr_1
-    assert attr_1_prov.op_desc == propagator_1.description
+    assert attr_1_prov.op_desc == duplicator_1.description
     assert attr_1_prov.source_data_items == [sentence_attr_1]
