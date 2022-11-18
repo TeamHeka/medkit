@@ -1,6 +1,7 @@
 __all__ = ["HFTranscriberFunction"]
 
-from typing import List
+from pathlib import Path
+from typing import List, Optional, Union
 
 import transformers
 from transformers import AutomaticSpeechRecognitionPipeline
@@ -23,6 +24,7 @@ class HFTranscriberFunction:
         capitalize: bool = True,
         device: int = -1,
         batch_size: int = 1,
+        cache_dir: Optional[Union[str, Path]] = None,
     ):
         """
         Parameters
@@ -41,6 +43,8 @@ class HFTranscriberFunction:
             (`-1` for cpu and device number for gpu, for instance `0` for "cuda:0")
         batch_size:
             Size of batches processed by ASR pipeline.
+        cache_dir:
+            Directory where to store download models (instead of default HuggingFace cache dir).
         """
         self.model_name = model
         self.add_trailing_dot = add_trailing_dot
@@ -61,6 +65,7 @@ class HFTranscriberFunction:
             pipeline_class=AutomaticSpeechRecognitionPipeline,
             device=self.device,
             batch_size=batch_size,
+            model_kwargs={"cache_dir": cache_dir},
         )
 
     @property
