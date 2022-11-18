@@ -5,7 +5,7 @@ __all__ = ["HFTranslator"]
 from collections import defaultdict
 import dataclasses
 from pathlib import Path
-from typing import Dict, Iterator, List, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import torch
 import transformers
@@ -53,6 +53,7 @@ class HFTranslator(Operation):
         alignment_threshold: float = DefaultConfig.alignment_threshold,
         device: int = DefaultConfig.device,
         batch_size: int = DefaultConfig.batch_size,
+        cache_dir: Optional[Union[str, Path]] = None,
         op_id: str = None,
     ):
         """
@@ -76,6 +77,8 @@ class HFTranslator(Operation):
             (-1 for "cpu" and device number for gpu, for instance 0 for "cuda:0")
         batch_size:
             Number of segments in batches processed by translation and alignment models
+        cache_dir:
+            Directory where to store download models (instead of default HuggingFace cache dir).
         op_id:
             Identifier of the translator
         """
@@ -107,6 +110,7 @@ class HFTranslator(Operation):
             pipeline_class=TranslationPipeline,
             device=self.device,
             batch_size=self.batch_size,
+            model_kwargs={"cache_dir": cache_dir},
         )
         self._aligner = _Aligner(
             model=self.alignment_model,
@@ -114,6 +118,7 @@ class HFTranslator(Operation):
             threshold=self.alignment_threshold,
             device=self.device,
             batch_size=self.batch_size,
+            cache_dir=cache_dir,
         )
 
     def run(self, segments: List[Segment]) -> List[Segment]:
@@ -238,12 +243,15 @@ class _Aligner:
         threshold: float = 1e-3,
         device: int = -1,
         batch_size: int = 1,
+        cache_dir: Optional[Union[str, Path]] = None,
     ):
         self._device = torch.device("cpu" if device < 0 else f"cuda:{device}")
         self._batch_size = batch_size
-        self._model = BertModel.from_pretrained(model, output_hidden_states=True).to(
-            self._device
-        )
+        self._model = BertModel.from_pretrained(
+            model,
+            output_hidden_states=True,
+            cache_dir=cache_dir,
+        ).to(self._device)
         self._layer_index = layer_index
         self._threshold: float = threshold
         self._tokenizer = BertTokenizerFast.from_pretrained(model)
