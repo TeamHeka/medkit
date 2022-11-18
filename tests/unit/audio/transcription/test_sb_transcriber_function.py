@@ -16,7 +16,7 @@ _TEXT_TEMPLATE = "AUDIO HAS {} SAMPLES"
 
 
 # mock of speechbrain.pretrained.EncoderASR and
-# speechbrain.pretrained.EncoderDecoderASR classes used by SBTranscriber
+# speechbrain.pretrained.EncoderDecoderASR classes used by SBTranscriberFunction
 class _MockSpeechbrainASR:
     def __init__(self):
         # original class stores AudioNormalizer instance that we use to check
@@ -71,7 +71,7 @@ def test_basic():
     assert texts == ["Audio has 1000 samples.", "Audio has 2000 samples."]
 
 
-def test_test_no_formatting():
+def test_no_formatting():
     """No reformatting of transcribed text (raw text as returned by speechbrain ASR)"""
 
     transcriber_func = SBTranscriberFunction(
