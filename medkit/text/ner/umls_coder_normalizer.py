@@ -76,11 +76,11 @@ class UMLSCoderNormalizer(Operation):
 
     When `UMLSCoderNormalizer` is used for the first time for a given `MRCONSO.RRF`,
     the embeddings of all umls terms are pre-computed (this can take a very long time)
-    and stored in `cache_dir`, so they can be reused next time.
+    and stored in `embeddings_cache_dir`, so they can be reused next time.
 
     If another `MRCONSO.RRF` file is used, or if a parameter impacting the computation
-    of embeddings (`model`, `summary_method`, etc) is changed, then another `cache_dir`
-    must be used, or `cache_dir` must be deleted so it can be created properly.
+    of embeddings (`model`, `summary_method`, etc) is changed, then another `embeddings_cache_dir`
+    must be used, or `embeddings_cache_dir` must be deleted so it can be created properly.
 
     If the umls embeddings are too big to be held in memory, use `nb_umls_embeddings_chunks`.
     """
@@ -90,7 +90,7 @@ class UMLSCoderNormalizer(Operation):
         umls_mrconso_file: Union[str, Path],
         language: str,
         model: Union[str, Path],
-        cache_dir: Union[str, Path],
+        embeddings_cache_dir: Union[str, Path],
         summary_method: Literal["mean", "cls"] = "cls",
         normalize_embeddings: bool = True,
         lowercase: bool = False,
@@ -100,6 +100,7 @@ class UMLSCoderNormalizer(Operation):
         device: int = -1,
         batch_size: int = 128,
         nb_umls_embeddings_chunks: Optional[int] = None,
+        hf_cache_dir: Optional[Union[str, Path]] = None,
         op_id: Optional[str] = None,
     ):
         """
@@ -112,7 +113,7 @@ class UMLSCoderNormalizer(Operation):
         model:
             Name on the Hugging Face hub or path to the transformers model that will be used to extract
             embeddings (ex: `"GanjinZero/UMLSBert_ENG"`).
-        cache_dir:
+        embeddings_cache_dir:
             Path to the directory into which pre-computed embeddings of UMLS terms should be cached.
             If it doesn't exist yet, the embeddings will be automatically generated (it can take a long
             time) and stored there, ready to be reused on further instantiations.
@@ -138,6 +139,8 @@ class UMLSCoderNormalizer(Operation):
             (-1 for "cpu" and device number for gpu, for instance 0 for "cuda:0").
         batch_size:
             Number of entities in batches processed by the embeddings extraction pipeline.
+        hf_cache_dir:
+            Directory where to store download models (instead of default HuggingFace cache dir).
         nb_umls_embeddings_chunks:
             Number of umls embeddings chunks to load at the same time when computing
             embeddings similarities. (a chunk contains 65536 embeddings).
@@ -156,7 +159,7 @@ class UMLSCoderNormalizer(Operation):
         super().__init__(**init_args)
 
         self.umls_mrconso_file = Path(umls_mrconso_file)
-        self.cache_dir = Path(cache_dir)
+        self.embeddings_cache_dir = Path(embeddings_cache_dir)
         self.language = language
         self.model = model
         self.summary_method = summary_method
@@ -176,6 +179,7 @@ class UMLSCoderNormalizer(Operation):
             normalize=normalize_embeddings,
             device=device,
             batch_size=batch_size,
+            model_kwargs={"cache_dir": hf_cache_dir},
         )
 
         # guess UMLS version
@@ -187,14 +191,14 @@ class UMLSCoderNormalizer(Operation):
         # preload all pre-computed UMLS embeddings if nb_umls_embeddings_chunks not set
         if self.nb_umls_embeddings_chunks is None:
             umls_embeddings_files = sorted(
-                self.cache_dir.glob(f"*{_UMLS_EMBEDDINGS_FILE_EXT}")
+                self.embeddings_cache_dir.glob(f"*{_UMLS_EMBEDDINGS_FILE_EXT}")
             )
             self._umls_embeddings = self._load_umls_embeddings(umls_embeddings_files)
         else:
             self._umls_embeddings = None
 
         # load corresponding UMLS terms and associated CUIs
-        umls_terms_file = self.cache_dir / _TERMS_FILENAME
+        umls_terms_file = self.embeddings_cache_dir / _TERMS_FILENAME
         self._umls_entries = pd.read_feather(umls_terms_file)
 
     def run(self, entities: List[Entity]):
@@ -234,7 +238,7 @@ class UMLSCoderNormalizer(Operation):
             # compute similarities for each batch of pre-computed umls embeddings
             all_similarities = []
             umls_embeddings_files = sorted(
-                self.cache_dir.glob(f"*{_UMLS_EMBEDDINGS_FILE_EXT}")
+                self.embeddings_cache_dir.glob(f"*{_UMLS_EMBEDDINGS_FILE_EXT}")
             )
             for files in medkit.core.utils.batch_list(
                 umls_embeddings_files, self.nb_umls_embeddings_chunks
@@ -302,15 +306,15 @@ class UMLSCoderNormalizer(Operation):
         )
 
         # check if embeddings have already been computed
-        params_file = self.cache_dir / _PARAMS_FILENAME
+        params_file = self.embeddings_cache_dir / _PARAMS_FILENAME
         if params_file.exists():
             # check consistency of params
             with open(params_file) as fp:
                 existing_params = _UMLSEmbeddingsParams(**yaml.safe_load(fp))
             if existing_params != params:
                 raise Exception(
-                    f"Cache directory {self.cache_dir} contains UMLS embeddings"
-                    f" pre-computed with different params: {params} vs"
+                    f"Cache directory {self.embeddings_cache_dir} contains UMLS"
+                    f" embeddings pre-computed with different params: {params} vs"
                     f" {existing_params}"
                 )
 
@@ -320,13 +324,16 @@ class UMLSCoderNormalizer(Operation):
         if show_progress:
             print(
                 "No pre-existing UMLS embeddings found in cache directory"
-                f" {self.cache_dir}, pre-computing them right now"
+                f" {self.embeddings_cache_dir}, pre-computing them right now"
             )
 
-        self.cache_dir.mkdir(exist_ok=True)
+        self.embeddings_cache_dir.mkdir(exist_ok=True)
 
         # remove all previous embedding files for safety
-        [f.unlink() for f in self.cache_dir.glob(f"*{_UMLS_EMBEDDINGS_FILE_EXT}")]
+        [
+            f.unlink()
+            for f in self.embeddings_cache_dir.glob(f"*{_UMLS_EMBEDDINGS_FILE_EXT}")
+        ]
 
         # get iterator to all UMLS entries
         entries_iter = load_umls(
@@ -364,7 +371,7 @@ class UMLSCoderNormalizer(Operation):
             )
             chunk_embeddings = torch.cat(list(chunk_embeddings_iter), dim=0)
             chunk_embeddings_file = (
-                self.cache_dir / f"{i:010d}{_UMLS_EMBEDDINGS_FILE_EXT}"
+                self.embeddings_cache_dir / f"{i:010d}{_UMLS_EMBEDDINGS_FILE_EXT}"
             )
             # save chunk embeddings
             torch.save(chunk_embeddings, chunk_embeddings_file)
@@ -373,7 +380,7 @@ class UMLSCoderNormalizer(Operation):
         entries_df = pd.DataFrame.from_records(
             [e.to_dict() for e in entries_by_term_to_match.values()]
         )
-        terms_file = self.cache_dir / _TERMS_FILENAME
+        terms_file = self.embeddings_cache_dir / _TERMS_FILENAME
         if show_progress:
             print("Writing UMLS terms... ", end="")
         entries_df.to_feather(terms_file)
