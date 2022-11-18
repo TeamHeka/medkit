@@ -22,6 +22,7 @@ class HFTranscriberFunction:
         add_trailing_dot: bool = True,
         capitalize: bool = True,
         device: int = -1,
+        batch_size: int = 1,
     ):
         """
         Parameters
@@ -38,6 +39,8 @@ class HFTranscriberFunction:
         device:
             Device to use for pytorch models. Follows the Hugging Face convention
             (`-1` for cpu and device number for gpu, for instance `0` for "cuda:0")
+        batch_size:
+            Size of batches processed by ASR pipeline.
         """
         self.model_name = model
         self.add_trailing_dot = add_trailing_dot
@@ -55,8 +58,9 @@ class HFTranscriberFunction:
             task=task,
             model=self.model_name,
             feature_extractor=self.model_name,
-            device=self.device,
             pipeline_class=AutomaticSpeechRecognitionPipeline,
+            device=self.device,
+            batch_size=batch_size,
         )
 
     @property

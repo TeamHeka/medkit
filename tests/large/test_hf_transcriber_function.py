@@ -22,10 +22,11 @@ def test_basic():
     assert texts == [_EXPECTED_TEXT]
 
 
-def test_batch():
-    "Pass batch inputs"
+@pytest.mark.parametrize("batch_size", [1, 5, 10, 15])
+def test_batch(batch_size):
+    """Various batch sizes (smallest, half, exact number of items, more than)"""
 
-    transcriber_func = HFTranscriberFunction(model=_MODEL)
+    transcriber_func = HFTranscriberFunction(model=_MODEL, batch_size=batch_size)
 
     # generate batch of different audios by duplicating signal every other time
     audios = []
