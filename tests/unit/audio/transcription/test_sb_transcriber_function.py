@@ -82,26 +82,3 @@ def test_no_formatting():
     )
     texts = transcriber_func.transcribe([_gen_audio(1000)])
     assert texts == ["AUDIO HAS 1000 SAMPLES"]
-
-
-@pytest.mark.parametrize("batch_size", [1, 5, 10, 15])
-def test_batch(batch_size):
-    """Various batch sizes"""
-
-    # generate input audios and corresponding texts
-    audios = []
-    expected_texts = []
-    for i in range(10):
-        nb_samples = (i + 1) * 1000
-        audios.append(_gen_audio(nb_samples))
-        expected_text = _TEXT_TEMPLATE.format(nb_samples).capitalize() + "."
-        expected_texts.append(expected_text)
-
-    transcriber_func = SBTranscriberFunction(
-        model=_MOCK_MODEL_NAME,
-        needs_decoder=False,
-        batch_size=batch_size,
-    )
-
-    texts = transcriber_func.transcribe(audios)
-    assert texts == expected_texts
