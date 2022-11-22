@@ -44,7 +44,8 @@ class HFTranscriberFunction:
         batch_size:
             Size of batches processed by ASR pipeline.
         cache_dir:
-            Directory where to store download models (instead of default HuggingFace cache dir).
+            Directory where to store downloaded models. If not set, the default
+            HuggingFace cache dir is used.
         """
         self.model_name = model
         self.add_trailing_dot = add_trailing_dot

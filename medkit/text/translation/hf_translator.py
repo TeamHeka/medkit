@@ -78,7 +78,8 @@ class HFTranslator(Operation):
         batch_size:
             Number of segments in batches processed by translation and alignment models
         cache_dir:
-            Directory where to store download models (instead of default HuggingFace cache dir).
+            Directory where to store downloaded models. If not set, the default
+            HuggingFace cache dir is used.
         op_id:
             Identifier of the translator
         """

@@ -51,7 +51,8 @@ class HFEntityMatcher(NEROperation):
         batch_size:
             Number of segments in batches processed by the transformer model.
         cache_dir:
-            Directory where to store download models (instead of default HuggingFace cache dir).
+            Directory where to store downloaded models. If not set, the default
+            HuggingFace cache dir is used.
         op_id:
             Identifier of the matcher.
         """

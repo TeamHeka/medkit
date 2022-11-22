@@ -140,7 +140,8 @@ class UMLSCoderNormalizer(Operation):
         batch_size:
             Number of entities in batches processed by the embeddings extraction pipeline.
         hf_cache_dir:
-            Directory where to store download models (instead of default HuggingFace cache dir).
+            Directory where to store downloaded models. If not set, the default
+            HuggingFace cache dir is used.
         nb_umls_embeddings_chunks:
             Number of umls embeddings chunks to load at the same time when computing
             embeddings similarities. (a chunk contains 65536 embeddings).
