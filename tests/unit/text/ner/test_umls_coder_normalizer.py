@@ -30,17 +30,17 @@ def module_tmp_dir(tmp_path_factory):
 
 
 @pytest.fixture(scope="module")
-def cache_dir(module_tmp_dir):
+def embeddings_cache_dir(module_tmp_dir):
     return module_tmp_dir / "umls_coder_cache"
 
 
 @pytest.fixture(scope="module")
-def normalizer(cache_dir):
+def normalizer(embeddings_cache_dir):
     return UMLSCoderNormalizer(
         umls_mrconso_file=_PATH_TO_MR_CONSO_FILE,
         language="ENG",
         model=_MODEL,
-        cache_dir=cache_dir,
+        embeddings_cache_dir=embeddings_cache_dir,
     )
 
 
@@ -88,7 +88,7 @@ def _get_entities(nb_entities):
     return entities
 
 
-def test_threshold(cache_dir):
+def test_threshold(embeddings_cache_dir):
     """Threshold should leave some entities without normalization attributes when similarity is low
     """
 
@@ -103,7 +103,7 @@ def test_threshold(cache_dir):
         umls_mrconso_file=_PATH_TO_MR_CONSO_FILE,
         language=_LANGUAGE,
         model=_MODEL,
-        cache_dir=cache_dir,
+        embeddings_cache_dir=embeddings_cache_dir,
         threshold=threshold,
     )
     normalizer.run(entities)
@@ -115,7 +115,7 @@ def test_threshold(cache_dir):
     assert len(entity_2.get_attrs_by_label("umls")) == 0
 
 
-def test_max_nb_matches(cache_dir):
+def test_max_nb_matches(embeddings_cache_dir):
     entity = _get_entity(label="disease", text="diabetes")
 
     max_nb_matches = 2
@@ -123,7 +123,7 @@ def test_max_nb_matches(cache_dir):
         umls_mrconso_file=_PATH_TO_MR_CONSO_FILE,
         language=_LANGUAGE,
         model=_MODEL,
-        cache_dir=cache_dir,
+        embeddings_cache_dir=embeddings_cache_dir,
         max_nb_matches=max_nb_matches,
     )
     normalizer.run([entity])
@@ -135,7 +135,7 @@ def test_max_nb_matches(cache_dir):
     "input_size,batch_size",
     [(12, 1), (1, 12), (24, 12)],
 )
-def test_batch(cache_dir, input_size, batch_size):
+def test_batch(embeddings_cache_dir, input_size, batch_size):
     """Behavior with various input length/batch size combinations"""
 
     entities = _get_entities(input_size)
@@ -144,7 +144,7 @@ def test_batch(cache_dir, input_size, batch_size):
         umls_mrconso_file=_PATH_TO_MR_CONSO_FILE,
         language=_LANGUAGE,
         model=_MODEL,
-        cache_dir=cache_dir,
+        embeddings_cache_dir=embeddings_cache_dir,
         batch_size=batch_size,
     )
     normalizer.run(entities)
@@ -161,7 +161,7 @@ def test_batch(cache_dir, input_size, batch_size):
         assert attr.value == excepted_attr.value
 
 
-def test_nb_umls_embeddings_chunks(cache_dir):
+def test_nb_umls_embeddings_chunks(embeddings_cache_dir):
     """Enable chunk loading of precomputed umls embeddings
     Note that for tests, a chunk contains 2 embeddings
     (cf _mocked_umls_embeddings_chunk_size())
@@ -173,7 +173,7 @@ def test_nb_umls_embeddings_chunks(cache_dir):
         umls_mrconso_file=_PATH_TO_MR_CONSO_FILE,
         language=_LANGUAGE,
         model=_MODEL,
-        cache_dir=cache_dir,
+        embeddings_cache_dir=embeddings_cache_dir,
         nb_umls_embeddings_chunks=2,
     )
     normalizer.run([entity])
@@ -184,7 +184,7 @@ def test_nb_umls_embeddings_chunks(cache_dir):
         umls_mrconso_file=_PATH_TO_MR_CONSO_FILE,
         language=_LANGUAGE,
         model=_MODEL,
-        cache_dir=cache_dir,
+        embeddings_cache_dir=embeddings_cache_dir,
     )
     ref_normalizer.run([entity_copy])
 
@@ -200,13 +200,13 @@ def test_inconsistent_params(module_tmp_dir):
     """Use UMLS embeddings dir containing embeddings pre-computed with different params
     """
 
-    cache_dir = module_tmp_dir / "umls_coder_cache_cls"
+    embeddings_cache_dir = module_tmp_dir / "umls_coder_cache_cls"
     # first, generate embeddings with "cls" method in umls_embeddings_dir
     _ = UMLSCoderNormalizer(
         umls_mrconso_file=_PATH_TO_MR_CONSO_FILE,
         language=_LANGUAGE,
         model=_MODEL,
-        cache_dir=cache_dir,
+        embeddings_cache_dir=embeddings_cache_dir,
         summary_method="cls",
     )
 
@@ -222,7 +222,7 @@ def test_inconsistent_params(module_tmp_dir):
             umls_mrconso_file=_PATH_TO_MR_CONSO_FILE,
             language=_LANGUAGE,
             model=_MODEL,
-            cache_dir=cache_dir,
+            embeddings_cache_dir=embeddings_cache_dir,
             summary_method="mean",
         )
 

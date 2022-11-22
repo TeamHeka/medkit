@@ -1,4 +1,5 @@
 import pytest
+import re
 
 pytest.importorskip(modname="torch", reason="torch is not installed")
 pytest.importorskip(modname="transformers", reason="transformers is not installed")
@@ -8,8 +9,43 @@ from medkit.core.text import Segment, Span  # noqa: E402
 from medkit.text.ner.hf_entity_matcher import HFEntityMatcher  # noqa: E402
 
 
-_MODEL = "samrawal/bert-base-uncased_clinical-ner"
 _SPAN_OFFSET = 10
+
+
+# mock of TokenClassificationPipeline class used by HFEntityMatcher
+class _MockedPipeline:
+    def __init__(self, *args, **kwargs):
+        self._regexps_and_labels = [
+            (re.compile(r"\basthma\b"), "problem"),
+            (re.compile(r"\bdiabetes\b"), "problem"),
+            (re.compile(r"\bventoline\b"), "treatment"),
+        ]
+
+    def __call__(self, texts):
+        all_match_dicts = []
+        for text in texts:
+            match_dicts = []
+            for regexp, label in self._regexps_and_labels:
+                for match in regexp.finditer(text):
+                    match_dicts.append(
+                        {
+                            "start": match.start(),
+                            "end": match.end(),
+                            "entity_group": label,
+                            "score": 1.0,
+                        }
+                    )
+            all_match_dicts.append(match_dicts)
+
+        return all_match_dicts
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _mocked_pipeline(module_mocker):
+    module_mocker.patch(
+        "transformers.pipelines.get_task", lambda m: "token-classification"
+    )
+    module_mocker.patch("transformers.pipeline", _MockedPipeline)
 
 
 def _get_sentence_segment(text):
@@ -20,15 +56,11 @@ def _get_sentence_segment(text):
     )
 
 
-@pytest.fixture(scope="module")
-def matcher():
-    return HFEntityMatcher(model=_MODEL)
-
-
-def test_single_match(matcher):
+def test_single_match():
     """Basic behavior, single match in one input segment"""
 
     sentence = _get_sentence_segment("The patient has asthma.")
+    matcher = HFEntityMatcher(model="mock-model")
     entities = matcher.run([sentence])
     assert len(entities) == 1
 
@@ -46,12 +78,13 @@ def test_single_match(matcher):
     assert 0.0 <= attr.value <= 1.0
 
 
-def test_multiple_matches(matcher):
+def test_multiple_matches():
     """Basic behavior, multiple matches in multiple input segments"""
 
     sentence_1 = _get_sentence_segment("The patient has asthma and is using ventoline.")
     sentence_2 = _get_sentence_segment("The patient has diabetes.")
     sentences = [sentence_1, sentence_2]
+    matcher = HFEntityMatcher(model="mock-model")
     entities = matcher.run(sentences)
     assert len(entities) == 3
 
@@ -83,7 +116,7 @@ def test_attrs_to_copy():
     # uncopied attribute
     sentence.add_attr(Attribute(label="hypothesis", value=False))
 
-    matcher = HFEntityMatcher(model=_MODEL, attrs_to_copy=["negation"])
+    matcher = HFEntityMatcher(model="mock-model", attrs_to_copy=["negation"])
     entity = matcher.run([sentence])[0]
 
     assert len(entity.get_attrs_by_label("score")) == 1
@@ -93,7 +126,7 @@ def test_attrs_to_copy():
     assert len(entity.get_attrs_by_label("hypothesis")) == 0
 
 
-def test_prov(matcher):
+def test_prov():
     """Generated provenance nodes"""
 
     # use file containing voice signal
@@ -101,6 +134,7 @@ def test_prov(matcher):
     sentence_2 = _get_sentence_segment("The patient has diabetes.")
     sentences = [sentence_1, sentence_2]
 
+    matcher = HFEntityMatcher(model="mock-model")
     prov_tracer = ProvTracer()
     matcher.set_prov_tracer(prov_tracer)
     entities = matcher.run(sentences)
