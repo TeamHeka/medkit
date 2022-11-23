@@ -49,6 +49,7 @@ sphinx:
       - pandas
       - PyRuSH
       - spacy
+      - speechbrain
     autodoc_member_order: 'bysource'
 
   extra_extensions:
