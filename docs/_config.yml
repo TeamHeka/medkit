@@ -50,6 +50,7 @@ sphinx:
       - PyRuSH
       - spacy
       - speechbrain
+      - pyannote.audio
     autodoc_member_order: 'bysource'
 
   extra_extensions:
