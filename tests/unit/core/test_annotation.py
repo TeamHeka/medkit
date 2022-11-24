@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 import pytest
 
 from medkit.core.annotation import Annotation, Attribute
@@ -8,8 +10,14 @@ _CUI_ATTR_1 = Attribute(label="cui", value="C0011854")
 _CUI_ATTR_2 = Attribute(label="cui", value="C0011855")
 
 
+class _MockAnnotation(Annotation):
+    @classmethod
+    def from_dict(cls, annotation_dict: Dict[str, Any]) -> Annotation:
+        pass
+
+
 def test_add_attrs():
-    ann = Annotation(label="problem")
+    ann = _MockAnnotation(label="problem")
 
     assert len(ann.get_attrs()) == 0
     assert len(ann.get_attrs_by_label("cui")) == 0
@@ -26,7 +34,7 @@ def test_add_attrs():
 
 def test_attrs_at_init():
     attrs = [_NEGATION_ATTR, _CUI_ATTR_1, _CUI_ATTR_2]
-    ann = Annotation(label="problem", attrs=attrs)
+    ann = _MockAnnotation(label="problem", attrs=attrs)
 
     assert ann.get_attrs() == attrs
     assert ann.get_attrs_by_label("negation") == [_NEGATION_ATTR]
@@ -34,7 +42,7 @@ def test_attrs_at_init():
 
 
 def test_add_same_attr():
-    ann = Annotation(label="problem")
+    ann = _MockAnnotation(label="problem")
     ann.add_attr(_CUI_ATTR_1)
 
     with pytest.raises(

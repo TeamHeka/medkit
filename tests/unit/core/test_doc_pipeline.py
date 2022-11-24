@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 from medkit.core import (
     generate_id,
     Document,
@@ -28,6 +30,10 @@ class _TextAnnotation(Annotation):
     def __init__(self, label, text):
         super().__init__(label=label)
         self.text = text
+
+    @classmethod
+    def from_dict(cls, annotation_dict: Dict[str, Any]) -> Annotation:
+        pass
 
 
 def _get_doc():
