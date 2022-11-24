@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 from medkit.core import Annotation, DictStore
 from medkit.core.document import Document
 
@@ -6,6 +8,10 @@ class _MockAnnotation(Annotation):
     def __init__(self, label, value, keys=None, ann_id=None):
         super().__init__(label=label, keys=keys, ann_id=ann_id)
         self.value = value
+
+    @classmethod
+    def from_dict(cls, annotation_dict: Dict[str, Any]) -> Annotation:
+        pass
 
 
 def test_basic():

@@ -14,7 +14,7 @@ import unidecode
 
 @dataclasses.dataclass
 class UMLSEntry:
-    """Entry in MRCONSO.RRF file of a UMLS dictionnary
+    """Entry in MRCONSO.RRF file of a UMLS dictionary
 
     Attributes
     ----------

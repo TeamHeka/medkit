@@ -118,7 +118,7 @@ class Document(Generic[AnnotationType]):
     def to_dict(self) -> Dict[str, Any]:
         annotations = [
             cast(AnnotationType, self.store.get_data_item(id)).to_dict()
-            for id in self.annotation_ids
+            for id in sorted(self.annotation_ids)
         ]
         return dict(id=self.id, annotations=annotations, metadata=self.metadata)
 
