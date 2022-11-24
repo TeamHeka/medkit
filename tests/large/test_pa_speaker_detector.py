@@ -24,7 +24,7 @@ _PIPELINE_PARAMS = {
 }
 
 
-_AUDIO = FileAudioBuffer("/home/obirot/file.ogg")
+_AUDIO = FileAudioBuffer("tests/data/audio/dialog_long.ogg")
 _SPEAKER_CHANGE_TIME = 4.0
 _MARGIN = 1.0
 

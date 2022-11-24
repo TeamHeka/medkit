@@ -64,9 +64,7 @@ def _mocked_pipeline(module_mocker):
 def _get_segment(duration):
     signal = generate_sin_signal(duration, _SAMPLE_RATE)
     audio = MemoryAudioBuffer(signal=signal, sample_rate=_SAMPLE_RATE)
-    from medkit.core.audio import FileAudioBuffer
 
-    audio = FileAudioBuffer("/home/obirot/file.ogg").trim_duration(end_time=duration)
     return Segment(
         label="RAW_AUDIO",
         span=Span(start=_SPAN_OFFSET, end=_SPAN_OFFSET + duration),
