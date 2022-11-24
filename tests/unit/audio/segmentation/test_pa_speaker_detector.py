@@ -1,5 +1,9 @@
 import pytest
 
+# must import pandas first, cf workaround description in pa_speaker_detector.py
+pytest.importorskip(
+    modname="pandas", reason="pandas (therefore pyannote) is not installed"
+)
 pytest.importorskip(modname="pyannote.audio", reason="pyannote.audio is not installed")
 
 import math  # noqa: E402

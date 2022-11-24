@@ -4,6 +4,15 @@ from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Union
 from typing_extensions import Literal
 
+# When pyannote and spacy are both installed, a conflict might occur between the
+# ujson library used by pandas (a pyannote dependency) and the ujson library used
+# by srsrly (a spacy dependency), especially in docker environments.
+# srsly seems to end up using the ujson library from pandas, which is older and does not
+# support the escape_forward_slashes parameters, instead of its own.
+# The bug seems to only happen when pandas is imported from pyannote, not if
+# we import pandas manually first.
+# So as a workaround, we always import pandas before importing something from pyannote
+import pandas  # noqa: F401
 from pyannote.audio.pipelines import SpeakerDiarization
 import torch
 
