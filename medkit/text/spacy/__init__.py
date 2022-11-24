@@ -1,10 +1,9 @@
 __all__ = ["spacy_utils", "displacy_utils", "SpacyDocPipeline", "SpacyPipeline"]
 
 # Verify that spacy is installed
-import importlib.util
+from medkit.core.utils import has_optional_modules
 
-_spacy_is_available = importlib.util.find_spec("spacy") is not None
-if not _spacy_is_available:
+if not has_optional_modules(["spacy"]):
     raise ImportError("Requires spacy install for importing medkit.text.spacy module")
 
 from . import spacy_utils  # noqa: E402, F401
