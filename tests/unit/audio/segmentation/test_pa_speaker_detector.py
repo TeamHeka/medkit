@@ -18,7 +18,7 @@ from tests.audio_utils import generate_sin_signal, signals_are_equal  # noqa: E4
 
 _SAMPLE_RATE = 16000
 _OUTPUT_LABEL = "turn"
-_SPAN_OFFSET = 0.0  # 10.0 NOCOMMIT
+_SPAN_OFFSET = 10.0
 
 
 class _MockedPASegment(NamedTuple):
