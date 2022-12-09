@@ -24,7 +24,7 @@ class PASpeakerDetector(SegmentationOperation):
     """Speaker diarization operation relying on `pyannote.audio`
 
     Each input segment will be split into several sub-segments corresponding
-    to speach turn, and an attribute will be attached to each of these sub-segments
+    to speech turn, and an attribute will be attached to each of these sub-segments
     indicating the speaker of the turn.
 
     `PASpeakerDetector` uses the `SpeakerDiarization` pipeline from
