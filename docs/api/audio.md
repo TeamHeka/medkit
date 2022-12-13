@@ -45,6 +45,16 @@ This section lists audio segmentation operations. They are part of the
     :members:
 ```
 
+### Pyannote speaker detector
+
+`PASpeakerDetector` needs additional dependencies that can be installed with `pip install medkit[pa-speaker-detector]`
+
+```{eval-rst}
+.. automodule:: medkit.audio.segmentation.pa_speaker_detector
+    :members:
+```
+
+
 ## Audio Transcription
 
 This section lists operations and other components to use to perform audio transcription.

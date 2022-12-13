@@ -22,6 +22,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Large test files
+tests/large_data/*
+!tests/large_data/README.md
+
 #  Sphinx documentation
 docs/_build/
 
