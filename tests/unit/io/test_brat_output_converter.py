@@ -333,7 +333,7 @@ def _get_modified_medkit_doc():
                 Span(12, 22),
             ],
             label="maladie",
-            text="douleur abdominale",
+            text="Douleur abdominale",
             entity_id="e1",
         ),
         Entity(
@@ -352,8 +352,8 @@ def _get_modified_medkit_doc():
     return doc
 
 
-_EXPECTED_ANN = """T1\tmaladie 0 7;12 22\tdouleur abdominale
-T2\tgrade 26 31;43 44\tgrade 4
+_EXPECTED_ANN = """T1\tmaladie 0 8;12 22\tDouleur abdominale
+T2\tgrade 26 32;43 44\tgrade 4
 """
 
 

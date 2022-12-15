@@ -464,13 +464,16 @@ class BratOutputConverter(OutputConverter):
 
         return anns_by_medkit_id.values()
 
-    def _ensure_text_and_spans(self, segment: Segment, raw_text: str):
+    @staticmethod
+    def _ensure_text_and_spans(
+        segment: Segment, raw_text: str
+    ) -> Tuple[str, List[Span]]:
         """Ensure consistency between `raw_text` and `segment.text`"""
         # normalize and extract from raw_text
         segment_spans = span_utils.normalize_spans(segment.spans)
         text = "".join(raw_text[sp.start : sp.end] for sp in segment_spans)
         # remove multiple whitespaces because they are not supported by Brat
-        pattern = r"(?P<blanks>\s{2,})"
+        pattern = r"[ \t](?P<blanks>\s{2,})"
         ranges = [(match.span("blanks")) for match in re.finditer(pattern, text)]
         text, spans = span_utils.remove(text, segment_spans, ranges)
         return text, spans
@@ -500,7 +503,6 @@ class BratOutputConverter(OutputConverter):
         type = segment.label.replace(" ", "_")
         text, _spans = self._ensure_text_and_spans(segment, raw_text)
         spans = tuple((span.start, span.end) for span in _spans)
-        text = segment.text
         return BratEntity(brat_id, type, spans, text)
 
     @staticmethod
