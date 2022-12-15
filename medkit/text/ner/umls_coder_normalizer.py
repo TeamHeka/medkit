@@ -1,7 +1,7 @@
-__all__ = ["UMLSCoderNormalizer", "UMLSCoderMetadata"]
+__all__ = ["UMLSCoderNormalizer"]
 
 from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
-from typing_extensions import Literal, TypedDict
+from typing_extensions import Literal
 from pathlib import Path
 
 import pandas as pd
@@ -13,6 +13,7 @@ import yaml
 from medkit.core import Operation, Attribute
 from medkit.core.text import Entity
 import medkit.core.utils
+from medkit.text.ner.normalization import UMLSNormalization
 from medkit.text.ner.umls_utils import (
     load_umls,
     preprocess_term_to_match,
@@ -45,24 +46,6 @@ class _UMLSEmbeddingsParams(NamedTuple):
             lowercase=self.lowercase,
             normalize_unicode=self.normalize_unicode,
         )
-
-
-class UMLSCoderMetadata(TypedDict):
-    """Metadata dict added to umls coder normalization attributes.
-
-    Parameters
-    ----------
-    normalized_term:
-        Term the entity was matched against, as in the UMLS
-    score:
-        Score of the match, between 0.0 and 1.0
-    version:
-        UMLS version (ex: "2021AB")
-    """
-
-    normalized_term: str  # TODO: harmonize among annotators
-    score: float
-    version: str
 
 
 class UMLSCoderNormalizer(Operation):
@@ -281,12 +264,12 @@ class UMLSCoderNormalizer(Operation):
 
             umls_entry = self._umls_entries.iloc[match_index]
             norm_attr = Attribute(
-                label="umls",
-                value=umls_entry.cui,
-                metadata=UMLSCoderMetadata(
-                    normalized_term=umls_entry.term,
+                label="normalization",
+                value=UMLSNormalization(
+                    cui=umls_entry.cui,
+                    umls_version=self._umls_version,
+                    term=umls_entry.term,
                     score=match_score,
-                    version=self._umls_version,
                 ),
             )
 

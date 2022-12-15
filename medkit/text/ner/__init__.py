@@ -46,6 +46,6 @@ _torch_is_available = importlib.util.find_spec("torch") is not None
 _transformers_is_available = importlib.util.find_spec("transformers") is not None
 if _pandas_is_available and _torch_is_available and _transformers_is_available:
     # fmt: off
-    from .umls_coder_normalizer import UMLSCoderNormalizer, UMLSCoderMetadata  # noqa: F401
-    __all__ += ["UMLSCoderNormalizer", "UMLSCoderMetadata"]
+    from .umls_coder_normalizer import UMLSCoderNormalizer  # noqa: F401
+    __all__ += ["UMLSCoderNormalizer"]
     # fmt: on
