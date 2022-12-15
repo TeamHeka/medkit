@@ -66,6 +66,7 @@ def test_basic(normalizer):
     # exact match has 1.0 score
     assert attr_1.metadata["score"] == 1.0
     assert attr_1.metadata["normalized_term"] == "Asthma"
+    assert attr_1.metadata["version"] == "sample_umls_data"
 
     attrs = entity_2.get_attrs_by_label("umls")
     assert len(attrs) == 1
