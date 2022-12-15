@@ -1,4 +1,6 @@
 __all__ = [
+    "Normalization",
+    "UMLSNormalization",
     "DucklingMatcher",
     "RegexpMatcher",
     "RegexpMatcherRule",
@@ -9,6 +11,7 @@ __all__ = [
 import importlib.util
 
 from .duckling_matcher import DucklingMatcher
+from .normalization import Normalization, UMLSNormalization
 from .regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,
