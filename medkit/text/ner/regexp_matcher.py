@@ -17,9 +17,9 @@ from typing_extensions import TypedDict
 import unidecode
 import yaml
 
-
 from medkit.core import Attribute
 from medkit.core.text import Entity, NEROperation, Segment, span_utils
+from medkit.text.ner.normalization import Normalization, UMLSNormalization
 
 
 logger = logging.getLogger(__name__)
@@ -280,17 +280,7 @@ class RegexpMatcher(NEROperation):
 
             # create normalization attributes for each normalization descriptor
             # of the rule
-            # TODO should we have a NormalizationAttribute class
-            # with specific fields (name, id, version) ?
-
-            norm_attrs = [
-                Attribute(
-                    label=norm.kb_name,
-                    value=norm.id,
-                    metadata=dict(version=norm.kb_version),
-                )
-                for norm in rule.normalizations
-            ]
+            norm_attrs = [self._create_norm_attr(norm) for norm in rule.normalizations]
             for norm_attr in norm_attrs:
                 entity.add_attr(norm_attr)
 
@@ -304,6 +294,16 @@ class RegexpMatcher(NEROperation):
                     )
 
             yield entity
+
+    @staticmethod
+    def _create_norm_attr(norm: RegexpMatcherNormalization) -> Normalization:
+        if norm.kb_name == "umls":
+            norm = UMLSNormalization(cui=norm.id, umls_version=norm.kb_version)
+        else:
+            norm = Normalization(
+                kb_name=norm.kb_name, kb_id=norm.id, kb_version=norm.kb_version
+            )
+        return Attribute(label="normalization", value=norm)
 
     @staticmethod
     def load_rules(path_to_rules) -> List[RegexpMatcherRule]:

@@ -2,6 +2,7 @@ import logging
 
 from medkit.core import Attribute, ProvTracer
 from medkit.core.text import Segment, Span
+from medkit.text.ner import Normalization, UMLSNormalization
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,
@@ -100,7 +101,10 @@ def test_normalization():
     rule = RegexpMatcherRule(
         label="Diabetes",
         regexp="diabetes",
-        normalizations=[RegexpMatcherNormalization("umls", "2020AB", "C0011849")],
+        normalizations=[
+            RegexpMatcherNormalization("icd", "10", "E10-E14"),
+            RegexpMatcherNormalization("umls", "2020AB", "C0011849"),
+        ],
     )
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
@@ -108,11 +112,20 @@ def test_normalization():
     entity = entities[0]
     assert entity.label == "Diabetes"
 
-    attrs = entity.get_attrs_by_label("umls")
-    assert len(attrs) == 1
-    attr = attrs[0]
-    assert attr.label == "umls"
-    assert attr.value == "C0011849"
+    norm_attrs = entity.get_attrs_by_label("normalization")
+    assert len(norm_attrs) == 2
+    norm_1 = norm_attrs[0].value
+    assert type(norm_1) is Normalization
+    assert norm_1.kb_name == "icd"
+    assert norm_1.kb_version == "10"
+    assert norm_1.kb_id == "E10-E14"
+    assert norm_1.term is None
+
+    norm_2 = norm_attrs[1].value
+    assert type(norm_2) is UMLSNormalization
+    assert norm_2.umls_version == "2020AB"
+    assert norm_2.cui == "C0011849"
+    assert norm_2.term is None
 
 
 def test_exclusion_regex():
@@ -246,7 +259,7 @@ def test_prov():
     assert entity_prov.op_desc == matcher.description
     assert entity_prov.source_data_items == [sentence]
 
-    attr = entity.get_attrs_by_label("umls")[0]
+    attr = entity.get_attrs_by_label("normalization")[0]
     attr_prov = prov_tracer.get_prov(attr.uid)
     assert attr_prov.data_item == attr
     assert attr_prov.op_desc == matcher.description
