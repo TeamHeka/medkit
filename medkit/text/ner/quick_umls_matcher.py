@@ -11,6 +11,7 @@ import quickumls.constants
 
 from medkit.core import Attribute
 from medkit.core.text import Entity, NEROperation, Segment, span_utils
+from medkit.text.ner.normalization import UMLSNormalization
 
 
 # workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/issues/68
@@ -263,19 +264,17 @@ class QuickUMLSMatcher(NEROperation):
                 for attr in segment.get_attrs_by_label(label):
                     entity.add_attr(attr)
 
-            # TODO force now we consider the version, score and semtypes
-            # to be just extra informational metadata
-            # We might need to reconsider this if these items
-            # are actually accessed in other "downstream" processing modules
             norm_attr = Attribute(
-                label="umls",
-                value=match["cui"],
-                metadata=dict(
-                    version=self.version,
+                label="normalization",
+                value=UMLSNormalization(
+                    cui=match["cui"],
+                    umls_version=self.version,
+                    term=match["term"],
                     score=match["similarity"],
                     sem_types=list(match["semtypes"]),
                 ),
             )
+
             entity.add_attr(norm_attr)
 
             if self._prov_tracer is not None:
