@@ -54,9 +54,9 @@ def test_basic():
     assert doc.get_annotations_by_label("speech") == [speech_seg_1, speech_seg_2]
     assert doc.get_annotations_by_label("noise") == [noise_seg]
 
-    assert doc.get_annotation_by_id(speech_seg_1.id) == speech_seg_1
-    assert doc.get_annotation_by_id(speech_seg_2.id) == speech_seg_2
-    assert doc.get_annotation_by_id(noise_seg.id) == noise_seg
+    assert doc.get_annotation_by_id(speech_seg_1.uid) == speech_seg_1
+    assert doc.get_annotation_by_id(speech_seg_2.uid) == speech_seg_2
+    assert doc.get_annotation_by_id(noise_seg.uid) == noise_seg
 
 
 def test_raw_segment():
@@ -73,7 +73,7 @@ def test_raw_segment():
     assert doc_with_raw_audio.get_annotations_by_label(AudioDocument.RAW_LABEL) == [
         raw_seg
     ]
-    assert doc_with_raw_audio.get_annotation_by_id(raw_seg.id) == raw_seg
+    assert doc_with_raw_audio.get_annotation_by_id(raw_seg.uid) == raw_seg
     # but not included in full annotations list
     assert raw_seg not in doc_with_raw_audio.get_annotations()
 
@@ -82,11 +82,11 @@ def test_raw_segment():
     assert doc_without_raw_audio.raw_segment is None
     assert not doc_without_raw_audio.get_annotations_by_label(AudioDocument.RAW_LABEL)
 
-    # docs with same ids should have raw audio segments with same id
+    # docs with same ids should have raw audio segments with same uid
     doc_id = generate_id()
     doc_1 = AudioDocument(doc_id=doc_id, audio=audio)
     doc_2 = AudioDocument(doc_id=doc_id, audio=audio)
-    assert doc_1.raw_segment.id == doc_2.raw_segment.id
+    assert doc_1.raw_segment.uid == doc_2.raw_segment.uid
 
     # manually adding raw audio segment is forbidden
     doc = AudioDocument()

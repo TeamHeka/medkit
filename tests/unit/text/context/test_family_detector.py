@@ -197,7 +197,7 @@ def test_prov():
     detector.run(syntagmas)
 
     attr = syntagmas[0].get_attrs_by_label(_OUTPUT_LABEL)[0]
-    prov = prov_tracer.get_prov(attr.id)
+    prov = prov_tracer.get_prov(attr.uid)
     assert prov.data_item == attr
     assert prov.op_desc == detector.description
     assert prov.source_data_items == [syntagmas[0]]

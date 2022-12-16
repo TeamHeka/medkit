@@ -46,7 +46,7 @@ class SpacyInputConverter:
         if op_id is None:
             op_id = generate_id()
 
-        self.id = op_id
+        self.uid = op_id
         self._prov_tracer: Optional[ProvTracer] = None
 
         self.entities = entities
@@ -62,7 +62,7 @@ class SpacyInputConverter:
         )
 
         return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
+            uid=self.uid, name=self.__class__.__name__, config=config
         )
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
@@ -97,7 +97,7 @@ class SpacyInputConverter:
 
     @classmethod
     def from_description(cls, description: OperationDescription):
-        return cls(op_id=description.id, **description.config)
+        return cls(op_id=description.uid, **description.config)
 
     def _load_anns(self, spacy_doc: Doc):
         annotations, attributes_by_ann = extract_anns_and_attrs_from_spacy_doc(
@@ -115,8 +115,8 @@ class SpacyInputConverter:
                 # the input converter does not know the source data item
                 self._prov_tracer.add_prov(ann, self.description, source_data_items=[])
 
-            if ann.id in attributes_by_ann.keys():
-                attrs = attributes_by_ann[ann.id]
+            if ann.uid in attributes_by_ann.keys():
+                attrs = attributes_by_ann[ann.uid]
                 for attr in attrs:
                     ann.add_attr(attr)
                     if self._prov_tracer is not None:
@@ -165,7 +165,7 @@ class SpacyOutputConverter:
         if op_id is None:
             op_id = generate_id()
 
-        self.id = op_id
+        self.uid = op_id
         self._prov_tracer: Optional[ProvTracer] = None
 
         self.nlp = nlp
@@ -184,7 +184,7 @@ class SpacyOutputConverter:
             apply_nlp_spacy=self.apply_nlp_spacy,
         )
         return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
+            uid=self.uid, name=self.__class__.__name__, config=config
         )
 
     def convert(self, medkit_docs: Union[List[TextDocument], Collection]) -> List[Doc]:
@@ -215,8 +215,8 @@ class SpacyOutputConverter:
         for medkit_doc in medkit_docs:
             if medkit_doc.text is None:
                 warnings.warn(
-                    f"The document with id {medkit_doc.id} has no text, it is not"
-                    " converted"
+                    f"The document with identifier {medkit_doc.uid} has no text, it is"
+                    " not converted"
                 )
                 continue
 

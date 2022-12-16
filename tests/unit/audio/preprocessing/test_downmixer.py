@@ -129,13 +129,13 @@ def test_prov():
     downmixer.set_prov_tracer(prov_tracer)
     downmixed_segs = downmixer.run(segs)
 
-    # data item id and operation id are correct
+    # data item uid and operation uid are correct
     downmixed_seg_1 = downmixed_segs[0]
-    prov_1 = prov_tracer.get_prov(downmixed_seg_1.id)
+    prov_1 = prov_tracer.get_prov(downmixed_seg_1.uid)
     assert prov_1.data_item == downmixed_seg_1
     assert prov_1.op_desc == downmixer.description
     # each text segment has corresponding voice segment as source
     assert prov_1.source_data_items == [seg_1]
     downmixed_seg_2 = downmixed_segs[1]
-    prov_2 = prov_tracer.get_prov(downmixed_seg_2.id)
+    prov_2 = prov_tracer.get_prov(downmixed_seg_2.uid)
     assert prov_2.source_data_items == [seg_2]

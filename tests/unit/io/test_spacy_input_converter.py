@@ -268,7 +268,7 @@ def test_prov(nlp_spacy):
     medkit_doc = collection.documents[0]
     entity = medkit_doc.get_annotations_by_label("PERSON")[0]
 
-    prov = prov_tracer.get_prov(entity.id)
+    prov = prov_tracer.get_prov(entity.uid)
     assert prov.data_item == entity
     assert prov.op_desc == spacy_converter.description
     assert len(prov.source_data_items) == 0

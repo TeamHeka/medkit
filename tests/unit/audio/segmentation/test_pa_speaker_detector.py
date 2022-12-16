@@ -204,9 +204,9 @@ def test_prov():
     input_seg_2 = _get_segment(duration=4.0)
     turn_segs = speaker_detector.run([input_seg_1, input_seg_2])
 
-    # data item id and operation id are correct
+    # data item uid and operation uid are correct
     turn_seg_1 = turn_segs[0]
-    prov_1 = prov_tracer.get_prov(turn_seg_1.id)
+    prov_1 = prov_tracer.get_prov(turn_seg_1.uid)
     assert prov_1.data_item == turn_seg_1
     assert prov_1.op_desc == speaker_detector.description
 
@@ -214,14 +214,14 @@ def test_prov():
     assert prov_1.source_data_items == [input_seg_1]
 
     turn_seg_2 = turn_segs[1]
-    prov_2 = prov_tracer.get_prov(turn_seg_2.id)
+    prov_2 = prov_tracer.get_prov(turn_seg_2.uid)
     assert prov_2.source_data_items == [input_seg_1]
 
     # 3d and 4th voices segments have 2d input segment as source
     turn_seg_3 = turn_segs[2]
-    prov_3 = prov_tracer.get_prov(turn_seg_3.id)
+    prov_3 = prov_tracer.get_prov(turn_seg_3.uid)
     assert prov_3.source_data_items == [input_seg_2]
 
     turn_seg_4 = turn_segs[3]
-    prov_4 = prov_tracer.get_prov(turn_seg_4.id)
+    prov_4 = prov_tracer.get_prov(turn_seg_4.uid)
     assert prov_4.source_data_items == [input_seg_2]

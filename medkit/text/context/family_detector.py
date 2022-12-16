@@ -103,7 +103,7 @@ class FamilyDetector(ContextOperation):
         rules:
             The set of rules to use when detecting family references. If none provided,
             the rules in "family_detector_default_rules.yml" will be used
-        proc_id:
+        op_id:
             Identifier of the detector
         """
         # Pass all arguments to super (remove self)

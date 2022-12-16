@@ -99,13 +99,13 @@ def test_prov():
     syntagmas = tokenizer.run([segment])
 
     syntagma_1 = syntagmas[0]
-    prov_1 = prov_tracer.get_prov(syntagma_1.id)
+    prov_1 = prov_tracer.get_prov(syntagma_1.uid)
     assert prov_1.data_item == syntagma_1
     assert prov_1.op_desc == tokenizer.description
     assert prov_1.source_data_items == [segment]
 
     syntagma_2 = syntagmas[1]
-    prov_2 = prov_tracer.get_prov(syntagma_2.id)
+    prov_2 = prov_tracer.get_prov(syntagma_2.uid)
     assert prov_2.data_item == syntagma_2
     assert prov_2.op_desc == tokenizer.description
     assert prov_2.source_data_items == [segment]

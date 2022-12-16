@@ -160,13 +160,13 @@ def test_prov(nlp_spacy_modified):
 
     # check new entity
     entity = medkit_doc.get_annotations_by_label("DATE")[0]
-    entity_prov = prov_tracer.get_prov(entity.id)
+    entity_prov = prov_tracer.get_prov(entity.uid)
     assert entity_prov.data_item == entity
     assert entity_prov.op_desc == spacydoc_pipeline.description
     assert entity_prov.source_data_items == [raw_segment]
 
     attribute = entity.get_attrs()[0]
-    attr_prov = prov_tracer.get_prov(attribute.id)
+    attr_prov = prov_tracer.get_prov(attribute.uid)
     assert attr_prov.data_item == attribute
     assert attr_prov.op_desc == spacydoc_pipeline.description
     # it is a new entity, medkit object origin was raw_ann
@@ -176,7 +176,7 @@ def test_prov(nlp_spacy_modified):
     entity = medkit_doc.get_annotations_by_label("disease")[0]
 
     attribute = entity.get_attrs()[0]
-    attr_prov = prov_tracer.get_prov(attribute.id)
+    attr_prov = prov_tracer.get_prov(attribute.uid)
     assert attr_prov.data_item == attribute
     assert attr_prov.op_desc == spacydoc_pipeline.description
     # it is a medkit entity, medkit object origin was entity

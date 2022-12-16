@@ -81,13 +81,13 @@ def test_prov(nlp_spacy_modified):
 
     # check new entity
     entity = new_segments[0]
-    entity_prov = prov_tracer.get_prov(entity.id)
+    entity_prov = prov_tracer.get_prov(entity.uid)
     assert entity_prov.data_item == entity
     assert entity_prov.op_desc == pipe.description
     assert entity_prov.source_data_items == [segment]
 
     attribute = entity.get_attrs()[0]
-    attr_prov = prov_tracer.get_prov(attribute.id)
+    attr_prov = prov_tracer.get_prov(attribute.uid)
     assert attr_prov.data_item == attribute
     assert attr_prov.op_desc == pipe.description
     assert attr_prov.source_data_items == [segment]

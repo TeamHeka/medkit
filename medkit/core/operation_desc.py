@@ -12,7 +12,7 @@ class OperationDescription:
     ----------
     name:
         The name of the operation (typically the class name)
-    id:
+    uid:
         A unique identifier for the instance
     config:
         The specific configuration of the instance. Ideally, it
@@ -21,8 +21,8 @@ class OperationDescription:
     """
 
     name: str
-    id: str
+    uid: str
     config: Dict[str, Any] = dataclasses.field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(name=self.name, id=self.id, config=self.config)
+        return dict(name=self.name, uid=self.uid, config=self.config)

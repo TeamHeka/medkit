@@ -46,6 +46,6 @@ def test_add_same_attr():
     ann.add_attr(_CUI_ATTR_1)
 
     with pytest.raises(
-        ValueError, match="Attribute with id .* already attached to annotation"
+        ValueError, match="Attribute with uid .* already attached to annotation"
     ):
         ann.add_attr(_CUI_ATTR_1)

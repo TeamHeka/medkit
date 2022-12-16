@@ -21,10 +21,10 @@ class AudioAnnotation(Annotation):
         self,
         label: str,
         attrs: Optional[List[Attribute]] = None,
-        ann_id: Optional[str] = None,
+        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ):
-        super().__init__(label=label, attrs=attrs, ann_id=ann_id, metadata=metadata)
+        super().__init__(label=label, attrs=attrs, uid=uid, metadata=metadata)
 
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
@@ -42,7 +42,7 @@ class Segment(AudioAnnotation):
         span: Span,
         audio: AudioBuffer,
         attrs: Optional[List[Attribute]] = None,
-        ann_id: Optional[str] = None,
+        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ):
         """
@@ -59,12 +59,12 @@ class Segment(AudioAnnotation):
             audio signal.
         attrs:
             Attributes of the segment.
-        ann_id:
+        uid:
             Identifier of the segment.
         metadata:
             Metadata of the segment.
         """
-        super().__init__(ann_id=ann_id, label=label, attrs=attrs, metadata=metadata)
+        super().__init__(uid=uid, label=label, attrs=attrs, metadata=metadata)
 
         self.span = span
         self.audio = audio
@@ -91,6 +91,6 @@ class Segment(AudioAnnotation):
             span=span,
             audio=audio,
             attrs=attrs,
-            ann_id=data["id"],
+            uid=data["uid"],
             metadata=data["metadata"],
         )

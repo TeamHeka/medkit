@@ -56,7 +56,7 @@ def _get_doc():
 def _assert_spacy_doc(doc, raw_annotation):
     assert isinstance(doc, Doc)
     assert Doc.has_extension("medkit_id")
-    assert doc._.get("medkit_id") == raw_annotation.id
+    assert doc._.get("medkit_id") == raw_annotation.uid
 
 
 # test medkit doc to spacy doc
@@ -111,11 +111,11 @@ def test_medkit_to_spacy_doc_selected_ents_list(nlp_spacy):
     doc_ents = sorted(
         spacy_doc.ents, key=lambda ent_spacy: ent_spacy._.get("medkit_id")
     )
-    ents = sorted(ents, key=lambda sp: sp.id)
+    ents = sorted(ents, key=lambda sp: sp.uid)
 
-    # each entity created has the same id and label as its entity of origin
+    # each entity created has the same uid and label as its entity of origin
     for ent_spacy, ent_medkit in zip(doc_ents, ents):
-        assert ent_spacy._.get("medkit_id") == ent_medkit.id
+        assert ent_spacy._.get("medkit_id") == ent_medkit.uid
         assert ent_spacy.label_ == ent_medkit.label
 
     # check disease spacy span
@@ -186,7 +186,7 @@ def test_medkit_segments_to_spacy_docs(nlp_spacy):
         )
         assert isinstance(doc, Doc)
         assert Doc.has_extension("medkit_id")
-        assert doc._.get("medkit_id") == ann_source.id
+        assert doc._.get("medkit_id") == ann_source.uid
         assert doc.text == ann_source.text
 
     # testing when 'include_medkit_info' is False

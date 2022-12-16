@@ -140,19 +140,19 @@ def test_prov():
     entities = matcher.run(sentences)
     assert len(entities) == 3
 
-    # data item id and operation id are correct
+    # data item uid and operation uid are correct
     entity_1 = entities[0]
-    prov_1 = prov_tracer.get_prov(entity_1.id)
+    prov_1 = prov_tracer.get_prov(entity_1.uid)
     assert prov_1.data_item == entity_1
     assert prov_1.op_desc == matcher.description
 
     # 1st and 2nd entities have 1st sentence as source
     assert prov_1.source_data_items == [sentence_1]
     entity_2 = entities[1]
-    prov_2 = prov_tracer.get_prov(entity_2.id)
+    prov_2 = prov_tracer.get_prov(entity_2.uid)
     assert prov_2.source_data_items == [sentence_1]
 
     # 3d entity has 2nd sentence as source
     entity_3 = entities[2]
-    prov_3 = prov_tracer.get_prov(entity_3.id)
+    prov_3 = prov_tracer.get_prov(entity_3.uid)
     assert prov_3.source_data_items == [sentence_2]

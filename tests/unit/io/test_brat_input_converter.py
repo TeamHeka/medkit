@@ -32,12 +32,12 @@ def test_load():
     # check relation for T1
     entity_t1 = doc.get_annotations_by_label("medication")[0]
     entity_t3 = doc.get_annotations_by_label("disease")[0]
-    relations_ent_t1 = doc.get_relations_by_source_id(entity_t1.id)
+    relations_ent_t1 = doc.get_relations_by_source_id(entity_t1.uid)
     assert len(relations_ent_t1) == 1
 
     assert relations_ent_t1[0].label == "treats"
-    assert relations_ent_t1[0].target_id == entity_t3.id
-    assert not doc.get_relations_by_source_id(entity_t3.id)
+    assert relations_ent_t1[0].target_id == entity_t3.uid
+    assert not doc.get_relations_by_source_id(entity_t3.uid)
 
     # check entity T4 disease
     entity_1 = doc.get_annotations_by_label("disease")[1]
@@ -65,12 +65,12 @@ def test_relations():
     relations = doc.get_relations()
     assert len(relations) == 2
 
-    assert relations[0].source_id == doc.get_annotations_by_label("medication")[0].id
-    assert relations[0].target_id == doc.get_annotations_by_label("disease")[0].id
+    assert relations[0].source_id == doc.get_annotations_by_label("medication")[0].uid
+    assert relations[0].target_id == doc.get_annotations_by_label("disease")[0].uid
     assert relations[0].label == "treats"
 
-    assert relations[1].source_id == doc.get_annotations_by_label("medication")[1].id
-    assert relations[1].target_id == doc.get_annotations_by_label("disease")[1].id
+    assert relations[1].source_id == doc.get_annotations_by_label("medication")[1].uid
+    assert relations[1].target_id == doc.get_annotations_by_label("disease")[1].uid
     assert relations[1].label == "treats"
 
 
@@ -90,7 +90,7 @@ def test_prov():
 
     doc = collection.documents[0]
     entity = doc.get_annotations_by_label("disease")[1]
-    prov = prov_tracer.get_prov(entity.id)
+    prov = prov_tracer.get_prov(entity.uid)
     assert prov.data_item == entity
     assert prov.op_desc == brat_converter.description
     assert len(prov.source_data_items) == 0

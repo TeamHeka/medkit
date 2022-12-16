@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class BratEntity:
     """A simple entity annotation data structure."""
 
-    id: str
+    uid: str
     type: str
     span: Tuple[Tuple[int, int], ...]
     text: str
@@ -32,27 +32,27 @@ class BratEntity:
 
     def to_str(self) -> str:
         spans_str = ";".join(f"{span[0]} {span[1]}" for span in self.span)
-        return f"{self.id}\t{self.type} {spans_str}\t{self.text}\n"
+        return f"{self.uid}\t{self.type} {spans_str}\t{self.text}\n"
 
 
 @dataclass
 class BratRelation:
     """A simple relation data structure."""
 
-    id: str
+    uid: str
     type: str
     subj: str
     obj: str
 
     def to_str(self) -> str:
-        return f"{self.id}\t{self.type} Arg1:{self.subj} Arg2:{self.obj}\n"
+        return f"{self.uid}\t{self.type} Arg1:{self.subj} Arg2:{self.obj}\n"
 
 
 @dataclass
 class BratAttribute:
     """A simple attribute data structure."""
 
-    id: str
+    uid: str
     type: str
     target: str
     value: str = None  # Only one value is possible
@@ -60,7 +60,7 @@ class BratAttribute:
     def to_str(self) -> str:
         value = ensure_attr_value(self.value)
         value_str = f" {value}" if value else ""
-        return f"{self.id}\t{self.type} {self.target}{value_str}\n"
+        return f"{self.uid}\t{self.type} {self.target}{value_str}\n"
 
 
 def ensure_attr_value(attr_value: Any) -> str:
@@ -82,7 +82,7 @@ def ensure_attr_value(attr_value: Any) -> str:
 class Grouping:
     """A grouping data structure for entities  of type 'And-Group", "Or-Group'"""
 
-    id: str
+    uid: str
     type: str
     items: List[BratEntity]
 
@@ -95,7 +95,7 @@ class Grouping:
 class BratAugmentedEntity:
     """An augmented entity data structure with its relations and attributes."""
 
-    id: str
+    uid: str
     type: str
     span: Tuple[Tuple[int, int], ...]
     text: str
@@ -126,15 +126,15 @@ class BratDocument:
             entity_relations_to_me = []
             entity_attributes = []
             for relation in self.relations.values():
-                if relation.subj == entity.id:
+                if relation.subj == entity.uid:
                     entity_relations_from_me.append(relation)
-                if relation.obj == entity.id:
+                if relation.obj == entity.uid:
                     entity_relations_to_me.append(relation)
             for attribute in self.attributes.values():
-                if attribute.target == entity.id:
+                if attribute.target == entity.uid:
                     entity_attributes.append(attribute)
-            augmented_entities[entity.id] = BratAugmentedEntity(
-                id=entity.id,
+            augmented_entities[entity.uid] = BratAugmentedEntity(
+                uid=entity.uid,
                 type=entity.type,
                 span=entity.span,
                 text=entity.text,
@@ -358,13 +358,13 @@ def parse_string(ann_string: str, detect_groups: bool = False) -> BratDocument:
         try:
             if ann.startswith("T"):
                 entity = _parse_entity(ann_id, ann_content)
-                entities[entity.id] = entity
+                entities[entity.uid] = entity
             elif ann.startswith("R"):
                 relation = _parse_relation(ann_id, ann_content)
-                relations[relation.id] = relation
+                relations[relation.uid] = relation
             elif ann.startswith("A"):
                 attribute = _parse_attribute(ann_id, ann_content)
-                attributes[attribute.id] = attribute
+                attributes[attribute.uid] = attribute
         except ValueError as err:
             logger.warning(err)
             logger.warning(f"Ignore annotation {ann_id} at line {line_number}")
@@ -374,16 +374,16 @@ def parse_string(ann_string: str, detect_groups: bool = False) -> BratDocument:
     if detect_groups:
         groups: Dict[str, Grouping] = dict()
         grouping_relations = {
-            r.id: r for r in relations.values() if r.type in GROUPING_RELATIONS
+            r.uid: r for r in relations.values() if r.type in GROUPING_RELATIONS
         }
 
         for entity in entities.values():
             if entity.type in GROUPING_ENTITIES:
                 items: List[BratEntity] = list()
                 for relation in grouping_relations.values():
-                    if relation.subj == entity.id:
+                    if relation.subj == entity.uid:
                         items.append(entities[relation.obj])
-                groups[entity.id] = Grouping(entity.id, entity.type, items)
+                groups[entity.uid] = Grouping(entity.uid, entity.type, items)
 
     return BratDocument(entities, relations, attributes, groups)
 

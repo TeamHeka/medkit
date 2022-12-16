@@ -96,8 +96,8 @@ def test_duplicate_a_list_of_attrs_labels():
         family_trigger = target.get_attrs_by_label("family_trigger")[0]
         assert family.value == attr_src_family.value
         assert family_trigger.value == attr_src_family_trigger.value == "Mother"
-        assert family.id != attr_src_family.id
-        assert family_trigger.id != attr_src_family_trigger.id
+        assert family.uid != attr_src_family.uid
+        assert family_trigger.uid != attr_src_family_trigger.uid
 
 
 def test_provenance():
@@ -115,7 +115,7 @@ def test_provenance():
     sentence_attr_1 = sentences[0].get_attrs_by_label("is_family")[0]
     attr_1 = targets[0].get_attrs_by_label("is_family")[0]
 
-    attr_1_prov = prov_tracer.get_prov(attr_1.id)
+    attr_1_prov = prov_tracer.get_prov(attr_1.uid)
     assert attr_1_prov.data_item == attr_1
     assert attr_1_prov.op_desc == duplicator_1.description
     assert attr_1_prov.source_data_items == [sentence_attr_1]

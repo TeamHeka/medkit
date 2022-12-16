@@ -5,7 +5,7 @@ from typing_extensions import Protocol, runtime_checkable
 
 
 class IdentifiableDataItem(Protocol):
-    id: str
+    uid: str
 
 
 IdentifiableDataItemType = TypeVar(

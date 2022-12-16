@@ -41,13 +41,13 @@ class BratInputConverter(InputConverter):
         if op_id is None:
             op_id = generate_id()
 
-        self.id = op_id
+        self.uid = op_id
         self.store: Optional[Store] = store
         self._prov_tracer: Optional[ProvTracer] = None
 
     @property
     def description(self) -> OperationDescription:
-        return OperationDescription(id=self.id, name=self.__class__.__name__)
+        return OperationDescription(uid=self.uid, name=self.__class__.__name__)
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
         self._prov_tracer = prov_tracer
@@ -150,15 +150,15 @@ class BratInputConverter(InputConverter):
         anns_by_brat_id = dict()
 
         # First convert entities, then relations, finally attributes
-        # because new annotation id is needed
+        # because new annotation identifier is needed
         for brat_entity in brat_doc.entities.values():
             entity = Entity(
                 label=brat_entity.type,
                 spans=[Span(*brat_span) for brat_span in brat_entity.span],
                 text=brat_entity.text,
-                metadata=dict(brat_id=brat_entity.id),
+                metadata=dict(brat_id=brat_entity.uid),
             )
-            anns_by_brat_id[brat_entity.id] = entity
+            anns_by_brat_id[brat_entity.uid] = entity
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     entity, self.description, source_data_items=[]
@@ -167,11 +167,11 @@ class BratInputConverter(InputConverter):
         for brat_relation in brat_doc.relations.values():
             relation = Relation(
                 label=brat_relation.type,
-                source_id=anns_by_brat_id[brat_relation.subj].id,
-                target_id=anns_by_brat_id[brat_relation.obj].id,
-                metadata=dict(brat_id=brat_relation.id),
+                source_id=anns_by_brat_id[brat_relation.subj].uid,
+                target_id=anns_by_brat_id[brat_relation.obj].uid,
+                metadata=dict(brat_id=brat_relation.uid),
             )
-            anns_by_brat_id[brat_relation.id] = relation
+            anns_by_brat_id[brat_relation.uid] = relation
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     relation, self.description, source_data_items=[]
@@ -181,7 +181,7 @@ class BratInputConverter(InputConverter):
             attribute = Attribute(
                 label=brat_attribute.type,
                 value=brat_attribute.value,
-                metadata=dict(brat_id=brat_attribute.id),
+                metadata=dict(brat_id=brat_attribute.uid),
             )
             anns_by_brat_id[brat_attribute.target].add_attr(attribute)
             if self._prov_tracer is not None:
@@ -235,7 +235,7 @@ class BratOutputConverter(OutputConverter):
         if op_id is None:
             op_id = generate_id()
 
-        self.id = op_id
+        self.uid = op_id
         self.anns_labels = anns_labels
         self.attrs = attrs
         self.ignore_segments = ignore_segments
@@ -252,7 +252,7 @@ class BratOutputConverter(OutputConverter):
             top_values_by_attr=self.top_values_by_attr,
         )
         return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
+            uid=self.uid, name=self.__class__.__name__, config=config
         )
 
     def save(
@@ -292,7 +292,7 @@ class BratOutputConverter(OutputConverter):
         config = BratAnnConfiguration(self.top_values_by_attr)
 
         for i, medkit_doc in enumerate(docs):
-            doc_id = medkit_doc.id if doc_names is None else doc_names[i]
+            doc_id = medkit_doc.uid if doc_names is None else doc_names[i]
             text = medkit_doc.text
 
             if text is not None:
@@ -375,7 +375,7 @@ class BratOutputConverter(OutputConverter):
         # First convert segments then relations including its attributes
         for medkit_segment in segments:
             brat_entity = self._convert_segment_to_brat(medkit_segment, nb_segment)
-            anns_by_medkit_id[medkit_segment.id] = brat_entity
+            anns_by_medkit_id[medkit_segment.uid] = brat_entity
             config.add_entity_type(brat_entity.type)
             nb_segment += 1
 
@@ -400,26 +400,26 @@ class BratOutputConverter(OutputConverter):
                         label=attr.label,
                         value=value,
                         nb_attribute=nb_attribute,
-                        target_brat_id=brat_entity.id,
+                        target_brat_id=brat_entity.uid,
                         is_from_entity=True,
                     )
-                    anns_by_medkit_id[attr.id] = brat_attr
+                    anns_by_medkit_id[attr.uid] = brat_attr
                     config.add_attribute_type(attr_config)
                     nb_attribute += 1
 
                 except TypeError as err:
-                    logger.warning(f"Ignore attribute {attr.id}. {err}")
+                    logger.warning(f"Ignore attribute {attr.uid}. {err}")
 
         for medkit_relation in relations:
             try:
                 brat_relation, relation_config = self._convert_relation_to_brat(
                     medkit_relation, nb_relation, anns_by_medkit_id
                 )
-                anns_by_medkit_id[medkit_relation.id] = brat_relation
+                anns_by_medkit_id[medkit_relation.uid] = brat_relation
                 config.add_relation_type(relation_config)
                 nb_relation += 1
             except ValueError as err:
-                logger.warning(f"Ignore relation {medkit_relation.id}. {err}")
+                logger.warning(f"Ignore relation {medkit_relation.uid}. {err}")
                 continue
 
             # Note: it seems that brat does not support attributes for relations
@@ -443,14 +443,14 @@ class BratOutputConverter(OutputConverter):
                         label=attr.label,
                         value=value,
                         nb_attribute=nb_attribute,
-                        target_brat_id=brat_relation.id,
+                        target_brat_id=brat_relation.uid,
                         is_from_entity=False,
                     )
-                    anns_by_medkit_id[attr.id] = brat_attr
+                    anns_by_medkit_id[attr.uid] = brat_attr
                     config.add_attribute_type(attr_config)
                     nb_attribute += 1
                 except TypeError as err:
-                    logger.warning(f"Ignore attribute {attr.id}. {err}")
+                    logger.warning(f"Ignore attribute {attr.uid}. {err}")
 
         return anns_by_medkit_id.values()
 
@@ -520,7 +520,7 @@ class BratOutputConverter(OutputConverter):
             raise ValueError("Entity target/source was not found.")
 
         relation_conf = RelationConf(type, arg1=subj.type, arg2=obj.type)
-        return BratRelation(brat_id, type, subj.id, obj.id), relation_conf
+        return BratRelation(brat_id, type, subj.uid, obj.uid), relation_conf
 
     @staticmethod
     def _convert_attribute_to_brat(

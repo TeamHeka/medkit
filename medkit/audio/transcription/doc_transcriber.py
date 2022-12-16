@@ -66,7 +66,7 @@ class DocTranscriber(Operation):
     Generated text documents are instances of
     :class:`~medkit.audio.transcription.transcribed_document.TranscribedDocument`
     (subclass of :class:`~medkit.core.text.document.TextDocument`) with
-    additional info such as the id of the original audio document and a mapping
+    additional info such as the identifier of the original audio document and a mapping
     between audio spans and text spans.
 
     Methods :func: `create_text_segment()` and :func:
@@ -105,7 +105,7 @@ class DocTranscriber(Operation):
         attrs_to_copy:
             Labels of attributes that should be copied from the original audio segments
             to the transcribed text segments.
-        proc_id:
+        op_id:
             Identifier of the transcriber.
         """
 
@@ -180,7 +180,7 @@ class DocTranscriber(Operation):
         store = audio_doc.store if audio_doc.has_shared_store else None
         text_doc = TranscribedDocument(
             text=full_text,
-            audio_doc_id=audio_doc.id,
+            audio_doc_id=audio_doc.uid,
             text_spans_to_audio_spans=text_spans_to_audio_spans,
             store=store,
         )
