@@ -102,14 +102,13 @@ brat_output_converter = BratOutputConverter()
 
 # save the medkit collection in `dir_path`
 brat_output_converter.save(
-  collection,  dir_path="./_out/brat", doc_names=["doc_1"])
+  collection,  dir_path="./brat_out", doc_names=["doc_1"])
 ```
 
 The collection is saved on disk including the following files:
 * `doc_1.txt`: text of medkit document
 * `doc_1.ann`: brat annotation file
 * `annotation.conf`: annotation type configuration
-
 
 By default the name is the `document_id`, you can change it using the `doc_names` parameter.
 
