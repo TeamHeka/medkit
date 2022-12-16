@@ -11,7 +11,7 @@ kernelspec:
   name: python3
 ---
 
-# How to clean text using an Operation
+# Cleaning text with a predefined operation
 
 +++
 
@@ -97,7 +97,7 @@ print(f"text={sentence.text!r}")
 print("spans=\n","\n".join(f"{sp}" for sp in sentence.spans))
 ```
 
-We see a combination of `Span` and `ModifiedSpan` indicating that something changed in the text. The sentence starts at the character (56:`M`) and then the character (57:`.`) is a ModifiedSpan because it was replaced by a single space.
+The sentence starts with the character `M` (index 56), followed by a point `.` which has been replaced by a space (index 57). Then, the whole text up to the newline character has not been modified, so it corresponds to the original span (index 58 to 110). Each modification is stored by `ModifiedSpan` objets, until the end of the sentence, the character index 177.
 
 ## Displaying in the original text
 
