@@ -15,7 +15,20 @@ kernelspec:
 
 +++
 
-[spaCy](https://spacy.io/) is a library for advanced Natural Language Processing in Python. Medkit supports Spacy in input/output conversion as well as annotator. Medkit can load spacy documents with **entities**, **attributes** (custom extensions) and groups of **spans** and convert medkit documents to spacy docs easily.
+[spaCy](https://spacy.io/) is a library for advanced Natural Language Processing in Python. Medkit supports Spacy in input/output conversion as well as annotator. 
+
+| Task                                        | Medkit Operation                                                                        |
+| :------------------------------------------ | --------------------------------------------------------------------------------------- |
+| Load SpacyDocs                              | {class}`~medkit.io.spacy.SpacyInputConverter`                                           |
+| Convert documents to SpacyDocs              | {class}`~medkit.io.spacy.SpacyOutputConverter`                                          |
+| Annotate segments using a Spacy pipeline    | {class}`~medkit.text.spacy.pipeline.SpacyPipeline`                                      |
+| Annotate documents using a Spacy pipeline   | {class}`~medkit.text.spacy.doc_pipeline.SpacyDocPipeline`                               |
+| Detect syntactic relations between entities | {class}`~medkit.text.relations.syntactic_relation_extractor.SyntacticRelationExtractor` |
+
+
+## How I/O integration works
+
+Medkit can load spacy documents with **entities**, **attributes** (custom extensions) and groups of **spans** and convert medkit documents to spacy docs easily.
 
 In this example, we will show how to import spacy documents into medkit and how to convert medkit documents into Spacy documents. We use some spacy concepts, more information can be found in the official spacy documentation.
 
@@ -46,13 +59,13 @@ spacy_doc = nlp(text)
 #  Spacy adds entities, here we add a span 'SECTION' as an example
 spacy_doc.spans["SECTION"] = [SpacySpan(spacy_doc, 0, 2, "header")]
 
-# Adding a custom attribute in spacy
-# We could add information to the entity 'LOC' for example
-# In spacy, we need to set the extension before change its value
+# Adding a custom attribute
+# We need to define the extension before setting its value on an entity. 
+# Let's define an attribute called 'country'
 if not SpacySpan.has_extension("country"):
   SpacySpan.set_extension("country", default=None)
 
-# add the country in the 'LOC' entity
+# Now, we can set the country in the 'LOC' entity
 for e in spacy_doc.ents:
   if e.label_ == 'LOC':
     e._.set("country", 'France')
@@ -84,12 +97,18 @@ The entity 'LOC' has **1** attribute called `country`.
 
 Let's see how to convert this spacy doc in a `TextDocument` with annotations.
 
-## Load spacy docs into a Collection of TextDocuments
+## Load SpacyDocs into a Collection of TextDocuments
 
-The class {class}`~medkit.io.spacy.SpacyInputConverter` is in charge of converting spacy Docs into a collection of TextDocuments. By default, it loads all entities, span groups and extension  attributes for each SpacyDoc object, but you can use the `entities`, `span_groups` and `attrs` parameters to specify which items should be converted, based on their labels.
+The class {class}`~medkit.io.spacy.SpacyInputConverter` is in charge of converting spacy Docs into a collection of TextDocuments. By default, it loads **all** entities, span groups and extension  attributes for each SpacyDoc object, but you can use the `entities`, `span_groups` and `attrs` parameters to specify which items should be converted, based on their labels.
 
 ```{tip}
 You can enable provenance tracing by assigning a {class}`~medkit.core.ProvTracer` object to the SpacyInputConverter with the `set_prov_tracer()` method.
+```
+
+```{note}
+**Span groups in medkit**
+
+In spacy, the spans are grouped with a `key` and each span can have its own label. To be compatible, medkit uses the key as the span `label` and the spacy label is stored as `name` in its metadata.
 ```
 
 
@@ -115,11 +134,10 @@ print(f"The medkit doc has {len(medkit_doc.get_segments())} segment.")
 **What about 'LOC' entity?**
 ```{code-cell} ipython3
 entity = medkit_doc.get_annotations_by_label('LOC')[0]
-attribute = entity.get_attrs_by_label("country")
+attributes = entity.get_attrs_by_label("country")
 print(f"Entity label={entity.label}, Entity text={entity.text}")
 print("Attributes loaded from spacy")
-print(f"The attr `country` was loaded? : {attribute != []}")
-print(attribute)
+print(attributes)
 ```
 **Visualizing Medkit annotations**
 
@@ -132,7 +150,7 @@ As explained in other tutorials, we can display medkit annotations using `displa
 ```{code-cell} ipython3
 from medkit.text.spacy.displacy_utils import medkit_doc_to_displacy
 
-# getting entities in displacy format
+# getting entities in displacy format (default config) 
 entities_data = medkit_doc_to_displacy(medkit_doc)
 displacy.render(entities_data, style="ent",manual=True)
 ```
@@ -144,14 +162,20 @@ displacy.render(entities_data, style="ent",manual=True)
 ```{code-cell} ipython3
 
 # getting spans from 'SECTION' in displacy format
-# In this case, we display the original label from spacy 
-section_data = medkit_doc_to_displacy(medkit_doc,["SECTION"],lambda sp: sp.metadata["name"])
+# In this case, we display the 'name' of the segment
+section_data = medkit_doc_to_displacy(
+  medkit_doc,
+  entity_labels=["SECTION"],
+  entity_formatter=lambda sp: sp.metadata["name"]
+)
 displacy.render(section_data, style="ent",manual=True)
 ```
 
 ## Convert a collection of TextDocument to SpacyDocs
 
-Similarly it is possible to convert a list/Collection of TextDocument to Spacy using {class}`~medkit.io.spacy.SpacyOutputConverter`. You will need to provide an `nlp` object that tokenizes and generates the document with the raw text as reference. By default, it converts all medkit annotations and attributes to Spacy, but you can use  `anns_labels` and `attrs` parameters to specify which items should be converted. 
+Similarly it is possible to convert a list/Collection of TextDocument to Spacy using {class}`~medkit.io.spacy.SpacyOutputConverter`. 
+
+You will need to provide an `nlp` object that tokenizes and generates the document with the raw text as reference. By default, it converts **all** medkit annotations and attributes to Spacy, but you can use  `anns_labels` and `attrs` parameters to specify which items should be converted. 
 
 ```{code-cell} ipython3
 from medkit.io.spacy import SpacyOutputConverter
@@ -162,10 +186,10 @@ spacy_output_converter = SpacyOutputConverter(nlp=nlp)
 # Convert a list of TextDocument 
 
 spacy_docs = spacy_output_converter.convert([medkit_doc])
-spacy_doc_v2 = spacy_docs[0]
+spacy_doc = spacy_docs[0]
 
 # Explore new spacy doc
-print("Text of spacy doc from TextDocument:\n",spacy_doc_v2.text)
+print("Text of spacy doc from TextDocument:\n",spacy_doc.text)
 ```
 
 **Description of the resulting Spacy document**
@@ -175,7 +199,7 @@ print("Text of spacy doc from TextDocument:\n",spacy_doc_v2.text)
 ---
 
 ```{code-cell} ipython3
-displacy.render(spacy_doc_v2, style="ent")
+displacy.render(spacy_doc, style="ent")
 ```
 
 ---
@@ -183,22 +207,22 @@ displacy.render(spacy_doc_v2, style="ent")
 ---
 
 ```{code-cell} ipython3
-displacy.render(spacy_doc_v2, style="span",options={"spans_key": "SECTION"})
+displacy.render(spacy_doc, style="span",options={"spans_key": "SECTION"})
 
 ```
 
 **What about 'LOC' entity?**
 ```{code-cell} ipython3
-entity = [e for e in spacy_doc_v2.ents if e.label_ == 'LOC'][0]
+entity = [e for e in spacy_doc.ents if e.label_ == 'LOC'][0]
 attribute = entity._.get('country')
 print(f"Entity label={entity.label_}. Entity text={entity.text}")
-print("Attributes imported from medkit")
+print("Attribute imported from medkit")
 print(f"The attr `country` was imported? : {attribute is not None}, value={entity._.get('country')}")
 ```
 
 :::{seealso}
 cf. [Spacy IO module](api:io:spacy).
 
-Medkit has more components related to spacy, you may see Spacy text module.
+Medkit has more components related to spacy, you may see [Spacy text module](api:text:spacy).
 
 :::
