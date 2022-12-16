@@ -43,7 +43,7 @@ class Document(Generic[AnnotationType]):
         else:
             has_shared_store = True
 
-        self.id: str = doc_id
+        self.uid: str = doc_id
         self.store: Store = store
         self.has_shared_store = has_shared_store
         self.annotation_ids: Set[str] = set()
@@ -63,27 +63,27 @@ class Document(Generic[AnnotationType]):
         Raises
         ------
         ValueError
-            If `annotation.id` is already in Document.annotations.
+            If `annotation.uid` is already in Document.annotations.
         """
-        id = annotation.id
-        if id in self.annotation_ids:
+        uid = annotation.uid
+        if uid in self.annotation_ids:
             raise ValueError(
-                f"Impossible to add this annotation.The id {id} already"
+                f"Impossible to add this annotation.The uid {uid} already"
                 " exists in the document"
             )
 
-        self.annotation_ids.add(id)
+        self.annotation_ids.add(uid)
         self.store.store_data_item(annotation)
 
         label = annotation.label
         if label not in self.annotation_ids_by_label:
             self.annotation_ids_by_label[label] = []
-        self.annotation_ids_by_label[label].append(id)
+        self.annotation_ids_by_label[label].append(uid)
 
         for key in annotation.keys:
             if key not in self.annotation_ids_by_key:
                 self.annotation_ids_by_key[key] = []
-            self.annotation_ids_by_key[key].append(id)
+            self.annotation_ids_by_key[key].append(uid)
 
     def get_annotation_by_id(self, annotation_id) -> Optional[AnnotationType]:
         """Returns the annotation corresponding to `annotation_id`."""
@@ -96,31 +96,31 @@ class Document(Generic[AnnotationType]):
 
     def get_annotations(self) -> List[AnnotationType]:
         """Returns the list of annotations of the document"""
-        anns = [self.store.get_data_item(id) for id in self.annotation_ids]
+        anns = [self.store.get_data_item(uid) for uid in self.annotation_ids]
         return cast(List[AnnotationType], anns)
 
     def get_annotations_by_key(self, key) -> List[AnnotationType]:
         """Returns the list of annotations of the document using the processing key"""
         anns = [
-            self.store.get_data_item(id)
-            for id in self.annotation_ids_by_key.get(key, [])
+            self.store.get_data_item(uid)
+            for uid in self.annotation_ids_by_key.get(key, [])
         ]
         return cast(List[AnnotationType], anns)
 
     def get_annotations_by_label(self, label) -> List[AnnotationType]:
         """Returns the list of annotations of the document using the label"""
         anns = [
-            self.store.get_data_item(id)
-            for id in self.annotation_ids_by_label.get(label, [])
+            self.store.get_data_item(uid)
+            for uid in self.annotation_ids_by_label.get(label, [])
         ]
         return cast(List[AnnotationType], anns)
 
     def to_dict(self) -> Dict[str, Any]:
-        annotations = [
-            cast(AnnotationType, self.store.get_data_item(id)).to_dict()
-            for id in sorted(self.annotation_ids)
+        anns = [
+            cast(AnnotationType, self.store.get_data_item(uid)).to_dict()
+            for uid in sorted(self.annotation_ids)
         ]
-        return dict(id=self.id, annotations=annotations, metadata=self.metadata)
+        return dict(uid=self.uid, annotations=anns, metadata=self.metadata)
 
 
 class Collection:

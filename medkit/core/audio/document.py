@@ -53,16 +53,16 @@ class AudioDocument(Document[AudioAnnotation]):
         if self.audio is None:
             return None
 
-        # generate deterministic uuid based on document id
-        # so that the annotation id is the same if the doc id is the same
-        rng = random.Random(self.id)
-        id = str(uuid.UUID(int=rng.getrandbits(128)))
+        # generate deterministic uuid based on document identifier
+        # so that the annotation identifier is the same if the doc identifier is the same
+        rng = random.Random(self.uid)
+        uid = str(uuid.UUID(int=rng.getrandbits(128)))
 
         return Segment(
             label=self.RAW_LABEL,
             span=Span(0.0, self.audio.duration),
             audio=self.audio,
-            ann_id=id,
+            uid=uid,
         )
 
     def add_annotation(self, annotation: AudioAnnotation):
@@ -77,7 +77,7 @@ class AudioDocument(Document[AudioAnnotation]):
         Raises
         ------
         RuntimeError
-            Raised when an annotation with the same id is already attached to
+            Raised when an annotation with the same identifier is already attached to
             the document.
         """
         if annotation.label == self.RAW_LABEL:
@@ -95,7 +95,7 @@ class AudioDocument(Document[AudioAnnotation]):
 
     def get_annotation_by_id(self, annotation_id) -> Optional[AudioAnnotation]:
         # inject RAW_AUDIO segment
-        if self.raw_segment is not None and annotation_id == self.raw_segment.id:
+        if self.raw_segment is not None and annotation_id == self.raw_segment.uid:
             return self.raw_segment
         return super().get_annotation_by_id(annotation_id)
 
@@ -115,7 +115,7 @@ class AudioDocument(Document[AudioAnnotation]):
         annotations = [Segment.from_dict(ann_data) for ann_data in data["annotations"]]
 
         doc = cls(
-            doc_id=data["id"],
+            doc_id=data["uid"],
             audio=audio,
             metadata=data["metadata"],
         )

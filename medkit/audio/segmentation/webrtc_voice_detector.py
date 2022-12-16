@@ -87,12 +87,12 @@ class WebRTCVoiceDetector(SegmentationOperation):
         audio = segment.audio
         if audio.nb_channels > 1:
             raise RuntimeError(
-                f"Segment with id {segment.id} has multi-channel audio, which is not"
-                " supported"
+                f"Segment with identifier {segment.uid} has multi-channel audio, which"
+                " is not supported"
             )
         if audio.sample_rate not in _SUPPORTED_SAMPLE_RATES:
             raise RuntimeError(
-                f"Segment with id {segment.id} has non-supported sample rate"
+                f"Segment with identifier {segment.uid} has non-supported sample rate"
                 f" {audio.sample_rate}"
             )
 

@@ -238,9 +238,9 @@ def test_prov(normalizer):
     normalizer.set_prov_tracer(prov_tracer)
     entities = normalizer.run(entities)
 
-    # data item id and operation id are correct
+    # data item uid and operation uid are correct
     attr_1 = entity_1.get_attrs_by_label("umls")[0]
-    prov_1 = prov_tracer.get_prov(attr_1.id)
+    prov_1 = prov_tracer.get_prov(attr_1.uid)
     assert prov_1.data_item == attr_1
     assert prov_1.op_desc == normalizer.description
 
@@ -248,5 +248,5 @@ def test_prov(normalizer):
     assert prov_1.source_data_items == [entity_1]
     # 2nd attribute has 2nd entity as source
     attr_2 = entity_2.get_attrs_by_label("umls")[0]
-    prov_2 = prov_tracer.get_prov(attr_2.id)
+    prov_2 = prov_tracer.get_prov(attr_2.uid)
     assert prov_2.source_data_items == [entity_2]

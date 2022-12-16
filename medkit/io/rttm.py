@@ -75,7 +75,7 @@ class RTTMInputConverter(InputConverter):
         if converter_id is None:
             converter_id = generate_id()
 
-        self.id = converter_id
+        self.uid = converter_id
         self.turn_label = turn_label
         self.speaker_label = speaker_label
         self.store = store
@@ -85,7 +85,7 @@ class RTTMInputConverter(InputConverter):
     @property
     def description(self) -> OperationDescription:
         """Contains all the input converter init parameters."""
-        return OperationDescription(id=self.id, name=self.__class__.__name__)
+        return OperationDescription(uid=self.uid, name=self.__class__.__name__)
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
         """Enable provenance tracing.
@@ -299,7 +299,7 @@ class RTTMOutputConverter(OutputConverter):
                     "doc_names must have the same length as docs when provided"
                 )
         else:
-            doc_names = [doc.id for doc in docs]
+            doc_names = [doc.uid for doc in docs]
 
         rttm_dir.mkdir(parents=True, exist_ok=True)
 
@@ -323,13 +323,13 @@ class RTTMOutputConverter(OutputConverter):
         rttm_file:
             Path of the generated .rttm file.
         rttm_doc_id:
-            File id to use for the generated .rttm file (2d column). If none
-            provided, the document id will be used.
+            File uid to use for the generated .rttm file (2d column). If none
+            provided, the document uid will be used.
         """
 
         rttm_file = Path(rttm_file)
         if rttm_doc_id is None:
-            rttm_doc_id = doc.id
+            rttm_doc_id = doc.uid
 
         turns = doc.get_annotations_by_label(self.turn_label)
         self.save_turn_segments(turns, rttm_file, rttm_doc_id)
@@ -344,12 +344,12 @@ class RTTMOutputConverter(OutputConverter):
 
         Parameters
         ----------
-        doc:
-            Audio document to save.
+        turn_segments:
+            Turn segments to save.
         rttm_file:
             Path of the generated .rttm file.
         rttm_doc_id:
-            File id to use for the generated .rttm file (2d column).
+            File uid to use for the generated .rttm file (2d column).
         """
 
         rttm_file = Path(rttm_file)

@@ -21,10 +21,10 @@ class TextAnnotation(Annotation):
         self,
         label: str,
         attrs: Optional[List[Attribute]] = None,
-        ann_id: Optional[str] = None,
+        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ):
-        super().__init__(label=label, attrs=attrs, ann_id=ann_id, metadata=metadata)
+        super().__init__(label=label, attrs=attrs, uid=uid, metadata=metadata)
 
 
 class Segment(TextAnnotation):
@@ -34,7 +34,7 @@ class Segment(TextAnnotation):
         spans: List[AnySpanType],
         text: str,
         attrs: Optional[List[Attribute]] = None,
-        ann_id: Optional[str] = None,
+        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ):
         """
@@ -50,12 +50,12 @@ class Segment(TextAnnotation):
             The annotation text
         attrs:
             The attributes of the segment
-        ann_id: str, Optional
-            The id of the annotation (if existing)
+        uid: str, Optional
+            The identifier of the annotation (if existing)
         metadata: dict[str, Any], Optional
             The metadata of the annotation
         """
-        super().__init__(ann_id=ann_id, label=label, attrs=attrs, metadata=metadata)
+        super().__init__(uid=uid, label=label, attrs=attrs, metadata=metadata)
         self.spans: List[AnySpanType] = spans
         self.text: str = text
 
@@ -79,7 +79,7 @@ class Segment(TextAnnotation):
         attrs = [Attribute.from_dict(a) for a in segment_dict["attrs"]]
         spans = [AnySpan.from_dict(span) for span in segment_dict["spans"]]
         segment = cls(
-            ann_id=segment_dict["id"],
+            uid=segment_dict["uid"],
             label=segment_dict["label"],
             attrs=attrs,
             spans=spans,
@@ -122,7 +122,7 @@ class Entity(Segment):
         spans: List[AnySpanType],
         text: str,
         attrs: Optional[List[Attribute]] = None,
-        entity_id: Optional[str] = None,
+        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ):
         """
@@ -138,8 +138,8 @@ class Entity(Segment):
             The entity text
         attrs:
             The attributes of the entity
-        entity_id: str, Optional
-            The id of the entity (if existing)
+        uid: str, Optional
+            The identifier of the entity (if existing)
         metadata: dict[str, Any], Optional
             The metadata of the entity
         """
@@ -148,7 +148,7 @@ class Entity(Segment):
             spans=spans,
             text=text,
             attrs=attrs,
-            ann_id=entity_id,
+            uid=uid,
             metadata=metadata,
         )
 
@@ -171,7 +171,7 @@ class Entity(Segment):
         spans = [AnySpan.from_dict(span) for span in entity_dict["spans"]]
 
         entity = cls(
-            entity_id=entity_dict["id"],
+            uid=entity_dict["uid"],
             label=entity_dict["label"],
             attrs=attrs,
             spans=spans,
@@ -190,7 +190,7 @@ class Relation(TextAnnotation):
         source_id: str,
         target_id: str,
         attrs: Optional[List[Attribute]] = None,
-        rel_id: Optional[str] = None,
+        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ):
         """
@@ -201,17 +201,17 @@ class Relation(TextAnnotation):
         label: str
             The relation label
         source_id: str
-            The id of the entity from which the relation is defined
+            The identifier of the entity from which the relation is defined
         target_id: str
-            The id of the entity to which the relation is defined
+            The identifier of the entity to which the relation is defined
         attrs:
             The attributes of the relation
-        rel_id: str, Optional
-            The id of the relation (if existing)
+        uid: str, Optional
+            The identifier of the relation (if existing)
         metadata: Dict[str, Any], Optional
             The metadata of the relation
         """
-        super().__init__(ann_id=rel_id, label=label, attrs=attrs, metadata=metadata)
+        super().__init__(uid=uid, label=label, attrs=attrs, metadata=metadata)
         self.source_id: str = source_id
         self.target_id: str = target_id
 
@@ -238,7 +238,7 @@ class Relation(TextAnnotation):
         attrs = [Attribute.from_dict(a) for a in relation_dict["attrs"]]
 
         relation = cls(
-            rel_id=relation_dict["id"],
+            uid=relation_dict["uid"],
             label=relation_dict["label"],
             attrs=attrs,
             source_id=relation_dict["source_id"],

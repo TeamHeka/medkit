@@ -5,8 +5,8 @@ from medkit.core.document import Document
 
 
 class _MockAnnotation(Annotation):
-    def __init__(self, label, value, keys=None, ann_id=None):
-        super().__init__(label=label, keys=keys, ann_id=ann_id)
+    def __init__(self, label, value, keys=None, uid=None):
+        super().__init__(label=label, keys=keys, uid=uid)
         self.value = value
 
     @classmethod
@@ -26,7 +26,7 @@ def test_basic():
     doc.add_annotation(ann_3)
 
     assert set(doc.get_annotations()) == {ann_1, ann_2, ann_3}
-    assert doc.get_annotation_by_id(ann_1.id) == ann_1
+    assert doc.get_annotation_by_id(ann_1.uid) == ann_1
     assert doc.get_annotations_by_label("name") == [ann_1]
     assert doc.get_annotations_by_label("topic") == [ann_2, ann_3]
     assert doc.get_annotations_by_label("misc") == []

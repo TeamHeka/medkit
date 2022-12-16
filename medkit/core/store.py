@@ -28,13 +28,13 @@ class DictStore:
         self._op_descs_by_id: Dict[str, OperationDescription] = {}
 
     def store_data_item(self, data_item: IdentifiableDataItem):
-        self._data_items_by_id[data_item.id] = data_item
+        self._data_items_by_id[data_item.uid] = data_item
 
     def get_data_item(self, data_item_id: str) -> IdentifiableDataItem:
         return self._data_items_by_id[data_item_id]
 
     def store_op_desc(self, op_desc: OperationDescription):
-        self._op_descs_by_id[op_desc.id] = op_desc
+        self._op_descs_by_id[op_desc.uid] = op_desc
 
     def get_op_desc(self, operation_id: str) -> OperationDescription:
         return self._op_descs_by_id[operation_id]

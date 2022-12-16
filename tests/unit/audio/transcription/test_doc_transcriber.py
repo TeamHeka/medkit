@@ -75,7 +75,7 @@ def test_basic():
     )
     assert text_doc_1.text == expected_text
     # reference to original audio doc
-    assert text_doc_1.audio_doc_id == audio_doc_1.id
+    assert text_doc_1.audio_doc_id == audio_doc_1.uid
     # mapping to audio spans in original doc
     text_span_1 = TextSpan(0, 34)
     text_span_2 = TextSpan(35, 69)
@@ -104,7 +104,7 @@ def test_basic():
     # reconstructed full text is as expected
     assert text_doc_2.text == "This is transcribed text number 3."
     # reference to original audio doc
-    assert text_doc_2.audio_doc_id == audio_doc_2.id
+    assert text_doc_2.audio_doc_id == audio_doc_2.uid
     # mapping to audio spans in original doc
     text_span_3 = TextSpan(0, 34)
     assert text_doc_2.text_spans_to_audio_spans == {
@@ -134,9 +134,9 @@ def test_prov():
     text_segs = text_doc.get_annotations_by_label(_TEXT_LABEL)
     assert len(text_segs) == 2
 
-    # data item id and operation id are correct
+    # data item uid and operation uid are correct
     text_seg_1 = text_segs[0]
-    prov_1 = prov_tracer.get_prov(text_seg_1.id)
+    prov_1 = prov_tracer.get_prov(text_seg_1.uid)
     assert prov_1.data_item == text_seg_1
     assert prov_1.op_desc == doc_transcriber.description
 
@@ -146,7 +146,7 @@ def test_prov():
     assert prov_1.source_data_items == [audio_seg_1]
 
     text_seg_2 = text_segs[1]
-    prov_2 = prov_tracer.get_prov(text_seg_2.id)
+    prov_2 = prov_tracer.get_prov(text_seg_2.uid)
     audio_seg_2 = audios_segs[1]
     assert prov_2.source_data_items == [audio_seg_2]
 

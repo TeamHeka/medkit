@@ -5,7 +5,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.13.8
+    jupytext_version: 1.14.4
 kernelspec:
   display_name: Python 3 (ipykernel)
   language: python
@@ -79,7 +79,6 @@ for entity in entities:
 Let's retrieve and inspect the provenance info concerning this entity:
 
 ```{code-cell} ipython3
-
 def print_prov(prov):
     # data item
     print(f"data_item={prov.data_item.text!r}")
@@ -92,7 +91,7 @@ def print_prov(prov):
     print(f"derived_items={[d.text for d in prov.derived_data_items]}", end="\n\n")
 
 entity = entities[0]
-prov = prov_tracer.get_prov(entity.id)
+prov = prov_tracer.get_prov(entity.uid)
 print_prov(prov)
 ```
 
@@ -135,7 +134,6 @@ node. For visualization, medkit provides a
 {func}`~medkit.tools.save_prov_to_dot` helper function that generates
 [graphviz](https://graphviz.org/)-compatible `.dot` files:
 
-
 ```{code-cell} ipython3
 ---
 render:
@@ -168,7 +166,6 @@ Let's move on to a slightly more complex example: before using the
 `RegexpMatcher` matcher, we will split our document into sentences with a
 `SentenceTokenizer`. We will also wrap our `SentenceTokenizer` and our
 `RegexpMatcher` in a pipeline:
-
 
 ```{code-cell} ipython3
 from medkit.text.segmentation import SentenceTokenizer
@@ -226,7 +223,7 @@ However, if we are interested in the details about what happened inside the
 that can be retrieved with `get_sub_prov_tracer()`:
 
 ```{code-cell} ipython3
-pipeline_prov_tracer = prov_tracer.get_sub_prov_tracer(pipeline.id)
+pipeline_prov_tracer = prov_tracer.get_sub_prov_tracer(pipeline.uid)
 
 for prov in pipeline_prov_tracer.get_provs():
     print_prov(prov)

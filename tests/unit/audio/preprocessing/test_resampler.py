@@ -131,11 +131,11 @@ def test_prov():
     resampled_segs = resampler.run(segs)
 
     resampled_seg_1, resampled_seg_2 = resampled_segs
-    # data item id and operation id are correct
-    prov_1 = prov_tracer.get_prov(resampled_seg_1.id)
+    # data item uid and operation uid are correct
+    prov_1 = prov_tracer.get_prov(resampled_seg_1.uid)
     assert prov_1.data_item == resampled_seg_1
     assert prov_1.op_desc == resampler.description
     # each text segment has corresponding voice segment as source
     assert prov_1.source_data_items == [seg_1]
-    prov_2 = prov_tracer.get_prov(resampled_seg_2.id)
+    prov_2 = prov_tracer.get_prov(resampled_seg_2.uid)
     assert prov_2.source_data_items == [seg_2]

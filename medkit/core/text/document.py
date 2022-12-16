@@ -69,16 +69,16 @@ class TextDocument(Document[TextAnnotation]):
         if self.text is None:
             return None
 
-        # generate deterministic uuid based on document id
-        # so that the annotation id is the same if the doc id is the same
-        rng = random.Random(self.id)
-        id = str(uuid.UUID(int=rng.getrandbits(128)))
+        # generate deterministic uuid based on document uid
+        # so that the annotation uid is the same if the doc uid is the same
+        rng = random.Random(self.uid)
+        uid = str(uuid.UUID(int=rng.getrandbits(128)))
 
         return Segment(
             label=self.RAW_LABEL,
             spans=[Span(0, len(self.text))],
             text=self.text,
-            ann_id=id,
+            uid=uid,
         )
 
     def add_annotation(self, annotation: TextAnnotation):
@@ -87,7 +87,7 @@ class TextDocument(Document[TextAnnotation]):
 
         The method uses the abstract class method to add the annotation
         in the Document.
-        It also adds the annotation id to the corresponding dictionary view (segments,
+        It also adds the annotation uid to the corresponding dictionary view (segments,
         entities, relations)
         according to the annotation category (Segment, Entity, Relation).
 
@@ -99,7 +99,7 @@ class TextDocument(Document[TextAnnotation]):
         Raises
         ------
         ValueError
-            If `annotation.id` is already in Document.annotations.
+            If `annotation.uid` is already in Document.annotations.
 
 
         """
@@ -114,13 +114,13 @@ class TextDocument(Document[TextAnnotation]):
             raise err
 
         if isinstance(annotation, Entity):
-            self._entity_ids.append(annotation.id)
+            self._entity_ids.append(annotation.uid)
         elif isinstance(annotation, Segment):
-            self._segment_ids.append(annotation.id)
+            self._segment_ids.append(annotation.uid)
         elif isinstance(annotation, Relation):
             if annotation.source_id not in self.relations_by_source:
                 self.relations_by_source[annotation.source_id] = []
-            self.relations_by_source[annotation.source_id].append(annotation.id)
+            self.relations_by_source[annotation.source_id].append(annotation.uid)
 
     def get_annotations_by_label(self, label) -> List[TextAnnotation]:
         # inject raw segment
@@ -130,7 +130,7 @@ class TextDocument(Document[TextAnnotation]):
 
     def get_annotation_by_id(self, annotation_id) -> Optional[TextAnnotation]:
         # inject raw segment
-        if self.raw_segment is not None and annotation_id == self.raw_segment.id:
+        if self.raw_segment is not None and annotation_id == self.raw_segment.uid:
             return self.raw_segment
         return super().get_annotation_by_id(annotation_id)
 
@@ -159,7 +159,7 @@ class TextDocument(Document[TextAnnotation]):
                 annotations.append(Entity.from_dict(annotation_dict))
 
         doc = cls(
-            doc_id=doc_dict["id"], metadata=doc_dict["metadata"], text=doc_dict["text"]
+            doc_id=doc_dict["uid"], metadata=doc_dict["metadata"], text=doc_dict["text"]
         )
 
         for annotation in annotations:
@@ -175,7 +175,7 @@ class TextDocument(Document[TextAnnotation]):
         List[Entity]:
             Entities in document
         """
-        return [self.get_annotation_by_id(id) for id in self._entity_ids]
+        return [self.get_annotation_by_id(uid) for uid in self._entity_ids]
 
     def get_segments(self) -> List[Segment]:
         """Return all segments attached to document (not including entities)
@@ -185,11 +185,11 @@ class TextDocument(Document[TextAnnotation]):
         List[~medkit.core.text.Segment]:
             Segments in document
         """
-        return [self.get_annotation_by_id(id) for id in self._segment_ids]
+        return [self.get_annotation_by_id(uid) for uid in self._segment_ids]
 
     def get_relations_by_source_id(self, source_ann_id) -> List[Relation]:
         relation_ids = self.relations_by_source.get(source_ann_id, [])
-        relations = [self.store.get_data_item(id) for id in relation_ids]
+        relations = [self.store.get_data_item(uid) for uid in relation_ids]
         return relations
 
     def get_relations(self) -> List[Relation]:

@@ -85,7 +85,7 @@ class SpacyDocPipeline(DocOperation):
         for medkit_doc in medkit_docs:
             if medkit_doc.text is None:
                 warnings.warn(
-                    f"The document with id {medkit_doc.id} has no text, it is not"
+                    f"The document with uid {medkit_doc.uid} has no text, it is not"
                     " converted"
                 )
                 continue

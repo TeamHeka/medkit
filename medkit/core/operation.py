@@ -17,7 +17,7 @@ C = TypeVar("C", bound="Operation")
 class Operation(abc.ABC):
     """Abstract class for all annotator modules"""
 
-    id: str
+    uid: str
     _description: OperationDescription = None
     _prov_tracer: ProvTracer = None
 
@@ -25,13 +25,13 @@ class Operation(abc.ABC):
     def __init__(self, op_id=None, **kwargs):
         """
         Common initialization for all annotators:
-          * assigning id to operation
+          * assigning identifier to operation
           * storing config in description
 
         Parameters
         ----------
         op_id:
-            Operation id
+            Operation identifier
         kwargs:
             All other arguments of the child init
 
@@ -45,9 +45,9 @@ class Operation(abc.ABC):
         """
         if op_id is None:
             op_id = generate_id()
-        self.id = op_id
+        self.uid = op_id
         self._description = OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=kwargs
+            uid=self.uid, name=self.__class__.__name__, config=kwargs
         )
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
@@ -87,7 +87,7 @@ class Operation(abc.ABC):
             when description is not correct or not adapted to the operation.
         """
         if cls.__class__.__name__ == description.name:
-            return cls(op_id=description.id, **description.config)
+            return cls(op_id=description.uid, **description.config)
         else:
             raise ValueError(
                 "Provided description does not match"

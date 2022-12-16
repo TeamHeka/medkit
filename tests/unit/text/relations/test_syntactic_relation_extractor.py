@@ -123,8 +123,8 @@ def test_entities_without_medkit_id(caplog, tmp_path):
     # it should only add relation between medkit entities
     assert len(relations) == 2
     maladie_ents = medkit_doc.get_annotations_by_label("maladie")
-    assert relations[0].source_id == maladie_ents[0].id
-    assert relations[1].source_id == maladie_ents[1].id
+    assert relations[0].source_id == maladie_ents[0].uid
+    assert relations[1].source_id == maladie_ents[1].uid
 
 
 def test_prov():
@@ -140,7 +140,7 @@ def test_prov():
     relation_extractor.run([medkit_doc])
     relation = medkit_doc.get_relations()[0]
 
-    relation_prov = prov_tracer.get_prov(relation.id)
+    relation_prov = prov_tracer.get_prov(relation.uid)
     assert relation_prov.data_item == relation
     assert relation_prov.op_desc == relation_extractor.description
     assert relation_prov.source_data_items == [medkit_doc.raw_segment]

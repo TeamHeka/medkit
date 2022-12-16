@@ -1,16 +1,17 @@
 ---
 jupytext:
-    formats: md:myst
-    text_representation:
-        extension: .md
-        format_name: myst
-        format_version: 0.13
-        jupytext_version: 1.13.8
+  formats: md:myst
+  text_representation:
+    extension: .md
+    format_name: myst
+    format_version: 0.13
+    jupytext_version: 1.14.4
 kernelspec:
-    display_name: Python 3 (ipykernel)
-    language: python
-    name: python3
+  display_name: Python 3 (ipykernel)
+  language: python
+  name: python3
 ---
+
 # First steps
 
 This tutorial will show you how to use medkit to annotate a text document, by
@@ -64,13 +65,13 @@ through the `raw_segment` attribute of `TextDocument`:
 ```{code-cell} ipython3
 sentences = sent_tokenizer.run([doc.raw_segment])
 for sentence in sentences:
-    print(f"id={sentence.id}")
+    print(f"uid={sentence.uid}")
     print(f"text={sentence.text!r}")
     print(f"spans={sentence.spans}, label={sentence.label}\n")
 ```
 
 As you can see, each segment has:
- - an `id` attribute, which unique value is automatically generated;
+ - an `uid` attribute, which unique value is automatically generated;
  - a `text` attribute holding the text that the segment refers to;
  - a `spans` attribute reflecting the position of this text in the document's
    full raw text. Here we only have one span for each segment, but multiple
@@ -167,11 +168,11 @@ tokenizer:
 entities = regexp_matcher.run(sentences)
 
 for entity in entities:
-    print(f"id={entity.id}")
+    print(f"uid={entity.uid}")
     print(f"text={entity.text!r}, spans={entity.spans}, label={entity.label}\n")
 ```
 
-Just like sentences, each entity has `id`, `text`, `spans` and `label` attributes (in
+Just like sentences, each entity has `uid`, `text`, `spans` and `label` attributes (in
 this case, determined by the rule that was used to match it).
 
 ## Detecting negation
@@ -297,6 +298,7 @@ and its annotations to a json-serializable dict:
 
 ```{code-cell} ipython3
 :tags: [scroll-output]
+
 doc.to_dict()
 ```
 
@@ -309,6 +311,7 @@ provides helper functions to facilitate the use of `displacy` in the
 
 ```{code-cell} ipython3
 :tags: [scroll-output]
+
 from spacy import displacy
 from medkit.text.spacy.displacy_utils import medkit_doc_to_displacy
 

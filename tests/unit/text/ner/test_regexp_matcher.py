@@ -241,13 +241,13 @@ def test_prov():
     entities = matcher.run([sentence])
 
     entity = entities[0]
-    entity_prov = prov_tracer.get_prov(entity.id)
+    entity_prov = prov_tracer.get_prov(entity.uid)
     assert entity_prov.data_item == entity
     assert entity_prov.op_desc == matcher.description
     assert entity_prov.source_data_items == [sentence]
 
     attr = entity.get_attrs_by_label("umls")[0]
-    attr_prov = prov_tracer.get_prov(attr.id)
+    attr_prov = prov_tracer.get_prov(attr.uid)
     assert attr_prov.data_item == attr
     assert attr_prov.op_desc == matcher.description
     assert attr_prov.source_data_items == [sentence]

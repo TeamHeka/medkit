@@ -66,7 +66,7 @@ class NegationMetadata(TypedDict):
     ----------
     rule_id:
         Identifier of the rule used to detect a negation.
-        If the rule has no id, then the index of the rule in
+        If the rule has no uid, then the index of the rule in
         the list of rules is used instead.
     """
 
@@ -208,7 +208,7 @@ class NegationDetector(ContextOperation):
             text = text_unicode if rule.unicode_sensitive else text_ascii
             if pattern.search(text) is not None:
                 if exclusion_pattern is None or exclusion_pattern.search(text) is None:
-                    # return the rule id or the rule index if no id has been set
+                    # return the rule uid or the rule index if no uid has been set
                     rule_id = rule.id if rule.id is not None else rule_index
                     return rule_id
 
@@ -238,7 +238,7 @@ class NegationDetector(ContextOperation):
         return rules
 
     @staticmethod
-    def check_rules_sanity(rules: List[NegationDetector]):
+    def check_rules_sanity(rules: List[NegationDetectorRule]):
         """Check consistency of a set of rules"""
 
         if any(r.id is not None for r in rules):
@@ -249,5 +249,5 @@ class NegationDetector(ContextOperation):
                 )
             if len(set(r.id for r in rules)) != len(rules):
                 raise ValueError(
-                    "Some rules have the same id, each rule must have a unique id"
+                    "Some rules have the same uid, each rule must have a unique uid"
                 )

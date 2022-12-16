@@ -13,7 +13,7 @@ def init_data():
     ent1 = Entity(label="ent1", spans=[Span(0, 0)], text="", attrs=[attribute])
     ent2 = Entity(label="ent2", spans=[Span(0, 0)], text="")
     segment = Segment(label="seg1", spans=[Span(0, 0)], text="")
-    relation = Relation(label="toto", source_id=ent1.id, target_id=ent2.id)
+    relation = Relation(label="toto", source_id=ent1.uid, target_id=ent2.uid)
     return doc, ent1, ent2, segment, relation, attribute
 
 
@@ -31,7 +31,7 @@ def test_add_annotation(init_data):
     # Test relation addition in annotations list
     doc.add_annotation(ent2)
     doc.add_annotation(relation)
-    assert doc.get_annotation_by_id(relation.id) == relation
+    assert doc.get_annotation_by_id(relation.uid) == relation
 
 
 def test_get_annotations_by_key(init_data):
@@ -68,9 +68,9 @@ def test_raw_segment():
     assert seg.text == text
     assert seg.spans == [Span(0, len(text))]
 
-    # also reachable through label and id
+    # also reachable through label and uid
     assert doc.get_annotations_by_label(TextDocument.RAW_LABEL) == [seg]
-    assert doc.get_annotation_by_id(seg.id) is seg
+    assert doc.get_annotation_by_id(seg.uid) is seg
     # but not included in full annotation list
     assert seg not in doc.get_annotations()
 
@@ -79,13 +79,13 @@ def test_raw_segment():
     assert doc.raw_segment is None
     assert not doc.get_annotations_by_label(TextDocument.RAW_LABEL)
 
-    # docs with same ids should have raw text segments with same id
+    # docs with same ids should have raw text segments with same uid
     doc_id = generate_id()
     doc_1 = TextDocument(doc_id=doc_id, text=text)
     ann_1 = doc_1.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
     doc_2 = TextDocument(doc_id=doc_id, text=text)
     ann_2 = doc_2.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
-    assert ann_1.id == ann_2.id
+    assert ann_1.uid == ann_2.uid
 
     # manually adding annotation with reserved label RAW_LABEL is forbidden
     doc = TextDocument()

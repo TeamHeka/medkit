@@ -11,12 +11,12 @@ from tests.unit.core.prov_tracer._common import (
 
 class _PrefixerWrapper:
     def __init__(self, prov_tracer):
-        self.id = generate_id()
+        self.uid = generate_id()
         self.prefixer = Prefixer()
         self.prov_tracer = prov_tracer
         self.sub_prov_tracer = ProvTracer(prov_tracer.store)
         self.prefixer.prov_tracer = self.sub_prov_tracer
-        self.description = OperationDescription(id=self.id, name="PrefixerWrapper")
+        self.description = OperationDescription(uid=self.uid, name="PrefixerWrapper")
 
     def run(self, input_items):
         output_items = self.prefixer.prefix(input_items)
@@ -42,14 +42,14 @@ def test_single_operation():
     assert len(tracer.get_provs()) == len(input_items) + len(output_items)
 
     for input_item, output_item in zip(input_items, output_items):
-        input_prov = tracer.get_prov(input_item.id)
+        input_prov = tracer.get_prov(input_item.uid)
         assert input_prov.data_item == input_item
         assert input_prov.op_desc is None
         assert len(input_prov.source_data_items) == 0
         # input item has corresponding output item as derived
         assert input_prov.derived_data_items == [output_item]
 
-        output_prov = tracer.get_prov(output_item.id)
+        output_prov = tracer.get_prov(output_item.uid)
         assert output_prov.data_item == output_item
         # operation is outer wrapper operation
         assert output_prov.op_desc == wrapper.description
@@ -58,21 +58,21 @@ def test_single_operation():
         assert len(output_prov.derived_data_items) == 0
 
     # check inner sub provenance
-    assert tracer.has_sub_prov_tracer(wrapper.id)
+    assert tracer.has_sub_prov_tracer(wrapper.uid)
     assert len(tracer.get_sub_prov_tracers()) == 1
-    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.uid)
     # must have prov for each input item and each output item
     assert len(sub_tracer.get_provs()) == len(input_items) + len(output_items)
 
     for input_item, output_item in zip(input_items, output_items):
-        input_prov = sub_tracer.get_prov(input_item.id)
+        input_prov = sub_tracer.get_prov(input_item.uid)
         assert input_prov.data_item == input_item
         assert input_prov.op_desc is None
         assert len(input_prov.source_data_items) == 0
         # input item has corresponding output item as derived
         assert input_prov.derived_data_items == [output_item]
 
-        output_prov = sub_tracer.get_prov(output_item.id)
+        output_prov = sub_tracer.get_prov(output_item.uid)
         assert output_prov.data_item == output_item
         # operation is inner prefixer
         assert output_prov.op_desc == wrapper.prefixer.description
@@ -83,7 +83,7 @@ def test_single_operation():
 
 class _DoublePrefixerWrapper:
     def __init__(self, prov_tracer):
-        self.id = generate_id()
+        self.uid = generate_id()
         self.prefixer_1 = Prefixer()
         self.prefixer_2 = Prefixer()
         self.prov_tracer = prov_tracer
@@ -91,7 +91,7 @@ class _DoublePrefixerWrapper:
         self.prefixer_1.prov_tracer = self.sub_prov_tracer
         self.prefixer_2.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(
-            id=self.id, name="DoublePrefixerWrapper"
+            uid=self.uid, name="DoublePrefixerWrapper"
         )
 
     def run(self, input_items):
@@ -121,32 +121,32 @@ def test_intermediate_operation():
     assert len(tracer.get_provs()) == len(input_items) + len(output_items)
 
     for input_item, output_item in zip(input_items, output_items):
-        input_prov = tracer.get_prov(input_item.id)
+        input_prov = tracer.get_prov(input_item.uid)
         # input item has corresponding output item as derived
         assert input_prov.derived_data_items == [output_item]
 
-        output_prov = tracer.get_prov(output_item.id)
+        output_prov = tracer.get_prov(output_item.uid)
         # operation is outer wrapper operation
         assert output_prov.op_desc == wrapper.description
         # output item has corresponding input item as source
         assert output_prov.source_data_items == [input_item]
 
     # check inner sub provenance
-    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.uid)
     # must have prov for each input item, each intermediate item and each output item
     assert len(sub_tracer.get_provs()) == len(input_items) + 2 * len(output_items)
 
     for input_item, output_item in zip(input_items, output_items):
-        assert sub_tracer.has_prov(input_item.id)
+        assert sub_tracer.has_prov(input_item.uid)
 
-        output_prov = sub_tracer.get_prov(output_item.id)
+        output_prov = sub_tracer.get_prov(output_item.uid)
         # operation is inner 1st prefixer
         assert output_prov.op_desc == wrapper.prefixer_2.description
         # output item has 1 intermediate item as source
         assert len(output_prov.source_data_items) == 1
         intermediate_item = output_prov.source_data_items[0]
 
-        intermediate_prov = sub_tracer.get_prov(intermediate_item.id)
+        intermediate_prov = sub_tracer.get_prov(intermediate_item.uid)
         # operation is inner 2d prefixer
         assert intermediate_prov.op_desc == wrapper.prefixer_1.description
         # intermediate item has corresponding input item as source
@@ -154,14 +154,14 @@ def test_intermediate_operation():
         # intermediate item has corresponding output item as derived
         assert intermediate_prov.derived_data_items == [output_item]
 
-        input_prov = sub_tracer.get_prov(input_item.id)
+        input_prov = sub_tracer.get_prov(input_item.uid)
         # input item has corresponding intermediate item as derived
         assert input_prov.derived_data_items == [intermediate_item]
 
 
 class _PrefixerMergerWrapper:
     def __init__(self, prov_tracer):
-        self.id = generate_id()
+        self.uid = generate_id()
         self.prefixer = Prefixer()
         self.merger = Merger()
         self.prov_tracer = prov_tracer
@@ -169,7 +169,7 @@ class _PrefixerMergerWrapper:
         self.prefixer.prov_tracer = self.sub_prov_tracer
         self.merger.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(
-            id=self.id, name="PrefixerMergerWrapper"
+            uid=self.uid, name="PrefixerMergerWrapper"
         )
 
     def run(self, input_items):
@@ -198,24 +198,24 @@ def test_multi_input_operation():
     # must have prov for each input item and each output item
     assert len(tracer.get_provs()) == len(input_items) + 1
 
-    output_prov = tracer.get_prov(output_item.id)
+    output_prov = tracer.get_prov(output_item.uid)
     # operation is outer wrapper operation
     assert output_prov.op_desc == wrapper.description
     # output item has all input items as sources
     assert output_prov.source_data_items == input_items
 
     # check inner sub provenance
-    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.uid)
     # must have prov for each input item, each prefixed item and each output item
     nb_prefixed_items = len(input_items)
     assert len(sub_tracer.get_provs()) == len(input_items) + nb_prefixed_items + 1
     # merged item has all prefixed items as sources
-    merged_prov = sub_tracer.get_prov(output_item.id)
+    merged_prov = sub_tracer.get_prov(output_item.uid)
     assert merged_prov.op_desc == wrapper.merger.description
     assert len(merged_prov.source_data_items) == nb_prefixed_items
 
     for prefixed_item, input_item in zip(merged_prov.source_data_items, input_items):
-        prefixed_prov = sub_tracer.get_prov(prefixed_item.id)
+        prefixed_prov = sub_tracer.get_prov(prefixed_item.uid)
         # operation is inner prefixer
         assert prefixed_prov.op_desc == wrapper.prefixer.description
         # prefixed item has corresponding input item as source
@@ -224,7 +224,7 @@ def test_multi_input_operation():
 
 class _SplitterPrefixerWrapper:
     def __init__(self, prov_tracer):
-        self.id = generate_id()
+        self.uid = generate_id()
         self.splitter = Splitter()
         self.prefixer = Prefixer()
         self.prov_tracer = prov_tracer
@@ -232,7 +232,7 @@ class _SplitterPrefixerWrapper:
         self.splitter.prov_tracer = self.sub_prov_tracer
         self.prefixer.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(
-            id=self.id, name="SplitterPrefixerMWrapper"
+            uid=self.uid, name="SplitterPrefixerMWrapper"
         )
 
     def run(self, input_items):
@@ -264,13 +264,13 @@ def test_multi_output_operation():
     for i, output_item in enumerate(output_items):
         input_item = input_items[i // 2]
         # output item has corresponding input item as source
-        output_prov = tracer.get_prov(output_item.id)
+        output_prov = tracer.get_prov(output_item.uid)
         # operation is outer wrapper operation
         assert output_prov.op_desc == wrapper.description
         assert output_prov.source_data_items == [input_item]
 
     # check inner sub provenance
-    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.uid)
     # must have prov for each input item, each prefixed item and each output item
     nb_split_items = 2 * len(input_items)
     assert len(sub_tracer.get_provs()) == len(input_items) + nb_split_items + len(
@@ -280,13 +280,13 @@ def test_multi_output_operation():
     for i, prefixed_item in enumerate(output_items):
         input_item = input_items[i // 2]
 
-        prefixed_prov = sub_tracer.get_prov(prefixed_item.id)
+        prefixed_prov = sub_tracer.get_prov(prefixed_item.uid)
         assert prefixed_prov.op_desc == wrapper.prefixer.description
         # prefixed item has one split item as source
         assert len(prefixed_prov.source_data_items) == 1
 
         split_item = prefixed_prov.source_data_items[0]
-        split_prov = sub_tracer.get_prov(split_item.id)
+        split_prov = sub_tracer.get_prov(split_item.uid)
         # operation is inner splitter
         assert split_prov.op_desc == wrapper.splitter.description
         # split item has its corresponding input item as source
@@ -295,7 +295,7 @@ def test_multi_output_operation():
 
 class _BranchedPrefixerWrapper:
     def __init__(self, prov_tracer):
-        self.id = generate_id()
+        self.uid = generate_id()
         self.prefixer_1 = Prefixer()
         self.prefixer_2 = Prefixer()
         self.prov_tracer = prov_tracer
@@ -303,7 +303,7 @@ class _BranchedPrefixerWrapper:
         self.prefixer_1.prov_tracer = self.sub_prov_tracer
         self.prefixer_2.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(
-            id=self.id, name="BrancherPrefixerWrapper"
+            uid=self.uid, name="BrancherPrefixerWrapper"
         )
 
     def run(self, input_items):
@@ -337,27 +337,27 @@ def test_operation_reusing_output():
     )
 
     for input_item, prefixed_item in zip(input_items, prefixed_items):
-        prefixed_prov = tracer.get_prov(prefixed_item.id)
+        prefixed_prov = tracer.get_prov(prefixed_item.uid)
         # operation is outer wrapper operation
         assert prefixed_prov.op_desc == wrapper.description
         # prefixed item has corresponding input item as source
         assert prefixed_prov.source_data_items == [input_item]
     for input_item, double_prefixed_item in zip(input_items, prefixed_items):
-        double_prefixed_prov = tracer.get_prov(double_prefixed_item.id)
+        double_prefixed_prov = tracer.get_prov(double_prefixed_item.uid)
         # operation is outer wrapper operation
         assert double_prefixed_prov.op_desc == wrapper.description
         # prefixed item has corresponding input item as source
         assert double_prefixed_prov.source_data_items == [input_item]
 
     # check inner sub provenance
-    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.uid)
     # must have prov for each input item, each prefixed item and each double prefixed item
     assert len(sub_tracer.get_provs()) == len(input_items) + len(prefixed_items) + len(
         double_prefixed_items
     )
 
     for input_item, prefixed_item in zip(input_items, prefixed_items):
-        prefixed_prov = sub_tracer.get_prov(prefixed_item.id)
+        prefixed_prov = sub_tracer.get_prov(prefixed_item.uid)
         # operation is inner 1st prefixer
         assert prefixed_prov.op_desc == wrapper.prefixer_1.description
         # prefixed item has corresponding input item as source
@@ -366,7 +366,7 @@ def test_operation_reusing_output():
     for prefixed_item, double_prefixed_item in zip(
         prefixed_items, double_prefixed_items
     ):
-        double_prefixed_prov = sub_tracer.get_prov(double_prefixed_item.id)
+        double_prefixed_prov = sub_tracer.get_prov(double_prefixed_item.uid)
         # operation is inner 2d prefixer
         assert double_prefixed_prov.op_desc == wrapper.prefixer_2.description
         # double prefixed item has corresponding prefixed item as source
@@ -391,19 +391,19 @@ def test_consecutive_calls():
     assert len(tracer.get_provs()) == len(input_items) + len(output_items)
 
     # check inner sub provenance
-    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.uid)
     # must have prov for each input item, each intermediate item and each output item
     assert len(sub_tracer.get_provs()) == len(input_items) + 2 * len(output_items)
 
 
 class _NestedWrapper:
     def __init__(self, prov_tracer):
-        self.id = generate_id()
+        self.uid = generate_id()
         self.prov_tracer = prov_tracer
         self.sub_prov_tracer = ProvTracer(prov_tracer.store)
         self.sub_wrapper_1 = _DoublePrefixerWrapper(self.sub_prov_tracer)
         self.sub_wrapper_2 = _DoublePrefixerWrapper(self.sub_prov_tracer)
-        self.description = OperationDescription(id=self.id, name="NestedWrapper")
+        self.description = OperationDescription(uid=self.uid, name="NestedWrapper")
 
     def run(self, input_items):
         output_items = self.sub_wrapper_1.run(input_items)
@@ -428,23 +428,23 @@ def test_nested():
     # check outer main provenance
     input_item = input_items[0]
     prefixed_item = prefixed_items[0]
-    prov = tracer.get_prov(prefixed_item.id)
+    prov = tracer.get_prov(prefixed_item.uid)
     assert prov.op_desc == wrapper.description
     assert prov.source_data_items == [input_item]
 
     # check inner sub provenance
     assert len(tracer.get_sub_prov_tracers()) == 1
-    sub_tracer = tracer.get_sub_prov_tracer(wrapper.id)
-    prov = sub_tracer.get_prov(prefixed_item.id)
+    sub_tracer = tracer.get_sub_prov_tracer(wrapper.uid)
+    prov = sub_tracer.get_prov(prefixed_item.uid)
     assert prov.op_desc == wrapper.sub_wrapper_1.description
     assert prov.source_data_items == [input_item]
 
     # check innermost "sub sub" provenance
     assert len(sub_tracer.get_sub_prov_tracers()) == 2
-    sub_sub_tracer_1 = sub_tracer.get_sub_prov_tracer(wrapper.sub_wrapper_1.id)
-    prov = sub_sub_tracer_1.get_prov(prefixed_item.id)
+    sub_sub_tracer_1 = sub_tracer.get_sub_prov_tracer(wrapper.sub_wrapper_1.uid)
+    prov = sub_sub_tracer_1.get_prov(prefixed_item.uid)
     assert prov.op_desc == wrapper.sub_wrapper_1.prefixer_2.description
     intermediate_item = prov.source_data_items[0]
-    prov = sub_sub_tracer_1.get_prov(intermediate_item.id)
+    prov = sub_sub_tracer_1.get_prov(intermediate_item.uid)
     assert prov.op_desc == wrapper.sub_wrapper_1.prefixer_1.description
     assert prov.source_data_items == [input_item]

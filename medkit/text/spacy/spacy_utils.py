@@ -63,12 +63,12 @@ def extract_anns_and_attrs_from_spacy_doc(
     annotations: List[~medkit.core.text.Segment]
         Segments extracted from the spacy Doc object
     attributes_by_ann: Dict[str, List[Attribute]]]
-        Attributes extracted for each annotation, the key is a medkit id
+        Attributes extracted for each annotation, the key is a medkit uid
 
     Raises
     ------
     ValueError
-        Raises when the given medkit source and the spacy doc do not have the same medkit id
+        Raises when the given medkit source and the spacy doc do not have the same medkit uid
     """
 
     # extensions to indicate the medkit origin
@@ -77,12 +77,12 @@ def extract_anns_and_attrs_from_spacy_doc(
     if spacy_doc_medkit_id is not None:
         if (
             medkit_source_ann is not None
-            and medkit_source_ann.id != spacy_doc_medkit_id
+            and medkit_source_ann.uid != spacy_doc_medkit_id
         ):
             msg = (
-                "The medkit id of the Doc object is"
+                "The medkit uid of the Doc object is"
                 f" {spacy_doc_medkit_id}, the medkit source annotation"
-                f" provided has a different id: {medkit_source_ann.id}."
+                f" provided has a different uid: {medkit_source_ann.uid}."
             )
             raise ValueError(msg)
 
@@ -106,7 +106,7 @@ def extract_anns_and_attrs_from_spacy_doc(
             )
 
             entity = Entity(label=label, spans=spans, text=text)
-            medkit_id = entity.id
+            medkit_id = entity.uid
             annotations.append(entity)
 
         # for each spacy extension having a value other than None,
@@ -131,7 +131,7 @@ def extract_anns_and_attrs_from_spacy_doc(
                     span_spacy=span_spacy, medkit_source_ann=medkit_source_ann
                 )
                 segment = Segment(label=label, spans=spans, text=text, attrs=[])
-                medkit_id = segment.id
+                medkit_id = segment.uid
                 annotations.append(segment)
 
             # for each spacy extension having a value other than None,
@@ -247,7 +247,7 @@ def build_spacy_doc_from_medkit_segment(
     # create spacy doc
     doc = nlp.make_doc(segment.text)
     if include_medkit_info:
-        doc._.set(_ATTR_MEDKIT_ID, segment.id)
+        doc._.set(_ATTR_MEDKIT_ID, segment.uid)
 
     if annotations == []:
         return doc
@@ -425,7 +425,7 @@ def _segment_to_spacy_span(
     )
 
     if include_medkit_info:
-        span._.set(_ATTR_MEDKIT_ID, medkit_segment.id)
+        span._.set(_ATTR_MEDKIT_ID, medkit_segment.uid)
 
     # in medkit having an attribute, indicates that the attribute exists
     # for the given annotation, we force True as value
@@ -434,7 +434,7 @@ def _segment_to_spacy_span(
             # set attributes as extensions
             span._.set(attr.label, True if attr.value is None else attr.value)
             if include_medkit_info:
-                span._.set(f"{attr.label}_{_ATTR_MEDKIT_ID}", attr.id)
+                span._.set(f"{attr.label}_{_ATTR_MEDKIT_ID}", attr.uid)
 
     return span
 

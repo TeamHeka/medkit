@@ -203,7 +203,7 @@ def test_prov():
     clean_segments = cleaner.run([raw_segment])
 
     clean_segment = clean_segments[0]
-    prov_1 = prov_tracer.get_prov(clean_segment.id)
+    prov_1 = prov_tracer.get_prov(clean_segment.uid)
     assert prov_1.data_item == clean_segment
     assert prov_1.op_desc == cleaner.description
     assert prov_1.source_data_items == [raw_segment]

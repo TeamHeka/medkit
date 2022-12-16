@@ -49,14 +49,14 @@ def test_prov():
     segments = doc.get_annotations_by_label("turn")
 
     seg = segments[0]
-    seg_prov = prov_tracer.get_prov(seg.id)
+    seg_prov = prov_tracer.get_prov(seg.uid)
     assert seg_prov.data_item == seg
     assert len(seg_prov.source_data_items) == 0
     assert len(seg_prov.derived_data_items) == 0
     assert seg_prov.op_desc == converter.description
 
     speaker_attr = seg.get_attrs_by_label("speaker")[0]
-    attr_prov = prov_tracer.get_prov(speaker_attr.id)
+    attr_prov = prov_tracer.get_prov(speaker_attr.uid)
     assert attr_prov.data_item == speaker_attr
     assert len(attr_prov.source_data_items) == 0
     assert len(attr_prov.derived_data_items) == 0
