@@ -142,7 +142,7 @@ attributes to pre-existing entities.
 .. automodule:: medkit.text.ner.umls_coder_normalizer
     :members:
 ```
-
+(api:text:spacy)=
 ## Spacy modules
 
 This section lists operations and utilities related to spacy. They are part of
@@ -183,5 +183,13 @@ This section lists operations related to translation. They are part of
 
 ```{eval-rst}
 .. automodule:: medkit.text.translation
+    :members:
+```
+
+## Extraction of syntactic relations
+This module detect syntactic relations between entities using a parser of dependencies.
+
+```{eval-rst}
+.. automodule:: medkit.text.relations
     :members:
 ```
