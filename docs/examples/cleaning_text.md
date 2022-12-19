@@ -62,7 +62,7 @@ print(clean_segment.text)
 
 ```
 
-The class works on `Segments`. In the `run` method it performs several operations to delete or change characters of interest. By default it performs these operations:
+The class works on `Segments`. In the `run` method it performs several operations to delete or change characters of interest. By default, it performs these operations:
 
 * Changes points between uppercase letters to spaces
 * Changes points between numbers to commas
@@ -97,7 +97,7 @@ print(f"text={sentence.text!r}")
 print("spans=\n","\n".join(f"{sp}" for sp in sentence.spans))
 ```
 
-The sentence starts with the character `M` (index 56), followed by a point `.` which has been replaced by a space (index 57). Then, the whole text up to the newline character has not been modified, so it corresponds to the original span (index 58 to 110). Each modification is stored by `ModifiedSpan` objets, until the end of the sentence, the character index 177.
+The sentence starts with the character `M` (index 56), followed by a point `.` which has been replaced by a space (index 57). Then, the whole text up to the newline character has not been modified, so it corresponds to the original span (index 58 to 110). Each modification is stored by `ModifiedSpan` objects, until the end of the sentence, the character index 177.
 
 ## Displaying in the original text
 
