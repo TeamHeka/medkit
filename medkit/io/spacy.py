@@ -22,7 +22,7 @@ class SpacyInputConverter:
         entities: Optional[List[str]] = None,
         span_groups: Optional[List[str]] = None,
         attrs: Optional[List[str]] = None,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """Initialize the spacy input converter
 
@@ -39,14 +39,14 @@ class SpacyInputConverter:
         attrs:
             Name of span extensions to convert into medkit attributes.
             If `None` (default) all non-None extensions will be added for each annotation
-        op_id:
+        uid:
             Identifier of the converter
         """
 
-        if op_id is None:
-            op_id = generate_id()
+        if uid is None:
+            uid = generate_id()
 
-        self.uid = op_id
+        self.uid = uid
         self._prov_tracer: Optional[ProvTracer] = None
 
         self.entities = entities
@@ -137,7 +137,7 @@ class SpacyOutputConverter:
         apply_nlp_spacy: bool = False,
         labels_anns: Optional[List[str]] = None,
         attrs: Optional[List[str]] = None,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """Initialize the spacy output converter
 
@@ -158,14 +158,14 @@ class SpacyOutputConverter:
             Labels of medkit attributes to add in the annotations that will be included.
             If `None` (default) all the attributes will be added as `custom attributes`
             in each annotation included.
-        op_id:
+        uid:
             Identifier of the pipeline
 
         """
-        if op_id is None:
-            op_id = generate_id()
+        if uid is None:
+            uid = generate_id()
 
-        self.uid = op_id
+        self.uid = uid
         self._prov_tracer: Optional[ProvTracer] = None
 
         self.nlp = nlp

@@ -32,7 +32,7 @@ class RushSentenceTokenizer(SegmentationOperation):
         output_label: str = DefaultConfig.output_label,
         path_to_rules: Union[str, Path] = DefaultConfig.path_to_rules,
         keep_newlines: bool = DefaultConfig.keep_newlines,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Instantiate the RuSH tokenizer
@@ -50,7 +50,7 @@ class RushSentenceTokenizer(SegmentationOperation):
             With the default rules, newline chars are not used to split
             sentences, therefore a sentence maybe contain one or more newline chars.
             If `keep_newlines` is False, newlines will be replaced by spaces.
-        op_id:
+        uid:
             Identifier of the tokenizer
         """
         # Pass all arguments to super (remove self)

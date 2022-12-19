@@ -11,7 +11,7 @@ You can find several examples of implemented modules in [medkit.text](../api/tex
 For all operations inheriting from `Operation` abstract class, these 4 lines
 shall be added in `__init__` method:
 ```
-def __init__(self, ..., op_id=None):
+def __init__(self, ..., uid=None):
     ...
     # Pass all arguments to super (remove self)
     init_args = locals()
@@ -27,7 +27,7 @@ class MyTokenizer(SegmentationOperation):
         self,
         output_label,
         ...
-        op_id = None,
+        uid = None,
     ):
         # Pass all arguments to super (remove self)
         init_args = locals()

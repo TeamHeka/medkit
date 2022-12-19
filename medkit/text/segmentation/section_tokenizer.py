@@ -34,7 +34,7 @@ class SectionTokenizer(SegmentationOperation):
         section_dict: Dict[str, List[str]],
         output_label: str = DefaultConfig.output_label,
         section_rules: Tuple[SectionModificationRule] = (),
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Initialize the Section Tokenizer

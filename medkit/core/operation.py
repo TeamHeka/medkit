@@ -22,7 +22,7 @@ class Operation(abc.ABC):
     _prov_tracer: ProvTracer = None
 
     @abc.abstractmethod
-    def __init__(self, op_id=None, **kwargs):
+    def __init__(self, uid=None, **kwargs):
         """
         Common initialization for all annotators:
           * assigning identifier to operation
@@ -30,7 +30,7 @@ class Operation(abc.ABC):
 
         Parameters
         ----------
-        op_id:
+        uid:
             Operation identifier
         kwargs:
             All other arguments of the child init
@@ -43,9 +43,9 @@ class Operation(abc.ABC):
         >>> init_args.pop('self')
         >>> super().__init__(**init_args)
         """
-        if op_id is None:
-            op_id = generate_id()
-        self.uid = op_id
+        if uid is None:
+            uid = generate_id()
+        self.uid = uid
         self._description = OperationDescription(
             uid=self.uid, name=self.__class__.__name__, config=kwargs
         )

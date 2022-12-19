@@ -90,7 +90,7 @@ class DocTranscriber(Operation):
         output_label: str,
         transcriber_func: TranscriberFunction,
         attrs_to_copy: Optional[List[str]] = None,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
@@ -105,7 +105,7 @@ class DocTranscriber(Operation):
         attrs_to_copy:
             Labels of attributes that should be copied from the original audio segments
             to the transcribed text segments.
-        op_id:
+        uid:
             Identifier of the transcriber.
         """
 

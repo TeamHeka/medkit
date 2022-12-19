@@ -139,7 +139,7 @@ class RegexpMatcher(NEROperation):
         self,
         rules: Optional[List[RegexpMatcherRule]] = None,
         attrs_to_copy: Optional[List[str]] = None,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Instantiate the regexp matcher
@@ -153,7 +153,7 @@ class RegexpMatcher(NEROperation):
             Labels of the attributes that should be copied from the source segment
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
-        op_id:
+        uid:
             Identifier of the tokenizer
         """
         # Pass all arguments to super (remove self)

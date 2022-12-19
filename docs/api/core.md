@@ -87,7 +87,7 @@ Here is a graph representing this hierarchy:
 For all operations inheriting from `Operation` abstract class, these 4 lines
 shall be added in `__init__` method:
 ```
-def __init__(self, ..., op_id=None):
+def __init__(self, ..., uid=None):
     ...
     # Pass all arguments to super (remove self)
     init_args = locals()

@@ -28,7 +28,7 @@ class Normalizer(Operation):
         self,
         output_label: str,
         rules: List[NormalizerRule] = None,
-        op_id: str = None,
+        uid: str = None,
     ):
         """
         TODO: change default output_label
@@ -38,7 +38,7 @@ class Normalizer(Operation):
             The output label of the created annotations
         rules
             The list of normalization rules
-        op_id
+        uid
             Identifier of the pre-processing module
         """
         # Pass all arguments to super (remove self)

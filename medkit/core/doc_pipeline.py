@@ -19,7 +19,7 @@ class DocPipeline(DocOperation):
         self,
         pipeline: Pipeline,
         labels_by_input_key: Dict[str, List[str]],
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """Initialize the pipeline
 

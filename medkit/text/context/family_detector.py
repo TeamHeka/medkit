@@ -93,7 +93,7 @@ class FamilyDetector(ContextOperation):
         self,
         output_label: str,
         rules: Optional[List[FamilyDetectorRule]] = None,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
@@ -103,7 +103,7 @@ class FamilyDetector(ContextOperation):
         rules:
             The set of rules to use when detecting family references. If none provided,
             the rules in "family_detector_default_rules.yml" will be used
-        op_id:
+        uid:
             Identifier of the detector
         """
         # Pass all arguments to super (remove self)

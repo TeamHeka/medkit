@@ -26,7 +26,7 @@ class SentenceTokenizer(SegmentationOperation):
         punct_chars: Tuple[str] = DefaultConfig.punct_chars,
         keep_punct: bool = DefaultConfig.keep_punct,
         split_on_newlines: bool = DefaultConfig.split_on_newlines,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Instantiate the sentence tokenizer
@@ -42,7 +42,7 @@ class SentenceTokenizer(SegmentationOperation):
             If False, the sentence text does not include the end punctuations.
         split_on_newlines:
             Whether to consider that newlines characters are sentence boundaries or not.
-        op_id: str, Optional
+        uid: str, Optional
             Identifier of the tokenizer
         """
         # Pass all arguments to super (remove self)

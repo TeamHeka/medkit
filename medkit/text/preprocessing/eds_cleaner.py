@@ -49,7 +49,7 @@ class EDSCleaner(Operation):
         keep_endlines: bool = DefaultConfig.keep_endlines,
         handle_parentheses_eds: bool = DefaultConfig.handle_parentheses_eds,
         handle_points_eds: bool = DefaultConfig.handle_points_eds,
-        op_id: str = None,
+        uid: str = None,
     ):
         """
         Instantiate the endlines handler.
@@ -70,7 +70,7 @@ class EDSCleaner(Operation):
             Modify points near to predefined keywords for french documents
             If True (default), modify the points near to keywords
             If False, the points near to keywords is not modified
-        op_id
+        uid
             Identifier of the pre-processing module
         """
         # Pass all arguments to super (remove self)

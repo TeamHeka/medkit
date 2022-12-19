@@ -57,7 +57,7 @@ class PASpeakerDetector(SegmentationOperation):
         max_nb_speakers: Optional[int] = None,
         segmentation_batch_size: int = 1,
         embedding_batch_size: int = 1,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
@@ -88,7 +88,7 @@ class PASpeakerDetector(SegmentationOperation):
             Number of input segments in batches processed by segmentation model.
         embedding_batch_size:
             Number of pre-segmented audios in batches processed by embedding model.
-        op_id:
+        uid:
             Identifier of the detector.
         """
 

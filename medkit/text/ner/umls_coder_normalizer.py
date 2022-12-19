@@ -101,7 +101,7 @@ class UMLSCoderNormalizer(Operation):
         batch_size: int = 128,
         nb_umls_embeddings_chunks: Optional[int] = None,
         hf_cache_dir: Optional[Union[str, Path]] = None,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
@@ -151,7 +151,7 @@ class UMLSCoderNormalizer(Operation):
             for each group.
             Use this when umls embeddings are too big to be fully loaded in memory.
             The higher this value, the more memory needed.
-        op_id:
+        uid:
             Identifier of the normalizer.
         """
         # Pass all arguments to super (remove self)
