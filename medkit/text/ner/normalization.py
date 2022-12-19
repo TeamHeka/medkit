@@ -63,7 +63,7 @@ class UMLSNormalization(EntityNormalization):
         Parameters:
         -----------
         cui:
-            CUI to which the annotation should be linked.
+            CUI (Concept Unique Identifier) to which the annotation should be linked.
         umls_version:
             Optional version of the UMLS database (ex: "202AB").
         term:
