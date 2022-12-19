@@ -11,7 +11,7 @@ import quickumls.constants
 
 from medkit.core import Attribute
 from medkit.core.text import Entity, NEROperation, Segment, span_utils
-from medkit.text.ner.normalization import UMLSNormalization
+from medkit.text.ner.umls_normalization import UMLSNormalization
 
 
 # workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/issues/68

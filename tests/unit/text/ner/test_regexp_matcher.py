@@ -1,8 +1,8 @@
 import logging
 
 from medkit.core import Attribute, ProvTracer
-from medkit.core.text import Segment, Span
-from medkit.text.ner import EntityNormalization, UMLSNormalization
+from medkit.core.text import Segment, Span, EntityNormalization
+from medkit.text.ner import UMLSNormalization
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,

@@ -13,7 +13,7 @@ import yaml
 from medkit.core import Operation, Attribute
 from medkit.core.text import Entity
 import medkit.core.utils
-from medkit.text.ner.normalization import UMLSNormalization
+from medkit.text.ner.umls_normalization import UMLSNormalization
 from medkit.text.ner.umls_utils import (
     load_umls,
     preprocess_term_to_match,

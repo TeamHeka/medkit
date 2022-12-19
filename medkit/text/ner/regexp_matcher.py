@@ -18,8 +18,14 @@ import unidecode
 import yaml
 
 from medkit.core import Attribute
-from medkit.core.text import Entity, NEROperation, Segment, span_utils
-from medkit.text.ner.normalization import EntityNormalization, UMLSNormalization
+from medkit.core.text import (
+    Entity,
+    NEROperation,
+    Segment,
+    EntityNormalization,
+    span_utils,
+)
+from medkit.text.ner.umls_normalization import UMLSNormalization
 
 
 logger = logging.getLogger(__name__)
