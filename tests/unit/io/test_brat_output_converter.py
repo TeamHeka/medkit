@@ -334,7 +334,7 @@ def _get_modified_medkit_doc():
             ],
             label="maladie",
             text="Douleur abdominale",
-            entity_id="e1",
+            uid="e1",
         ),
         Entity(
             spans=[
@@ -344,7 +344,7 @@ def _get_modified_medkit_doc():
             ],
             label="grade",
             text="grade 4",
-            entity_id="e2",
+            uid="e2",
         ),
     ]
     for ann in medkit_anns:
@@ -361,8 +361,8 @@ def test_brat_output_from_modified_span(tmp_path: Path):
     medkit_doc = _get_modified_medkit_doc()
     medkit_doc.annotation_ids = sorted(medkit_doc.annotation_ids)
     output_path = tmp_path / "output"
-    expected_txt_path = output_path / f"{medkit_doc.id}.txt"
-    expected_ann_path = output_path / f"{medkit_doc.id}.ann"
+    expected_txt_path = output_path / f"{medkit_doc.uid}.txt"
+    expected_ann_path = output_path / f"{medkit_doc.uid}.ann"
 
     # define a brat output converter
     brat_converter = BratOutputConverter(anns_labels=None, create_config=False)
