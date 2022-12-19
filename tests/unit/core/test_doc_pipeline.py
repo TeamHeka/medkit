@@ -7,7 +7,6 @@ from medkit.core import (
     Attribute,
     Pipeline,
     PipelineStep,
-    OperationDescription,
 )
 from medkit.core.doc_pipeline import DocPipeline
 
@@ -55,10 +54,6 @@ class _Uppercaser:
         self.id = generate_id()
         self.output_label = output_label
 
-    @property
-    def description(self):
-        return OperationDescription(id=self.id, name="Uppercaser")
-
     def run(self, anns):
         uppercase_anns = []
         for ann in anns:
@@ -78,10 +73,6 @@ class _Prefixer:
         self.output_label = output_label
         self.prefix = prefix
 
-    @property
-    def description(self):
-        return OperationDescription(id=self.id, name="Prefixer")
-
     def run(self, anns):
         prefixed_anns = []
         for ann in anns:
@@ -99,10 +90,6 @@ class _AttributeAdder:
     def __init__(self, output_label):
         self.id = generate_id()
         self.output_label = output_label
-
-    @property
-    def description(self):
-        return OperationDescription(id=self.id, name="AttributeAdder")
 
     def run(self, anns):
         for ann in anns:
