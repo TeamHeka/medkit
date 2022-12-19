@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from medkit.core.annotation import Annotation, Attribute
 from medkit.core.text import span_utils
+from medkit.core.text.normalization import EntityNormalization
 from medkit.core.text.span import AnySpan, AnySpanType
 
 if TYPE_CHECKING:
@@ -116,6 +117,8 @@ class Segment(TextAnnotation):
 
 
 class Entity(Segment):
+    NORM_LABEL = "NORMALIZATION"
+
     def __init__(
         self,
         label: str,
@@ -181,6 +184,40 @@ class Entity(Segment):
         entity.keys = set(entity_dict["keys"])
 
         return entity
+
+    def add_norm(self, normalization: EntityNormalization) -> Attribute:
+        """
+        Attach an :class:`~medkit.core.text.EntityNormalization` object to the
+        entity.
+
+        This helper will wrap `normalization` in an
+        :class:`~medkit.core.annotation.Attribute` with `Entity.NORM_LABEL` as
+        label and add it to the entity.
+
+        Returns
+        -------
+        Attribute:
+            The attribute that was created and added to the entity
+        """
+
+        attr = Attribute(label=self.NORM_LABEL, value=normalization)
+        self.add_attr(attr)
+        return attr
+
+    def get_norms(self) -> List[EntityNormalization]:
+        """
+        Return all `EntityNormalization` objects attached to the entity.
+
+        This helper will retrieve all the entity attributes with
+        `Entity.NORM_LABEL` as label and return their
+        :class:`~medkit.core.text.normalization.EntityNormalization` values.
+
+        Returns
+        -------
+        List[EntityNormalization]:
+            All normalizations attached to the entity.
+        """
+        return [a.value for a in self.get_attrs_by_label(label=self.NORM_LABEL)]
 
 
 class Relation(TextAnnotation):
