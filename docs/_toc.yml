@@ -11,6 +11,9 @@ parts:
 - caption: Examples
   chapters:
   - file: examples/spans
+  - file: examples/cleaning_text
+  - file: examples/brat_io
+  - file: examples/spacy_io
 - caption: API reference
   chapters:
   - file: api/core.rst

@@ -113,11 +113,8 @@ def clean_multiple_whitespaces_in_sentence(
     >>> print(text)
     A phrase with multiple spaces
     """
-    alphanums_chars = _UPPERCASE_CHARS + _LOWERCASE_CHARS + _NUMERIC_CHARS
-    lowernums_chars = _LOWERCASE_CHARS + _NUMERIC_CHARS
-
-    pattern = rf"[{alphanums_chars},:](\s{{2,}})[{lowernums_chars}]"
-    text, spans = _replace_text(text, spans, pattern, " ", group=1)
+    pattern = r"([ \t]{2,})"
+    text, spans = _replace_text(text, spans, pattern, " ", group=0)
     return text, spans
 
 
@@ -190,7 +187,7 @@ def replace_multiple_newline_after_sentence(
         The cleaned text and the list of spans updated
 
     """
-    pattern = rf"(?P<blanks>\r?\n[\t\r\n\t\s]*)[{_NUMERIC_CHARS}{_UPPERCASE_CHARS}]"
+    pattern = rf"(?P<blanks>\r?\n[\r\n]*)[\t\s]*[{_NUMERIC_CHARS}{_UPPERCASE_CHARS}]"
     replace_by = "\n"
     text, spans = _replace_text(text, spans, pattern, repl=replace_by, group="blanks")
     return text, spans
@@ -214,7 +211,7 @@ def replace_newline_inside_sentence(
         The cleaned text and the list of spans updated
 
     """
-    pattern = rf"(?P<blanks>\r?\n[\t\r\n\t\s]*)[{_LOWERCASE_CHARS}{_PUNCT_CHARS}]"
+    pattern = rf"(?P<blanks>\r?\n[\r\n]*)[\t\s]*[{_LOWERCASE_CHARS}{_PUNCT_CHARS}]"
     replace_by = " "
     text, spans = _replace_text(text, spans, pattern, repl=replace_by, group="blanks")
     return text, spans

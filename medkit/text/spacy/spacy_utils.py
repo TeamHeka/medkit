@@ -130,7 +130,15 @@ def extract_anns_and_attrs_from_spacy_doc(
                 text, spans = _get_text_and_spans_from_span_spacy(
                     span_spacy=span_spacy, medkit_source_ann=medkit_source_ann
                 )
-                segment = Segment(label=label, spans=spans, text=text, attrs=[])
+                segment = Segment(
+                    label=label,
+                    spans=spans,
+                    text=text,
+                    attrs=[],
+                    metadata={"name": span_spacy.label_},
+                )
+                # 'label' represents 'span_key' from spacy
+                # 'name' in metadata represents the original label of the span in spacy
                 medkit_id = segment.uid
                 annotations.append(segment)
 
@@ -420,9 +428,8 @@ def _segment_to_spacy_span(
     """Create a spacy span given a medkit segment."""
     # create a spacy span from characters in the text instead of tokens
     start, end = _get_span_boundaries(medkit_segment.spans)
-    span = spacy_doc_target.char_span(
-        start, end, alignment_mode="expand", label=medkit_segment.label
-    )
+    label = medkit_segment.metadata.get("name", medkit_segment.label)
+    span = spacy_doc_target.char_span(start, end, alignment_mode="expand", label=label)
 
     if include_medkit_info:
         span._.set(_ATTR_MEDKIT_ID, medkit_segment.uid)

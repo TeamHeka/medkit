@@ -15,9 +15,15 @@ TEST_DEFAULT_CONFIG = [
             Span(start=0, end=20),
             ModifiedSpan(length=1, replaced_spans=[Span(start=20, end=21)]),
             Span(start=21, end=43),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=43, end=49)]),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=43, end=48), Span(start=48, end=49)],
+            ),
             Span(start=49, end=57),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=57, end=63)]),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=57, end=59), Span(start=59, end=63)],
+            ),
             Span(start=63, end=79),
         ],
     ),
@@ -58,9 +64,15 @@ TEST_DEFAULT_CONFIG = [
         "Le patient reviens le 4 d avril",
         [
             Span(start=0, end=10),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=10, end=20)]),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=10, end=13), Span(start=13, end=20)],
+            ),
             Span(start=20, end=27),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=27, end=30)]),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=27, end=29), Span(start=29, end=30)],
+            ),
             Span(start=30, end=36),
             ModifiedSpan(length=1, replaced_spans=[Span(start=36, end=40)]),
             Span(start=40, end=45),
@@ -90,6 +102,8 @@ def _get_raw_segment(text):
 def test_default_cleaner(text, expected_text, expected_spans):
     # default config: this configuration allows to obtain the
     # same results as in the original version of the endlines function
+    # Note: EDSCleaner replaces now all whitespaces by a single whitespace
+    # this is different from the original implementation but it's more coherent
     cleaner = EDSCleaner(
         keep_endlines=False, handle_parentheses_eds=True, handle_points_eds=True
     )
@@ -103,27 +117,33 @@ TEST_PARAMS_CONFIG = [
     (
         EDSCleaner(keep_endlines=True),
         (
-            "Le patient\n\n\n       reviens. Nom patient"
+            "Le patient\n\n\n  reviens. Nom patient"
             " probleme.\n\nTraitement :\n\n\n à dose curative dès cet appel."
         ),
         (
-            "Le patient reviens. Nom patient probleme..\nTraitement : à dose"
-            " curative dès cet appel."
+            "Le patient reviens. Nom patient probleme..\nTraitement : à dose curative"
+            " dès cet appel."
         ),
         [
             Span(start=0, end=10),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=10, end=20)]),
-            Span(start=20, end=50),
-            ModifiedSpan(length=2, replaced_spans=[Span(start=50, end=52)]),
-            Span(start=52, end=64),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=64, end=68)]),
-            Span(start=68, end=98),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=10, end=13), Span(start=13, end=15)],
+            ),
+            Span(start=15, end=45),
+            ModifiedSpan(length=2, replaced_spans=[Span(start=45, end=47)]),
+            Span(start=47, end=59),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=59, end=62), Span(start=62, end=63)],
+            ),
+            Span(start=63, end=93),
         ],
     ),
     (
         EDSCleaner(keep_endlines=False),
         (
-            "Le patient\n\n\n       reviens. Nom patient"
+            "Le patient\n\n\nreviens. Nom patient"
             " probleme.\n\nTraitement :\n\n\n à dose curative dès cet appel."
         ),
         (
@@ -132,12 +152,18 @@ TEST_PARAMS_CONFIG = [
         ),
         [
             Span(start=0, end=10),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=10, end=20)]),
-            Span(start=20, end=50),
-            ModifiedSpan(length=2, replaced_spans=[Span(start=50, end=52)]),
-            Span(start=52, end=64),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=64, end=68)]),
-            Span(start=68, end=98),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=10, end=13)],
+            ),
+            Span(start=13, end=43),
+            ModifiedSpan(length=2, replaced_spans=[Span(start=43, end=45)]),
+            Span(start=45, end=57),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=57, end=60), Span(start=60, end=61)],
+            ),
+            Span(start=61, end=91),
         ],
     ),
     (
@@ -154,24 +180,31 @@ TEST_PARAMS_CONFIG = [
             Span(start=0, end=15),
             ModifiedSpan(length=1, replaced_spans=[Span(start=15, end=16)]),
             Span(start=16, end=69),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=69, end=73)]),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=69, end=72), Span(start=72, end=73)],
+            ),
             Span(start=73, end=103),
         ],
     ),
-    (
+    (  # whitespaces are removed now
         EDSCleaner(handle_points_eds=False),
         (
-            "Nom patient : la Mme. Marie Du  \n\npont, date le     .24 avril .    pour"
+            "Nom patient : la Mme. Marie Du \n\npont, date le     .24 avril .    pour"
             " un probleme"
         ),
-        (
-            "Nom patient : la Mme. Marie Du pont, date le     .24 avril .    pour un"
-            " probleme"
-        ),
+        "Nom patient : la Mme. Marie Du pont, date le .24 avril . pour un probleme",
         [
             Span(start=0, end=30),
-            ModifiedSpan(length=1, replaced_spans=[Span(start=30, end=34)]),
-            Span(start=34, end=83),
+            ModifiedSpan(
+                length=1,
+                replaced_spans=[Span(start=30, end=31), Span(start=31, end=33)],
+            ),
+            Span(start=33, end=46),
+            ModifiedSpan(length=1, replaced_spans=[Span(start=46, end=51)]),
+            Span(start=51, end=62),
+            ModifiedSpan(length=1, replaced_spans=[Span(start=62, end=66)]),
+            Span(start=66, end=82),
         ],
     ),
 ]
