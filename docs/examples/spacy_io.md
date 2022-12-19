@@ -165,8 +165,8 @@ displacy.render(entities_data, style="ent",manual=True)
 # In this case, we display the 'name' of the segment
 section_data = medkit_doc_to_displacy(
   medkit_doc,
-  entity_labels=["SECTION"],
-  entity_formatter=lambda sp: sp.metadata["name"]
+  segment_labels=["SECTION"],
+  segment_formatter=lambda sp: sp.metadata["name"]
 )
 displacy.render(section_data, style="ent",manual=True)
 ```
