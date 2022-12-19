@@ -19,7 +19,7 @@ import yaml
 
 from medkit.core import Attribute
 from medkit.core.text import Entity, NEROperation, Segment, span_utils
-from medkit.text.ner.normalization import Normalization, UMLSNormalization
+from medkit.text.ner.normalization import EntityNormalization, UMLSNormalization
 
 
 logger = logging.getLogger(__name__)
@@ -296,11 +296,11 @@ class RegexpMatcher(NEROperation):
             yield entity
 
     @staticmethod
-    def _create_norm_attr(norm: RegexpMatcherNormalization) -> Normalization:
+    def _create_norm_attr(norm: RegexpMatcherNormalization) -> EntityNormalization:
         if norm.kb_name == "umls":
             norm = UMLSNormalization(cui=norm.id, umls_version=norm.kb_version)
         else:
-            norm = Normalization(
+            norm = EntityNormalization(
                 kb_name=norm.kb_name, kb_id=norm.id, kb_version=norm.kb_version
             )
         return Attribute(label="normalization", value=norm)

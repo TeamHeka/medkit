@@ -1,9 +1,9 @@
-__all__ = ["Normalization", "UMLSNormalization"]
+__all__ = ["EntityNormalization", "UMLSNormalization"]
 
 from typing import Any, Dict, List, Optional
 
 
-class Normalization:
+class EntityNormalization:
     """Normalization linking an entity to an ID in a knowledge base."""
 
     def __init__(
@@ -48,7 +48,7 @@ class Normalization:
         )
 
 
-class UMLSNormalization(Normalization):
+class UMLSNormalization(EntityNormalization):
     """Normalization attribute linking an entity to a CUI in the UMLS knowledge base."""
 
     def __init__(

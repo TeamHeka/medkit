@@ -2,7 +2,7 @@ import logging
 
 from medkit.core import Attribute, ProvTracer
 from medkit.core.text import Segment, Span
-from medkit.text.ner import Normalization, UMLSNormalization
+from medkit.text.ner import EntityNormalization, UMLSNormalization
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,
@@ -115,7 +115,7 @@ def test_normalization():
     norm_attrs = entity.get_attrs_by_label("normalization")
     assert len(norm_attrs) == 2
     norm_1 = norm_attrs[0].value
-    assert type(norm_1) is Normalization
+    assert type(norm_1) is EntityNormalization
     assert norm_1.kb_name == "icd"
     assert norm_1.kb_version == "10"
     assert norm_1.kb_id == "E10-E14"
