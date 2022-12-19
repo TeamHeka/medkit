@@ -49,6 +49,12 @@ def medkit_doc_to_displacy(
             for label in segment_labels
             for e in medkit_doc.get_annotations_by_label(label)
         ]
+        if not all(isinstance(s, Segment) for s in segments):
+            raise ValueError(
+                "Cannot display with displacy annotations that are not subclasses of"
+                " Segment, make sure that you have provided labels only referring to"
+                " segments or entities"
+            )
     else:
         segments = medkit_doc.get_entities()
 
