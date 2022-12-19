@@ -3,7 +3,7 @@ from __future__ import annotations
 __all__ = ["Normalizer", "NormalizerRule"]
 
 import re
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Optional
 
 from medkit.core.operation import Operation
 from medkit.core.text import Segment, span_utils
@@ -28,7 +28,8 @@ class Normalizer(Operation):
         self,
         output_label: str,
         rules: List[NormalizerRule] = None,
-        uid: str = None,
+        name: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         TODO: change default output_label
@@ -38,6 +39,8 @@ class Normalizer(Operation):
             The output label of the created annotations
         rules
             The list of normalization rules
+        name:
+            Name describing the pre-processing module (defaults to the class name)
         uid
             Identifier of the pre-processing module
         """

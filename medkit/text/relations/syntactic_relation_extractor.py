@@ -43,6 +43,7 @@ class SyntacticRelationExtractor(DocOperation):
         relation_label: str = DefaultConfig.relation_label,
         entities_source: Optional[List[str]] = None,
         entities_target: Optional[List[str]] = None,
+        name: Optional[str] = None,
         uid: Optional[str] = None,
     ):
         """Initialize the syntactic relation extractor
@@ -62,6 +63,8 @@ class SyntacticRelationExtractor(DocOperation):
         entities_target: List[str]
             Labels of medkit entities to use as target of the relation.
             If `None`, any entity can be used as target.
+        name:
+            Name describing the relation extractor (defaults to the class name)
         uid:
             Identifier of the relation extractor
 

@@ -18,6 +18,7 @@ class SpacyPipeline(Operation):
         spacy_entities: Optional[List[str]] = None,
         spacy_span_groups: Optional[List[str]] = None,
         spacy_attrs: Optional[List[str]] = None,
+        name: Optional[str] = None,
         uid: Optional[str] = None,
     ):
         """Initialize the segment annotator
@@ -36,6 +37,8 @@ class SpacyPipeline(Operation):
             Name of span extensions to convert into medkit attributes.
             If `None` (default) all non-None extensions will be added for each annotation with
             a medkit ID.
+        name:
+            Name describing the pipeline (defaults to the class name).
         uid:
             Identifier of the pipeline
         """

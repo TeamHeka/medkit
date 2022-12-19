@@ -29,6 +29,7 @@ class HFEntityMatcher(NEROperation):
         device: int = -1,
         batch_size: int = 1,
         cache_dir: Optional[Union[str, Path]] = None,
+        name: Optional[str] = None,
         uid: Optional[str] = None,
     ):
         """
@@ -53,6 +54,8 @@ class HFEntityMatcher(NEROperation):
         cache_dir:
             Directory where to store downloaded models. If not set, the default
             HuggingFace cache dir is used.
+        name:
+            Name describing the matcher (defaults to the class name).
         uid:
             Identifier of the matcher.
         """
