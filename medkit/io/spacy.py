@@ -62,7 +62,7 @@ class SpacyInputConverter:
         )
 
         return OperationDescription(
-            uid=self.uid, name=self.__class__.__name__, config=config
+            uid=self.uid, class_name=self.__class__.__name__, config=config
         )
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
@@ -180,7 +180,7 @@ class SpacyOutputConverter:
             apply_nlp_spacy=self.apply_nlp_spacy,
         )
         return OperationDescription(
-            uid=self.uid, name=self.__class__.__name__, config=config
+            uid=self.uid, class_name=self.__class__.__name__, config=config
         )
 
     def convert(self, medkit_docs: Union[List[TextDocument], Collection]) -> List[Doc]:

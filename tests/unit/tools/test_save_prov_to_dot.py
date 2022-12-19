@@ -22,18 +22,20 @@ def _get_segment_and_entity(with_attr=False):
 
 
 def _build_prov(prov_tracer, sentence_segment, syntagma_segment, entity):
-    tokenizer_desc = OperationDescription(name="SyntagmaTokenizer", uid=generate_id())
+    tokenizer_desc = OperationDescription(
+        uid=generate_id(), class_name="SyntagmaTokenizer"
+    )
     prov_tracer.add_prov(
         syntagma_segment, tokenizer_desc, source_data_items=[sentence_segment]
     )
 
-    matcher_desc = OperationDescription(name="EntityMatcher", uid=generate_id())
+    matcher_desc = OperationDescription(uid=generate_id(), class_name="EntityMatcher")
     prov_tracer.add_prov(entity, matcher_desc, source_data_items=[syntagma_segment])
 
     for attr in entity.get_attrs():
         # add attribute to entity
         neg_detector_desc = OperationDescription(
-            name="NegationDetector", uid=generate_id()
+            uid=generate_id(), class_name="NegationDetector"
         )
         prov_tracer.add_prov(
             attr, neg_detector_desc, source_data_items=[syntagma_segment]
@@ -129,7 +131,7 @@ def test_sub_prov(tmp_path):
     _build_prov(sub_prov_tracer, sentence_segment, syntagma_segment, entity)
 
     # wrap it in outer pipeline graph
-    pipeline_desc = OperationDescription(name="Pipeline", uid=generate_id())
+    pipeline_desc = OperationDescription(uid=generate_id(), class_name="Pipeline")
     prov_tracer.add_prov_from_sub_tracer([entity], pipeline_desc, sub_prov_tracer)
 
     # render dot, not expanding sub provenance

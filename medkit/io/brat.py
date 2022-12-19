@@ -47,7 +47,7 @@ class BratInputConverter(InputConverter):
 
     @property
     def description(self) -> OperationDescription:
-        return OperationDescription(uid=self.uid, name=self.__class__.__name__)
+        return OperationDescription(uid=self.uid, class_name=self.__class__.__name__)
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
         self._prov_tracer = prov_tracer
@@ -252,7 +252,7 @@ class BratOutputConverter(OutputConverter):
             top_values_by_attr=self.top_values_by_attr,
         )
         return OperationDescription(
-            uid=self.uid, name=self.__class__.__name__, config=config
+            uid=self.uid, class_name=self.__class__.__name__, config=config
         )
 
     def save(

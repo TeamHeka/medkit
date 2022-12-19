@@ -47,7 +47,7 @@ class _Uppercaser:
 
     @property
     def description(self):
-        return OperationDescription(uid=self.uid, name="Uppercaser")
+        return OperationDescription(uid=self.uid, class_name="Uppercaser")
 
     def set_prov_tracer(self, prov_tracer):
         self._prov_tracer = prov_tracer
@@ -73,7 +73,7 @@ class _Prefixer:
 
     @property
     def description(self):
-        return OperationDescription(uid=self.uid, name="Prefixer")
+        return OperationDescription(uid=self.uid, class_name="Prefixer")
 
     def set_prov_tracer(self, prov_tracer):
         self._prov_tracer = prov_tracer
@@ -99,7 +99,7 @@ class _AttributeAdder:
 
     @property
     def description(self):
-        return OperationDescription(uid=self.uid, name="AttributeAdder")
+        return OperationDescription(uid=self.uid, class_name="AttributeAdder")
 
     def set_prov_tracer(self, prov_tracer):
         self._prov_tracer = prov_tracer
