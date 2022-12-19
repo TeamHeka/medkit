@@ -66,6 +66,8 @@ class UMLSNormalization(EntityNormalization):
             CUI to which the annotation should be linked.
         umls_version:
             Optional version of the UMLS database (ex: "202AB").
+        term:
+            Normalized version of the entity text.
         score:
             Optional score reflecting confidence of this link.
         sem_types:
