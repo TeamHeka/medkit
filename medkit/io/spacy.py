@@ -95,10 +95,6 @@ class SpacyInputConverter:
 
         return Collection(medkit_docs)
 
-    @classmethod
-    def from_description(cls, description: OperationDescription):
-        return cls(op_id=description.uid, **description.config)
-
     def _load_anns(self, spacy_doc: Doc):
         annotations, attributes_by_ann = extract_anns_and_attrs_from_spacy_doc(
             spacy_doc=spacy_doc,

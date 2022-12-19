@@ -15,9 +15,7 @@ class OperationDescription:
     uid:
         A unique identifier for the instance
     config:
-        The specific configuration of the instance. Ideally, it
-        should be possible to use that dict to reinstantiate the same
-        operation
+        The specific configuration of the instance
     """
 
     name: str

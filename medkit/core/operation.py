@@ -4,14 +4,12 @@ __all__ = ["Operation", "DocOperation"]
 
 import abc
 
-from typing import List, Type, TypeVar, Union
+from typing import List, Union
 
 from medkit.core.document import Collection, Document
 from medkit.core.id import generate_id
 from medkit.core.operation_desc import OperationDescription
 from medkit.core.prov_tracer import ProvTracer
-
-C = TypeVar("C", bound="Operation")
 
 
 class Operation(abc.ABC):
@@ -33,7 +31,7 @@ class Operation(abc.ABC):
         uid:
             Operation identifier
         kwargs:
-            All other arguments of the child init
+            All other arguments of the child init useful to describe the operation
 
         Examples
         --------
@@ -65,34 +63,6 @@ class Operation(abc.ABC):
     def description(self) -> OperationDescription:
         """Contains all the operation init parameters."""
         return self._description
-
-    @classmethod
-    def from_description(cls: Type[C], description: OperationDescription) -> C:
-        """
-        Allows to re-instantiate an existing operation from a description.
-
-        Parameters
-        ----------
-        description:
-            Operation description saved from a previous medkit usage.
-
-        Returns
-        -------
-        Operation:
-            The corresponding operation class instance generated from the description.
-
-        Raises
-        ------
-        ValueError:
-            when description is not correct or not adapted to the operation.
-        """
-        if cls.__class__.__name__ == description.name:
-            return cls(op_id=description.uid, **description.config)
-        else:
-            raise ValueError(
-                "Provided description does not match"
-                f" {cls.__class__.__name__} constructor"
-            )
 
     def check_sanity(self) -> bool:
         # TODO: add some checks
