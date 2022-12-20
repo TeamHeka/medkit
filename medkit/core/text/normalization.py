@@ -4,7 +4,10 @@ from typing import Any, Dict, Optional
 
 
 class EntityNormalization:
-    """Normalization linking an entity to an ID in a knowledge base."""
+    """Normalization linking an entity to an ID in a knowledge base.
+
+    To be used as the value of a normalization attribute.
+    """
 
     def __init__(
         self,
@@ -15,8 +18,8 @@ class EntityNormalization:
         score: Optional[float] = None,
     ):
         """
-        Parameters:
-        -----------
+        Parameters
+        ----------
         kb_name:
             Name of the knowledge base (ex: "icd"). Should always be provided
             except in special cases when we just want to store a normalized
@@ -26,11 +29,11 @@ class EntityNormalization:
             Should always be provided except in special cases when we just want
             to store a normalized term.
         kb_version:
-            Optional version of the knowledge base
+            Optional version of the knowledge base.
         term:
-            Normalized version of the entity text
+            Normalized version of the entity text.
         score:
-            Optional score reflecting confidence of this link
+            Optional score reflecting confidence of this link.
         """
         self.kb_name = kb_name
         self.kb_id = kb_id

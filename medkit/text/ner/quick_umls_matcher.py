@@ -234,7 +234,11 @@ class QuickUMLSMatcher(NEROperation):
         Returns
         -------
         entities: List[Entity]
-            Entities found in `segments` (with UMLS normalization attributes)
+            Entities found in `segments`, with UMLS normalization attributes.
+            The value of each normalization attribute is a
+            :class:`~medkit.text.ner.umls_normalization.UMLSNormalization` object
+            that can be retrieved on the entity with the
+            :meth:`~medkit.core.text.annotation.Entity.get_norms` method.
         """
         return [
             entity

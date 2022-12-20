@@ -17,8 +17,8 @@ class UMLSNormalization(EntityNormalization):
         sem_types: Optional[List[str]] = None,
     ):
         """
-        Parameters:
-        -----------
+        Parameters
+        ----------
         cui:
             CUI (Concept Unique Identifier) to which the annotation should be linked.
         umls_version:

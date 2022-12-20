@@ -118,6 +118,9 @@ class Segment(TextAnnotation):
 
 class Entity(Segment):
     NORM_LABEL = "NORMALIZATION"
+    """
+    Label to use for normalization attributes
+    """
 
     def __init__(
         self,
@@ -187,12 +190,12 @@ class Entity(Segment):
 
     def add_norm(self, normalization: EntityNormalization) -> Attribute:
         """
-        Attach an :class:`~medkit.core.text.EntityNormalization` object to the
-        entity.
+        Attach an :class:`~medkit.core.text.normalization.EntityNormalization`
+        object to the entity.
 
         This helper will wrap `normalization` in an
-        :class:`~medkit.core.annotation.Attribute` with `Entity.NORM_LABEL` as
-        label and add it to the entity.
+        :class:`~medkit.core.annotation.Attribute` with
+        :attr:`Entity.NORM_LABEL` as label and add it to the entity.
 
         Returns
         -------
@@ -206,10 +209,11 @@ class Entity(Segment):
 
     def get_norms(self) -> List[EntityNormalization]:
         """
-        Return all `EntityNormalization` objects attached to the entity.
+        Return all :class:`~medkit.core.text.normalization.EntityNormalization`
+        objects attached to the entity.
 
         This helper will retrieve all the entity attributes with
-        `Entity.NORM_LABEL` as label and return their
+        :attr:`Entity.NORM_LABEL` as label and return their
         :class:`~medkit.core.text.normalization.EntityNormalization` values.
 
         Returns

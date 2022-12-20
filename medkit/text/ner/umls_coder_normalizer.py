@@ -49,7 +49,7 @@ class _UMLSEmbeddingsParams(NamedTuple):
 
 
 class UMLSCoderNormalizer(Operation):
-    """Normalizer adding normalization attributes with CUI as value to
+    """Normalizer adding UMLS normalization attributes to
     pre-existing entities. Based on https://github.com/GanjinZero/CODER/.
 
     An UMLS `MRCONSO.RRF` file is needed. The normalizer identifies UMLS concepts by
@@ -189,8 +189,7 @@ class UMLSCoderNormalizer(Operation):
         self._umls_entries = pd.read_feather(umls_terms_file)
 
     def run(self, entities: List[Entity]):
-        """Add normalization attributes with `"umls"` as label and CUI as value
-        to each entity in `entities`.
+        """Add normalization attributes to each entity in `entities`.
 
         Each entity will have zero, one or more normalization attributes depending
         on `max_nb_matches` and on how many matches with a similarity above `threshold`
@@ -199,7 +198,11 @@ class UMLSCoderNormalizer(Operation):
         Parameters
         ----------
         entities:
-            List of entities to add normalization attributes to
+            List of entities to add normalization attributes to. The value of
+            each normalization attribute is a
+            :class:`~medkit.text.ner.umls_normalization.UMLSNormalization` object
+            that can be retrieved on the entity with the
+            :meth:`~medkit.core.text.annotation.Entity.get_norms` method.
         """
 
         # find best matches and assocatied score for all entities
