@@ -12,7 +12,7 @@ quickumls = pytest.importorskip(
 import spacy.cli  # noqa: E402
 
 from medkit.core import Attribute, ProvTracer  # noqa: E402
-from medkit.core.text import Segment, Span  # noqa: E402
+from medkit.core.text import Segment, Entity, Span  # noqa: E402
 from medkit.text.ner import UMLSNormalization  # noqa: E402
 from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher  # noqa: E402
 
@@ -98,9 +98,9 @@ def test_single_match():
     assert entity.spans == [Span(16, 22)]
 
     # normalization attribute
-    norm_attrs = entity.get_attrs_by_label("normalization")
-    assert len(norm_attrs) == 1
-    norm = norm_attrs[0].value
+    norms = entity.get_norms()
+    assert len(norms) == 1
+    norm = norms[0]
     assert isinstance(norm, UMLSNormalization)
     assert norm.cui == _ASTHMA_CUI
     assert norm.umls_version == "2021AB"
@@ -123,7 +123,7 @@ def test_multiple_matches():
     assert entity_1.text == "type 1 diabetes"
     assert entity_1.spans == [Span(27, 42)]
 
-    norm_1 = entity_1.get_attrs_by_label("normalization")[0].value
+    norm_1 = entity_1.get_norms()[0]
     assert norm_1.cui == _DIABETES_CUI
     assert norm_1.term == "type 1 diabetes"
 
@@ -133,7 +133,7 @@ def test_multiple_matches():
     assert entity_2.text == "asthma"
     assert entity_2.spans == [Span(16, 22)]
 
-    norm_2 = entity_2.get_attrs_by_label("normalization")[0].value
+    norm_2 = entity_2.get_norms()[0]
     assert norm_2.cui == _ASTHMA_CUI
     assert norm_2.term == "asthma"
 
@@ -150,7 +150,7 @@ def test_language():
     assert entity.text == "Asthme"
 
     # normalization attribute, same CUI as in english
-    norm = entity.get_attrs_by_label("normalization")[0].value
+    norm = entity.get_norms()[0]
     assert norm.cui == _ASTHMA_CUI
     assert norm.term == "Asthme"
 
@@ -174,7 +174,7 @@ def test_lowercase():
     assert entity.label == "asthme"
     assert entity.text == "asthme"
 
-    norm = entity.get_attrs_by_label("normalization")[0].value
+    norm = entity.get_norms()[0]
     assert norm.cui == _ASTHMA_CUI
     assert norm.term == "asthme"
 
@@ -189,8 +189,8 @@ def test_ambiguous_match():
     # 1 normalization attribute is created
     assert len(entities) == 1
     entity = entities[0]
-    norm_attrs = entity.get_attrs_by_label("normalization")
-    assert len(norm_attrs) == 1
+    norms = entity.get_norms()
+    assert len(norms) == 1
 
 
 def test_attrs_to_copy():
@@ -207,8 +207,8 @@ def test_attrs_to_copy():
     )
     entity = umls_matcher.run([sentence])[0]
 
-    norm_attrs = entity.get_attrs_by_label("normalization")
-    assert len(norm_attrs) == 1
+    norms = entity.get_norms()
+    assert len(norms) == 1
     # only negation attribute was copied
     neg_attrs = entity.get_attrs_by_label("negation")
     assert len(neg_attrs) == 1 and neg_attrs[0].value is True
@@ -230,7 +230,7 @@ def test_prov():
     assert entity_prov.op_desc == umls_matcher.description
     assert entity_prov.source_data_items == [sentence]
 
-    attr = entity.get_attrs_by_label("normalization")[0]
+    attr = entity.get_attrs_by_label(Entity.NORM_LABEL)[0]
     attr_prov = prov_tracer.get_prov(attr.uid)
     assert attr_prov.data_item == attr
     assert attr_prov.op_desc == umls_matcher.description

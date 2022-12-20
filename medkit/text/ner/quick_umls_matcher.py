@@ -9,7 +9,6 @@ from quickumls import QuickUMLS
 import quickumls.about
 import quickumls.constants
 
-from medkit.core import Attribute
 from medkit.core.text import Entity, NEROperation, Segment, span_utils
 from medkit.text.ner.umls_normalization import UMLSNormalization
 
@@ -264,18 +263,14 @@ class QuickUMLSMatcher(NEROperation):
                 for attr in segment.get_attrs_by_label(label):
                     entity.add_attr(attr)
 
-            norm_attr = Attribute(
-                label="normalization",
-                value=UMLSNormalization(
-                    cui=match["cui"],
-                    umls_version=self.version,
-                    term=match["term"],
-                    score=match["similarity"],
-                    sem_types=list(match["semtypes"]),
-                ),
+            norm = UMLSNormalization(
+                cui=match["cui"],
+                umls_version=self.version,
+                term=match["term"],
+                score=match["similarity"],
+                sem_types=list(match["semtypes"]),
             )
-
-            entity.add_attr(norm_attr)
+            norm_attr = entity.add_norm(norm)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(

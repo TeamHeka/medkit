@@ -1,6 +1,6 @@
 __all__ = ["UMLSCoderNormalizer"]
 
-from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 from typing_extensions import Literal
 from pathlib import Path
 
@@ -10,7 +10,7 @@ import transformers
 from transformers import PreTrainedModel, PreTrainedTokenizer, FeatureExtractionPipeline
 import yaml
 
-from medkit.core import Operation, Attribute
+from medkit.core import Operation
 from medkit.core.text import Entity
 import medkit.core.utils
 from medkit.text.ner.umls_normalization import UMLSNormalization
@@ -209,10 +209,7 @@ class UMLSCoderNormalizer(Operation):
         for entity, match_indices, match_scores in zip(
             entities, all_match_indices, all_match_scores
         ):
-            for norm_attr in self._normalize_entity(
-                entity, match_indices, match_scores
-            ):
-                entity.add_attr(norm_attr)
+            self._normalize_entity(entity, match_indices, match_scores)
 
     def _find_best_matches(
         self, entities: List[Entity]
@@ -257,28 +254,24 @@ class UMLSCoderNormalizer(Operation):
 
     def _normalize_entity(
         self, entity: Entity, match_indices: List[int], match_scores: List[float]
-    ) -> Iterator[Attribute]:
+    ):
         for match_index, match_score in zip(match_indices, match_scores):
             if self.threshold is not None and match_score < self.threshold:
                 continue
 
             umls_entry = self._umls_entries.iloc[match_index]
-            norm_attr = Attribute(
-                label="normalization",
-                value=UMLSNormalization(
-                    cui=umls_entry.cui,
-                    umls_version=self._umls_version,
-                    term=umls_entry.term,
-                    score=match_score,
-                ),
+            norm = UMLSNormalization(
+                cui=umls_entry.cui,
+                umls_version=self._umls_version,
+                term=umls_entry.term,
+                score=match_score,
             )
+            norm_attr = entity.add_norm(norm)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     norm_attr, self.description, source_data_items=[entity]
                 )
-
-            yield norm_attr
 
     def _build_umls_embeddings(self, show_progress=True):
         # build description of computation params

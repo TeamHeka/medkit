@@ -17,7 +17,6 @@ from typing_extensions import TypedDict
 import unidecode
 import yaml
 
-from medkit.core import Attribute
 from medkit.core.text import (
     Entity,
     NEROperation,
@@ -286,9 +285,11 @@ class RegexpMatcher(NEROperation):
 
             # create normalization attributes for each normalization descriptor
             # of the rule
-            norm_attrs = [self._create_norm_attr(norm) for norm in rule.normalizations]
-            for norm_attr in norm_attrs:
-                entity.add_attr(norm_attr)
+            norms = [self._create_norm_attr(norm) for norm in rule.normalizations]
+            norm_attrs = []
+            for norm in norms:
+                norm_attr = entity.add_norm(norm)
+                norm_attrs.append(norm_attr)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
@@ -309,7 +310,7 @@ class RegexpMatcher(NEROperation):
             norm = EntityNormalization(
                 kb_name=norm.kb_name, kb_id=norm.id, kb_version=norm.kb_version
             )
-        return Attribute(label="normalization", value=norm)
+        return norm
 
     @staticmethod
     def load_rules(path_to_rules) -> List[RegexpMatcherRule]:
