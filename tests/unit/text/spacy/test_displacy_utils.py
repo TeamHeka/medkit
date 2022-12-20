@@ -2,10 +2,10 @@ import pytest
 from spacy import displacy
 
 from medkit.core import Attribute
-from medkit.core.text import Entity, Span, ModifiedSpan, TextDocument
+from medkit.core.text import Segment, Entity, Span, ModifiedSpan, TextDocument
 from medkit.text.spacy.displacy_utils import (
     medkit_doc_to_displacy,
-    entities_to_displacy,
+    segments_to_displacy,
 )
 
 _TEXT = "The patient has asthma and a diabetes of type 1."
@@ -94,17 +94,17 @@ _TEST_DATA = [
 
 
 @pytest.mark.parametrize(
-    "entities,entity_formatter,expected_displacy_data",
+    "segments,segment_formatter,expected_displacy_data",
     _TEST_DATA,
 )
-def test_entities_to_displacy(entities, entity_formatter, expected_displacy_data):
-    displacy_data = entities_to_displacy(entities, _TEXT, entity_formatter)
+def test_segments_to_displacy(segments, segment_formatter, expected_displacy_data):
+    displacy_data = segments_to_displacy(segments, _TEXT, segment_formatter)
 
     assert displacy_data == expected_displacy_data
     displacy.render(displacy_data, manual=True, style="ent")
 
 
-def test_medkit_doc_to_displacy():
+def _get_doc():
     doc = TextDocument(text=_TEXT)
     entity_1 = Entity(label="subject", spans=[Span(4, 11)], text="patient")
     doc.add_annotation(entity_1)
@@ -114,9 +114,30 @@ def test_medkit_doc_to_displacy():
         label="disease", spans=[Span(27, 47)], text="a diabetes of type 1"
     )
     doc.add_annotation(entity_3)
+    segment = Segment(label="segment", spans=[Span(0, 19)], text="This is a sentence.")
+    doc.add_annotation(segment)
+    return doc
+
+
+def test_medkit_doc_to_displacy_default():
+    doc = _get_doc()
+
+    # by default, display all entities but not segments
+    displacy_data = medkit_doc_to_displacy(doc)
+
+    # should have same result as directly calling segments_to_displacy() with all entities
+    entities = doc.get_entities()
+    expected_displacy_data = segments_to_displacy(entities, _TEXT)
+    assert displacy_data == expected_displacy_data
+
+
+def test_medkit_doc_to_displacy_filtered():
+    doc = _get_doc()
 
     # keep only entities with "disease" label
-    displacy_data = medkit_doc_to_displacy(doc, entity_labels=["disease"])
-    # should have same result as directly calling entities_to_displacy()
-    expected_displacy_data = entities_to_displacy([entity_2, entity_3], _TEXT)
+    displacy_data = medkit_doc_to_displacy(doc, segment_labels=["disease"])
+
+    # should have same result as directly calling segments_to_displacy() with selected entities
+    entities = doc.get_annotations_by_label("disease")
+    expected_displacy_data = segments_to_displacy(entities, _TEXT)
     assert displacy_data == expected_displacy_data
