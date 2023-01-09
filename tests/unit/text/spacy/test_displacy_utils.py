@@ -2,7 +2,14 @@ import pytest
 from spacy import displacy
 
 from medkit.core import Attribute
-from medkit.core.text import Segment, Entity, Span, ModifiedSpan, TextDocument
+from medkit.core.text import (
+    Segment,
+    Entity,
+    Span,
+    ModifiedSpan,
+    TextDocument,
+    EntityNormalization,
+)
 from medkit.text.spacy.displacy_utils import (
     medkit_doc_to_displacy,
     segments_to_displacy,
@@ -14,9 +21,13 @@ _TEXT = "The patient has asthma and a diabetes of type 1."
 def _custom_entity_formatter(entity):
     label = entity.label
     attrs = entity.get_attrs()
-    if attrs:
-        attrs_string = ", ".join(f"{a.label}={a.value}" for a in attrs)
-        label += f" ({attrs_string})"
+    attrs_strings = []
+    for attr in attrs:
+        if isinstance(attr.value, EntityNormalization):
+            attrs_strings.append(f"{attr.value.kb_name}={attr.value.kb_id}")
+        else:
+            attrs_strings.append(f"{attr.label}={attr.value}")
+    label += " (" + ", ".join(attrs_strings) + ")"
     return label
 
 
@@ -79,13 +90,20 @@ _TEST_DATA = [
                 label="disease",
                 spans=[Span(27, 47)],
                 text="a diabetes of type 1",
-                attrs=[Attribute(label="cui", value="C0011854")],
+                attrs=[
+                    Attribute(
+                        label="normalization",
+                        value=EntityNormalization(
+                            kb_name="umls", kb_id="C0011854", kb_version="2021AB"
+                        ),
+                    )
+                ],
             ),
         ],
         _custom_entity_formatter,
         {
             "ents": [
-                {"label": "disease (cui=C0011854)", "start": 27, "end": 47},
+                {"label": "disease (umls=C0011854)", "start": 27, "end": 47},
             ],
             "text": _TEXT,
         },
