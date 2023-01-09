@@ -2,7 +2,15 @@ from pathlib import Path
 import pytest
 
 from medkit.core import Attribute
-from medkit.core.text import Entity, Relation, Segment, Span, ModifiedSpan, TextDocument
+from medkit.core.text import (
+    Entity,
+    Relation,
+    Segment,
+    Span,
+    ModifiedSpan,
+    TextDocument,
+    EntityNormalization,
+)
 from medkit.io._brat_utils import (
     BratAttribute,
     BratEntity,
@@ -374,3 +382,22 @@ def test_brat_output_from_modified_span(tmp_path: Path):
     assert expected_ann_path.exists()
     assert expected_txt_path.read_text() == medkit_doc.text
     assert expected_ann_path.read_text() == _EXPECTED_ANN
+
+
+def test_normalization_attr(tmp_path: Path):
+    """Conversion of normalization objects to strings"""
+
+    text = "Le patient souffre d'asthme"
+    doc = TextDocument(text=text)
+    entity = Entity(label="maladie", text="asthme", spans=[Span(21, 27)])
+    entity.add_norm(
+        EntityNormalization(kb_name="umls", kb_id="C0004096", kb_version="2021AB")
+    )
+    doc.add_annotation(entity)
+
+    brat_converter = BratOutputConverter()
+    brat_converter.save([doc], tmp_path)
+
+    output_path = tmp_path / f"{doc.uid}.ann"
+    ann_lines = output_path.read_text().split("\n")
+    assert ann_lines[1] == "A1\tNORMALIZATION T1 umls:C0004096"

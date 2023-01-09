@@ -24,7 +24,15 @@ from medkit.core import (
     generate_id,
     OperationDescription,
 )
-from medkit.core.text import Entity, Relation, Segment, Span, TextDocument, span_utils
+from medkit.core.text import (
+    Entity,
+    Relation,
+    Segment,
+    Span,
+    TextDocument,
+    EntityNormalization,
+    span_utils,
+)
 
 
 TEXT_EXT = ".txt"
@@ -584,6 +592,11 @@ class BratOutputConverter(OutputConverter):
         assert nb_attribute != 0
         brat_id = f"A{nb_attribute}"
         type = label.replace(" ", "_")
+
+        # convert normalization objects to string
+        if isinstance(value, EntityNormalization):
+            value = f"{value.kb_name}:{value.kb_id}"
+
         value: str = brat_utils.ensure_attr_value(value)
         attr_conf = AttributeConf(from_entity=is_from_entity, type=type, value=value)
         return BratAttribute(brat_id, type, target_brat_id, value), attr_conf
