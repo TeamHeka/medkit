@@ -45,6 +45,8 @@ class Operation(abc.ABC):
         """
         if uid is None:
             uid = generate_id()
+        if name is None:
+            name = self.__class__.__name__
 
         self.uid = uid
         self._description = OperationDescription(

@@ -85,7 +85,11 @@ class RTTMInputConverter(InputConverter):
     @property
     def description(self) -> OperationDescription:
         """Contains all the input converter init parameters."""
-        return OperationDescription(uid=self.uid, class_name=self.__class__.__name__)
+        return OperationDescription(
+            uid=self.uid,
+            name=self.__class__.__name__,
+            class_name=self.__class__.__name__,
+        )
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
         """Enable provenance tracing.

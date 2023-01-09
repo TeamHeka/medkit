@@ -16,9 +16,7 @@ class _PrefixerWrapper:
         self.prov_tracer = prov_tracer
         self.sub_prov_tracer = ProvTracer(prov_tracer.store)
         self.prefixer.prov_tracer = self.sub_prov_tracer
-        self.description = OperationDescription(
-            uid=self.uid, class_name="PrefixerWrapper"
-        )
+        self.description = OperationDescription(uid=self.uid, name="PrefixerWrapper")
 
     def run(self, input_items):
         output_items = self.prefixer.prefix(input_items)
@@ -93,7 +91,7 @@ class _DoublePrefixerWrapper:
         self.prefixer_1.prov_tracer = self.sub_prov_tracer
         self.prefixer_2.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(
-            uid=self.uid, class_name="DoublePrefixerWrapper"
+            uid=self.uid, name="DoublePrefixerWrapper"
         )
 
     def run(self, input_items):
@@ -171,7 +169,7 @@ class _PrefixerMergerWrapper:
         self.prefixer.prov_tracer = self.sub_prov_tracer
         self.merger.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(
-            uid=self.uid, class_name="PrefixerMergerWrapper"
+            uid=self.uid, name="PrefixerMergerWrapper"
         )
 
     def run(self, input_items):
@@ -234,7 +232,7 @@ class _SplitterPrefixerWrapper:
         self.splitter.prov_tracer = self.sub_prov_tracer
         self.prefixer.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(
-            uid=self.uid, class_name="SplitterPrefixerMWrapper"
+            uid=self.uid, name="SplitterPrefixerMWrapper"
         )
 
     def run(self, input_items):
@@ -305,7 +303,7 @@ class _BranchedPrefixerWrapper:
         self.prefixer_1.prov_tracer = self.sub_prov_tracer
         self.prefixer_2.prov_tracer = self.sub_prov_tracer
         self.description = OperationDescription(
-            uid=self.uid, class_name="BrancherPrefixerWrapper"
+            uid=self.uid, name="BrancherPrefixerWrapper"
         )
 
     def run(self, input_items):
@@ -405,9 +403,7 @@ class _NestedWrapper:
         self.sub_prov_tracer = ProvTracer(prov_tracer.store)
         self.sub_wrapper_1 = _DoublePrefixerWrapper(self.sub_prov_tracer)
         self.sub_wrapper_2 = _DoublePrefixerWrapper(self.sub_prov_tracer)
-        self.description = OperationDescription(
-            uid=self.uid, class_name="NestedWrapper"
-        )
+        self.description = OperationDescription(uid=self.uid, name="NestedWrapper")
 
     def run(self, input_items):
         output_items = self.sub_wrapper_1.run(input_items)

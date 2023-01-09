@@ -62,7 +62,10 @@ class SpacyInputConverter:
         )
 
         return OperationDescription(
-            uid=self.uid, class_name=self.__class__.__name__, config=config
+            uid=self.uid,
+            name=self.__class__.__name__,
+            class_name=self.__class__.__name__,
+            config=config,
         )
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
