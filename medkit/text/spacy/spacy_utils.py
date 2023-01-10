@@ -443,7 +443,12 @@ def _segment_to_spacy_span(
                 value = True
             elif isinstance(attr.value, EntityNormalization):
                 # convert normalization objects to string
-                value = f"{attr.value.kb_name}:{attr.value.kb_id}"
+                norm = attr.value
+                if norm.kb_name is not None and norm.kb_id is not None:
+                    value = f"{norm.kb_name}:{norm.kb_id}"
+                else:
+                    # special case when we use an EntityNormalization containing just a normalized term
+                    value = norm.term
             else:
                 value = attr.value
             # set attributes as extensions
