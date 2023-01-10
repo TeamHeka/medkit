@@ -103,7 +103,7 @@ a specific object. It has the following attributes:
    instance, it could also be an `Attribute`;
  - `op_desc` holds an {class}`~medkit.core.OperationDescription` object, that
    describes the operation that created the data item, in our case the regexp
-   matcher. The `OperationDescription` will typically contain the class name of
+   matcher. The `OperationDescription` will contain the name of
    the operation and the init parameters that were used;
  - `source_data_items` contains the objects that were used by the operation to
    create the new data item. Here there is only one source, the raw text
