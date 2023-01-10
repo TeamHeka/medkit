@@ -20,6 +20,7 @@ from medkit.core.text import (
     AnySpanType,
     Span,
     span_utils,
+    EntityNormalization,
 )
 
 
@@ -434,12 +435,24 @@ def _segment_to_spacy_span(
     if include_medkit_info:
         span._.set(_ATTR_MEDKIT_ID, medkit_segment.uid)
 
-    # in medkit having an attribute, indicates that the attribute exists
-    # for the given annotation, we force True as value
     for label in attrs:
         for attr in medkit_segment.get_attrs_by_label(label):
+            if attr.value is None:
+                # in medkit having an attribute, indicates that the attribute exists
+                # for the given annotation, we force True as value
+                value = True
+            elif isinstance(attr.value, EntityNormalization):
+                # convert normalization objects to string
+                norm = attr.value
+                if norm.kb_name is not None and norm.kb_id is not None:
+                    value = f"{norm.kb_name}:{norm.kb_id}"
+                else:
+                    # special case when we use an EntityNormalization containing just a normalized term
+                    value = norm.term
+            else:
+                value = attr.value
             # set attributes as extensions
-            span._.set(attr.label, True if attr.value is None else attr.value)
+            span._.set(attr.label, value)
             if include_medkit_info:
                 span._.set(f"{attr.label}_{_ATTR_MEDKIT_ID}", attr.uid)
 

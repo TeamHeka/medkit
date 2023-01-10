@@ -142,6 +142,18 @@ attributes to pre-existing entities.
 .. automodule:: medkit.text.ner.umls_coder_normalizer
     :members:
 ```
+
+### UMLS Normalization
+
+This modules provides a subclass of
+{class}`~medkit.core.text.normalization.EntityNormalization` to facilitate
+the handling of UMLS information.
+
+```{eval-rst}
+.. automodule:: medkit.text.ner.umls_normalization
+    :members:
+```
+
 (api:text:spacy)=
 ## Spacy modules
 

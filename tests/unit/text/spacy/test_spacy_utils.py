@@ -3,7 +3,7 @@ import spacy
 from spacy.tokens import Doc, Span as SpacySpan
 
 from medkit.core import Attribute
-from medkit.core.text import Span, Entity, Segment, TextDocument
+from medkit.core.text import Span, Entity, Segment, TextDocument, EntityNormalization
 from medkit.text.spacy import spacy_utils
 
 
@@ -197,3 +197,20 @@ def test_medkit_segments_to_spacy_docs(nlp_spacy):
         assert isinstance(doc, Doc)
         assert doc._.get("medkit_id") is None
         assert doc.text == ann_source.text
+
+
+def test_normalization_attr(nlp_spacy):
+    """Conversion of normalization objects to strings"""
+
+    text = "Le patient souffre d'asthme"
+    doc = TextDocument(text=text)
+    entity = Entity(label="maladie", text="asthme", spans=[Span(21, 27)])
+    entity.add_norm(
+        EntityNormalization(kb_name="umls", kb_id="C0004096", kb_version="2021AB")
+    )
+    doc.add_annotation(entity)
+
+    spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(
+        nlp=nlp_spacy, medkit_doc=doc
+    )
+    assert spacy_doc.ents[0]._.get("NORMALIZATION") == "umls:C0004096"

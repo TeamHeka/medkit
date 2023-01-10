@@ -35,6 +35,12 @@ subclasses of `TextAnnotation`.
     :inherited-members:
 ```
 
+```{eval-rst}
+.. automodule:: medkit.core.text.normalization
+    :members:
+    :inherited-members:
+```
+
 (api:core-text:span)=
 ## Span (specific to text)
 

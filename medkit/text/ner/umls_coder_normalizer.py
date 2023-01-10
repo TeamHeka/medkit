@@ -1,7 +1,7 @@
-__all__ = ["UMLSCoderNormalizer", "UMLSCoderMetadata"]
+__all__ = ["UMLSCoderNormalizer"]
 
-from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
-from typing_extensions import Literal, TypedDict
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing_extensions import Literal
 from pathlib import Path
 
 import pandas as pd
@@ -10,9 +10,10 @@ import transformers
 from transformers import PreTrainedModel, PreTrainedTokenizer, FeatureExtractionPipeline
 import yaml
 
-from medkit.core import Operation, Attribute
+from medkit.core import Operation
 from medkit.core.text import Entity
 import medkit.core.utils
+from medkit.text.ner.umls_normalization import UMLSNormalization
 from medkit.text.ner.umls_utils import (
     load_umls,
     preprocess_term_to_match,
@@ -47,26 +48,8 @@ class _UMLSEmbeddingsParams(NamedTuple):
         )
 
 
-class UMLSCoderMetadata(TypedDict):
-    """Metadata dict added to umls coder normalization attributes.
-
-    Parameters
-    ----------
-    normalized_term:
-        Term the entity was matched against, as in the UMLS
-    score:
-        Score of the match, between 0.0 and 1.0
-    version:
-        UMLS version (ex: "2021AB")
-    """
-
-    normalized_term: str  # TODO: harmonize among annotators
-    score: float
-    version: str
-
-
 class UMLSCoderNormalizer(Operation):
-    """Normalizer adding normalization attributes with CUI as value to
+    """Normalizer adding UMLS normalization attributes to
     pre-existing entities. Based on https://github.com/GanjinZero/CODER/.
 
     An UMLS `MRCONSO.RRF` file is needed. The normalizer identifies UMLS concepts by
@@ -206,8 +189,7 @@ class UMLSCoderNormalizer(Operation):
         self._umls_entries = pd.read_feather(umls_terms_file)
 
     def run(self, entities: List[Entity]):
-        """Add normalization attributes with `"umls"` as label and CUI as value
-        to each entity in `entities`.
+        """Add normalization attributes to each entity in `entities`.
 
         Each entity will have zero, one or more normalization attributes depending
         on `max_nb_matches` and on how many matches with a similarity above `threshold`
@@ -216,7 +198,11 @@ class UMLSCoderNormalizer(Operation):
         Parameters
         ----------
         entities:
-            List of entities to add normalization attributes to
+            List of entities to add normalization attributes to. The value of
+            each normalization attribute is a
+            :class:`~medkit.text.ner.umls_normalization.UMLSNormalization` object
+            that can be retrieved on the entity with the
+            :meth:`~medkit.core.text.annotation.Entity.get_norms` method.
         """
 
         # find best matches and assocatied score for all entities
@@ -226,10 +212,7 @@ class UMLSCoderNormalizer(Operation):
         for entity, match_indices, match_scores in zip(
             entities, all_match_indices, all_match_scores
         ):
-            for norm_attr in self._normalize_entity(
-                entity, match_indices, match_scores
-            ):
-                entity.add_attr(norm_attr)
+            self._normalize_entity(entity, match_indices, match_scores)
 
     def _find_best_matches(
         self, entities: List[Entity]
@@ -274,28 +257,24 @@ class UMLSCoderNormalizer(Operation):
 
     def _normalize_entity(
         self, entity: Entity, match_indices: List[int], match_scores: List[float]
-    ) -> Iterator[Attribute]:
+    ):
         for match_index, match_score in zip(match_indices, match_scores):
             if self.threshold is not None and match_score < self.threshold:
                 continue
 
             umls_entry = self._umls_entries.iloc[match_index]
-            norm_attr = Attribute(
-                label="umls",
-                value=umls_entry.cui,
-                metadata=UMLSCoderMetadata(
-                    normalized_term=umls_entry.term,
-                    score=match_score,
-                    version=self._umls_version,
-                ),
+            norm = UMLSNormalization(
+                cui=umls_entry.cui,
+                umls_version=self._umls_version,
+                term=umls_entry.term,
+                score=match_score,
             )
+            norm_attr = entity.add_norm(norm)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     norm_attr, self.description, source_data_items=[entity]
                 )
-
-            yield norm_attr
 
     def _build_umls_embeddings(self, show_progress=True):
         # build description of computation params

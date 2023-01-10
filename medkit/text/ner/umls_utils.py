@@ -156,6 +156,8 @@ def guess_umls_version(path: Union[str, Path]) -> str:
         "META", "NET" nor "LEX", nor a subfolder of these folders
     """
     path = Path(path).resolve()
+    if path.is_file():
+        path = path.parent
     while any(dir_name in path.parts for dir_name in ("META", "NET", "LEX")):
         path = path.parent
     return path.name

@@ -1,4 +1,5 @@
 __all__ = [
+    "UMLSNormalization",
     "DucklingMatcher",
     "RegexpMatcher",
     "RegexpMatcherRule",
@@ -9,6 +10,7 @@ __all__ = [
 import importlib.util
 
 from .duckling_matcher import DucklingMatcher
+from .umls_normalization import UMLSNormalization
 from .regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,
@@ -43,6 +45,6 @@ _torch_is_available = importlib.util.find_spec("torch") is not None
 _transformers_is_available = importlib.util.find_spec("transformers") is not None
 if _pandas_is_available and _torch_is_available and _transformers_is_available:
     # fmt: off
-    from .umls_coder_normalizer import UMLSCoderNormalizer, UMLSCoderMetadata  # noqa: F401
-    __all__ += ["UMLSCoderNormalizer", "UMLSCoderMetadata"]
+    from .umls_coder_normalizer import UMLSCoderNormalizer  # noqa: F401
+    __all__ += ["UMLSCoderNormalizer"]
     # fmt: on
