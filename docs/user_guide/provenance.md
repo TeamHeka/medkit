@@ -297,20 +297,34 @@ regexp_rules = [
 ]
 regexp_matcher = RegexpMatcher(rules=regexp_rules, attrs_to_copy=["is_negated"])
 
-# sub pipeline handling segmentation and negation detection
+# context sub pipeline handling segmentation and negation detection
 sub_pipeline_steps = [
     PipelineStep(sent_tokenizer, input_keys=["full_text"], output_keys=["sentences"]),
     PipelineStep(neg_detector, input_keys=["sentences"], output_keys=[]),  # no output
 ]
-sub_pipeline = Pipeline(sub_pipeline_steps, input_keys=["full_text"], output_keys=["sentences"])
+sub_pipeline = Pipeline(
+    sub_pipeline_steps,
+    name="ContextPipeline",
+    input_keys=["full_text"],
+    output_keys=["sentences"],
+)
 
 # main pipeline
 pipeline_steps = [
     PipelineStep(sub_pipeline, input_keys=["full_text"], output_keys=["sentences"]),
     PipelineStep(regexp_matcher, input_keys=["sentences"], output_keys=["entities"]),
 ]
-pipeline = Pipeline(pipeline_steps, input_keys=["full_text"], output_keys=["entities"])
+pipeline = Pipeline(
+    pipeline_steps,
+    name="MainPipeline",
+    input_keys=["full_text"],
+    output_keys=["entities"],
+)
 ```
+
+Note that since we have 2 pipelines, we pass an optional `name` parameter to
+each of them that will be used in the operation description and will help us to
+distinguish them.
 
 Running the pipeline gives us 2 entities with negation attributes:
 
@@ -358,17 +372,14 @@ display_dot(dot_file)
 ```
 
 We now see the details of the operations and data items handled in our main
-pipeline: a sub-pipeline[^sub-pipeline] created sentence segments and negation
+pipeline: a sub-pipeline created sentence segments and negation
 attributes, then the `RegexpMatcher` created entities, using the sentences
 segments. The negation attributes were attached to both the sentences and the
 entities derived from the sentences.
 
-[^sub-pipeline]: The sub-pipeline is displayed with the _Pipeline_ label by
-`save_prov_to_dot()` because the class name is used and there is currently no
-way to give operations a more descriptive name.
 
-To have more details about the processing inside the sub-pipeline, we have to go
-one step deeper:
+To have more details about the processing inside the context sub-pipeline, we
+have to go one step deeper:
 
 ```{code-cell} ipython3
 ---
