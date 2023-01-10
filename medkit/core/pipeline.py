@@ -164,7 +164,7 @@ class Pipeline:
         return OperationDescription(
             uid=self.uid,
             class_name=self.__class__.__name__,
-            name=self.name,
+            name=self.__class__.__name__ if self.name is None else self.name,
             config=config,
         )
 
