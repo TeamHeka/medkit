@@ -116,6 +116,7 @@ class Pipeline:
         steps: List[PipelineStep],
         input_keys: List[str],
         output_keys: List[str],
+        name: Optional[str] = None,
         uid: Optional[str] = None,
     ):
         """Initialize the pipeline
@@ -133,11 +134,18 @@ class Pipeline:
 
         output_keys:
             List of keys corresponding to the outputs returned by `run()`
+
+        name:
+            Name describing the pipeline (defaults to the class name)
+
+        uid:
+             Identifier of the pipeline
         """
         if uid is None:
             uid = generate_id()
 
         self.uid: str = uid
+        self.name: Optional[str] = name
         self.steps: List[PipelineStep] = steps
         self.input_keys: List[str] = input_keys
         self.output_keys: List[str] = output_keys
@@ -154,7 +162,10 @@ class Pipeline:
             output_keys=self.output_keys,
         )
         return OperationDescription(
-            uid=self.uid, name=self.__class__.__name__, config=config
+            uid=self.uid,
+            class_name=self.__class__.__name__,
+            name=self.__class__.__name__ if self.name is None else self.name,
+            config=config,
         )
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):

@@ -146,7 +146,8 @@ class QuickUMLSMatcher(NEROperation):
         similarity: Literal["dice", "jaccard", "cosine", "overlap"] = "jaccard",
         accepted_semtypes: List[str] = quickumls.constants.ACCEPTED_SEMTYPES,
         attrs_to_copy: Optional[List[str]] = None,
-        op_id: Optional[str] = None,
+        name: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """Instantiate the QuickUMLS matcher
 
@@ -179,6 +180,10 @@ class QuickUMLSMatcher(NEROperation):
             Labels of the attributes that should be copied from the source segment
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
+        name:
+            Name describing the matcher (defaults to the class name)
+        uid:
+            Identifier of the matcher
         """
         _fix_spacy_language_map()
 

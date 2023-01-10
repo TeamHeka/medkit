@@ -118,7 +118,7 @@ class HypothesisDetector(ContextOperation):
         verbs: Optional[Dict[str, Dict[str, Dict[str, List[str]]]]] = None,
         modes_and_tenses: Optional[List[Tuple[str, str]]] = None,
         max_length: int = 150,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """Instantiate the hypothesis detector
 
@@ -143,7 +143,7 @@ class HypothesisDetector(ContextOperation):
         max_length:
             Maximum number of characters in an hypothesis segment. Segments longer than
             this will never be considered as hypothesis
-        op_id:
+        uid:
             Identifier of the detector
         """
         # Pass all arguments to super (remove self)

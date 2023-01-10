@@ -54,7 +54,7 @@ class HFTranslator(Operation):
         device: int = DefaultConfig.device,
         batch_size: int = DefaultConfig.batch_size,
         cache_dir: Optional[Union[str, Path]] = None,
-        op_id: str = None,
+        uid: str = None,
     ):
         """
         Parameters
@@ -80,7 +80,7 @@ class HFTranslator(Operation):
         cache_dir:
             Directory where to store downloaded models. If not set, the default
             HuggingFace cache dir is used.
-        op_id:
+        uid:
             Identifier of the translator
         """
 

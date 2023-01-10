@@ -14,7 +14,7 @@ class Downmixer(PreprocessingOperation):
         self,
         output_label: str,
         prevent_clipping: bool = True,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
@@ -23,7 +23,7 @@ class Downmixer(PreprocessingOperation):
             Label of output downmixed segments.
         prevent_clipping:
             If `True`, normalize downmixed signals by number of channels to prevent clipping.
-        op_id:
+        uid:
             Identifier of the downmixer.
         """
 

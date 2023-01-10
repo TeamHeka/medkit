@@ -14,7 +14,7 @@ class AttributeDuplicator(Operation):
     def __init__(
         self,
         attr_labels: List[str],
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """Instantiate the attribute duplicator
 
@@ -22,7 +22,7 @@ class AttributeDuplicator(Operation):
         ----------
         attr_labels:
             Labels of the attributes to copy
-        op_id:
+        uid:
             Identifier of the annotator
         """
         self.attr_labels = attr_labels

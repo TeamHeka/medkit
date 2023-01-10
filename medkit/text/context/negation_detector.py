@@ -93,7 +93,7 @@ class NegationDetector(ContextOperation):
         self,
         output_label: str,
         rules: Optional[List[NegationDetectorRule]] = None,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """Instantiate the negation detector
 
@@ -104,7 +104,7 @@ class NegationDetector(ContextOperation):
         rules:
             The set of rules to use when detecting negation. If none provided,
             the rules in "negation_detector_default_rules.yml" will be used
-        op_id:
+        uid:
             Identifier of the detector
         """
         # Pass all arguments to super (remove self)

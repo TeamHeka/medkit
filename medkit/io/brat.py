@@ -37,17 +37,21 @@ logger = logging.getLogger(__name__)
 class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
 
-    def __init__(self, store: Optional[Store] = None, op_id: Optional[str] = None):
-        if op_id is None:
-            op_id = generate_id()
+    def __init__(self, store: Optional[Store] = None, uid: Optional[str] = None):
+        if uid is None:
+            uid = generate_id()
 
-        self.uid = op_id
+        self.uid = uid
         self.store: Optional[Store] = store
         self._prov_tracer: Optional[ProvTracer] = None
 
     @property
     def description(self) -> OperationDescription:
-        return OperationDescription(uid=self.uid, name=self.__class__.__name__)
+        return OperationDescription(
+            uid=self.uid,
+            name=self.__class__.__name__,
+            class_name=self.__class__.__name__,
+        )
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
         self._prov_tracer = prov_tracer
@@ -203,7 +207,7 @@ class BratOutputConverter(OutputConverter):
         ignore_segments: bool = True,
         create_config: bool = True,
         top_values_by_attr: int = 50,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Initialize the Brat output converter
@@ -229,13 +233,13 @@ class BratOutputConverter(OutputConverter):
             Defines the number of most common values by attribute to show in the configuration.
             This is useful when an attribute has a large number of values, only the 'top' ones
             will be in the config. By default, the top 50 of values by attr will be in the config.
-        op_id:
+        uid:
             Identifier of the converter
         """
-        if op_id is None:
-            op_id = generate_id()
+        if uid is None:
+            uid = generate_id()
 
-        self.uid = op_id
+        self.uid = uid
         self.anns_labels = anns_labels
         self.attrs = attrs
         self.ignore_segments = ignore_segments
@@ -252,7 +256,7 @@ class BratOutputConverter(OutputConverter):
             top_values_by_attr=self.top_values_by_attr,
         )
         return OperationDescription(
-            uid=self.uid, name=self.__class__.__name__, config=config
+            uid=self.uid, class_name=self.__class__.__name__, config=config
         )
 
     def save(
