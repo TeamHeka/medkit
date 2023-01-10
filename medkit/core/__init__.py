@@ -23,7 +23,8 @@ __all__ = [
     "DictStore",
 ]
 
-from .annotation import Annotation, Attribute
+from .annotation import Annotation
+from .attribute import Attribute
 from .collection import Collection
 from .conversion import InputConverter, OutputConverter
 from .data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs
