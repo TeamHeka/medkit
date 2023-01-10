@@ -37,10 +37,25 @@ class _QuickUMLSInstall(NamedTuple):
     normalize_unicode: bool
 
 
-# Note: The semantic groups provide a partition of the UMLS Metathesaurus
-# for 99.5% of the concepts.
+# The semantic groups provide a partition of the UMLS Metathesaurus for 99.5%
+# of the concepts, we use this file to obtain a semtype-to-semgroup mapping.
+# Which is useful to find a label for each match.
 # Source: UMLS project
+# https://lhncbc.nlm.nih.gov/semanticnetwork/download/sg_archive/SemGroups-v04.txt
 _PATH_UMLS_GROUPS = Path(__file__).parent / "umls_semgroups_v04.txt"
+
+DEFAULT_LABEL_MAPPING = {
+    "ANAT": "anatomy",
+    "CHEM": "chemical",
+    "DEVI": "device",
+    "DISO": "disorder",
+    "GEOG": "geographic_area",
+    "LIVB": "living_being",
+    "OBJC": "object",
+    "PHEN": "phenomenon",
+    "PHYS": "physiology",
+    "PROC": "procedure",
+}
 
 
 class QuickUMLSMatcher(NEROperation):
@@ -81,7 +96,7 @@ class QuickUMLSMatcher(NEROperation):
     """
 
     _install_paths: Dict[_QuickUMLSInstall, str] = {}
-    _semgroups_umls: Dict[str, str] = {}
+    _semtype_to_semgroup: Dict[str, str] = {}
 
     @classmethod
     def add_install(
@@ -142,12 +157,13 @@ class QuickUMLSMatcher(NEROperation):
         return path
 
     @classmethod
-    def _load_semgroups_information(cls):
-        semgroups = dict()
-        for line in open(_PATH_UMLS_GROUPS):
-            label, _, semtype, _ = line.split("|")
-            semgroups[semtype] = label
-        cls._semgroups_umls = semgroups
+    def _load_semtype_to_semgroup_mapping(cls):
+        """Load semtype mapping from the UMLS semgroups file"""
+        if not cls._semtype_to_semgroup:
+            cls._semtype_to_semgroup = dict()
+            for line in open(_PATH_UMLS_GROUPS):
+                semgroup, _, semtype, _ = line.split("|")
+                cls._semtype_to_semgroup[semtype] = semgroup
 
     def __init__(
         self,
@@ -161,7 +177,7 @@ class QuickUMLSMatcher(NEROperation):
         similarity: Literal["dice", "jaccard", "cosine", "overlap"] = "jaccard",
         accepted_semtypes: List[str] = quickumls.constants.ACCEPTED_SEMTYPES,
         attrs_to_copy: Optional[List[str]] = None,
-        output_label: Optional[str] = None,
+        output_label: Optional[Union[str, Dict[str, str]]] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
     ):
@@ -197,8 +213,8 @@ class QuickUMLSMatcher(NEROperation):
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
         output_label:
-            Optional output label of the detected entities. By default, By default,
-            the corresponding semantic group is used.
+            This can modify the label for a given semgroup identifier (cf `DEFAULT_LABEL_MAPPING`).
+            If `output_label` is a string, all entities will use this string as label.
         name:
             Name describing the matcher (defaults to the class name)
         uid:
@@ -224,7 +240,6 @@ class QuickUMLSMatcher(NEROperation):
         self.window = window
         self.accepted_semtypes = accepted_semtypes
         self.attrs_to_copy = attrs_to_copy
-        self.output_label = output_label
 
         path_to_install = self._get_path_to_install(
             version, language, lowercase, normalize_unicode
@@ -243,7 +258,25 @@ class QuickUMLSMatcher(NEROperation):
             and self._matcher.normalize_unicode_flag == normalize_unicode
         ), "Inconsistent QuickUMLS install flags"
 
-        self._load_semgroups_information()
+        self._load_semtype_to_semgroup_mapping()
+        self.label_mapping = self._get_label_mapping(output_label)
+
+    @staticmethod
+    def _get_label_mapping(
+        output_label: Union[None, str, Dict[str, str]]
+    ) -> Dict[str, str]:
+        """Return label mapping according to `output_label`"""
+        label_mapping = DEFAULT_LABEL_MAPPING
+
+        if output_label is None:
+            return label_mapping
+
+        if isinstance(output_label, str):
+            return {key: output_label for key in label_mapping.keys()}
+
+        if isinstance(output_label, Dict):
+            label_mapping.update(output_label)
+            return label_mapping
 
     def run(self, segments: List[Segment]) -> List[Entity]:
         """Return entities (with UMLS normalization attributes) for each match in `segments`
@@ -280,11 +313,10 @@ class QuickUMLSMatcher(NEROperation):
             )
             semtypes = list(match["semtypes"])
 
-            label = (
-                self._semgroups_umls[semtypes[0]]
-                if self.output_label is None
-                else self.output_label
-            )
+            # define label using the first semtype
+            semgroup = self._semtype_to_semgroup[semtypes[0]]
+            label = self.label_mapping[semgroup]
+
             entity = Entity(
                 label=label,
                 text=text,

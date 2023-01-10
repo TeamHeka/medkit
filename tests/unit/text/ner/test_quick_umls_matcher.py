@@ -96,7 +96,7 @@ def test_single_match():
     assert entity is not None
     assert entity.text == "asthma"
     assert entity.spans == [Span(16, 22)]
-    assert entity.label == "DISO"
+    assert entity.label == "disorder"
 
     # normalization attribute
     norms = entity.get_norms()
@@ -120,7 +120,7 @@ def test_multiple_matches():
 
     # 1st entity (diabetes)
     entity_1 = entities[0]
-    assert entity_1.label == "DISO"
+    assert entity_1.label == "disorder"
     assert entity_1.text == "type 1 diabetes"
     assert entity_1.spans == [Span(27, 42)]
 
@@ -130,7 +130,7 @@ def test_multiple_matches():
 
     # 2d entity (asthma)
     entity_2 = entities[1]
-    assert entity_2.label == "DISO"
+    assert entity_2.label == "disorder"
     assert entity_2.text == "asthma"
     assert entity_2.spans == [Span(16, 22)]
 
@@ -147,7 +147,7 @@ def test_language():
 
     # entity
     entity = entities[0]
-    assert entity.label == "DISO"
+    assert entity.label == "disorder"
     assert entity.text == "Asthme"
 
     # normalization attribute, same CUI as in english
@@ -172,7 +172,7 @@ def test_lowercase():
     entities = umls_matcher_lowercase.run([sentence])
     assert len(entities) == 1
     entity = entities[0]
-    assert entity.label == "DISO"
+    assert entity.label == "disorder"
     assert entity.text == "asthme"
 
     norm = entity.get_norms()[0]
@@ -238,15 +238,27 @@ def test_prov():
     assert attr_prov.source_data_items == [sentence]
 
 
-def test_custom_output_label():
+TEST_OUTPUT_LABEL = [
+    (None, "disorder"),
+    ("disease", "disease"),
+    ({"DISO": "problem"}, "problem"),
+]
+
+
+@pytest.mark.parametrize(
+    "output_label,expected_label",
+    TEST_OUTPUT_LABEL,
+    ids=["default_label", "label_str", "label_dict"],
+)
+def test_output_label(output_label, expected_label):
     sentence = _get_sentence_segment("The patient has asthma and type 1 diabetes.")
 
     umls_matcher = QuickUMLSMatcher(
         version="2021AB",
         language="ENG",
-        output_label="MALADIE",
+        output_label=output_label,
     )
     entities = umls_matcher.run([sentence])
 
     assert len(entities) == 2
-    assert all(ent.label == "MALADIE" for ent in entities)
+    assert all(ent.label == expected_label for ent in entities)
