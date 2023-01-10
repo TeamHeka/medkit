@@ -323,8 +323,8 @@ class QuickUMLSMatcher(NEROperation):
                 spans=spans,
             )
 
-            for label in self.attrs_to_copy:
-                for attr in segment.get_attrs_by_label(label):
+            for attr_label in self.attrs_to_copy:
+                for attr in segment.get_attrs_by_label(attr_label):
                     entity.add_attr(attr)
 
             norm = UMLSNormalization(
