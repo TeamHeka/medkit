@@ -44,19 +44,6 @@ class _QuickUMLSInstall(NamedTuple):
 # https://lhncbc.nlm.nih.gov/semanticnetwork/download/sg_archive/SemGroups-v04.txt
 _PATH_UMLS_GROUPS = Path(__file__).parent / "umls_semgroups_v04.txt"
 
-DEFAULT_LABEL_MAPPING = {
-    "ANAT": "anatomy",
-    "CHEM": "chemical",
-    "DEVI": "device",
-    "DISO": "disorder",
-    "GEOG": "geographic_area",
-    "LIVB": "living_being",
-    "OBJC": "object",
-    "PHEN": "phenomenon",
-    "PHYS": "physiology",
-    "PROC": "procedure",
-}
-
 
 class QuickUMLSMatcher(NEROperation):
     """Entity annotator relying on QuickUMLS.
@@ -96,7 +83,22 @@ class QuickUMLSMatcher(NEROperation):
     """
 
     _install_paths: Dict[_QuickUMLSInstall, str] = {}
-    _semtype_to_semgroup: Dict[str, str] = {}
+    _semtype_to_semgroup: Optional[Dict[str, str]] = None
+
+    DEFAULT_LABEL_MAPPING: Dict[str, str] = {
+        "ANAT": "anatomy",
+        "CHEM": "chemical",
+        "DEVI": "device",
+        "DISO": "disorder",
+        "GEOG": "geographic_area",
+        "LIVB": "living_being",
+        "OBJC": "object",
+        "PHEN": "phenomenon",
+        "PHYS": "physiology",
+        "PROC": "procedure",
+    }
+    """Dict[str, str]: Mapping of UMLS semgroup identifier to label
+    """
 
     @classmethod
     def add_install(
@@ -159,7 +161,7 @@ class QuickUMLSMatcher(NEROperation):
     @classmethod
     def _load_semtype_to_semgroup_mapping(cls):
         """Load semtype mapping from the UMLS semgroups file"""
-        if not cls._semtype_to_semgroup:
+        if cls._semtype_to_semgroup is None:
             cls._semtype_to_semgroup = dict()
             for line in open(_PATH_UMLS_GROUPS):
                 semgroup, _, semtype, _ = line.split("|")
@@ -213,7 +215,7 @@ class QuickUMLSMatcher(NEROperation):
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
         output_label:
-            This can modify the label for a given semgroup identifier (cf `DEFAULT_LABEL_MAPPING`).
+            Optional mapping to overwrite `DEFAULT_LABEL_MAPPING`.
             If `output_label` is a string, all entities will use this string as label.
         name:
             Name describing the matcher (defaults to the class name)
@@ -261,20 +263,18 @@ class QuickUMLSMatcher(NEROperation):
         self._load_semtype_to_semgroup_mapping()
         self.label_mapping = self._get_label_mapping(output_label)
 
-    @staticmethod
     def _get_label_mapping(
-        output_label: Union[None, str, Dict[str, str]]
+        self, output_label: Union[None, str, Dict[str, str]]
     ) -> Dict[str, str]:
         """Return label mapping according to `output_label`"""
-        label_mapping = DEFAULT_LABEL_MAPPING
-
         if output_label is None:
-            return label_mapping
+            return self.DEFAULT_LABEL_MAPPING
 
         if isinstance(output_label, str):
-            return {key: output_label for key in label_mapping.keys()}
+            return {key: output_label for key in self.DEFAULT_LABEL_MAPPING}
 
         if isinstance(output_label, Dict):
+            label_mapping = self.DEFAULT_LABEL_MAPPING.copy()
             label_mapping.update(output_label)
             return label_mapping
 
