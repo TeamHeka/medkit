@@ -112,11 +112,6 @@ class Annotation(abc.ABC):
     def keep_keys(self, keys):
         self.keys.intersection_update(keys)
 
-    def add_metadata(self, key: str, value: Any):
-        if key in self.metadata.keys():
-            raise ValueError(f"Metadata key {key} is already used")
-        self.metadata[key] = value
-
     def to_dict(self) -> Dict[str, Any]:
         attrs = [a.to_dict() for a in self._attrs_by_id.values()]
         return dict(
@@ -168,11 +163,6 @@ class Attribute:
         self.label: str = label
         self.value: Optional[Any] = value
         self.metadata: Dict[str, Any] = metadata
-
-    def add_metadata(self, key: str, value: Any):
-        if key in self.metadata.keys():
-            raise ValueError(f"Metadata key {key} is already used")
-        self.metadata[key] = value
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
