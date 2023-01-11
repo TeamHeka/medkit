@@ -55,12 +55,6 @@ class Annotation(abc.ABC):
         for attr in attrs:
             self.attrs.add(attr)
 
-    def add_key(self, key: str):
-        self.keys.add(key)
-
-    def keep_keys(self, keys):
-        self.keys.intersection_update(keys)
-
     def to_dict(self) -> Dict[str, Any]:
         attrs = [a.to_dict() for a in self.attrs]
         return dict(

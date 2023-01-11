@@ -221,7 +221,7 @@ class Pipeline:
         # Keep keys only for output key
         for data_item in [d for data_tuple in all_output_data for d in data_tuple]:
             if isinstance(data_item, Annotation):
-                data_item.keep_keys(self.output_keys)
+                data_item.keys.intersection_update(self.output_keys)
 
         if self._prov_tracer is not None:
             self._add_provenance(all_output_data)
@@ -280,7 +280,7 @@ class Pipeline:
                 data_by_key[output_key] += output_data
             for data_item in output_data:
                 if isinstance(data_item, Annotation):
-                    data_item.add_key(output_key)
+                    data_item.keys.add(output_key)
 
     def _add_provenance(self, all_output_data: Tuple[List[Any], ...]):
         assert self._prov_tracer is not None and self._sub_prov_tracer is not None
