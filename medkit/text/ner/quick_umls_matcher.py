@@ -1,17 +1,16 @@
 __all__ = ["QuickUMLSMatcher"]
 
 from pathlib import Path
+from packaging.version import parse as parse_version
 from typing import Dict, Iterator, List, NamedTuple, Optional, Union
+from typing_extensions import Literal
+
 import quickumls.about
 import quickumls.constants
-from packaging.version import parse as parse_version
 from quickumls import QuickUMLS
-from smart_open import open
-from typing_extensions import Literal
 
 from medkit.core.text import Entity, NEROperation, Segment, span_utils
 from medkit.text.ner.umls_normalization import UMLSNormalization
-
 
 # workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/issues/68
 _spacy_language_map_fixed = False
