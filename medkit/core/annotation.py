@@ -1,74 +1,37 @@
-from __future__ import annotations
-
 __all__ = ["Annotation"]
 
-import abc
-from typing import Any, Dict, List, Set, Optional
+from typing import Set
+from typing_extensions import Protocol, runtime_checkable
 
-from medkit.core.attribute import Attribute
 from medkit.core.attribute_container import AttributeContainer
-from medkit.core.id import generate_id
-from medkit.core.store import Store, DictStore
 
 
-class Annotation(abc.ABC):
-    def __init__(
-        self,
-        label: str,
-        attrs: Optional[List[Attribute]] = None,
-        uid: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        store: Optional[Store] = None,
-    ):
-        """
-        Provide common initialization for annotation instances
+@runtime_checkable
+class Annotation(Protocol):
+    """
+    Base annotation protocol that must be implement by annotations classes of all
+    modalities (text, audio, etc).
 
-        Parameters
-        ----------
-        label: str
-            The annotation label
-        attrs:
-            The attributes of the annotation
-        uid: str, Optional
-            The annotation identifier
-        metadata: dict
-            The dictionary containing the annotation metadata
-        store:
-            Optional shared store to hold the attributes. If none provided,
-            an internal store will be used.
-        """
-        if uid is None:
-            uid = generate_id()
-        if attrs is None:
-            attrs = []
-        if metadata is None:
-            metadata = {}
-        if store is None:
-            store = DictStore()
+    Annotations can be attached to :class:`~medkit.core.document.Document`
+    objects and can contain :class:`~medkit.core.attribute.Attribute` objects.
 
-        self.uid: str = uid
-        self.label: str = label
-        self.keys: Set[str] = set()
-        self.metadata: Dict[str, Any] = metadata
+    Attributes
+    ----------
+    uid:
+        Unique identifier of the annotation
+    label:
+        Label of the annotation, can be used to represent the "kind" of
+        annotation. (ex: "sentence", "disease", etc)
+    keys:
+        Pipeline output keys to which the segment belongs to (cf
+        :class:`~medkit.core.pipeline.Pipeline`.)
+    attrs:
+        Attributes of the annotation, stored in an
+        :class:`~medkit.core.attribute_container.AttributeContainer` for easier
+        access.
+    """
 
-        self.attrs = AttributeContainer(store=store)
-        for attr in attrs:
-            self.attrs.add(attr)
-
-    def to_dict(self) -> Dict[str, Any]:
-        attrs = [a.to_dict() for a in self.attrs]
-        return dict(
-            uid=self.uid,
-            label=self.label,
-            attrs=attrs,
-            metadata=self.metadata,
-            class_name=self.__class__.__name__,
-        )
-
-    @classmethod
-    @abc.abstractmethod
-    def from_dict(cls, annotation_dict: Dict[str, Any]) -> Annotation:
-        raise NotImplementedError
-
-    def __repr__(self):
-        return str(self.to_dict())
+    uid: str
+    label: str
+    keys: Set[str]
+    attrs: AttributeContainer

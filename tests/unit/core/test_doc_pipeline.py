@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from typing import Dict, Any
 
 from medkit.core import (
     generate_id,
     Document,
-    Annotation,
     Attribute,
+    AttributeContainer,
     Pipeline,
     PipelineStep,
 )
@@ -23,15 +25,18 @@ _ALT_SENTENCES = [
 _ENTITIES = ["Entity1", "Entity2"]
 
 
-class _TextAnnotation(Annotation):
+class _TextAnnotation:
     """Mock text annotation"""
 
     def __init__(self, label, text):
-        super().__init__(label=label)
+        self.uid = generate_id()
+        self.label = label
         self.text = text
+        self.keys = set()
+        self.attrs = AttributeContainer()
 
     @classmethod
-    def from_dict(cls, annotation_dict: Dict[str, Any]) -> Annotation:
+    def from_dict(cls, annotation_dict: Dict[str, Any]) -> _TextAnnotation:
         pass
 
 

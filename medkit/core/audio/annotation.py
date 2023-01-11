@@ -1,20 +1,23 @@
+from __future__ import annotations
+
 __all__ = ["AudioAnnotation", "Segment"]
 
-
 import abc
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
-from medkit.core.annotation import Annotation, Attribute
+from medkit.core.attribute import Attribute
+from medkit.core.attribute_container import AttributeContainer
 from medkit.core.audio.span import Span
 from medkit.core.audio.audio_buffer import (
     AudioBuffer,
     FileAudioBuffer,
     PlaceholderAudioBuffer,
 )
+from medkit.core.id import generate_id
 from medkit.core.store import Store
 
 
-class AudioAnnotation(Annotation):
+class AudioAnnotation(abc.ABC):
     """Base abstract class for all audio annotations"""
 
     @abc.abstractmethod
@@ -22,18 +25,58 @@ class AudioAnnotation(Annotation):
         self,
         label: str,
         attrs: Optional[List[Attribute]] = None,
-        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
-        super().__init__(
-            label=label, attrs=attrs, uid=uid, metadata=metadata, store=store
-        )
+        """
+        Parameters
+        ----------
+        label: str
+            The annotation label
+        attrs:
+            The attributes of the annotation
+        metadata: dict
+            The dictionary containing the annotation metadata
+        uid:
+            The annotation identifier
+        store:
+            Optional shared store to hold the attributes. If none provided,
+            an internal store will be used.
+        """
+        if uid is None:
+            uid = generate_id()
+        if attrs is None:
+            attrs = []
+        if metadata is None:
+            metadata = {}
+
+        self.uid: str = uid
+        self.label: str = label
+        self.metadata: Dict[str, Any] = metadata
+        self.keys: Set[str] = set()
+
+        self.attrs = AttributeContainer(store=store)
+        for attr in attrs:
+            self.attrs.add(attr)
 
     def to_dict(self) -> Dict[str, Any]:
-        data = super().to_dict()
-        data.update(span=self.span.to_dict(), audio=self.audio.to_dict())
-        return data
+        attrs = [a.to_dict() for a in self.attrs]
+        return dict(
+            uid=self.uid,
+            label=self.label,
+            attrs=attrs,
+            metadata=self.metadata,
+            class_name=self.__class__.__name__,
+        )
+
+    @classmethod
+    @abc.abstractmethod
+    def from_dict(cls, annotation_dict: Dict[str, Any]) -> AudioAnnotation:
+        pass
+
+    def __repr__(self):
+        return str(self.to_dict())
 
 
 class Segment(AudioAnnotation):
@@ -46,8 +89,8 @@ class Segment(AudioAnnotation):
         span: Span,
         audio: AudioBuffer,
         attrs: Optional[List[Attribute]] = None,
-        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
         """
@@ -64,16 +107,16 @@ class Segment(AudioAnnotation):
             audio signal.
         attrs:
             Attributes of the segment.
-        uid:
-            Identifier of the segment.
         metadata:
             Metadata of the segment.
+        uid:
+            Identifier of the segment.
         store:
             Optional shared store to hold the attributes. If none provided,
             an internal store will be used.
         """
         super().__init__(
-            uid=uid, label=label, attrs=attrs, metadata=metadata, store=store
+            label=label, attrs=attrs, metadata=metadata, uid=uid, store=store
         )
 
         self.span = span

@@ -3,9 +3,11 @@ from __future__ import annotations
 __all__ = ["TextAnnotation", "Segment", "Entity", "Relation"]
 
 import abc
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Set, TYPE_CHECKING
 
-from medkit.core.annotation import Annotation, Attribute
+from medkit.core.attribute import Attribute
+from medkit.core.attribute_container import AttributeContainer
+from medkit.core.id import generate_id
 from medkit.core.store import Store
 from medkit.core.text import span_utils
 from medkit.core.text.normalization import EntityNormalization
@@ -15,7 +17,7 @@ if TYPE_CHECKING:
     from medkit.core.text.document import TextDocument
 
 
-class TextAnnotation(Annotation):
+class TextAnnotation(abc.ABC):
     """Base abstract class for all text annotations"""
 
     @abc.abstractmethod
@@ -23,11 +25,58 @@ class TextAnnotation(Annotation):
         self,
         label: str,
         attrs: Optional[List[Attribute]] = None,
-        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
-        super().__init__(label=label, attrs=attrs, uid=uid, metadata=metadata)
+        """
+        Parameters
+        ----------
+        label: str
+            The annotation label
+        attrs:
+            The attributes of the annotation
+        metadata: dict
+            The dictionary containing the annotation metadata
+        uid:
+            The annotation identifier.
+        store:
+            Optional shared store to hold the attributes. If none provided,
+            an internal store will be used.
+        """
+        if uid is None:
+            uid = generate_id()
+        if attrs is None:
+            attrs = []
+        if metadata is None:
+            metadata = {}
+
+        self.uid: str = uid
+        self.label: str = label
+        self.metadata: Dict[str, Any] = metadata
+        self.keys: Set[str] = set()
+
+        self.attrs = AttributeContainer(store=store)
+        for attr in attrs:
+            self.attrs.add(attr)
+
+    def to_dict(self) -> Dict[str, Any]:
+        attrs = [a.to_dict() for a in self.attrs]
+        return dict(
+            uid=self.uid,
+            label=self.label,
+            attrs=attrs,
+            metadata=self.metadata,
+            class_name=self.__class__.__name__,
+        )
+
+    @classmethod
+    @abc.abstractmethod
+    def from_dict(cls, annotation_dict: Dict[str, Any]) -> TextAnnotation:
+        pass
+
+    def __repr__(self):
+        return str(self.to_dict())
 
 
 class Segment(TextAnnotation):
@@ -37,8 +86,8 @@ class Segment(TextAnnotation):
         spans: List[AnySpanType],
         text: str,
         attrs: Optional[List[Attribute]] = None,
-        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
         """
@@ -54,16 +103,16 @@ class Segment(TextAnnotation):
             The annotation text
         attrs:
             The attributes of the segment
-        uid: str, Optional
-            The identifier of the annotation (if existing)
         metadata: dict[str, Any], Optional
             The metadata of the annotation
+        uid:
+            The identifier of the annotation (if existing).
         store:
             Optional shared store to hold the attributes. If none provided,
             an internal store will be used.
         """
         super().__init__(
-            uid=uid, label=label, attrs=attrs, metadata=metadata, store=store
+            label=label, attrs=attrs, metadata=metadata, uid=uid, store=store
         )
         self.spans: List[AnySpanType] = spans
         self.text: str = text
@@ -135,8 +184,8 @@ class Entity(Segment):
         spans: List[AnySpanType],
         text: str,
         attrs: Optional[List[Attribute]] = None,
-        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
         """
@@ -152,10 +201,10 @@ class Entity(Segment):
             The entity text
         attrs:
             The attributes of the entity
-        uid: str, Optional
-            The identifier of the entity (if existing)
         metadata: dict[str, Any], Optional
             The metadata of the entity
+        uid:
+            The identifier of the entity (if existing)
         store:
             Optional shared store to hold the attributes. If none provided,
             an internal store will be used.
@@ -165,8 +214,8 @@ class Entity(Segment):
             spans=spans,
             text=text,
             attrs=attrs,
-            uid=uid,
             metadata=metadata,
+            uid=uid,
             store=store,
         )
 
@@ -242,8 +291,8 @@ class Relation(TextAnnotation):
         source_id: str,
         target_id: str,
         attrs: Optional[List[Attribute]] = None,
-        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
         """
@@ -259,16 +308,16 @@ class Relation(TextAnnotation):
             The identifier of the entity to which the relation is defined
         attrs:
             The attributes of the relation
-        uid: str, Optional
-            The identifier of the relation (if existing)
         metadata: Dict[str, Any], Optional
             The metadata of the relation
+        uid:
+            The identifier of the relation (if existing)
         store:
             Optional shared store to hold the attributes. If none provided,
             an internal store will be used.
         """
         super().__init__(
-            uid=uid, label=label, attrs=attrs, metadata=metadata, store=store
+            label=label, attrs=attrs, metadata=metadata, uid=uid, store=store
         )
         self.source_id: str = source_id
         self.target_id: str = target_id
