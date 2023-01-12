@@ -1,4 +1,4 @@
-__all__ = ["batch_iter", "batch_list", "has_optional_modules"]
+__all__ = ["batch_iter", "batch_list", "modules_are_available"]
 
 import importlib.util
 from typing import Any, Iterator, List
@@ -51,5 +51,5 @@ def batch_list(list: List[Any], batch_size: int) -> Iterator[List[Any]]:
         yield list[i : i + batch_size]
 
 
-def has_optional_modules(modules: List[str]):
+def modules_are_available(modules: List[str]):
     return all(importlib.util.find_spec(m) is not None for m in modules)

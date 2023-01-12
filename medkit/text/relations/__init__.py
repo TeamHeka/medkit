@@ -1,13 +1,13 @@
 __all__ = []
 
-from medkit.core.utils import has_optional_modules
+from medkit.core.utils import modules_are_available
 
 # -----------------------------------------------------
 # Import optional modules if dependencies are installed
 # -----------------------------------------------------
 
 # Syntactic Relation Extractor module
-if has_optional_modules(["spacy"]):
+if modules_are_available(["spacy"]):
     # fmt: off
     from .syntactic_relation_extractor import SyntacticRelationExtractor  # noqa: F401
     __all__.append("SyntacticRelationExtractor")

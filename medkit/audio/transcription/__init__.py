@@ -5,7 +5,7 @@ __all__ = [
     "TranscribedDocument",
 ]
 
-from medkit.core.utils import has_optional_modules
+from medkit.core.utils import modules_are_available
 
 from .doc_transcriber import (
     DocTranscriber,
@@ -14,13 +14,13 @@ from .doc_transcriber import (
 )
 from .transcribed_document import TranscribedDocument
 
-if has_optional_modules(["torchaudio", "transformers"]):
+if modules_are_available(["torchaudio", "transformers"]):
     # fmt: off
     from .hf_transcriber_function import HFTranscriberFunction  # noqa: F401
     __all__.append("HFTranscriberFunction")
     # fmt: on
 
-if has_optional_modules(["torch", "speechbrain"]):
+if modules_are_available(["torch", "speechbrain"]):
     # fmt: off
     from .sb_transcriber_function import SBTranscriberFunction  # noqa: F401
     __all__.append("SBTranscriberFunction")
