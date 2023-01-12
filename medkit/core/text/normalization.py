@@ -46,7 +46,7 @@ class EntityNormalization:
         self.term = term
         self.score = score
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, deep: bool = False) -> Dict[str, Any]:
         return dict(
             kb_name=self.kb_name,
             kb_id=self.kb_id,

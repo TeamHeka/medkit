@@ -96,7 +96,7 @@ class AudioDocument:
     def audio(self) -> AudioBuffer:
         return self.raw_segment.audio
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, deep: bool = False) -> Dict[str, Any]:
         if isinstance(self.audio, DictSerializable):
             audio = serialize(self.audio)
         else:
@@ -104,19 +104,19 @@ class AudioDocument:
             # because we can't serialize the actual signal
             placeholder = PlaceholderAudioBuffer.from_audio_buffer(self.audio)
             audio = serialize(placeholder)
-        anns = [serialize(a) for a in self.anns]
-        return dict(
+        data = dict(
             uid=self.uid,
             audio=audio,
-            anns=anns,
             metadata=self.metadata,
         )
+        if deep:
+            data["anns"] = [serialize(a, deep=True) for a in self.anns]
+        return data
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> AudioDocument:
         audio = deserialize(data["audio"])
-        anns = [deserialize(a) for a in data["anns"]]
-
+        anns = [deserialize(a) for a in data.get("anns", [])]
         return cls(
             uid=data["uid"],
             audio=audio,

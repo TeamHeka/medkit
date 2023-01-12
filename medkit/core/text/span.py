@@ -33,7 +33,7 @@ class Span(NamedTuple):
     def length(self):
         return self.end - self.start
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, deep: bool = False) -> Dict[str, Any]:
         return dict(start=self.start, end=self.end)
 
     def overlaps(self, other: Span):
@@ -70,7 +70,7 @@ class ModifiedSpan:
     length: int
     replaced_spans: List[Span]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, deep: bool = False) -> Dict[str, Any]:
         replaced_spans = [serialize(s) for s in self.replaced_spans]
         return dict(
             length=self.length,
