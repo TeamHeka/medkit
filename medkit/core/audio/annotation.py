@@ -11,6 +11,7 @@ from medkit.core.audio.audio_buffer import (
     FileAudioBuffer,
     PlaceholderAudioBuffer,
 )
+from medkit.core.store import Store
 
 
 class AudioAnnotation(Annotation):
@@ -23,8 +24,11 @@ class AudioAnnotation(Annotation):
         attrs: Optional[List[Attribute]] = None,
         uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        store: Optional[Store] = None,
     ):
-        super().__init__(label=label, attrs=attrs, uid=uid, metadata=metadata)
+        super().__init__(
+            label=label, attrs=attrs, uid=uid, metadata=metadata, store=store
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
@@ -44,6 +48,7 @@ class Segment(AudioAnnotation):
         attrs: Optional[List[Attribute]] = None,
         uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        store: Optional[Store] = None,
     ):
         """
         Parameters
@@ -63,8 +68,13 @@ class Segment(AudioAnnotation):
             Identifier of the segment.
         metadata:
             Metadata of the segment.
+        store:
+            Optional shared store to hold the attributes. If none provided,
+            an internal store will be used.
         """
-        super().__init__(uid=uid, label=label, attrs=attrs, metadata=metadata)
+        super().__init__(
+            uid=uid, label=label, attrs=attrs, metadata=metadata, store=store
+        )
 
         self.span = span
         self.audio = audio
