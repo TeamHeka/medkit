@@ -2,7 +2,7 @@ __all__ = ["AudioAnnotation", "Segment"]
 
 
 import abc
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from medkit.core.annotation import Annotation, Attribute
 from medkit.core.audio.span import Span
@@ -23,8 +23,11 @@ class AudioAnnotation(Annotation):
         attrs: Optional[List[Attribute]] = None,
         uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        keys: Optional[Set[str]] = None,
     ):
-        super().__init__(label=label, attrs=attrs, uid=uid, metadata=metadata)
+        super().__init__(
+            label=label, attrs=attrs, uid=uid, metadata=metadata, keys=keys
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
@@ -44,6 +47,7 @@ class Segment(AudioAnnotation):
         attrs: Optional[List[Attribute]] = None,
         uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        keys: Optional[Set[str]] = None,
     ):
         """
         Parameters
@@ -63,8 +67,12 @@ class Segment(AudioAnnotation):
             Identifier of the segment.
         metadata:
             Metadata of the segment.
+        keys:
+            Pipeline output keys to which the segment belongs to.
         """
-        super().__init__(uid=uid, label=label, attrs=attrs, metadata=metadata)
+        super().__init__(
+            uid=uid, label=label, attrs=attrs, metadata=metadata, keys=keys
+        )
 
         self.span = span
         self.audio = audio
@@ -93,4 +101,5 @@ class Segment(AudioAnnotation):
             attrs=attrs,
             uid=data["uid"],
             metadata=data["metadata"],
+            keys=set(data["keys"]),
         )

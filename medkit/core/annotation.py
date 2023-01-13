@@ -116,10 +116,10 @@ class Annotation(abc.ABC):
         attrs = [a.to_dict() for a in self._attrs_by_id.values()]
         return dict(
             uid=self.uid,
-            keys=list(self.keys),
             label=self.label,
             attrs=attrs,
             metadata=self.metadata,
+            keys=list(self.keys),
             class_name=self.__class__.__name__,
         )
 
