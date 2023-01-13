@@ -8,6 +8,7 @@ __all__ = [
     "OutputConverter",
     "IdentifiableDataItem",
     "IdentifiableDataItemWithAttrs",
+    "DictSerializable",
     "DocPipeline",
     "Document",
     "generate_id",
@@ -34,6 +35,7 @@ from .attribute_container import AttributeContainer
 from .collection import Collection
 from .conversion import InputConverter, OutputConverter
 from .data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs
+from .dict_serialization import DictSerializable
 from .doc_pipeline import DocPipeline
 from .document import Document
 from .id import generate_id
