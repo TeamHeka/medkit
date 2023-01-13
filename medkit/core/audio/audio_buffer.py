@@ -9,6 +9,8 @@ from typing import Any, Dict, Optional, Union
 import numpy as np
 import soundfile as sf
 
+from medkit.core.dict_serialization import dict_serializable
+
 
 class AudioBuffer(abc.ABC):
     """Audio buffer base class. Gives access to raw audio samples."""
@@ -100,16 +102,8 @@ class AudioBuffer(abc.ABC):
         )
         return self.trim(start, end)
 
-    @abc.abstractmethod
-    def to_dict(self) -> Dict[str, Any]:
-        pass
 
-    @classmethod
-    @abc.abstractmethod
-    def from_dict(cls, data: Dict[str, Any]) -> AudioBuffer:
-        pass
-
-
+@dict_serializable
 class FileAudioBuffer(AudioBuffer):
     """Audio buffer giving access to audio files stored on the filesystem
     (to use when manipulating unmodified raw audio)."""
@@ -187,7 +181,6 @@ class FileAudioBuffer(AudioBuffer):
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
-            class_name=self.__class__.__name__,
             path=str(self.path),
             trim_start=self._trim_start,
             trim_end=self._trim_end,
@@ -195,13 +188,10 @@ class FileAudioBuffer(AudioBuffer):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> FileAudioBuffer:
-        return cls(
-            path=data["path"],
-            trim_start=data["trim_start"],
-            trim_end=data["trim_end"],
-        )
+        return cls(**data)
 
 
+@dict_serializable
 class MemoryAudioBuffer(AudioBuffer):
     """Audio buffer giving acces to signals stored in memory
     (to use when reading/writing a modified audio signal)."""
@@ -243,9 +233,8 @@ class MemoryAudioBuffer(AudioBuffer):
         return MemoryAudioBuffer(self._signal[:, start:end], self.sample_rate)
 
     def to_dict(self) -> Dict[str, Any]:
+        # TODO fin a way to serialize back to PlaceholderAudioBuffer because signal is not kept
         return dict(
-            # serialize back to PlaceholderAudioBuffer because signal is not kept
-            class_name="PlaceholderAudioBuffer",
             sample_rate=self.sample_rate,
             nb_samples=self.nb_samples,
             nb_channels=self.nb_channels,
@@ -256,6 +245,7 @@ class MemoryAudioBuffer(AudioBuffer):
         raise NotImplementedError("MemoryAudioBuffer can't be reinstantiated from dict")
 
 
+@dict_serializable
 class PlaceholderAudioBuffer(AudioBuffer):
     """Placeholder representing a MemoryAudioBuffer for which we have lost the actual signal.
 
@@ -280,7 +270,6 @@ class PlaceholderAudioBuffer(AudioBuffer):
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
-            class_name=self.__class__.__name__,
             sample_rate=self.sample_rate,
             nb_samples=self.nb_samples,
             nb_channels=self.nb_channels,

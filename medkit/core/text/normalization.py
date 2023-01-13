@@ -1,8 +1,13 @@
+from __future__ import annotations
+
 __all__ = ["EntityNormalization"]
 
 from typing import Any, Dict, Optional
 
+from medkit.core.dict_serialization import dict_serializable
 
+
+@dict_serializable
 class EntityNormalization:
     """Normalization linking an entity to an ID in a knowledge base.
 
@@ -49,3 +54,7 @@ class EntityNormalization:
             term=self.term,
             score=self.score,
         )
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> EntityNormalization:
+        return cls(**data)

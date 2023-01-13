@@ -8,14 +8,12 @@ from typing import Any, Dict, List, Optional, Set
 from medkit.core.attribute import Attribute
 from medkit.core.attribute_container import AttributeContainer
 from medkit.core.audio.span import Span
-from medkit.core.audio.audio_buffer import (
-    AudioBuffer,
-    FileAudioBuffer,
-    PlaceholderAudioBuffer,
-)
+from medkit.core.audio.audio_buffer import AudioBuffer
+from medkit.core.dict_serialization import dict_serializable, serialize, deserialize
 from medkit.core.id import generate_id
 
 
+@dict_serializable
 @dataclasses.dataclass(init=False)
 class Segment:
     """Audio segment referencing part of an {class}`~medkit.core.audio.AudioDocument`.
@@ -80,28 +78,23 @@ class Segment:
             self.attrs.add(attr)
 
     def to_dict(self) -> Dict[str, Any]:
-        attrs = [a.to_dict() for a in self.attrs]
+        audio = serialize(self.audio)
+        span = serialize(self.span)
+        attrs = [serialize(a) for a in self.attrs]
         return dict(
             uid=self.uid,
             label=self.label,
-            audio=self.audio.to_dict(),
-            span=self.span.to_dict(),
+            audio=audio,
+            span=span,
             attrs=attrs,
             metadata=self.metadata,
-            class_name=self.__class__.__name__,
         )
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]):
-        if data["audio"]["class_name"] == "FileAudioBuffer":
-            audio = FileAudioBuffer.from_dict(data["audio"])
-        else:
-            assert data["audio"]["class_name"] == "PlaceholderAudioBuffer"
-            audio = PlaceholderAudioBuffer.from_dict(data["audio"])
-
-        span = Span.from_dict(data["span"])
-        attrs = [Attribute.from_dict(a) for a in data["attrs"]]
-
+        audio = deserialize(data["audio"])
+        span = deserialize(data["span"])
+        attrs = [deserialize(a) for a in data["attrs"]]
         return cls(
             label=data["label"],
             audio=audio,

@@ -10,14 +10,12 @@ import uuid
 from medkit.core.audio.annotation import Segment
 from medkit.core.audio.annotation_container import AudioAnnotationContainer
 from medkit.core.audio.span import Span
-from medkit.core.audio.audio_buffer import (
-    AudioBuffer,
-    FileAudioBuffer,
-    PlaceholderAudioBuffer,
-)
+from medkit.core.audio.audio_buffer import AudioBuffer
+from medkit.core.dict_serialization import dict_serializable, serialize, deserialize
 from medkit.core.id import generate_id
 
 
+@dict_serializable
 @dataclasses.dataclass(init=False)
 class AudioDocument:
     """
@@ -91,23 +89,19 @@ class AudioDocument:
         return self.raw_segment.audio
 
     def to_dict(self) -> Dict[str, Any]:
-        anns = [ann.to_dict() for ann in self.anns]
+        audio = serialize(self.audio)
+        anns = [serialize(a) for a in self.anns]
         return dict(
             uid=self.uid,
-            audio=self.audio.to_dict(),
+            audio=audio,
             anns=anns,
             metadata=self.metadata,
         )
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> AudioDocument:
-        if data["audio"]["class_name"] == "FileAudioBuffer":
-            audio = FileAudioBuffer.from_dict(data["audio"])
-        else:
-            assert data["audio"]["class_name"] == "PlaceholderAudioBuffer"
-            audio = PlaceholderAudioBuffer.from_dict(data["audio"])
-
-        anns = [Segment.from_dict(ann_data) for ann_data in data["anns"]]
+        audio = deserialize(data["audio"])
+        anns = [deserialize(a) for a in data["anns"]]
 
         return cls(
             uid=data["uid"],

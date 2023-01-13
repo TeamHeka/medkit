@@ -4,7 +4,10 @@ __all__ = ["Span"]
 
 from typing import Any, Dict, NamedTuple
 
+from medkit.core.dict_serialization import dict_serializable
 
+
+@dict_serializable
 class Span(NamedTuple):
     """
     Boundaries of a slice of audio.
