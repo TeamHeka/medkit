@@ -5,12 +5,12 @@ __all__ = [
     "RTTMOutputConverter",
 ]
 
-import importlib.util
+from medkit.core.utils import modules_are_available
+
 from .brat import BratInputConverter, BratOutputConverter
 from .rttm import RTTMInputConverter, RTTMOutputConverter
 
-_spacy_is_available = importlib.util.find_spec("spacy") is not None
-if _spacy_is_available:
+if modules_are_available(["spacy"]):
     # fmt: off
     from .spacy import SpacyInputConverter, SpacyOutputConverter  # noqa: F401
     __all__.append("SpacyInputConverter")
