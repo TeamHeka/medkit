@@ -1,0 +1,62 @@
+{
+    "version": "0.1",
+    "content_type": "document",
+    "modality": "audio",
+    "content": {
+        "uid": "d1",
+        "audio": {
+            "path": "tests/data/audio/dialog_long.ogg",
+            "trim_start": 0,
+            "trim_end": 134099,
+            "_class_name": "medkit.core.audio.audio_buffer.FileAudioBuffer"
+        },
+        "metadata": {},
+        "anns": [
+            {
+                "uid": "s1",
+                "label": "speaker_1",
+                "audio": {
+                    "path": "tests/data/audio/dialog_long.ogg",
+                    "trim_start": 11200,
+                    "trim_end": 57600,
+                    "_class_name": "medkit.core.audio.audio_buffer.FileAudioBuffer"
+                },
+                "span": {
+                    "start": 0.7,
+                    "end": 3.6,
+                    "_class_name": "medkit.core.audio.span.Span"
+                },
+                "metadata": {},
+                "attrs": [
+                    {
+                        "uid": "a1",
+                        "label": "is_negated",
+                        "value": false,
+                        "metadata": {},
+                        "_class_name": "medkit.core.attribute.Attribute"
+                    }
+                ],
+                "_class_name": "medkit.core.audio.annotation.Segment"
+            },
+            {
+                "uid": "s2",
+                "label": "speaker_2",
+                "audio": {
+                    "path": "tests/data/audio/dialog_long.ogg",
+                    "trim_start": 64000,
+                    "trim_end": 128000,
+                    "_class_name": "medkit.core.audio.audio_buffer.FileAudioBuffer"
+                },
+                "span": {
+                    "start": 4.0,
+                    "end": 8.0,
+                    "_class_name": "medkit.core.audio.span.Span"
+                },
+                "metadata": {},
+                "attrs": [],
+                "_class_name": "medkit.core.audio.annotation.Segment"
+            }
+        ],
+        "_class_name": "medkit.core.audio.document.AudioDocument"
+    }
+}

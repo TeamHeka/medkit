@@ -1,0 +1,51 @@
+{
+    "version": "0.1",
+    "content_type": "document",
+    "modality": "text",
+    "content": {
+        "uid": "d1",
+        "text": "I have diabetes and asthma.",
+        "metadata": {},
+        "anns": [
+            {
+                "uid": "e1",
+                "label": "disease",
+                "text": "diabetes",
+                "spans": [
+                    {
+                        "start": 7,
+                        "end": 15,
+                        "_class_name": "medkit.core.text.span.Span"
+                    }
+                ],
+                "metadata": {},
+                "attrs": [],
+                "_class_name": "medkit.core.text.annotation.Entity"
+            },
+            {
+                "uid": "e2",
+                "label": "disease",
+                "text": "asthma",
+                "spans": [
+                    {
+                        "start": 20,
+                        "end": 26,
+                        "_class_name": "medkit.core.text.span.Span"
+                    }
+                ],
+                "metadata": {},
+                "attrs": [
+                    {
+                        "uid": "a1",
+                        "label": "is_negated",
+                        "value": false,
+                        "metadata": {},
+                        "_class_name": "medkit.core.attribute.Attribute"
+                    }
+                ],
+                "_class_name": "medkit.core.text.annotation.Entity"
+            }
+        ],
+        "_class_name": "medkit.core.text.document.TextDocument"
+    }
+}

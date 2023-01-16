@@ -1,0 +1,3 @@
+{"version": "0.1", "content_type": "document_list", "modality": "text"}
+{"uid": "d1", "text": "I have diabetes.", "metadata": {}, "anns": [{"uid": "e1", "label": "disease", "text": "diabetes", "spans": [{"start": 7, "end": 15, "_class_name": "medkit.core.text.span.Span"}], "metadata": {}, "attrs": [], "_class_name": "medkit.core.text.annotation.Entity"}], "_class_name": "medkit.core.text.document.TextDocument"}
+{"uid": "d2", "text": "I have asthma.", "metadata": {}, "anns": [{"uid": "e2", "label": "disease", "text": "asthma", "spans": [{"start": 7, "end": 13, "_class_name": "medkit.core.text.span.Span"}], "metadata": {}, "attrs": [], "_class_name": "medkit.core.text.annotation.Entity"}], "_class_name": "medkit.core.text.document.TextDocument"}
