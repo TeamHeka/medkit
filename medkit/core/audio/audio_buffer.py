@@ -102,6 +102,10 @@ class AudioBuffer(abc.ABC):
         )
         return self.trim(start, end)
 
+    @abc.abstractmethod
+    def __eq__(self, other: object) -> bool:
+        pass
+
 
 @dict_serializable
 class FileAudioBuffer(AudioBuffer):
@@ -190,6 +194,15 @@ class FileAudioBuffer(AudioBuffer):
     def from_dict(cls, data: Dict[str, Any]) -> FileAudioBuffer:
         return cls(**data)
 
+    def __eq__(self, other: object) -> bool:
+        if not type(other) is self.__class__:
+            return False
+        return (
+            self.path == other.path
+            and self._trim_end == other._trim_end
+            and self._trim_start == other._trim_start
+        )
+
 
 class MemoryAudioBuffer(AudioBuffer):
     """Audio buffer giving acces to signals stored in memory
@@ -230,6 +243,11 @@ class MemoryAudioBuffer(AudioBuffer):
             end = self.nb_samples
         assert start <= end
         return MemoryAudioBuffer(self._signal[:, start:end], self.sample_rate)
+
+    def __eq__(self, other: object) -> bool:
+        if not type(other) is self.__class__:
+            return False
+        return np.array_equal(self._signal, other._signal)
 
 
 @dict_serializable
@@ -276,4 +294,13 @@ class PlaceholderAudioBuffer(AudioBuffer):
             sample_rate=data["sample_rate"],
             nb_samples=data["nb_samples"],
             nb_channels=data["nb_channels"],
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not type(other) is self.__class__:
+            return False
+        return (
+            self.sample_rate == other.sample_rate
+            and self.nb_samples == other.nb_samples
+            and self.nb_channels == other.nb_channels
         )
