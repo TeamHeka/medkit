@@ -87,3 +87,8 @@ class AttributeContainer:
     def _get_by_id(self, uid: str) -> Attribute:
         attr = self._store.get_data_item(uid)
         return typing.cast(Attribute, attr)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return self.get() == other.get()

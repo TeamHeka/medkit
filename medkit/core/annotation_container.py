@@ -139,3 +139,8 @@ class AnnotationContainer(Generic[AnnotationType]):
 
         ann = self._store.get_data_item(uid)
         return typing.cast(AnnotationType, ann)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return self.get() == other.get()
