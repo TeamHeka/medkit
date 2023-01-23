@@ -1,5 +1,4 @@
 __all__ = [
-    "AudioAnnotation",
     "Segment",
     "AudioAnnotationContainer",
     "AudioBuffer",
@@ -11,7 +10,7 @@ __all__ = [
     "Span",
 ]
 
-from .annotation import AudioAnnotation, Segment
+from .annotation import Segment
 from .annotation_container import AudioAnnotationContainer
 from .audio_buffer import AudioBuffer, FileAudioBuffer, MemoryAudioBuffer
 from .document import AudioDocument

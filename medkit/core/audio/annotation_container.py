@@ -4,10 +4,10 @@ from typing import List, Optional
 
 from medkit.core.annotation_container import AnnotationContainer
 from medkit.core.store import Store
-from medkit.core.audio.annotation import AudioAnnotation, Segment
+from medkit.core.audio.annotation import Segment
 
 
-class AudioAnnotationContainer(AnnotationContainer[AudioAnnotation]):
+class AudioAnnotationContainer(AnnotationContainer[Segment]):
     """
     Manage a list of audio annotations belonging to an audio document.
 
@@ -25,7 +25,7 @@ class AudioAnnotationContainer(AnnotationContainer[AudioAnnotation]):
         # and get_by_id()
         self.raw_segment = raw_segment
 
-    def add(self, ann: AudioAnnotation):
+    def add(self, ann: Segment):
         if ann.label == self.raw_segment.label:
             raise RuntimeError(
                 f"Cannot add annotation with reserved label {self.raw_segment.label}"
@@ -35,13 +35,13 @@ class AudioAnnotationContainer(AnnotationContainer[AudioAnnotation]):
 
     def get(
         self, *, label: Optional[str] = None, key: Optional[str] = None
-    ) -> List[AudioAnnotation]:
+    ) -> List[Segment]:
         # inject raw segment
         if label == self.raw_segment.label and key is None:
             return [self.raw_segment]
         return super().get(label=label, key=key)
 
-    def get_by_id(self, uid) -> AudioAnnotation:
+    def get_by_id(self, uid) -> Segment:
         # inject raw segment
         if uid == self.raw_segment.uid:
             return self.raw_segment

@@ -5,7 +5,7 @@ This page contains all core audio concepts of medkit.
 ## Document & Annotations
 
 The `AudioDocument` class derives the `Document` and allows it to store
-subclasses of `AudioAnnotation`.
+subclasses of `Segment`.
 
 ```{eval-rst}
 .. autoclasstree:: medkit.core.document medkit.core.audio.document
