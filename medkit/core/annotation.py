@@ -6,6 +6,7 @@ import abc
 from typing import Any, Dict, List, Set, Optional
 
 from medkit.core.attribute import Attribute
+from medkit.core.attribute_container import AttributeContainer
 from medkit.core.id import generate_id
 from medkit.core.store import Store, DictStore
 
@@ -49,12 +50,10 @@ class Annotation(abc.ABC):
         self.label: str = label
         self.keys: Set[str] = set()
         self.metadata: Dict[str, Any] = metadata
-        self.store = store
 
-        self._attrs_id: List[str] = []
-        self._attr_ids_by_label: Dict[str, List[str]] = {}
+        self.attrs = AttributeContainer(store=store)
         for attr in attrs:
-            self.add_attr(attr)
+            self.attrs.add(attr)
 
     def add_attr(self, attr: Attribute):
         """
@@ -71,17 +70,7 @@ class Annotation(abc.ABC):
             If the attribute is already attached to the annotation
             (based on `attr.uid`).
         """
-        uid = attr.uid
-        if attr.uid in self._attrs_id:
-            raise ValueError(f"Attribute with uid {uid} already attached to annotation")
-
-        self._attrs_id.append(uid)
-        self.store.store_data_item(attr)
-
-        label = attr.label
-        if label not in self._attr_ids_by_label:
-            self._attr_ids_by_label[label] = []
-        self._attr_ids_by_label[label].append(uid)
+        self.attrs.add(attr)
 
     def get_attrs(self) -> List[Attribute]:
         """
@@ -92,7 +81,7 @@ class Annotation(abc.ABC):
         List[Attribute]
             List of all the attributes attached to the annotation.
         """
-        return [self.store.get_data_item(uid) for uid in self._attrs_id]
+        return self.attrs.get()
 
     def get_attrs_by_label(self, label: str) -> List[Attribute]:
         """
@@ -104,11 +93,7 @@ class Annotation(abc.ABC):
             List of all the attributes attached to the annotation
             with labels equal to `label`.
         """
-
-        return [
-            self.store.get_data_item(uid)
-            for uid in self._attr_ids_by_label.get(label, [])
-        ]
+        return self.attrs.get(label=label)
 
     def add_key(self, key: str):
         self.keys.add(key)
@@ -117,7 +102,7 @@ class Annotation(abc.ABC):
         self.keys.intersection_update(keys)
 
     def to_dict(self) -> Dict[str, Any]:
-        attrs = [a.to_dict() for a in self._attrs_by_id.values()]
+        attrs = [a.to_dict() for a in self.attrs]
         return dict(
             uid=self.uid,
             label=self.label,
