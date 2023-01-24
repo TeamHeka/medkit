@@ -212,7 +212,7 @@ class BratInputConverter(InputConverter):
                 value=brat_attribute.value,
                 metadata=dict(brat_id=brat_attribute.uid),
             )
-            anns_by_brat_id[brat_attribute.target].add_attr(attribute)
+            anns_by_brat_id[brat_attribute.target].attrs.add(attribute)
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     attribute, self.description, source_data_items=[]
@@ -409,12 +409,12 @@ class BratOutputConverter(OutputConverter):
 
             # include selected attributes
             if self.attrs is None:
-                attrs = medkit_segment.get_attrs()
+                attrs = medkit_segment.attrs.get()
             else:
                 attrs = [
                     a
                     for label in self.attrs
-                    for a in medkit_segment.get_attrs_by_label(label)
+                    for a in medkit_segment.attrs.get(label=label)
                 ]
             for attr in attrs:
                 value = attr.value
@@ -453,12 +453,12 @@ class BratOutputConverter(OutputConverter):
             # Note: it seems that brat does not support attributes for relations
             # include selected attributes
             if self.attrs is None:
-                attrs = medkit_relation.get_attrs()
+                attrs = medkit_relation.attrs.get()
             else:
                 attrs = [
                     a
                     for label in self.attrs
-                    for a in medkit_relation.get_attrs_by_label(label)
+                    for a in medkit_relation.attrs.get(label=label)
                 ]
             for attr in attrs:
                 value = attr.value

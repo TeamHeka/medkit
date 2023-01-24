@@ -234,7 +234,7 @@ class RTTMInputConverter(InputConverter):
         audio = full_audio.trim_duration(start, end)
         segment = Segment(label=self.turn_label, span=Span(start, end), audio=audio)
         speaker_attr = Attribute(label=self.speaker_label, value=row["speaker_name"])
-        segment.add_attr(speaker_attr)
+        segment.attrs.add(speaker_attr)
 
         if self._prov_tracer is not None:
             self._prov_tracer.add_prov(segment, self.description, source_data_items=[])
@@ -364,7 +364,7 @@ class RTTMOutputConverter(OutputConverter):
     def _build_rttm_row(
         self, turn_segment: Segment, rttm_doc_id: Optional[str]
     ) -> Dict[str, Any]:
-        speaker_attrs = turn_segment.get_attrs_by_label(self.speaker_label)
+        speaker_attrs = turn_segment.attrs.get(label=self.speaker_label)
         if len(speaker_attrs) == 0:
             raise RuntimeError(
                 f"Found no attribute with label '{self.speaker_label}' on turn segment"

@@ -117,7 +117,7 @@ class SpacyInputConverter:
             if ann.uid in attributes_by_ann.keys():
                 attrs = attributes_by_ann[ann.uid]
                 for attr in attrs:
-                    ann.add_attr(attr)
+                    ann.attrs.add(attr)
                     if self._prov_tracer is not None:
                         # the input converter does not know the source data item
                         self._prov_tracer.add_prov(
