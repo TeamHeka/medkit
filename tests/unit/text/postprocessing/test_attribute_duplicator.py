@@ -30,15 +30,15 @@ def _get_doc():
     target_1 = _extract_segment(doc.raw_segment, [(66, 73)], "disease")
 
     for ann in [sentence, syntagme_0, syntagme_1, target_0, target_1]:
-        doc.add_annotation(ann)
+        doc.anns.add(ann)
     return doc
 
 
 def test_default_attribute_duplicator():
     doc = _get_doc()
-    sentences = doc.get_annotations_by_label("sentence")
-    syntagmes = doc.get_annotations_by_label("syntagme")
-    targets = doc.get_annotations_by_label("disease")
+    sentences = doc.anns.get(label="sentence")
+    syntagmes = doc.anns.get(label="syntagme")
+    targets = doc.anns.get(label="disease")
 
     # check no attrs in targets
     assert all(len(target.attrs) == 0 for target in targets)
@@ -74,8 +74,8 @@ def test_default_attribute_duplicator():
 
 def test_duplicate_a_list_of_attrs_labels():
     doc = _get_doc()
-    sentences = doc.get_annotations_by_label("sentence")
-    targets = doc.get_annotations_by_label("disease")
+    sentences = doc.anns.get(label="sentence")
+    targets = doc.anns.get(label="disease")
 
     # check no attrs in targets
     assert all(len(target.attrs) == 0 for target in targets)
@@ -102,8 +102,8 @@ def test_duplicate_a_list_of_attrs_labels():
 
 def test_provenance():
     doc = _get_doc()
-    sentences = doc.get_annotations_by_label("sentence")
-    targets = doc.get_annotations_by_label("disease")
+    sentences = doc.anns.get(label="sentence")
+    targets = doc.anns.get(label="disease")
 
     prov_tracer = ProvTracer()
     duplicator_1 = AttributeDuplicator(attr_labels=["is_family"])

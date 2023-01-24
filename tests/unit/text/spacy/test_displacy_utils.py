@@ -124,15 +124,15 @@ def test_segments_to_displacy(segments, segment_formatter, expected_displacy_dat
 def _get_doc():
     doc = TextDocument(text=_TEXT)
     entity_1 = Entity(label="subject", spans=[Span(4, 11)], text="patient")
-    doc.add_annotation(entity_1)
+    doc.anns.add(entity_1)
     entity_2 = Entity(label="disease", spans=[Span(16, 22)], text="asthma")
-    doc.add_annotation(entity_2)
+    doc.anns.add(entity_2)
     entity_3 = Entity(
         label="disease", spans=[Span(27, 47)], text="a diabetes of type 1"
     )
-    doc.add_annotation(entity_3)
+    doc.anns.add(entity_3)
     segment = Segment(label="segment", spans=[Span(0, 19)], text="This is a sentence.")
-    doc.add_annotation(segment)
+    doc.anns.add(segment)
     return doc
 
 
@@ -143,7 +143,7 @@ def test_medkit_doc_to_displacy_default():
     displacy_data = medkit_doc_to_displacy(doc)
 
     # should have same result as directly calling segments_to_displacy() with all entities
-    entities = doc.get_entities()
+    entities = doc.anns.get_entities()
     expected_displacy_data = segments_to_displacy(entities, _TEXT)
     assert displacy_data == expected_displacy_data
 
@@ -155,6 +155,6 @@ def test_medkit_doc_to_displacy_filtered():
     displacy_data = medkit_doc_to_displacy(doc, segment_labels=["disease"])
 
     # should have same result as directly calling segments_to_displacy() with selected entities
-    entities = doc.get_annotations_by_label("disease")
+    entities = doc.anns.get(label="disease")
     expected_displacy_data = segments_to_displacy(entities, _TEXT)
     assert displacy_data == expected_displacy_data

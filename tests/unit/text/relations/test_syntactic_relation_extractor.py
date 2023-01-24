@@ -31,7 +31,7 @@ def _get_medkit_doc():
         Entity(spans=[Span(81, 87)], label="level", text="sévère"),
     ]
     for ent in entities:
-        doc.add_annotation(ent)
+        doc.anns.add(ent)
     return doc
 
 
@@ -67,14 +67,14 @@ def test_relation_extractor(entities_source, entities_target, exp_source_target)
     )
     relation_extractor.run([medkit_doc])
 
-    relations = medkit_doc.get_relations()
+    relations = medkit_doc.anns.get_relations()
     assert len(relations) == len(exp_source_target)
 
     for relation, exp_source_targets in zip(relations, exp_source_target):
         assert isinstance(relation, Relation)
         assert relation.label == "syntactic_dep"
-        source_ann = medkit_doc.get_annotation_by_id(relation.source_id)
-        target_ann = medkit_doc.get_annotation_by_id(relation.target_id)
+        source_ann = medkit_doc.anns.get_by_id(relation.source_id)
+        target_ann = medkit_doc.anns.get_by_id(relation.target_id)
         assert [source_ann.label, target_ann.label] == exp_source_targets
 
 
@@ -119,10 +119,10 @@ def test_entities_without_medkit_id(caplog, tmp_path):
         assert record.levelname == "WARNING"
     assert "Can't create a medkit Relation between" in caplog.text
 
-    relations = medkit_doc.get_relations()
+    relations = medkit_doc.anns.get_relations()
     # it should only add relation between medkit entities
     assert len(relations) == 2
-    maladie_ents = medkit_doc.get_annotations_by_label("maladie")
+    maladie_ents = medkit_doc.anns.get(label="maladie")
     assert relations[0].source_id == maladie_ents[0].uid
     assert relations[1].source_id == maladie_ents[1].uid
 
@@ -138,7 +138,7 @@ def test_prov():
     prov_tracer = ProvTracer()
     relation_extractor.set_prov_tracer(prov_tracer)
     relation_extractor.run([medkit_doc])
-    relation = medkit_doc.get_relations()[0]
+    relation = medkit_doc.anns.get_relations()[0]
 
     relation_prov = prov_tracer.get_prov(relation.uid)
     assert relation_prov.data_item == relation
