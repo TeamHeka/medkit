@@ -71,7 +71,7 @@ def test_single_match():
     assert entity.spans == [Span(26, 32)]
 
     # score attribute
-    attrs = entity.get_attrs_by_label("score")
+    attrs = entity.attrs.get(label="score")
     assert len(attrs) == 1
     attr = attrs[0]
     assert attr.label == "score"
@@ -112,18 +112,18 @@ def test_attrs_to_copy():
 
     sentence = _get_sentence_segment("The patient has asthma.")
     # copied attribute
-    sentence.add_attr(Attribute(label="negation", value=False))
+    sentence.attrs.add(Attribute(label="negation", value=False))
     # uncopied attribute
-    sentence.add_attr(Attribute(label="hypothesis", value=False))
+    sentence.attrs.add(Attribute(label="hypothesis", value=False))
 
     matcher = HFEntityMatcher(model="mock-model", attrs_to_copy=["negation"])
     entity = matcher.run([sentence])[0]
 
-    assert len(entity.get_attrs_by_label("score")) == 1
+    assert len(entity.attrs.get(label="score")) == 1
     # only negation attribute was copied
-    neg_attrs = entity.get_attrs_by_label("negation")
+    neg_attrs = entity.attrs.get(label="negation")
     assert len(neg_attrs) == 1 and neg_attrs[0].value is False
-    assert len(entity.get_attrs_by_label("hypothesis")) == 0
+    assert len(entity.attrs.get(label="hypothesis")) == 0
 
 
 def test_prov():

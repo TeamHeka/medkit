@@ -246,7 +246,7 @@ def test_prov(normalizer):
     entities = normalizer.run(entities)
 
     # data item id and operation id are correct
-    attr_1 = entity_1.get_attrs_by_label(Entity.NORM_LABEL)[0]
+    attr_1 = entity_1.attrs.get(label=Entity.NORM_LABEL)[0]
     prov_1 = prov_tracer.get_prov(attr_1.uid)
     assert prov_1.data_item == attr_1
     assert prov_1.op_desc == normalizer.description
@@ -254,6 +254,6 @@ def test_prov(normalizer):
     # 1st attribute has 1st entity as source
     assert prov_1.source_data_items == [entity_1]
     # 2nd attribute has 2nd entity as source
-    attr_2 = entity_2.get_attrs_by_label(Entity.NORM_LABEL)[0]
+    attr_2 = entity_2.attrs.get(label=Entity.NORM_LABEL)[0]
     prov_2 = prov_tracer.get_prov(attr_2.uid)
     assert prov_2.source_data_items == [entity_2]

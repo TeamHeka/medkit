@@ -20,9 +20,8 @@ _TEXT = "The patient has asthma and a diabetes of type 1."
 
 def _custom_entity_formatter(entity):
     label = entity.label
-    attrs = entity.get_attrs()
     attrs_strings = []
-    for attr in attrs:
+    for attr in entity.attrs:
         if isinstance(attr.value, EntityNormalization):
             attrs_strings.append(f"{attr.value.kb_name}={attr.value.kb_id}")
         else:

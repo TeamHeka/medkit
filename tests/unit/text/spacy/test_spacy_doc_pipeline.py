@@ -82,7 +82,7 @@ def test_default_pipeline(nlp_spacy):
     after_docpipeline_entities = medkit_doc.get_entities()
 
     # entities have no changes because nlp object does not add attrs or entities
-    assert all(len(ent.get_attrs()) == 0 for ent in after_docpipeline_entities)
+    assert all(len(ent.attrs) == 0 for ent in after_docpipeline_entities)
     for org_ent, after_ent in zip(original_entities, after_docpipeline_entities):
         assert org_ent is after_ent
 
@@ -107,7 +107,7 @@ def test_default_with_modified_pipeline(nlp_spacy_modified):
     assert len(original_entities) == 2
     assert "DATE" not in {e.label for e in original_entities}
     # original entities have no attrs
-    assert all(len(ent.get_attrs()) == 0 for ent in original_entities)
+    assert all(len(ent.attrs) == 0 for ent in original_entities)
     # entity to compare after pipeline
     disease_original = medkit_doc.get_annotations_by_label("disease")[0]
 
@@ -120,20 +120,20 @@ def test_default_with_modified_pipeline(nlp_spacy_modified):
     assert "DATE" in {e.label for e in after_docpipeline_entities}
 
     # spacy_doc adds 1 attribute
-    assert all(len(ent.get_attrs()) == 1 for ent in after_docpipeline_entities)
+    assert all(len(ent.attrs) == 1 for ent in after_docpipeline_entities)
 
     # check new entity
     new_annotation = medkit_doc.get_annotations_by_label("DATE")[0]
     assert new_annotation.label == "DATE"
     assert new_annotation.text == "2005"
-    new_ann_attr = new_annotation.get_attrs_by_label("is_from_medkit")[0]
+    new_ann_attr = new_annotation.attrs.get(label="is_from_medkit")[0]
     assert not new_ann_attr.value
 
     # check original entity
     # this entity comes from medkit; medkit_id was set up in the conversion phase,
     # so, 'attribute_adder' defines 'is_from_medkit' as True (cf. _custom_component)
     disease = medkit_doc.get_annotations_by_label("disease")[0]
-    disease_attr = disease.get_attrs_by_label("is_from_medkit")[0]
+    disease_attr = disease.attrs.get(label="is_from_medkit")[0]
     assert disease_attr.value
 
     # check disease is the same entity
@@ -165,7 +165,7 @@ def test_prov(nlp_spacy_modified):
     assert entity_prov.op_desc == spacydoc_pipeline.description
     assert entity_prov.source_data_items == [raw_segment]
 
-    attribute = entity.get_attrs()[0]
+    attribute = entity.attrs.get()[0]
     attr_prov = prov_tracer.get_prov(attribute.uid)
     assert attr_prov.data_item == attribute
     assert attr_prov.op_desc == spacydoc_pipeline.description
@@ -175,7 +175,7 @@ def test_prov(nlp_spacy_modified):
     # check new attr entity
     entity = medkit_doc.get_annotations_by_label("disease")[0]
 
-    attribute = entity.get_attrs()[0]
+    attribute = entity.attrs.get()[0]
     attr_prov = prov_tracer.get_prov(attribute.uid)
     assert attr_prov.data_item == attribute
     assert attr_prov.op_desc == spacydoc_pipeline.description
