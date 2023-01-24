@@ -215,7 +215,7 @@ And now, let's look at which sentence have been detected as being negated:
 
 ```{code-cell} ipython3
 for sentence in sentences:
-    neg_attr = sentence.get_attrs_by_label("is_negated")[0]
+    neg_attr = sentence.attrs.get(label="is_negated")[0]
     if neg_attr.value:
         print(sentence.text)
 ```
@@ -245,7 +245,7 @@ syntagmas = synt_tokenizer.run(sentences)
 neg_detector.run(syntagmas)
 
 for syntagma in syntagmas:
-    neg_attr = syntagma.get_attrs_by_label("is_negated")[0]
+    neg_attr = syntagma.attrs.get(label="is_negated")[0]
     if neg_attr.value:
         print(syntagma.text)
 ```
@@ -271,7 +271,7 @@ regexp_matcher = RegexpMatcher(rules=regexp_rules, attrs_to_copy=["is_negated"])
 entities = regexp_matcher.run(syntagmas)
 
 for entity in entities:
-    neg_attr = entity.get_attrs_by_label("is_negated")[0]
+    neg_attr = entity.attrs.get(label="is_negated")[0]
     print(f"text='{entity.text}', label={entity.label}, is_negated={neg_attr.value}")
 ```
 

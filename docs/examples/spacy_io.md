@@ -134,7 +134,7 @@ print(f"The medkit doc has {len(medkit_doc.get_segments())} segment.")
 **What about 'LOC' entity?**
 ```{code-cell} ipython3
 entity = medkit_doc.get_annotations_by_label('LOC')[0]
-attributes = entity.get_attrs_by_label("country")
+attributes = entity.attrs.get(label="country")
 print(f"Entity label={entity.label}, Entity text={entity.text}")
 print("Attributes loaded from spacy")
 print(attributes)

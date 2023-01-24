@@ -334,7 +334,7 @@ pipeline.set_prov_tracer(prov_tracer)
 entities = pipeline.run([doc.raw_segment])
 
 for entity in entities:
-    is_negated = entity.get_attrs_by_label("is_negated")[0].value
+    is_negated = entity.attrs.get(label="is_negated")[0].value
     print(f"text={entity.text!r}, label={entity.label}, is_negated={is_negated}")
 ```
 
