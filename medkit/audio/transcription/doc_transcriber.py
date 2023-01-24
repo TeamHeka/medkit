@@ -164,8 +164,8 @@ class DocTranscriber(Operation):
 
             # copy attrs from audio segment
             for label in self.attrs_to_copy:
-                for attr in audio_seg.get_attrs_by_label(label):
-                    text_seg.add_attr(attr)
+                for attr in audio_seg.attrs.get(label=label):
+                    text_seg.attrs.add(attr)
 
             text_segs.append(text_seg)
 
