@@ -158,7 +158,7 @@ class BratInputConverter(InputConverter):
 
         doc = TextDocument(text=text, metadata=metadata, store=self.store)
         for ann in anns:
-            doc.add_annotation(ann)
+            doc.anns.add(ann)
 
         return doc
 
@@ -340,11 +340,15 @@ class BratOutputConverter(OutputConverter):
         self, medkit_doc: TextDocument
     ) -> Tuple[List[Segment], List[Relation]]:
         """Return selected annotations from a medkit document"""
-        annotations = medkit_doc.get_annotations()
-
         if self.anns_labels is not None:
             # filter annotations by label
-            annotations = [ann for ann in annotations if ann.label in self.anns_labels]
+            annotations = [
+                ann
+                for label in self.anns_labels
+                for ann in medkit_doc.anns.get(label=label)
+            ]
+        else:
+            annotations = medkit_doc.anns.get()
 
         if self.anns_labels and annotations == []:
             # labels_anns were a list but none of the annotations

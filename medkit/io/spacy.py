@@ -93,7 +93,7 @@ class SpacyInputConverter:
             medkit_doc = TextDocument(text=spacy_doc.text_with_ws)
             anns = self._load_anns(spacy_doc)
             for ann in anns:
-                medkit_doc.add_annotation(ann)
+                medkit_doc.anns.add(ann)
             medkit_docs.append(medkit_doc)
 
         return medkit_docs

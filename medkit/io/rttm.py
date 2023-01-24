@@ -180,7 +180,7 @@ class RTTMInputConverter(InputConverter):
 
         doc = AudioDocument(audio=full_audio, store=self.store)
         for turn_segment in turn_segments:
-            doc.add_annotation(turn_segment)
+            doc.anns.add(turn_segment)
 
         return doc
 
@@ -331,7 +331,7 @@ class RTTMOutputConverter(OutputConverter):
         if rttm_doc_id is None:
             rttm_doc_id = doc.uid
 
-        turns = doc.get_annotations_by_label(self.turn_label)
+        turns = doc.anns.get(label=self.turn_label)
         self.save_turn_segments(turns, rttm_file, rttm_doc_id)
 
     def save_turn_segments(
