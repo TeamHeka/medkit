@@ -280,8 +280,8 @@ class RegexpMatcher(NEROperation):
             )
 
             for label in self.attrs_to_copy:
-                for attr in segment.get_attrs_by_label(label):
-                    entity.add_attr(attr)
+                for attr in segment.attrs.get(label=label):
+                    entity.attrs.add(attr)
 
             # create normalization attributes for each normalization descriptor
             # of the rule

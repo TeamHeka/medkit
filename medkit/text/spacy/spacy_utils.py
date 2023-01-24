@@ -265,7 +265,7 @@ def build_spacy_doc_from_medkit_segment(
     # define custom attributes in spacy from selected annotations
     if attrs is None:
         # include all atributes
-        attrs = set(attr.label for ann in annotations for attr in ann.get_attrs())
+        attrs = set(attr.label for ann in annotations for attr in ann.attrs)
     _define_attrs_extensions(attrs)
 
     entities = []
@@ -436,7 +436,7 @@ def _segment_to_spacy_span(
         span._.set(_ATTR_MEDKIT_ID, medkit_segment.uid)
 
     for label in attrs:
-        for attr in medkit_segment.get_attrs_by_label(label):
+        for attr in medkit_segment.attrs.get(label=label):
             if attr.value is None:
                 # in medkit having an attribute, indicates that the attribute exists
                 # for the given annotation, we force True as value

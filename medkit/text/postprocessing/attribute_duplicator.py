@@ -48,7 +48,7 @@ class AttributeDuplicator(Operation):
             attrs_to_copy = [
                 attr
                 for label in self.attr_labels
-                for attr in parent.get_attrs_by_label(label)
+                for attr in parent.attrs.get(label=label)
             ]
 
             # create a new attr in target from the source attr
@@ -92,7 +92,7 @@ class AttributeDuplicator(Operation):
             label=attr.label, value=attr.value, metadata=attr.metadata
         )
 
-        target.add_attr(target_attr)
+        target.attrs.add(target_attr)
 
         if self._prov_tracer is not None:
             self._prov_tracer.add_prov(

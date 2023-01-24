@@ -123,8 +123,8 @@ class DucklingMatcher(NEROperation):
             )
 
             for label in self.attrs_to_copy:
-                for attr in segment.get_attrs_by_label(label):
-                    entity.add_attr(attr)
+                for attr in segment.attrs.get(label=label):
+                    entity.attrs.add(attr)
 
             norm_attr = Attribute(
                 label=self.output_label,
@@ -133,7 +133,7 @@ class DucklingMatcher(NEROperation):
                     version=self.version,
                 ),
             )
-            entity.add_attr(norm_attr)
+            entity.attrs.add(norm_attr)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(

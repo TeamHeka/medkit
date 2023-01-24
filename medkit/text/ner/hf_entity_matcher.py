@@ -126,15 +126,15 @@ class HFEntityMatcher(NEROperation):
             )
 
             for label in self.attrs_to_copy:
-                for attr in segment.get_attrs_by_label(label):
-                    entity.add_attr(attr)
+                for attr in segment.attrs.get(label=label):
+                    entity.attrs.add(attr)
 
             score_attr = Attribute(
                 label="score",
                 value=float(match["score"]),
                 metadata=dict(model=self.model),
             )
-            entity.add_attr(score_attr)
+            entity.attrs.add(score_attr)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
