@@ -71,7 +71,7 @@ def test_input_converter_entity_transfer(
         assert entity_0.label == "PERSON"
         assert entity_0.text == "Marie Dupont"
         assert entity_0.spans == [Span(0, 12)]
-        assert entity_0.get_attrs() == []
+        assert len(entity_0.attrs) == 0
 
 
 TEST_ATTR_FROM_SPACY = [
@@ -125,13 +125,11 @@ def test_input_converter_attribute_transfer(
 
     ents = medkit_doc.get_entities()
     # verify the number of attrs for each entity
-    assert [len(ent.get_attrs()) for ent in ents] == expected_nb_attrs
+    assert [len(ent.attrs) for ent in ents] == expected_nb_attrs
 
     # chech DATE entity
     date_entity = medkit_doc.get_annotations_by_label("DATE")[0]
-    attrs = date_entity.get_attrs()
-    if attrs:
-        assert [a.value for a in attrs] == expected_values_attr_date
+    assert [a.value for a in date_entity.attrs] == expected_values_attr_date
 
 
 def test_input_converter_medkit_attribute_transfer_all_anns(nlp_spacy):
@@ -178,10 +176,10 @@ def test_input_converter_medkit_attribute_transfer_all_anns(nlp_spacy):
 
     ents = medkit_doc.get_entities()
     # verify the number of attrs for each entity
-    assert [len(ent.get_attrs()) for ent in ents] == [2, 2]
+    assert [len(ent.attrs) for ent in ents] == [2, 2]
     # check value for medkit attr transferred
     entity_0 = medkit_doc.get_annotations_by_label("PERSON")[0]
-    mock_medkit_attr = entity_0.get_attrs_by_label(label_mock_attr_medkit)[0]
+    mock_medkit_attr = entity_0.attrs.get(label=label_mock_attr_medkit)[0]
     assert mock_medkit_attr.value == "value_for_entities"
 
     # verify segments
@@ -191,10 +189,10 @@ def test_input_converter_medkit_attribute_transfer_all_anns(nlp_spacy):
     assert len(segments) == 4
 
     sentence = medkit_doc.get_annotations_by_label("SENTENCES")[0]
-    attrs = sentence.get_attrs()
-    assert len(attrs) == 1
-    assert attrs[0].label == label_mock_attr_medkit
-    assert attrs[0].value == "value_for_sentences"
+    assert len(sentence.attrs) == 1
+    attr = sentence.attrs.get()[0]
+    assert attr.label == label_mock_attr_medkit
+    assert attr.value == "value_for_sentences"
 
 
 TEST_SEGMENTS_FROM_SPACY = [
