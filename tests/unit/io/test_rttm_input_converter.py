@@ -14,7 +14,7 @@ def test_basic():
     docs = converter.load(_RRTM_DIR, _AUDIO_DIR, audio_ext=".ogg")
     assert len(docs) == 1
     doc = docs[0]
-    segments = doc.get_annotations_by_label("turn")
+    segments = doc.anns.get(label="turn")
     assert len(segments) == 2
 
     # 1st turn
@@ -47,7 +47,7 @@ def test_prov():
 
     docs = converter.load(_RRTM_DIR, _AUDIO_DIR, audio_ext=".ogg")
     doc = docs[0]
-    segments = doc.get_annotations_by_label("turn")
+    segments = doc.anns.get(label="turn")
 
     seg = segments[0]
     seg_prov = prov_tracer.get_prov(seg.uid)

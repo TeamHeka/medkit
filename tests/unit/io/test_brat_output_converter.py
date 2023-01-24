@@ -68,7 +68,7 @@ def _get_medkit_doc():
         ),
     ]
     for ann in medkit_anns:
-        doc.add_annotation(ann)
+        doc.anns.add(ann)
 
     return doc
 
@@ -355,7 +355,7 @@ def _get_modified_medkit_doc():
         ),
     ]
     for ann in medkit_anns:
-        doc.add_annotation(ann)
+        doc.anns.add(ann)
     return doc
 
 
@@ -391,7 +391,7 @@ def test_normalization_attr(tmp_path: Path):
     entity.add_norm(
         EntityNormalization(kb_name="umls", kb_id="C0004096", kb_version="2021AB")
     )
-    doc.add_annotation(entity)
+    doc.anns.add(entity)
 
     brat_converter = BratOutputConverter()
     brat_converter.save([doc], tmp_path)
