@@ -162,9 +162,9 @@ def test_attrs_to_copy():
 
     audio_seg = _get_audio_segment(audio_span)
     # copied attribute
-    audio_seg.add_attr(Attribute(label="speaker", value="Bob"))
+    audio_seg.attrs.add(Attribute(label="speaker", value="Bob"))
     # uncopied attribute
-    audio_seg.add_attr(Attribute(label="loud", value=True))
+    audio_seg.attrs.add(Attribute(label="loud", value=True))
 
     audio_doc = AudioDocument(audio=_FULL_AUDIO)
     audio_doc.add_annotation(audio_seg)
@@ -178,9 +178,9 @@ def test_attrs_to_copy():
     text_doc = doc_transcriber.run([audio_doc])[0]
     text_seg = text_doc.get_annotations_by_label(_TEXT_LABEL)[0]
     # only negation attribute was copied
-    speaker_attrs = text_seg.get_attrs_by_label("speaker")
+    speaker_attrs = text_seg.attrs.get(label="speaker")
     assert len(speaker_attrs) == 1 and speaker_attrs[0].value == "Bob"
-    assert len(text_seg.get_attrs_by_label("loud")) == 0
+    assert len(text_seg.attrs.get(label="loud")) == 0
 
 
 class _CustomDocTranscriber(DocTranscriber):
@@ -190,7 +190,7 @@ class _CustomDocTranscriber(DocTranscriber):
         # retrieve speaker name from audio segment attrs and include it in full text
         if len(full_text) > 0:
             full_text += "\n\n"
-        speaker = audio_segment.get_attrs_by_label("speaker")[0].value
+        speaker = audio_segment.attrs.get(label="speaker")[0].value
         full_text += f"- {speaker.upper()}:\n"
         return full_text
 
@@ -202,11 +202,11 @@ def test_custom_full_text():
     audio_doc = AudioDocument(audio=_FULL_AUDIO)
     audio_span_1 = AudioSpan(0.0, 0.5)
     audio_seg_1 = _get_audio_segment(audio_span_1)
-    audio_seg_1.add_attr(Attribute(label="speaker", value="Bob"))
+    audio_seg_1.attrs.add(Attribute(label="speaker", value="Bob"))
     audio_doc.add_annotation(audio_seg_1)
     audio_span_2 = AudioSpan(1.0, 2.5)
     audio_seg_2 = _get_audio_segment(audio_span_2)
-    audio_seg_2.add_attr(Attribute(label="speaker", value="Alice"))
+    audio_seg_2.attrs.add(Attribute(label="speaker", value="Alice"))
     audio_doc.add_annotation(audio_seg_2)
 
     doc_transcriber = _CustomDocTranscriber(
