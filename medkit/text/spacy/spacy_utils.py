@@ -194,7 +194,7 @@ def build_spacy_doc_from_medkit_doc(
 
     # get the raw text segment to transfer
     raw_segment = medkit_doc.raw_segment
-    annotations = medkit_doc.get_annotations()
+    annotations = medkit_doc.anns.get()
 
     if labels_anns is not None:
         # filter annotations by label

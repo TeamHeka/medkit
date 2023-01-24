@@ -41,9 +41,7 @@ def medkit_doc_to_displacy(
 
     if segment_labels:
         segments = [
-            e
-            for label in segment_labels
-            for e in medkit_doc.get_annotations_by_label(label)
+            e for label in segment_labels for e in medkit_doc.anns.get(label=label)
         ]
         if not all(isinstance(s, Segment) for s in segments):
             raise ValueError(
@@ -52,7 +50,7 @@ def medkit_doc_to_displacy(
                 " segments or entities"
             )
     else:
-        segments = medkit_doc.get_entities()
+        segments = medkit_doc.anns.get_entities()
 
     return segments_to_displacy(
         segments, medkit_doc.text, segment_formatter, max_gap_length
