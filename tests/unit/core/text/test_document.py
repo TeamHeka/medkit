@@ -48,7 +48,7 @@ def test_get_annotations_by_label(init_data):
     doc.add_annotation(ent2)
 
     assert doc.get_annotations_by_label(ent1.label) == [ent1]
-    assert doc.get_annotations_by_label(ent1.label)[0].get_attrs() == [attribute]
+    assert doc.get_annotations_by_label(ent1.label)[0].attrs.get() == [attribute]
     assert doc.get_annotations_by_label(ent2.label) == [ent2]
 
     # add 2d annotation for same label and make sure we find all annotations

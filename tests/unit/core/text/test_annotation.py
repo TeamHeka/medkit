@@ -32,7 +32,7 @@ def test_normalization():
 
     # should create an Attribute with Entity.NORM_LABEL as label
     # and the EntityNormalization object as value
-    norm_attrs = entity.get_attrs_by_label(Entity.NORM_LABEL)
+    norm_attrs = entity.attrs.get(label=Entity.NORM_LABEL)
     assert len(norm_attrs) == 1
     assert norm_attrs[0].value == norm
 

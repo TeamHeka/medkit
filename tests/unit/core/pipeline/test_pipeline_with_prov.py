@@ -9,13 +9,7 @@ class _Segment:
     def __init__(self, text):
         self.uid = generate_id()
         self.text = text
-        self._attrs = []
-
-    def get_attrs(self):
-        return self._attrs
-
-    def add_attr(self, attr):
-        self._attrs.append(attr)
+        self.attrs = []
 
 
 class _Attribute:
@@ -107,7 +101,7 @@ class _AttributeAdder:
     def run(self, segments):
         for segment in segments:
             attr = _Attribute(label=self.label, value=True)
-            segment.add_attr(attr)
+            segment.attrs.append(attr)
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     attr, self.description, source_data_items=[segment]
@@ -248,9 +242,8 @@ def test_step_with_attributes():
 
     # check outer main provenance
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
-        attrs = uppercased_seg.get_attrs()
-        assert len(attrs) == 1
-        attr = attrs[0]
+        assert len(uppercased_seg.attrs) == 1
+        attr = uppercased_seg.attrs[0]
         attr_prov = prov_tracer.get_prov(attr.uid)
         # operation is outer pipeline operation
         assert attr_prov.op_desc == pipeline.description
@@ -262,9 +255,8 @@ def test_step_with_attributes():
     sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.uid)
 
     for uppercased_seg in uppercased_segs:
-        attrs = uppercased_seg.get_attrs()
-        assert len(attrs) == 1
-        attr = attrs[0]
+        assert len(uppercased_seg.attrs) == 1
+        attr = uppercased_seg.attrs[0]
         attr_prov = sub_tracer.get_prov(attr.uid)
         # operation is inner attribute adder operation
         assert attr_prov.op_desc == attribute_adder.description
