@@ -302,7 +302,7 @@ class Pipeline:
             attr
             for data_item in data_items
             if isinstance(data_item, IdentifiableDataItemWithAttrs)
-            for attr in data_item.get_attrs()
+            for attr in data_item.attrs
             if (
                 self._sub_prov_tracer.has_prov(attr.uid)
                 # ignore stub provenance with no operation

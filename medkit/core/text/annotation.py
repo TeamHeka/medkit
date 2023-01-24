@@ -215,7 +215,7 @@ class Entity(Segment):
         """
 
         attr = Attribute(label=self.NORM_LABEL, value=normalization)
-        self.add_attr(attr)
+        self.attrs.add(attr)
         return attr
 
     def get_norms(self) -> List[EntityNormalization]:
@@ -232,7 +232,7 @@ class Entity(Segment):
         List[EntityNormalization]:
             All normalizations attached to the entity.
         """
-        return [a.value for a in self.get_attrs_by_label(label=self.NORM_LABEL)]
+        return [a.value for a in self.attrs.get(label=self.NORM_LABEL)]
 
 
 class Relation(TextAnnotation):
