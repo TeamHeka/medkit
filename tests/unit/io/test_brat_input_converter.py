@@ -1,16 +1,15 @@
 from medkit.core import ProvTracer
 from medkit.core.text import Span
-from medkit.core.text.document import TextDocument
 from medkit.io.brat import BratInputConverter
 
 
 def test_load():
     brat_converter = BratInputConverter()
     assert brat_converter.description.name == "BratInputConverter"
-    collection = brat_converter.load(dir_path="tests/data/brat/")
-    assert len(collection.documents) == 2
+    docs = brat_converter.load(dir_path="tests/data/brat/")
+    assert len(docs) == 2
 
-    doc: TextDocument = collection.documents[0]
+    doc = docs[0]
 
     assert "path_to_text" in doc.metadata
     assert "path_to_ann" in doc.metadata
@@ -61,7 +60,7 @@ def test_load():
 
 def test_relations():
     brat_converter = BratInputConverter()
-    doc: TextDocument = brat_converter.load(dir_path="tests/data/brat/").documents[0]
+    doc = brat_converter.load(dir_path="tests/data/brat/")[0]
     relations = doc.get_relations()
     assert len(relations) == 2
 
@@ -76,8 +75,8 @@ def test_relations():
 
 def test_load_no_anns():
     brat_converter = BratInputConverter()
-    collection = brat_converter.load(dir_path="tests/data/text")
-    for doc in collection.documents:
+    docs = brat_converter.load(dir_path="tests/data/text")
+    for doc in docs:
         assert doc.text is not None
         assert len(doc.get_annotations()) == 0
 
@@ -86,9 +85,9 @@ def test_prov():
     brat_converter = BratInputConverter()
     prov_tracer = ProvTracer()
     brat_converter.set_prov_tracer(prov_tracer)
-    collection = brat_converter.load(dir_path="tests/data/brat")
+    docs = brat_converter.load(dir_path="tests/data/brat")
 
-    doc = collection.documents[0]
+    doc = docs[0]
     entity = doc.get_annotations_by_label("disease")[1]
     prov = prov_tracer.get_prov(entity.uid)
     assert prov.data_item == entity

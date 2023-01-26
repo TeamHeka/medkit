@@ -97,7 +97,7 @@ The entity 'LOC' has **1** attribute called `country`.
 
 Let's see how to convert this spacy doc in a `TextDocument` with annotations.
 
-## Load SpacyDocs into a Collection of TextDocuments
+## Load SpacyDocs into a list of TextDocuments
 
 The class {class}`~medkit.io.spacy.SpacyInputConverter` is in charge of converting spacy Docs into a collection of TextDocuments. By default, it loads **all** entities, span groups and extension  attributes for each SpacyDoc object, but you can use the `entities`, `span_groups` and `attrs` parameters to specify which items should be converted, based on their labels.
 
@@ -173,7 +173,7 @@ displacy.render(section_data, style="ent",manual=True)
 
 ## Convert a collection of TextDocument to SpacyDocs
 
-Similarly it is possible to convert a list/Collection of TextDocument to Spacy using {class}`~medkit.io.spacy.SpacyOutputConverter`. 
+Similarly it is possible to convert a list of TextDocument to Spacy using {class}`~medkit.io.spacy.SpacyOutputConverter`. 
 
 You will need to provide an `nlp` object that tokenizes and generates the document with the raw text as reference. By default, it converts **all** medkit annotations and attributes to Spacy, but you can use  `anns_labels` and `attrs` parameters to specify which items should be converted. 
 

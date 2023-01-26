@@ -1,11 +1,11 @@
 __all__ = ["SpacyInputConverter", "SpacyOutputConverter"]
 import warnings
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from spacy import Language
 from spacy.tokens import Doc
 
-from medkit.core import Collection, OperationDescription, ProvTracer, generate_id
+from medkit.core import OperationDescription, ProvTracer, generate_id
 from medkit.core.text import TextDocument
 from medkit.text.spacy.spacy_utils import (
     build_spacy_doc_from_medkit_doc,
@@ -71,9 +71,9 @@ class SpacyInputConverter:
     def set_prov_tracer(self, prov_tracer: ProvTracer):
         self._prov_tracer = prov_tracer
 
-    def load(self, spacy_docs: List[Doc]) -> Collection:
+    def load(self, spacy_docs: List[Doc]) -> List[TextDocument]:
         """
-        Create a Collection of TextDocuments from a list of spacy Doc objects.
+        Create a list of TextDocuments from a list of spacy Doc objects.
         Depending on the configuration of the converted, the selected annotations
         and attributes are included in the documents.
 
@@ -84,8 +84,8 @@ class SpacyInputConverter:
 
         Returns
         -------
-        Collection
-            A collection of TextDocuments
+         List[TextDocument]
+            A list of TextDocuments
         """
         medkit_docs = []
         for spacy_doc in spacy_docs:
@@ -96,7 +96,7 @@ class SpacyInputConverter:
                 medkit_doc.add_annotation(ann)
             medkit_docs.append(medkit_doc)
 
-        return Collection(medkit_docs)
+        return medkit_docs
 
     def _load_anns(self, spacy_doc: Doc):
         annotations, attributes_by_ann = extract_anns_and_attrs_from_spacy_doc(
@@ -127,7 +127,7 @@ class SpacyInputConverter:
 
 
 class SpacyOutputConverter:
-    """Class in charge of converting a list/Collection of TextDocuments into a
+    """Class in charge of converting a list of TextDocuments into a
     list of spacy documents"""
 
     def __init__(
@@ -186,29 +186,22 @@ class SpacyOutputConverter:
             uid=self.uid, class_name=self.__class__.__name__, config=config
         )
 
-    def convert(self, medkit_docs: Union[List[TextDocument], Collection]) -> List[Doc]:
+    def convert(self, medkit_docs: List[TextDocument]) -> List[Doc]:
         """
-        Convert a Collection of TextDocuments into a list of spacy Doc objects.
+        Convert a list of TextDocuments into a list of spacy Doc objects.
         Depending on the configuration of the converted, the selected annotations
         and attributes are included in the documents.
 
         Parameters
         ----------
         medkit_docs:
-            A list or a collection of TextDocuments to convert
+            A list of TextDocuments to convert
 
         Returns
         -------
-        Collection
+        List[Doc]
             A list of spacy Doc objects
         """
-
-        if isinstance(medkit_docs, Collection):
-            medkit_docs = [
-                medkit_doc
-                for medkit_doc in medkit_docs.documents
-                if isinstance(medkit_doc, TextDocument)
-            ]
 
         spacy_docs = []
         for medkit_doc in medkit_docs:

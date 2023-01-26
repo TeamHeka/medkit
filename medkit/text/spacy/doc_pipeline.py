@@ -1,10 +1,10 @@
 __all__ = ["SpacyDocPipeline"]
 import warnings
-from typing import List, Optional, Union
+from typing import List, Optional
 
 from spacy import Language
 
-from medkit.core import Collection, DocOperation
+from medkit.core import DocOperation
 from medkit.core.text import TextDocument
 from medkit.text.spacy import spacy_utils
 
@@ -66,7 +66,7 @@ class SpacyDocPipeline(DocOperation):
         self.spacy_span_groups = spacy_span_groups
         self.spacy_attrs = spacy_attrs
 
-    def run(self, medkit_docs: Union[List[TextDocument], Collection]) -> None:
+    def run(self, medkit_docs: List[TextDocument]) -> None:
         """Run a spacy pipeline on a list of medkit documents.
         Each medkit document is converted to spacy document (Doc object),
         with the selected annotations and attributes. Then, the spacy pipeline
@@ -76,14 +76,8 @@ class SpacyDocPipeline(DocOperation):
         Parameters
         ----------
         medkit_docs:
-            List or collection of TextDocuments on which to run the pipeline
+            List of TextDocuments on which to run the pipeline
         """
-        if isinstance(medkit_docs, Collection):
-            medkit_docs = [
-                medkit_doc
-                for medkit_doc in medkit_docs.documents
-                if isinstance(medkit_doc, TextDocument)
-            ]
 
         for medkit_doc in medkit_docs:
             if medkit_doc.text is None:

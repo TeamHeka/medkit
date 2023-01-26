@@ -7,7 +7,6 @@ __all__ = [
     "IdentifiableDataItem",
     "IdentifiableDataItemWithAttrs",
     "DocPipeline",
-    "Collection",
     "Document",
     "generate_id",
     "DocOperation",

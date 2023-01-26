@@ -42,9 +42,9 @@ It has the following brat annotation file:
 print(Path("./input/brat/doc_01.ann").read_text())
 ```
 
-## Load brat into a Collection of TextDocuments
+## Load brat into a list of TextDocuments
 
-To load Brat Files, medkit provides the {class}`~medkit.io.brat.BratInputConverter` class. This converter returns a `Collection` of `TextDocument`. 
+To load Brat Files, medkit provides the {class}`~medkit.io.brat.BratInputConverter` class. This converter returns a list of `TextDocument`. 
 
 ```{tip}
 You can enable provenance tracing by assigning a {class}`~medkit.core.ProvTracer` object to the BratInputConverter with the `set_prov_tracer()` method.
@@ -79,7 +79,7 @@ for entity in medkit_doc.get_entities():
 
 ## Save a collection to Brat
 
-To save a Collection or list of `TextDocument` in Brat format, you can use {class}`~medkit.io.brat.BratOutputConverter`.
+To save a list of `TextDocument` in Brat format, you can use {class}`~medkit.io.brat.BratOutputConverter`.
 
 You can choose which medkit **annotations** and **attributes** to keep in the resulting Brat collection. By default, since its `anns_labels` and `attrs` are set to `None`, all annotations and attributes will be in the generated file. 
 

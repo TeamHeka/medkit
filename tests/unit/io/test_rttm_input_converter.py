@@ -11,8 +11,9 @@ _AUDIO_DIR = Path("tests/data/audio")
 
 def test_basic():
     converter = RTTMInputConverter()
-    collection = converter.load(_RRTM_DIR, _AUDIO_DIR, audio_ext=".ogg")
-    doc = collection.documents[0]
+    docs = converter.load(_RRTM_DIR, _AUDIO_DIR, audio_ext=".ogg")
+    assert len(docs) == 1
+    doc = docs[0]
     segments = doc.get_annotations_by_label("turn")
     assert len(segments) == 2
 
@@ -44,8 +45,8 @@ def test_prov():
     converter = RTTMInputConverter()
     converter.set_prov_tracer(prov_tracer)
 
-    collection = converter.load(_RRTM_DIR, _AUDIO_DIR, audio_ext=".ogg")
-    doc = collection.documents[0]
+    docs = converter.load(_RRTM_DIR, _AUDIO_DIR, audio_ext=".ogg")
+    doc = docs[0]
     segments = doc.get_annotations_by_label("turn")
 
     seg = segments[0]
