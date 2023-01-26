@@ -3,7 +3,8 @@ __all__ = ["DocPipeline"]
 from typing import Dict, List, Optional, Tuple, Union, cast
 
 from medkit.core.annotation import Annotation
-from medkit.core.document import Collection, Document
+from medkit.core.collection import Collection
+from medkit.core.document import Document
 from medkit.core.operation import DocOperation
 from medkit.core.pipeline import Pipeline
 from medkit.core.prov_tracer import ProvTracer

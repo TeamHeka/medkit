@@ -6,7 +6,8 @@ import abc
 
 from typing import List, Union
 
-from medkit.core.document import Collection, Document
+from medkit.core.collection import Collection
+from medkit.core.document import Document
 from medkit.core.id import generate_id
 from medkit.core.operation_desc import OperationDescription
 from medkit.core.prov_tracer import ProvTracer

@@ -1,7 +1,8 @@
 import abc
 from typing import List, Optional, Union
 
-from medkit.core.document import Collection, Document
+from medkit.core.collection import Collection
+from medkit.core.document import Document
 
 
 class InputConverter:

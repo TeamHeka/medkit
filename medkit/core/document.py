@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-__all__ = ["Collection", "Document"]
+__all__ = ["Document"]
 
 from typing import Any, Dict, Generic, List, Optional, Set, TypeVar, cast
 
@@ -121,14 +119,3 @@ class Document(Generic[AnnotationType]):
             for uid in sorted(self.annotation_ids)
         ]
         return dict(uid=self.uid, annotations=anns, metadata=self.metadata)
-
-
-class Collection:
-    """Collection of documents"""
-
-    def __init__(self, documents: List[Document]):
-        self.documents = documents
-
-    def to_dict(self) -> Dict[str, Any]:
-        documents = [d.to_dict() for d in self.documents]
-        return dict(documents=documents)
