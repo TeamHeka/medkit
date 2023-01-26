@@ -21,7 +21,7 @@ class TranscribedDocument(TextDocument):
         text: str,
         text_spans_to_audio_spans: Dict[TextSpan, AudioSpan],
         audio_doc_id: Optional[str],
-        doc_id: Optional[str] = None,
+        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
         store: Optional[Store] = None,
     ):
@@ -37,7 +37,7 @@ class TranscribedDocument(TextDocument):
             Id of the original
             :class:`~medkit.core.audio.document.AudioDocument` that was
             transcribed, if known.
-        doc_id:
+        uid:
             Document identifier.
         metadata:
             Document metadata.
@@ -46,7 +46,7 @@ class TranscribedDocument(TextDocument):
         """
         assert all(s.end <= len(text) for s in text_spans_to_audio_spans)
 
-        super().__init__(doc_id=doc_id, text=text, metadata=metadata, store=store)
+        super().__init__(uid=uid, text=text, metadata=metadata, store=store)
 
         self.audio_doc_id = audio_doc_id
         self.text_spans_to_audio_spans = text_spans_to_audio_spans

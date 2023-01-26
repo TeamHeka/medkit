@@ -25,7 +25,7 @@ def _get_medkit_doc():
         "Le patient présente une douleur abdominale de grade 4, la douleur abdominale"
         " est sévère."
     )
-    doc = TextDocument(doc_id="doc_brat", text=text)
+    doc = TextDocument(uid="doc_brat", text=text)
     medkit_anns = [
         Entity(
             spans=[Span(24, 42)],
@@ -332,7 +332,7 @@ def test_doc_names(tmp_path: Path):
 
 def _get_modified_medkit_doc():
     text = "Douleur     abdominale de grade            4"
-    doc = TextDocument(doc_id="doc_brat_2", text=text)
+    doc = TextDocument(uid="doc_brat_2", text=text)
     medkit_anns = [
         Entity(
             spans=[

@@ -83,9 +83,9 @@ def test_raw_segment():
     assert not doc_without_raw_audio.get_annotations_by_label(AudioDocument.RAW_LABEL)
 
     # docs with same ids should have raw audio segments with same uid
-    doc_id = generate_id()
-    doc_1 = AudioDocument(doc_id=doc_id, audio=audio)
-    doc_2 = AudioDocument(doc_id=doc_id, audio=audio)
+    uid = generate_id()
+    doc_1 = AudioDocument(uid=uid, audio=audio)
+    doc_2 = AudioDocument(uid=uid, audio=audio)
     assert doc_1.raw_segment.uid == doc_2.raw_segment.uid
 
     # manually adding raw audio segment is forbidden
