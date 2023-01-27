@@ -42,25 +42,29 @@ class AudioDocument(Document[AudioAnnotation]):
             Store to use for annotations.
         """
         super().__init__(uid=uid, metadata=metadata, store=store)
-        self.audio: AudioBuffer = audio
 
         # auto-generated RAW_AUDIO segment
         # not stored with other annotations but injected in calls to get_annotations_by_label()
         # and get_annotation_by_id()
-        self.raw_segment: Segment = self._generate_raw_segment()
+        self.raw_segment: Segment = self._generate_raw_segment(audio, self.uid)
 
-    def _generate_raw_segment(self) -> Segment:
+    @classmethod
+    def _generate_raw_segment(cls, audio: AudioBuffer, doc_id: str) -> Segment:
         # generate deterministic uuid based on document identifier
         # so that the annotation identifier is the same if the doc identifier is the same
-        rng = random.Random(self.uid)
+        rng = random.Random(doc_id)
         uid = str(uuid.UUID(int=rng.getrandbits(128)))
 
         return Segment(
-            label=self.RAW_LABEL,
-            span=Span(0.0, self.audio.duration),
-            audio=self.audio,
+            label=cls.RAW_LABEL,
+            span=Span(0.0, audio.duration),
+            audio=audio,
             uid=uid,
         )
+
+    @property
+    def audio(self) -> AudioBuffer:
+        return self.raw_segment.audio
 
     def add_annotation(self, annotation: AudioAnnotation):
         """

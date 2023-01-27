@@ -55,7 +55,7 @@ class TextDocument(Document[TextAnnotation]):
         >>> raw_text = doc.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
         """
         super().__init__(uid=uid, metadata=metadata, store=store)
-        self.text: str = text
+
         self._segment_ids: List[str] = []
         self._entity_ids: List[str] = []
         self.relations_by_source: Dict[str, List[str]] = dict()  # Key: source_id
@@ -63,20 +63,25 @@ class TextDocument(Document[TextAnnotation]):
         # auto-generated raw segment
         # not stored with other annotations but injected in calls to get_annotations_by_label()
         # and get_annotation_by_id()
-        self.raw_segment: Segment = self._generate_raw_segment()
+        self.raw_segment: Segment = self._generate_raw_segment(text, self.uid)
 
-    def _generate_raw_segment(self) -> Segment:
+    @classmethod
+    def _generate_raw_segment(cls, text: str, doc_id: str) -> Segment:
         # generate deterministic uuid based on document uid
         # so that the annotation uid is the same if the doc uid is the same
-        rng = random.Random(self.uid)
+        rng = random.Random(doc_id)
         uid = str(uuid.UUID(int=rng.getrandbits(128)))
 
         return Segment(
-            label=self.RAW_LABEL,
-            spans=[Span(0, len(self.text))],
-            text=self.text,
+            label=cls.RAW_LABEL,
+            spans=[Span(0, len(text))],
+            text=text,
             uid=uid,
         )
+
+    @property
+    def text(self) -> str:
+        return self.raw_segment.text
 
     def add_annotation(self, annotation: TextAnnotation):
         """
