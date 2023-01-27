@@ -16,10 +16,6 @@ def test_basic():
     doc = AudioDocument(audio=audio)
     assert doc.audio == audio
 
-    # raw audio segment available
-    assert doc.raw_segment is not None
-    assert doc.raw_segment.audio == audio
-
     duration = audio.duration
     # add speech segment on 1st quarter
     span_1 = Span(0.0, duration / 2)
@@ -65,10 +61,11 @@ def test_raw_segment():
         signal=generate_silence(0.5, _SAMPLE_RATE), sample_rate=_SAMPLE_RATE
     )
 
-    # raw audio segment automatically create when audio is provided
+    # raw audio segment automatically created
     doc_with_raw_audio = AudioDocument(audio=audio)
     raw_seg = doc_with_raw_audio.raw_segment
-    assert raw_seg is not None
+    assert raw_seg.audio == audio
+
     # also available trough get_annotations_by_label and get_annotation_by_id
     assert doc_with_raw_audio.get_annotations_by_label(AudioDocument.RAW_LABEL) == [
         raw_seg
@@ -77,11 +74,6 @@ def test_raw_segment():
     # but not included in full annotations list
     assert raw_seg not in doc_with_raw_audio.get_annotations()
 
-    # no audio provided, no raw segment
-    doc_without_raw_audio = AudioDocument()
-    assert doc_without_raw_audio.raw_segment is None
-    assert not doc_without_raw_audio.get_annotations_by_label(AudioDocument.RAW_LABEL)
-
     # docs with same ids should have raw audio segments with same uid
     uid = generate_id()
     doc_1 = AudioDocument(uid=uid, audio=audio)
@@ -89,7 +81,7 @@ def test_raw_segment():
     assert doc_1.raw_segment.uid == doc_2.raw_segment.uid
 
     # manually adding raw audio segment is forbidden
-    doc = AudioDocument()
+    doc = AudioDocument(audio=audio)
     seg = Segment(
         label=AudioDocument.RAW_LABEL, audio=audio, span=Span(0.0, audio.duration)
     )

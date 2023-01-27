@@ -17,6 +17,11 @@ _SAMPLE_RATE = 4000
 _AUDIO_LABEL = "speech"
 _TEXT_LABEL = "section"
 
+_FULL_AUDIO = MemoryAudioBuffer(
+    signal=generate_silence(5.0, _SAMPLE_RATE),
+    sample_rate=_SAMPLE_RATE,
+)
+
 
 class _MockTranscriberFunction(TranscriberFunction):
     def __init__(self) -> None:
@@ -41,7 +46,7 @@ def _get_audio_segment(audio_span):
 
 
 def _get_audio_doc(audio_spans):
-    audio_doc = AudioDocument()
+    audio_doc = AudioDocument(audio=_FULL_AUDIO)
     for audio_span in audio_spans:
         audio_seg = _get_audio_segment(audio_span)
         audio_doc.add_annotation(audio_seg)
@@ -161,7 +166,7 @@ def test_attrs_to_copy():
     # uncopied attribute
     audio_seg.add_attr(Attribute(label="loud", value=True))
 
-    audio_doc = AudioDocument()
+    audio_doc = AudioDocument(audio=_FULL_AUDIO)
     audio_doc.add_annotation(audio_seg)
 
     doc_transcriber = DocTranscriber(
@@ -194,7 +199,7 @@ def test_custom_full_text():
     """Overriding of full text reconstruction method"""
 
     # audio doc with speaker name attributes on segments
-    audio_doc = AudioDocument()
+    audio_doc = AudioDocument(audio=_FULL_AUDIO)
     audio_span_1 = AudioSpan(0.0, 0.5)
     audio_seg_1 = _get_audio_segment(audio_span_1)
     audio_seg_1.add_attr(Attribute(label="speaker", value="Bob"))
@@ -223,11 +228,11 @@ def test_store():
 
     # audio doc with explicitly provided shared store
     store = DictStore()
-    audio_doc_1 = AudioDocument(store=store)
+    audio_doc_1 = AudioDocument(audio=_FULL_AUDIO, store=store)
     audio_seg_1 = _get_audio_segment(AudioSpan(0.0, 0.5))
     audio_doc_1.add_annotation(audio_seg_1)
     # audio doc with own "private" store
-    audio_doc_2 = AudioDocument()
+    audio_doc_2 = AudioDocument(audio=_FULL_AUDIO)
     audio_seg_2 = _get_audio_segment(AudioSpan(0.0, 0.5))
     audio_doc_2.add_annotation(audio_seg_2)
 
