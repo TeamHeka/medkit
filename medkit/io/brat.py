@@ -300,10 +300,6 @@ class BratOutputConverter(OutputConverter):
             text = medkit_doc.text
             doc_id = medkit_doc.uid if doc_names is None else doc_names[i]
 
-            if text is None:
-                logger.warning(f"The medkit doc {doc_id} has no text, it was ignored.")
-                continue
-
             # convert medkit anns to brat format
             segments, relations = self._get_anns_from_medkit_doc(medkit_doc)
             brat_anns = self._convert_medkit_anns_to_brat(

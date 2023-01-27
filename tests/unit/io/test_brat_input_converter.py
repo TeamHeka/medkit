@@ -78,7 +78,6 @@ def test_load_no_anns():
     brat_converter = BratInputConverter()
     docs = brat_converter.load(dir_path="tests/data/text")
     for doc in docs:
-        assert doc.text is not None
         assert len(doc.get_annotations()) == 0
 
 

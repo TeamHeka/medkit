@@ -1,5 +1,5 @@
 __all__ = ["SpacyDocPipeline"]
-import warnings
+
 from typing import List, Optional
 
 from spacy import Language
@@ -80,13 +80,6 @@ class SpacyDocPipeline(DocOperation):
         """
 
         for medkit_doc in medkit_docs:
-            if medkit_doc.text is None:
-                warnings.warn(
-                    f"The document with uid {medkit_doc.uid} has no text, it is not"
-                    " converted"
-                )
-                continue
-
             # build spacy doc
             spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(
                 nlp=self.nlp,

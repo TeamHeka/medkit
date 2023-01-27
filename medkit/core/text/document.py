@@ -25,7 +25,7 @@ class TextDocument(Document[TextAnnotation]):
 
     def __init__(
         self,
-        text: Optional[str] = None,
+        text: str,
         metadata: Optional[Dict[str, Any]] = None,
         store: Optional[Store] = None,
         uid: Optional[str] = None,
@@ -38,7 +38,7 @@ class TextDocument(Document[TextAnnotation]):
 
         Parameters
         ----------
-        text: str, Optional
+        text:
             Document text
         metadata: dict  # TODO
             Document metadata
@@ -55,7 +55,7 @@ class TextDocument(Document[TextAnnotation]):
         >>> raw_text = doc.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
         """
         super().__init__(uid=uid, metadata=metadata, store=store)
-        self.text: Optional[str] = text
+        self.text: str = text
         self._segment_ids: List[str] = []
         self._entity_ids: List[str] = []
         self.relations_by_source: Dict[str, List[str]] = dict()  # Key: source_id
@@ -63,12 +63,9 @@ class TextDocument(Document[TextAnnotation]):
         # auto-generated raw segment
         # not stored with other annotations but injected in calls to get_annotations_by_label()
         # and get_annotation_by_id()
-        self.raw_segment: Optional[Segment] = self._generate_raw_segment()
+        self.raw_segment: Segment = self._generate_raw_segment()
 
-    def _generate_raw_segment(self) -> Optional[Segment]:
-        if self.text is None:
-            return None
-
+    def _generate_raw_segment(self) -> Segment:
         # generate deterministic uuid based on document uid
         # so that the annotation uid is the same if the doc uid is the same
         rng = random.Random(self.uid)
@@ -124,13 +121,13 @@ class TextDocument(Document[TextAnnotation]):
 
     def get_annotations_by_label(self, label) -> List[TextAnnotation]:
         # inject raw segment
-        if self.raw_segment is not None and label == self.RAW_LABEL:
+        if label == self.RAW_LABEL:
             return [self.raw_segment]
         return super().get_annotations_by_label(label)
 
     def get_annotation_by_id(self, annotation_id) -> Optional[TextAnnotation]:
         # inject raw segment
-        if self.raw_segment is not None and annotation_id == self.raw_segment.uid:
+        if annotation_id == self.raw_segment.uid:
             return self.raw_segment
         return super().get_annotation_by_id(annotation_id)
 

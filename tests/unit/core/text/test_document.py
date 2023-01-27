@@ -8,7 +8,7 @@ from medkit.core.text.span import Span
 
 @pytest.fixture()
 def init_data():
-    doc = TextDocument()
+    doc = TextDocument(text="")
     attribute = Attribute(label="Negation")
     ent1 = Entity(label="ent1", spans=[Span(0, 0)], text="", attrs=[attribute])
     ent2 = Entity(label="ent2", spans=[Span(0, 0)], text="")
@@ -59,7 +59,7 @@ def test_get_annotations_by_label(init_data):
 
 
 def test_raw_segment():
-    # raw text segment automatically generated when text is provided
+    # raw text segment automatically generated
     text = "This is the raw text."
     doc = TextDocument(text=text)
     seg = doc.raw_segment
@@ -74,11 +74,6 @@ def test_raw_segment():
     # but not included in full annotation list
     assert seg not in doc.get_annotations()
 
-    # no raw text segment generated if no text provided
-    doc = TextDocument()
-    assert doc.raw_segment is None
-    assert not doc.get_annotations_by_label(TextDocument.RAW_LABEL)
-
     # docs with same ids should have raw text segments with same uid
     uid = generate_id()
     doc_1 = TextDocument(uid=uid, text=text)
@@ -88,7 +83,7 @@ def test_raw_segment():
     assert ann_1.uid == ann_2.uid
 
     # manually adding annotation with reserved label RAW_LABEL is forbidden
-    doc = TextDocument()
+    doc = TextDocument(text=text)
     seg = Segment(label=TextDocument.RAW_LABEL, spans=Span(0, len(text)), text=text)
     with pytest.raises(
         RuntimeError, match=r"Cannot add annotation with reserved label .*"
