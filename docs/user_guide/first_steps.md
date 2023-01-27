@@ -188,7 +188,8 @@ To solve this kind of situations, medkit comes with context detectors, such as
 `NegationDetector.run()` receives a list of `Segment` objects. It doesn't return
 anything but it will append an {class}`~medkit.core.Attribute` object to each
 segment with a boolean value indicating whether a negation was detected or not
-(`Segment` and `Entity` objects can have a list of `Attribute` objects).
+(`Segment` and `Entity` objects can have a list of `Attribute` objects,
+accessible through their {class}`~medkit.core.AttributeContainer`).
 
 Let's instantiate a `NegationDetector` with a couple of simplistic handcrafted
 rules and run it on our sentences:

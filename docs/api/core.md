@@ -40,12 +40,13 @@ The `Collection` class is under construction.
 
 ### Annotation
 
-The `Annotation` abstract class provides common methods for every
-annotation type.
-An annotation may contain a list of [Attributes](api:core:attribute).
+The {class}`~medkit.core.Annotation` protocol shows common properties for every
+annotation type. An annotation may contain {class}`~medkit.core.Attribute` objects,
+stored in an {class}`~medkit.core.AttributeContainer`.
 
-We have several text and audio annotation classes in respectively `medkit.core.text` and `medkit.core.audio`,
-each one with its own data structure.
+We have several text and audio annotation classes implementing this protocol in
+respectively `medkit.core.text` and `medkit.core.audio`, each one with its own
+data structure.
 
 ```{eval-rst}
 .. autoclasstree:: medkit.core.annotation medkit.core.text.annotation medkit.core.audio.annotation
@@ -63,6 +64,11 @@ each one with its own data structure.
 (api:core:attribute)=
 ```{eval-rst}
 .. autoclass:: medkit.core::Attribute
+    :members:
+```
+
+```{eval-rst}
+.. autoclass:: medkit.core::AttributeContainer
     :members:
 ```
 
