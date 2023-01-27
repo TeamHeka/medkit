@@ -24,6 +24,7 @@ from medkit.core import (
     OperationDescription,
 )
 from medkit.core.text import (
+    TextAnnotation,
     Entity,
     Relation,
     Segment,
@@ -129,7 +130,7 @@ class BratInputConverter(InputConverter):
         with open(text_path, encoding="utf-8") as fp:
             text = fp.read()
 
-        anns = self._load_anns(ann_path)
+        anns = self.load_annotations(ann_path)
 
         metadata = dict(path_to_text=text_path, path_to_ann=ann_path)
 
@@ -139,10 +140,20 @@ class BratInputConverter(InputConverter):
 
         return doc
 
-    def _load_anns(
-        self, ann_path: Path
-    ) -> ValuesView[Union[Entity, Relation, Attribute]]:
-        brat_doc = brat_utils.parse_file(ann_path)
+    def load_annotations(self, ann_file: Union[str, Path]) -> List[TextAnnotation]:
+        """
+        Load a .ann file and return a list of
+        :class:`~medkit.core.text.annotation.Annotation` objects.
+
+        Parameters
+        ----------
+        ann_file:
+            Path to the .ann file.
+        """
+
+        ann_file = Path(ann_file)
+
+        brat_doc = brat_utils.parse_file(ann_file)
         anns_by_brat_id = dict()
 
         # First convert entities, then relations, finally attributes
@@ -185,7 +196,7 @@ class BratInputConverter(InputConverter):
                     attribute, self.description, source_data_items=[]
                 )
 
-        return anns_by_brat_id.values()
+        return list(anns_by_brat_id.values())
 
 
 class BratOutputConverter(OutputConverter):
