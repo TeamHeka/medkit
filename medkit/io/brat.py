@@ -102,7 +102,7 @@ class BratInputConverter(InputConverter):
                     " document"
                 )
                 continue
-            doc = self._load_doc(ann_path=ann_path, text_path=text_path)
+            doc = self.load_doc(ann_path=ann_path, text_path=text_path)
             documents.append(doc)
 
         if not documents:
@@ -110,7 +110,9 @@ class BratInputConverter(InputConverter):
 
         return documents
 
-    def _load_doc(self, ann_path: Path, text_path: Path) -> TextDocument:
+    def load_doc(
+        self, ann_path: Union[str, Path], text_path: Union[str, Path]
+    ) -> TextDocument:
         """
         Create a TextDocument from a .ann file and its associated .txt file
 
@@ -127,12 +129,15 @@ class BratInputConverter(InputConverter):
             The document containing the text and the annotations
         """
 
+        ann_path = Path(ann_path)
+        text_path = Path(text_path)
+
         with open(text_path, encoding="utf-8") as fp:
             text = fp.read()
 
         anns = self.load_annotations(ann_path)
 
-        metadata = dict(path_to_text=text_path, path_to_ann=ann_path)
+        metadata = dict(path_to_text=str(text_path), path_to_ann=str(ann_path))
 
         doc = TextDocument(text=text, metadata=metadata, store=self.store)
         for ann in anns:
