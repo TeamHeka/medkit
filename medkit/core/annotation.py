@@ -55,46 +55,6 @@ class Annotation(abc.ABC):
         for attr in attrs:
             self.attrs.add(attr)
 
-    def add_attr(self, attr: Attribute):
-        """
-        Attach an attribute to the annotation.
-
-        Parameters
-        ----------
-        attr:
-            Attribute to add.
-
-        Raises
-        ------
-        ValueError
-            If the attribute is already attached to the annotation
-            (based on `attr.uid`).
-        """
-        self.attrs.add(attr)
-
-    def get_attrs(self) -> List[Attribute]:
-        """
-        Return the attributes of the annotation.
-
-        Returns
-        -------
-        List[Attribute]
-            List of all the attributes attached to the annotation.
-        """
-        return self.attrs.get()
-
-    def get_attrs_by_label(self, label: str) -> List[Attribute]:
-        """
-        Return the attributes of the annotation having a specific label.
-
-        Returns
-        -------
-        List[Attribute]
-            List of all the attributes attached to the annotation
-            with labels equal to `label`.
-        """
-        return self.attrs.get(label=label)
-
     def add_key(self, key: str):
         self.keys.add(key)
 
