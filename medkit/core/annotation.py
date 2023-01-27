@@ -12,7 +12,6 @@ class Annotation(abc.ABC):
     def __init__(
         self,
         label: str,
-        keys: Optional[Set[str]] = None,
         attrs: Optional[List[Attribute]] = None,
         uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
@@ -24,8 +23,6 @@ class Annotation(abc.ABC):
         ----------
         label: str
             The annotation label
-        keys: Set[str], Optional
-            The set of pipeline output keys which annotation belongs to
         attrs:
             The attributes of the annotation
         uid: str, Optional
@@ -42,7 +39,7 @@ class Annotation(abc.ABC):
 
         self.uid: str = uid
         self.label: str = label
-        self.keys: Set[str] = keys if keys is not None else set()
+        self.keys: Set[str] = set()
         self.metadata: Dict[str, Any] = metadata
 
         self._attrs_by_id: Dict[str, Attribute] = {}
@@ -119,7 +116,6 @@ class Annotation(abc.ABC):
             label=self.label,
             attrs=attrs,
             metadata=self.metadata,
-            keys=list(self.keys),
             class_name=self.__class__.__name__,
         )
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 __all__ = ["TextAnnotation", "Segment", "Entity", "Relation"]
 
 import abc
-from typing import Any, Dict, List, Optional, Set, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 from medkit.core.annotation import Annotation, Attribute
 from medkit.core.text import span_utils
@@ -24,11 +24,8 @@ class TextAnnotation(Annotation):
         attrs: Optional[List[Attribute]] = None,
         uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        keys: Optional[Set[str]] = None,
     ):
-        super().__init__(
-            label=label, attrs=attrs, uid=uid, metadata=metadata, keys=keys
-        )
+        super().__init__(label=label, attrs=attrs, uid=uid, metadata=metadata)
 
 
 class Segment(TextAnnotation):
@@ -40,7 +37,6 @@ class Segment(TextAnnotation):
         attrs: Optional[List[Attribute]] = None,
         uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        keys: Optional[Set[str]] = None,
     ):
         """
         Initialize a medkit segment
@@ -59,12 +55,8 @@ class Segment(TextAnnotation):
             The identifier of the annotation (if existing)
         metadata: dict[str, Any], Optional
             The metadata of the annotation
-        keys:
-            Pipeline output keys to which the segment belongs to.
         """
-        super().__init__(
-            uid=uid, label=label, attrs=attrs, metadata=metadata, keys=keys
-        )
+        super().__init__(uid=uid, label=label, attrs=attrs, metadata=metadata)
         self.spans: List[AnySpanType] = spans
         self.text: str = text
 
@@ -94,7 +86,6 @@ class Segment(TextAnnotation):
             spans=spans,
             text=segment_dict["text"],
             metadata=segment_dict["metadata"],
-            keys=set(segment_dict["keys"]),
         )
 
         return segment
@@ -138,7 +129,6 @@ class Entity(Segment):
         attrs: Optional[List[Attribute]] = None,
         uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        keys: Optional[Set[str]] = None,
     ):
         """
         Initialize a medkit text entity
@@ -157,8 +147,6 @@ class Entity(Segment):
             The identifier of the entity (if existing)
         metadata: dict[str, Any], Optional
             The metadata of the entity
-        keys:
-            Pipeline output keys to which the entity belongs to.
         """
         super().__init__(
             label=label,
@@ -167,7 +155,6 @@ class Entity(Segment):
             attrs=attrs,
             uid=uid,
             metadata=metadata,
-            keys=keys,
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -195,7 +182,6 @@ class Entity(Segment):
             spans=spans,
             text=entity_dict["text"],
             metadata=entity_dict["metadata"],
-            keys=set(entity_dict["keys"]),
         )
 
         return entity
@@ -245,7 +231,6 @@ class Relation(TextAnnotation):
         attrs: Optional[List[Attribute]] = None,
         uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        keys: Optional[Set[str]] = None,
     ):
         """
         Initialize the medkit relation
@@ -264,12 +249,8 @@ class Relation(TextAnnotation):
             The identifier of the relation (if existing)
         metadata: Dict[str, Any], Optional
             The metadata of the relation
-        keys:
-            Pipeline output keys to which the relation belongs to.
         """
-        super().__init__(
-            uid=uid, label=label, attrs=attrs, metadata=metadata, keys=keys
-        )
+        super().__init__(uid=uid, label=label, attrs=attrs, metadata=metadata)
         self.source_id: str = source_id
         self.target_id: str = target_id
 
@@ -302,7 +283,6 @@ class Relation(TextAnnotation):
             source_id=relation_dict["source_id"],
             target_id=relation_dict["target_id"],
             metadata=relation_dict["metadata"],
-            keys=set(relation_dict["keys"]),
         )
 
         return relation
