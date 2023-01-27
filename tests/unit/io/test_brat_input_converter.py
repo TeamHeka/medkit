@@ -7,7 +7,8 @@ def test_load():
     brat_converter = BratInputConverter()
     assert brat_converter.description.name == "BratInputConverter"
     docs = brat_converter.load(dir_path="tests/data/brat/")
-    assert len(docs) == 2
+    # 2d .ann file in dir ignored because it has no corresponding .txt
+    assert len(docs) == 1
 
     doc = docs[0]
 

@@ -91,21 +91,16 @@ class BratInputConverter(InputConverter):
         documents = list()
         dir_path = Path(dir_path)
 
-        # find all base paths with at least a corresponding text or ann file
-        base_paths = set()
+        # find each .ann file
         for ann_path in sorted(dir_path.glob("*" + ann_ext)):
-            base_paths.add(dir_path / ann_path.stem)
-        for text_path in sorted(dir_path.glob("*" + text_ext)):
-            base_paths.add(dir_path / text_path.stem)
-
-        # load doc for each base_path
-        for base_path in sorted(base_paths):
-            text_path = base_path.with_suffix(text_ext)
+            # find corresponding .txt file
+            text_path = (dir_path / ann_path.stem).with_suffix(text_ext)
             if not text_path.exists():
-                text_path = None
-            ann_path = base_path.with_suffix(ann_ext)
-            if not ann_path.exists():
-                ann_path = None
+                logging.warning(
+                    f"Didn't find corresponding .txt for '{ann_path}', ignoring"
+                    " document"
+                )
+                continue
             doc = self._load_doc(ann_path=ann_path, text_path=text_path)
             documents.append(doc)
 
@@ -114,11 +109,9 @@ class BratInputConverter(InputConverter):
 
         return documents
 
-    def _load_doc(
-        self, ann_path: Optional[Path] = None, text_path: Optional[Path] = None
-    ) -> TextDocument:
+    def _load_doc(self, ann_path: Path, text_path: Path) -> TextDocument:
         """
-        Create a TextDocument from text file and its associated annotation file (.ann)
+        Create a TextDocument from a .ann file and its associated .txt file
 
         Parameters
         ----------
@@ -132,21 +125,13 @@ class BratInputConverter(InputConverter):
         TextDocument
             The document containing the text and the annotations
         """
-        assert ann_path is not None or text_path is not None
 
-        metadata = dict()
-        if text_path is not None:
-            metadata.update(path_to_text=text_path)
-            with open(text_path, encoding="utf-8") as text_file:
-                text = text_file.read()
-        else:
-            text = None
+        with open(text_path, encoding="utf-8") as fp:
+            text = fp.read()
 
-        if ann_path is not None:
-            metadata.update(path_to_ann=ann_path)
-            anns = self._load_anns(ann_path)
-        else:
-            anns = []
+        anns = self._load_anns(ann_path)
+
+        metadata = dict(path_to_text=text_path, path_to_ann=ann_path)
 
         doc = TextDocument(text=text, metadata=metadata, store=self.store)
         for ann in anns:
