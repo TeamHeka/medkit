@@ -32,7 +32,7 @@ class AudioDocument(Document[AudioAnnotation]):
         """
         Parameters
         ----------
-        douidc_id:
+        uid:
             Document identifier, if pre-existing.
         audio:
             Audio buffer containing the whole signal for the document.
