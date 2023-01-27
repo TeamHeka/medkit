@@ -99,7 +99,7 @@ Let's see how to convert this spacy doc in a `TextDocument` with annotations.
 
 ## Load SpacyDocs into a list of TextDocuments
 
-The class {class}`~medkit.io.spacy.SpacyInputConverter` is in charge of converting spacy Docs into a collection of TextDocuments. By default, it loads **all** entities, span groups and extension  attributes for each SpacyDoc object, but you can use the `entities`, `span_groups` and `attrs` parameters to specify which items should be converted, based on their labels.
+The class {class}`~medkit.io.spacy.SpacyInputConverter` is in charge of converting spacy Docs into a list of TextDocuments. By default, it loads **all** entities, span groups and extension  attributes for each SpacyDoc object, but you can use the `entities`, `span_groups` and `attrs` parameters to specify which items should be converted, based on their labels.
 
 ```{tip}
 You can enable provenance tracing by assigning a {class}`~medkit.core.ProvTracer` object to the SpacyInputConverter with the `set_prov_tracer()` method.
@@ -118,9 +118,9 @@ from medkit.io.spacy import SpacyInputConverter
 # Define default Input Converter 
 spacy_input_converter = SpacyInputConverter()
 
-# Load spacy doc into a collection of documents
-collection = spacy_input_converter.load([spacy_doc])
-medkit_doc = collection.documents[0]
+# Load spacy doc into a list of documents
+docs = spacy_input_converter.load([spacy_doc])
+medkit_doc = docs[0]
 ```
 
 **Description of the resulting Text document**
@@ -171,7 +171,7 @@ section_data = medkit_doc_to_displacy(
 displacy.render(section_data, style="ent",manual=True)
 ```
 
-## Convert a collection of TextDocument to SpacyDocs
+## Convert TextDocuments to SpacyDocs
 
 Similarly it is possible to convert a list of TextDocument to Spacy using {class}`~medkit.io.spacy.SpacyOutputConverter`. 
 
