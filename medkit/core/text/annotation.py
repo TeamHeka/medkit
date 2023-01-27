@@ -87,7 +87,6 @@ class Segment(TextAnnotation):
             text=segment_dict["text"],
             metadata=segment_dict["metadata"],
         )
-        segment.keys = set(segment_dict["keys"])
 
         return segment
 
@@ -184,7 +183,6 @@ class Entity(Segment):
             text=entity_dict["text"],
             metadata=entity_dict["metadata"],
         )
-        entity.keys = set(entity_dict["keys"])
 
         return entity
 
@@ -286,6 +284,5 @@ class Relation(TextAnnotation):
             target_id=relation_dict["target_id"],
             metadata=relation_dict["metadata"],
         )
-        relation.keys = set(relation_dict["keys"])
 
         return relation

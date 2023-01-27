@@ -24,7 +24,7 @@ class AudioDocument(Document[AudioAnnotation]):
 
     def __init__(
         self,
-        doc_id: Optional[str] = None,
+        uid: Optional[str] = None,
         audio: Optional[AudioBuffer] = None,
         metadata: Optional[Dict[str, Any]] = None,
         store: Optional[Store] = None,
@@ -32,7 +32,7 @@ class AudioDocument(Document[AudioAnnotation]):
         """
         Parameters
         ----------
-        doc_id:
+        uid:
             Document identifier, if pre-existing.
         audio:
             Audio buffer containing the whole signal for the document.
@@ -41,7 +41,7 @@ class AudioDocument(Document[AudioAnnotation]):
         store:
             Store to use for annotations.
         """
-        super().__init__(doc_id=doc_id, metadata=metadata, store=store)
+        super().__init__(uid=uid, metadata=metadata, store=store)
         self.audio: Optional[AudioBuffer] = audio
 
         # auto-generated RAW_AUDIO segment
@@ -115,7 +115,7 @@ class AudioDocument(Document[AudioAnnotation]):
         annotations = [Segment.from_dict(ann_data) for ann_data in data["annotations"]]
 
         doc = cls(
-            doc_id=data["uid"],
+            uid=data["uid"],
             audio=audio,
             metadata=data["metadata"],
         )

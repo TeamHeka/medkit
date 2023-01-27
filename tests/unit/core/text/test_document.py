@@ -80,10 +80,10 @@ def test_raw_segment():
     assert not doc.get_annotations_by_label(TextDocument.RAW_LABEL)
 
     # docs with same ids should have raw text segments with same uid
-    doc_id = generate_id()
-    doc_1 = TextDocument(doc_id=doc_id, text=text)
+    uid = generate_id()
+    doc_1 = TextDocument(uid=uid, text=text)
     ann_1 = doc_1.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
-    doc_2 = TextDocument(doc_id=doc_id, text=text)
+    doc_2 = TextDocument(uid=uid, text=text)
     ann_2 = doc_2.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
     assert ann_1.uid == ann_2.uid
 

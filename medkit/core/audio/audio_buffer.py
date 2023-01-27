@@ -188,7 +188,7 @@ class FileAudioBuffer(AudioBuffer):
     def to_dict(self) -> Dict[str, Any]:
         return dict(
             class_name=self.__class__.__name__,
-            path=self.path,
+            path=str(self.path),
             trim_start=self._trim_start,
             trim_end=self._trim_end,
         )

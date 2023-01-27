@@ -284,9 +284,9 @@ class BratOutputConverter(OutputConverter):
         dir_path:
             String or path object to save the generated files
         doc_names:
-            Optional list with the names for the generated files. If 'None', 'doc_id' will
-            be used as the name. Where 'doc_id.txt' has the raw text of the document and
-            'doc_id.ann' the Brat annotation file.
+            Optional list with the names for the generated files. If 'None', 'uid' will
+            be used as the name. Where 'uid.txt' has the raw text of the document and
+            'uid.ann' the Brat annotation file.
         """
 
         if isinstance(docs, Collection):

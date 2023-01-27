@@ -28,7 +28,7 @@ class TextDocument(Document[TextAnnotation]):
         text: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
         store: Optional[Store] = None,
-        doc_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Initializes the text document
@@ -44,7 +44,7 @@ class TextDocument(Document[TextAnnotation]):
             Document metadata
         store:
             Store to use for annotations
-        doc_id: str, Optional
+        uid: str, Optional
             Document identifier. If None, an uuid is generated.
 
         Examples
@@ -54,7 +54,7 @@ class TextDocument(Document[TextAnnotation]):
         >>> doc = TextDocument(text="hello")
         >>> raw_text = doc.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
         """
-        super().__init__(doc_id=doc_id, metadata=metadata, store=store)
+        super().__init__(uid=uid, metadata=metadata, store=store)
         self.text: Optional[str] = text
         self._segment_ids: List[str] = []
         self._entity_ids: List[str] = []
@@ -159,7 +159,7 @@ class TextDocument(Document[TextAnnotation]):
                 annotations.append(Entity.from_dict(annotation_dict))
 
         doc = cls(
-            doc_id=doc_dict["uid"], metadata=doc_dict["metadata"], text=doc_dict["text"]
+            uid=doc_dict["uid"], metadata=doc_dict["metadata"], text=doc_dict["text"]
         )
 
         for annotation in annotations:

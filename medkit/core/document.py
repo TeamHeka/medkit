@@ -18,14 +18,14 @@ class Document(Generic[AnnotationType]):
 
     def __init__(
         self,
-        doc_id: Optional[str] = None,
+        uid: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
         store: Optional[Store] = None,
     ):
         """
         Parameters
         ----------
-        doc_id:
+        uid:
             Id of the document in UUID format. Auto-generated if none provided
         metadata:
             Metadata of the document
@@ -33,8 +33,8 @@ class Document(Generic[AnnotationType]):
             Optional shared store to hold the document annotations. If none provided,
             an internal store will be used.
         """
-        if doc_id is None:
-            doc_id = generate_id()
+        if uid is None:
+            uid = generate_id()
         if metadata is None:
             metadata = {}
         if store is None:
@@ -43,7 +43,7 @@ class Document(Generic[AnnotationType]):
         else:
             has_shared_store = True
 
-        self.uid: str = doc_id
+        self.uid: str = uid
         self.store: Store = store
         self.has_shared_store = has_shared_store
         self.annotation_ids: Set[str] = set()
