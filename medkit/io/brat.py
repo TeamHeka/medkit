@@ -92,17 +92,34 @@ class BratInputConverter(InputConverter):
         documents = list()
         dir_path = Path(dir_path)
 
-        # find each .ann file
+        # find all base paths with at least a corresponding text or ann file
+        base_paths = set()
         for ann_path in sorted(dir_path.glob("*" + ann_ext)):
-            # find corresponding .txt file
-            text_path = (dir_path / ann_path.stem).with_suffix(text_ext)
+            base_paths.add(dir_path / ann_path.stem)
+        for text_path in sorted(dir_path.glob("*" + text_ext)):
+            base_paths.add(dir_path / text_path.stem)
+
+        # load doc for each base_path
+        for base_path in sorted(base_paths):
+            text_path = base_path.with_suffix(text_ext)
+            ann_path = base_path.with_suffix(ann_ext)
+
             if not text_path.exists():
+                # ignore .ann without .txt
                 logging.warning(
                     f"Didn't find corresponding .txt for '{ann_path}', ignoring"
                     " document"
                 )
                 continue
-            doc = self.load_doc(ann_path=ann_path, text_path=text_path)
+
+            if not ann_path.exists():
+                # directly load .txt without .ann
+                text = text_path.read_text(encoding="utf-8")
+                metadata = dict(path_to_text=str(text_path))
+                doc = TextDocument(text=text, metadata=metadata, store=self.store)
+            else:
+                # load both .txt and .ann
+                doc = self.load_doc(ann_path=ann_path, text_path=text_path)
             documents.append(doc)
 
         if not documents:
