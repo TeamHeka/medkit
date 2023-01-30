@@ -83,9 +83,7 @@ class DocPipeline(DocOperation, Generic[AnnotationType]):
         all_input_anns = []
         for input_key in self.pipeline.input_keys:
             labels = self.labels_by_input_key[input_key]
-            input_anns = [
-                ann for label in labels for ann in doc.get_annotations_by_label(label)
-            ]
+            input_anns = [ann for label in labels for ann in doc.anns.get(label=label)]
             all_input_anns.append(input_anns)
         all_output_anns = self.pipeline.run(*all_input_anns)
 
@@ -105,4 +103,4 @@ class DocPipeline(DocOperation, Generic[AnnotationType]):
         # add output anns to doc
         for output_anns in all_output_anns:
             for output_ann in output_anns:
-                doc.add_annotation(output_ann)
+                doc.anns.add(output_ann)
