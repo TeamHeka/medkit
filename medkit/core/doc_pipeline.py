@@ -1,6 +1,6 @@
 __all__ = ["DocPipeline"]
 
-from typing import Dict, List, Optional, Tuple, cast
+from typing import Dict, Generic, List, Optional, Tuple, TypeVar, cast
 
 from medkit.core.annotation import Annotation
 from medkit.core.document import Document
@@ -9,7 +9,10 @@ from medkit.core.pipeline import Pipeline
 from medkit.core.prov_tracer import ProvTracer
 
 
-class DocPipeline(DocOperation):
+AnnotationType = TypeVar("AnnotationType", bound=Annotation)
+
+
+class DocPipeline(DocOperation, Generic[AnnotationType]):
     """Wrapper around the `Pipeline` class that runs a pipeline on a list
     (or collection) of documents, retrieving input annotations from each document
     and attaching output annotations back to documents.
@@ -60,7 +63,7 @@ class DocPipeline(DocOperation):
     def set_prov_tracer(self, prov_tracer: ProvTracer):
         self.pipeline.set_prov_tracer(prov_tracer)
 
-    def run(self, docs: List[Document]) -> None:
+    def run(self, docs: List[Document[AnnotationType]]) -> None:
         """Run the pipeline on a list of documents, adding
         the output annotations to each document
 
@@ -76,7 +79,7 @@ class DocPipeline(DocOperation):
         for doc in docs:
             self._process_doc(doc)
 
-    def _process_doc(self, doc: Document):
+    def _process_doc(self, doc: Document[AnnotationType]):
         all_input_anns = []
         for input_key in self.pipeline.input_keys:
             labels = self.labels_by_input_key[input_key]
@@ -96,8 +99,8 @@ class DocPipeline(DocOperation):
         elif not isinstance(all_output_anns, tuple):
             all_output_anns = (all_output_anns,)
 
-        # operations must return annotations
-        all_output_anns = cast(Tuple[List[Annotation], ...], all_output_anns)
+        # operations must return annotations of expected modality type
+        all_output_anns = cast(Tuple[List[AnnotationType], ...], all_output_anns)
 
         # add output anns to doc
         for output_anns in all_output_anns:
