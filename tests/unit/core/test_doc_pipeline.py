@@ -4,7 +4,7 @@ from typing import Dict, Any
 
 from medkit.core import (
     generate_id,
-    Document,
+    AnnotationContainer,
     Attribute,
     AttributeContainer,
     Pipeline,
@@ -25,6 +25,14 @@ _ALT_SENTENCES = [
 _ENTITIES = ["Entity1", "Entity2"]
 
 
+class _TextDocument:
+    """Mock text document"""
+
+    def __init__(self):
+        self.uid = generate_id()
+        self.anns = AnnotationContainer()
+
+
 class _TextAnnotation:
     """Mock text annotation"""
 
@@ -41,7 +49,7 @@ class _TextAnnotation:
 
 
 def _get_doc():
-    doc = Document()
+    doc = _TextDocument()
     for text in _SENTENCES:
         ann = _TextAnnotation(label="sentence", text=text)
         doc.anns.add(ann)

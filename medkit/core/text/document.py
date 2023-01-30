@@ -6,14 +6,14 @@ import random
 from typing import Any, Dict, Optional
 import uuid
 
-from medkit.core.document import Document
+from medkit.core.id import generate_id
 from medkit.core.store import Store, DictStore
-from medkit.core.text.annotation import TextAnnotation, Segment, Entity, Relation
+from medkit.core.text.annotation import Segment, Entity, Relation
 from medkit.core.text.annotation_container import TextAnnotationContainer
 from medkit.core.text.span import Span
 
 
-class TextDocument(Document[TextAnnotation]):
+class TextDocument:
     """Document holding text annotations
 
     Annotations must be subclasses of `TextAnnotation`.
@@ -28,25 +28,21 @@ class TextDocument(Document[TextAnnotation]):
         self,
         text: str,
         metadata: Optional[Dict[str, Any]] = None,
-        store: Optional[Store] = None,
         uid: Optional[str] = None,
+        store: Optional[Store] = None,
     ):
         """
-        Initializes the text document
-
-        The method uses the abstract class Document to initialize a part
-        and creates dictionary views for accessing entities and relations.
-
         Parameters
         ----------
         text:
             Document text
         metadata: dict  # TODO
             Document metadata
-        store:
-            Store to use for annotations
         uid: str, Optional
             Document identifier. If None, an uuid is generated.
+        store:
+            Optional shared store to hold the document annotations. If none provided,
+            an internal store will be used.
 
         Examples
         --------
@@ -55,7 +51,10 @@ class TextDocument(Document[TextAnnotation]):
         >>> doc = TextDocument(text="hello")
         >>> raw_text = doc.anns.get(label=TextDocument.RAW_LABEL)[0]
         """
-
+        if uid is None:
+            uid = generate_id()
+        if metadata is None:
+            metadata = {}
         if store is None:
             store = DictStore()
             has_shared_store = False
@@ -65,16 +64,11 @@ class TextDocument(Document[TextAnnotation]):
         self.uid: str = uid
         self.store: Store = store
         self.has_shared_store = has_shared_store
+        self.metadata: Dict[str, Any] = metadata  # TODO: what is metadata format ?
 
         # auto-generated raw segment to hold the text
-        self.raw_segment: Segment = self._generate_raw_segment(text, self.uid)
-
-        anns = TextAnnotationContainer(self.raw_segment, store)
-        super().__init__(
-            anns=anns,
-            metadata=metadata,
-            uid=uid,
-        )
+        self.raw_segment: Segment = self._generate_raw_segment(text, uid)
+        self.anns = TextAnnotationContainer(self.raw_segment, store)
 
     @classmethod
     def _generate_raw_segment(cls, text: str, doc_id: str) -> Segment:
@@ -95,9 +89,14 @@ class TextDocument(Document[TextAnnotation]):
         return self.raw_segment.text
 
     def to_dict(self) -> Dict[str, Any]:
-        data = super().to_dict()
-        data.update(text=self.text, class_name=self.__class__.__name__)
-        return data
+        anns = [ann.to_dict() for ann in self.anns]
+        return dict(
+            uid=self.uid,
+            text=self.text,
+            anns=anns,
+            metadata=self.metadata,
+            class_name=self.__class__.__name__,
+        )
 
     @classmethod
     def from_dict(cls, doc_dict: Dict[str, Any]) -> TextDocument:

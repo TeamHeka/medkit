@@ -1,46 +1,32 @@
 __all__ = ["Document"]
 
-from typing import Any, Dict, Generic, Optional, TypeVar
+from typing import Generic, TypeVar
+from typing_extensions import Protocol, runtime_checkable
 
-from medkit.core.id import generate_id
 from medkit.core.annotation import Annotation
 from medkit.core.annotation_container import AnnotationContainer
+
 
 AnnotationType = TypeVar("AnnotationType", bound=Annotation)
 
 
-class Document(Generic[AnnotationType]):
-    """Document holding annotations
+@runtime_checkable
+class Document(Protocol, Generic[AnnotationType]):
+    """
+    Base document protocol that must be implement by document classes of all
+    modalities (text, audio, etc).
 
-    Annotations must be subclasses of `Annotation`."""
+    Documents can contain :class:`~medkit.core.annotation.Annotation` objects.
 
-    def __init__(
-        self,
-        anns: Optional[AnnotationContainer[AnnotationType]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        uid: Optional[str] = None,
-    ):
-        """
-        Parameters
-        ----------
-        anns:
-            The document annotations, in an `AnnotationContainer`.
-        metadata:
-            Metadata of the document
-        uid:
-            Id of the document in UUID format. Auto-generated if none provided
-        """
-        if anns is None:
-            anns = AnnotationContainer()
-        if uid is None:
-            uid = generate_id()
-        if metadata is None:
-            metadata = {}
+    Attributes
+    ----------
+    uid:
+        Unique identifier of the document
+    anns:
+        Annotations of the document, stored in an
+        :class:`~medkit.core.annotation_container.AnnotationContainer` for
+        easier access (can be subclassed to add modality-specific features).
+    """
 
-        self.metadata: Dict[str, Any] = metadata  # TODO: what is metadata format ?
-
-        self.anns = anns
-
-    def to_dict(self) -> Dict[str, Any]:
-        anns = [ann.to_dict() for ann in self.anns]
-        return dict(uid=self.uid, anns=anns, metadata=self.metadata)
+    uid: str
+    anns: AnnotationContainer[AnnotationType]
