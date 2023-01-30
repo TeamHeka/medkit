@@ -11,7 +11,7 @@ def test_snippet():
         spans=[Span(739, 755)],
         text="neurofibromatose",
     )
-    doc.add_annotation(entity)
+    doc.anns.add(entity)
 
     snippet = entity.get_snippet(doc, max_extend_length=49)
     expected = "tats de la suspicion de neurofibromatose, je proposerai ou pas un"
