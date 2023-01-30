@@ -4,30 +4,45 @@ This page contains all core audio concepts of medkit.
 
 ## Document & Annotations
 
-The `AudioDocument` class derives the `Document` and allows it to store
-subclasses of `Segment`.
+The {class}`~medkit.core.text.document.AudioDocument` class implements the
+{class}`~medkit.core.Document` protocol. It allows to store instances of the
+{class}`~medkit.core.audio.annotation.Segment` class, which implements the
+{class}`~medkit.core.Annotation` protocol.
 
-```{eval-rst}
-.. autoclasstree:: medkit.core.document medkit.core.audio.document
-    :strict:
-    :namespace: medkit.core
-    :align: center
-    :caption: Document hierarchy
+`AudioDocument` relies on {class}`~medkit.core.text.document.AudioAnnotationContainer`, a
+subclass of {class}`~medkit.core.AnnotationContainer`, to store the annotations,
+
+```{mermaid}
+:align: center
+:caption: Audio document and annotation hierarchy
+
+classDiagram
+    direction TD
+    class AudioDocument{
+        uid: str
+        anns: AudioAnnotationContainer
+    }
+    class AudioAnnotationContainer{
+    }
+    class Segment{
+        <<abstract>>
+        uid: str
+        label: str
+        attrs: AttributeContainer
+    }
+    AudioDocument *-- AudioAnnotationContainer
+    AudioAnnotationContainer o-- AudioAnnotation
 ```
 
-```{eval-rst}
-.. autoclasstree:: medkit.core.annotation medkit.core.audio.annotation
-    :strict:
-    :namespace: medkit.core
-    :align: center
-    :caption: Audio Annotation hierarchy
-```
+### Document
 
 ```{eval-rst}
 .. automodule:: medkit.core.audio.document
     :members:
     :inherited-members:
 ```
+
+### Annotations
 
 ```{eval-rst}
 .. automodule:: medkit.core.audio.annotation
@@ -38,7 +53,7 @@ subclasses of `Segment`.
 ## Span
 
 Similary to [text spans](api:core-text:span), audio annotations have an audio span pointing to the part of
-the audio document that is annotated. Contrary to text annotations, multiple discontinous spans are not supported. An audio annotation can only have 1 continuous span, and there is no concept of "modified spans".
+the audio document that is annotated. Contrary to text annotations, multiple discontinuous spans are not supported. An audio annotation can only have 1 continuous span, and there is no concept of "modified spans".
 
 ```{eval-rst}
 .. automodule:: medkit.core.audio.span

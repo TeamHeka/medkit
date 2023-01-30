@@ -1,27 +1,46 @@
-# Core text classes
+# Core text components
 
 This page contains all core text concepts of medkit.
 
-## Document & Annotations
+## Document, Annotations & Attributes
 
-The `TextDocument` class derives the `Document` and allows it to store
-subclasses of `TextAnnotation`.
+The {class}`~medkit.core.text.document.TextDocument` class implements the
+{class}`~medkit.core.Document` protocol. It allows to store subclasses of
+{class}`~medkit.core.text.annotation.TextAnnotation`, which implements the
+{class}`~medkit.core.Annotation` protocol. Three subclasses are defined:
+{class}`~medkit.core.text.annotation.Segment`,
+{class}`~medkit.core.text.annotation.Entity` and
+{class}`~medkit.core.text.annotation.Relation`
 
-```{eval-rst}
-.. autoclasstree:: medkit.core.document medkit.core.text.document
-    :strict:
-    :namespace: medkit.core
-    :align: center
-    :caption: Document hierarchy
+`TextDocument` relies on {class}`~medkit.core.text.document.TextAnnotationContainer`, a
+subclass of {class}`~medkit.core.AnnotationContainer`, to store the annotations,
+
+```{mermaid}
+:align: center
+:caption: Text document and annotation hierarchy
+
+classDiagram
+    direction TD
+    class TextDocument{
+        uid: str
+        anns: TextAnnotationContainer
+    }
+    class TextAnnotationContainer{
+    }
+    class TextAnnotation{
+        <<abstract>>
+        uid: str
+        label: str
+        attrs: AttributeContainer
+    }
+    TextDocument *-- TextAnnotationContainer
+    TextAnnotationContainer o-- TextAnnotation
+    TextAnnotation <|-- Segment 
+    TextAnnotation <|-- Relation
+    Segment <|-- Entity
 ```
 
-```{eval-rst}
-.. autoclasstree:: medkit.core.annotation medkit.core.text.annotation
-    :strict:
-    :namespace: medkit.core
-    :align: center
-    :caption: Text Annotation hierarchy
-```
+### Document
 
 ```{eval-rst}
 .. automodule:: medkit.core.text.document
@@ -29,11 +48,23 @@ subclasses of `TextAnnotation`.
     :inherited-members:
 ```
 
+### Annotations
+
 ```{eval-rst}
 .. automodule:: medkit.core.text.annotation
     :members:
     :inherited-members:
 ```
+
+### Attributes
+
+Text annotations can receive attributes, which will be instances of the core
+{class}`~medkit.core.Attribute` class.
+
+`medkit.core.text` defines
+{class}`~medkit.core.text.normalization.EntityNormalization`, to be used for
+values of normalization attributes, in order to have a common structure for
+normalization information, independently of the operation used to create it.
 
 ```{eval-rst}
 .. automodule:: medkit.core.text.normalization
@@ -42,14 +73,10 @@ subclasses of `TextAnnotation`.
 ```
 
 (api:core-text:span)=
-## Span (specific to text)
+## Spans
 
 ```{eval-rst}
-.. autoclass:: medkit.core.text::Span
-```
-
-```{eval-rst}
-.. autoclass:: medkit.core.text::ModifiedSpan
+.. automodule:: medkit.core.text.span
     :members:
 ```
 

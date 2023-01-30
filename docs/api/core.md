@@ -1,24 +1,110 @@
-# Core classes
+# Core components
 
 This page contains all core concepts of medkit.
 
-## Document & Annotations
+## Documents, Annotations & Attributes
 
-The `Document` class allows medkit to:
+Medkit documents classes are used to:
 * access to raw data,
 * store relevant annotations extracted from the raw data.
 
-The `Document` class is an abstract class which will be inherited by
-different modalities (e.g., text, audio, images, ...).
-`TextDocument` and `AudioDocument` derive `Document` for text and audio usecases.
+The {class}`~medkit.core.Document` and {class}`~medkit.core.Annotation`
+protocols are defined inside `medkit.core`. They define common properties and
+methods across all modalities. These protocols are then implemented for each
+modality (text, audio, image, etc), with additional logic specific to the
+modality.
 
-```{eval-rst}
-.. autoclasstree:: medkit.core.text.document medkit.core.document medkit.core.audio.document
-    :strict:
-    :namespace: medkit.core
-    :align: center
-    :caption: Document hierarchy
+To facilitate the implementation of the `Document` protocol, an
+{class}`~medkit.core.AnnotationContainer` class is provided. It behaves like a
+list of annotations, with additional filtering methods and support for
+non-memory storage.
+
+`medkit.core` also defines the {class}`~medkit.core.Attribute` class, that can
+directly be used to attach attributes to annotations of any modality. Similarly
+to `AnnotationContainer`, an {class}`~medkit.core.AttributeContainer` class is
+provided to be reused when implementing `Annotation` for a specific modality.
+
+```{mermaid}
+:align: center
+:caption: Core protocols and classes
+
+classDiagram
+    direction LR
+    class Document~Annotation~{
+        <<protocol>>
+        uid: str
+        anns: AnnotationContainer~Annotation~
+    }
+    class AnnotationContainer~Annotation~{
+    }
+    class Annotation{
+        <<protocol>>
+        uid: str
+        label: str
+        attrs: AttributeContainer
+    }
+    class Attribute{
+        uid: str
+        label: str
+        value: Optional[Any]
+    }
+    class AttributeContainer{
+    }
+    Document .. AnnotationContainer
+    AnnotationContainer o-- Annotation
+    AttributeContainer o-- Attribute
+    Annotation .. AttributeContainer
 ```
+
+Currently, `medkit.core.text` implements a
+{class}`~medkit.core.text.TextDocument` class and a corresponding set of
+{class}`~medkit.core.text.TextAnnotation` subclasses, and similarly
+`medkit.core.text` provides an {class}`~medkit.core.text.AudioDocument` class
+and a corresponding {class}`~medkit.core.text.AudioSegment`. Both modality also
+subclass `AnnotationContainer` to add some modality-specific logic or filtering.
+
+```{mermaid}
+:align: center
+:caption: Modality-specific classes
+
+classDiagram
+    direction LR
+    class TextDocument{
+        uid: str
+        anns: TextAnnotationContainer
+    }
+    class TextAnnotationContainer{
+    }
+    class TextAnnotation{
+        <<abstract>>
+        uid: str
+        label: str
+        attrs: AttributeContainer
+    }
+    TextDocument *-- TextAnnotationContainer
+    TextAnnotationContainer o-- TextAnnotation
+    TextAnnotation <|-- TextSegment 
+    TextAnnotation <|-- Relation
+    TextSegment <|-- Entity
+
+    class AudioDocument{
+        uid: str
+        anns: AudioAnnotationContainer
+    }
+    class AudioAnnotationContainer{
+    }
+    class AudioSegment {
+        uid: str
+        label: str
+        attrs: AttributeContainer
+    }
+    AudioDocument *-- AudioAnnotationContainer
+    AudioAnnotationContainer o-- AudioSegment
+    AudioSegment
+```
+
+### Document
+
 
 ```{eval-rst}
 .. autoclass:: medkit.core::Document
@@ -30,36 +116,29 @@ different modalities (e.g., text, audio, images, ...).
     :no-type:
  ```
 
-The `Collection` class is under construction.
-
 ```{eval-rst}
-.. autoclass:: medkit.core::Collection
+.. autoclass:: medkit.core::AnnotationContainer
     :members:
 ```
 
+```{eval-rst}
+.. autotypevar:: medkit.core.annotation_container::AnnotationType
+    :no-type:
+ ```
 
 ### Annotation
-
-The {class}`~medkit.core.Annotation` protocol shows common properties for every
-annotation type. An annotation may contain {class}`~medkit.core.Attribute` objects,
-stored in an {class}`~medkit.core.AttributeContainer`.
-
-We have several text and audio annotation classes implementing this protocol in
-respectively `medkit.core.text` and `medkit.core.audio`, each one with its own
-data structure.
-
-```{eval-rst}
-.. autoclasstree:: medkit.core.annotation medkit.core.text.annotation medkit.core.audio.annotation
-    :strict:
-    :namespace: medkit.core
-    :align: center
-    :caption: Annotation hierarchy (TODO: fix this schema to remove the audio/text Segment confusion)
-```
 
 ```{eval-rst}
 .. autoclass:: medkit.core::Annotation
     :members:
 ```
+
+```{eval-rst}
+.. autoclass:: medkit.core::AttributeContainer
+    :members:
+```
+
+### Attribute
 
 (api:core:attribute)=
 ```{eval-rst}
@@ -67,8 +146,14 @@ data structure.
     :members:
 ```
 
+### Collection
+
+:::{warning}
+This work is still under development. It may be changed in the future.
+:::
+
 ```{eval-rst}
-.. autoclass:: medkit.core::AttributeContainer
+.. autoclass:: medkit.core::Collection
     :members:
 ```
 
@@ -154,10 +239,37 @@ The `DocPipeline` class allows to run a pipeline on a list of documents.
     :members:
 ```
 
-(api:core:provenance)=
-## Provenance & Store
+## Store
 
-Provenance & store are medkit concepts allowing to track all operations and
+A store is an object responsible of keeping the annotations of a document
+(through an {class}`~medkit.core.AnnotationContainer`) or the attributes of an
+annotation (through an {class}`~medkit.core.AttributeContainer`).
+
+The {class}`~medkit.core.Store` protocol defines the method that a store must
+implement. For now we only provide a single implement of this protocol based on
+a dictionnary, {class}`~medkit.core.DictStore` but in the future we will
+probably provide other implementations relying on databases.
+
+Users can also implement their own store based on their needs.
+
+:::{warning}
+This work is still under development. It may be changed in the future.
+:::
+
+```{eval-rst}
+.. autoclass:: medkit.core::Store
+    :members:
+```
+
+```{eval-rst}
+.. autoclass:: medkit.core::DictStore
+    :members:
+```
+
+(api:core:provenance)=
+## Provenance
+
+Provenance is a medkit concept allowing to track all operations and
 their role in new knowledge extraction.
 With this mechanism, we will be able to provide the provenance information
 about a generated data.
@@ -179,15 +291,5 @@ This work is still under development. It may be changed in the future.
 
 ```{eval-rst}
 .. autoclass:: medkit.core::Prov
-    :members:
-```
-
-```{eval-rst}
-.. autoclass:: medkit.core::Store
-    :members:
-```
-
-```{eval-rst}
-.. autoclass:: medkit.core::DictStore
     :members:
 ```
