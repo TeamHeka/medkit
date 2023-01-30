@@ -42,9 +42,9 @@ It has the following brat annotation file:
 print(Path("./input/brat/doc_01.ann").read_text())
 ```
 
-## Load brat into a Collection of TextDocuments
+## Load brat into a list of TextDocuments
 
-To load Brat Files, medkit provides the {class}`~medkit.io.brat.BratInputConverter` class. This converter returns a `Collection` of `TextDocument`. 
+To load Brat Files, medkit provides the {class}`~medkit.io.brat.BratInputConverter` class. This converter returns a list of `TextDocument`. 
 
 ```{tip}
 You can enable provenance tracing by assigning a {class}`~medkit.core.ProvTracer` object to the BratInputConverter with the `set_prov_tracer()` method.
@@ -56,9 +56,9 @@ from medkit.io.brat import BratInputConverter
 # Define Input Converter 
 brat_converter = BratInputConverter()
 
-# Load brat into a collection of documents
-collection = brat_converter.load(dir_path="./input/brat")
-medkit_doc = collection.documents[0]
+# Load brat into a list of documents
+docs = brat_converter.load(dir_path="./input/brat")
+medkit_doc = docs[0]
 
 # Explore annotations
 print(f"The document has {len(medkit_doc.get_annotations())} annotations")
@@ -77,9 +77,9 @@ for entity in medkit_doc.get_entities():
     print(f"label={entity.label}, spans={entity.spans}, text={entity.text!r}")
 ```
 
-## Save a collection to Brat
+## Save TextDocuments to Brat
 
-To save a Collection or list of `TextDocument` in Brat format, you can use {class}`~medkit.io.brat.BratOutputConverter`.
+To save a list of `TextDocument` in Brat format, you can use {class}`~medkit.io.brat.BratOutputConverter`.
 
 You can choose which medkit **annotations** and **attributes** to keep in the resulting Brat collection. By default, since its `anns_labels` and `attrs` are set to `None`, all annotations and attributes will be in the generated file. 
 
@@ -100,9 +100,9 @@ from medkit.io.brat import BratOutputConverter
 # transfer all annotations and attributes
 brat_output_converter = BratOutputConverter()
 
-# save the medkit collection in `dir_path`
+# save the medkit documents in `dir_path`
 brat_output_converter.save(
-  collection,  dir_path="./brat_out", doc_names=["doc_1"])
+  docs,  dir_path="./brat_out", doc_names=["doc_1"])
 ```
 
 The collection is saved on disk including the following files:

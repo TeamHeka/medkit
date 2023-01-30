@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Optional, Union
 from medkit.core import (
     generate_id,
     Attribute,
-    Collection,
     InputConverter,
     OutputConverter,
     OperationDescription,
@@ -107,9 +106,9 @@ class RTTMInputConverter(InputConverter):
         rttm_dir: Union[str, Path],
         audio_dir: Optional[Union[str, Path]] = None,
         audio_ext: str = ".wav",
-    ) -> Collection:
-        """Load all .rttm file in a directory into a
-        :class:`~medkit.core.Collection` of
+    ) -> List[AudioDocument]:
+        """
+        Load all .rttm file in a directory into a list of
         :class:`~medkit.core.audio.document.AudioDocument` objects.
 
         For each .rttm file, they must be a corresponding audio file with the
@@ -128,8 +127,8 @@ class RTTMInputConverter(InputConverter):
 
         Returns
         -------
-        Collection:
-            Collection of generated documents.
+        List[AudioDocument]
+            List of generated documents.
         """
 
         rttm_dir = Path(rttm_dir)
@@ -151,7 +150,7 @@ class RTTMInputConverter(InputConverter):
         if len(docs) == 0:
             logger.warning(f"No .rttm found in '{rttm_dir}'")
 
-        return Collection(docs)
+        return docs
 
     def load_doc(
         self, rttm_file: Union[str, Path], audio_file: Union[str, Path]
@@ -273,7 +272,7 @@ class RTTMOutputConverter(OutputConverter):
 
     def save(
         self,
-        docs: Union[List[AudioDocument], Collection],
+        docs: List[AudioDocument],
         rttm_dir: Union[str, Path],
         doc_names: Optional[List[str]] = None,
     ):
@@ -283,7 +282,7 @@ class RTTMOutputConverter(OutputConverter):
         Parameters
         ----------
         docs:
-            Collection or list of audio documents to save.
+            List of audio documents to save.
         rttm_dir:
             Directory into which the generated .rttm files will be stored.
         doc_names:
@@ -293,9 +292,6 @@ class RTTMOutputConverter(OutputConverter):
         """
 
         rttm_dir = Path(rttm_dir)
-
-        if isinstance(docs, Collection):
-            docs = [doc for doc in docs.documents if isinstance(doc, AudioDocument)]
 
         if doc_names is not None:
             if len(doc_names) != len(docs):

@@ -1,12 +1,12 @@
 __all__ = [
     "Annotation",
     "Attribute",
+    "Collection",
     "InputConverter",
     "OutputConverter",
     "IdentifiableDataItem",
     "IdentifiableDataItemWithAttrs",
     "DocPipeline",
-    "Collection",
     "Document",
     "generate_id",
     "DocOperation",
@@ -24,10 +24,11 @@ __all__ = [
 ]
 
 from .annotation import Annotation, Attribute
+from .collection import Collection
 from .conversion import InputConverter, OutputConverter
 from .data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs
 from .doc_pipeline import DocPipeline
-from .document import Collection, Document
+from .document import Document
 from .id import generate_id
 from .operation import Operation, DocOperation
 from .operation_desc import OperationDescription

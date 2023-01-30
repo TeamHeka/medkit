@@ -4,7 +4,7 @@ spacy = pytest.importorskip(modname="spacy", reason="spacy is not installed")
 
 from spacy.tokens import Span as SpacySpan  # noqa: E402
 
-from medkit.core import ProvTracer, Collection  # noqa: E402
+from medkit.core import ProvTracer  # noqa: E402
 from medkit.core.text import Entity, Span, TextDocument  # noqa: E402
 from medkit.io.spacy import SpacyInputConverter  # noqa: E402
 from medkit.text.spacy.spacy_utils import _define_attrs_extensions  # noqa: E402
@@ -55,9 +55,8 @@ def test_input_converter_entity_transfer(
     # get a medkit doc from a spacy doc
     medkit_docs = spacy_converter.load([doc])
 
-    assert isinstance(medkit_docs, Collection)
-    assert len(medkit_docs.documents) == 1
-    medkit_doc = medkit_docs.documents[0]
+    assert len(medkit_docs) == 1
+    medkit_doc = medkit_docs[0]
 
     assert isinstance(medkit_doc, TextDocument)
     # all entities should be included
@@ -117,9 +116,8 @@ def test_input_converter_attribute_transfer(
     # use the input converter to get a spacy doc
     medkit_docs = spacy_converter.load([doc])
 
-    assert isinstance(medkit_docs, Collection)
-    assert len(medkit_docs.documents) == 1
-    medkit_doc = medkit_docs.documents[0]
+    assert len(medkit_docs) == 1
+    medkit_doc = medkit_docs[0]
 
     assert isinstance(medkit_doc, TextDocument)
     assert medkit_doc.text == doc.text
@@ -171,9 +169,8 @@ def test_input_converter_medkit_attribute_transfer_all_anns(nlp_spacy):
     # use the input converter to get a spacy doc
     medkit_docs = spacy_converter.load([doc])
 
-    assert isinstance(medkit_docs, Collection)
-    assert len(medkit_docs.documents) == 1
-    medkit_doc = medkit_docs.documents[0]
+    assert len(medkit_docs) == 1
+    medkit_doc = medkit_docs[0]
 
     assert isinstance(medkit_doc, TextDocument)
     assert medkit_doc.text == doc.text
@@ -233,9 +230,8 @@ def test_input_converter_segments_transfer(
     # get a medkit doc from a spacy doc
     medkit_docs = spacy_converter.load([doc])
 
-    assert isinstance(medkit_docs, Collection)
-    assert len(medkit_docs.documents) == 1
-    medkit_doc = medkit_docs.documents[0]
+    assert len(medkit_docs) == 1
+    medkit_doc = medkit_docs[0]
     assert medkit_doc.text == doc.text
     assert isinstance(medkit_doc, TextDocument)
 
@@ -263,9 +259,9 @@ def test_prov(nlp_spacy):
     prov_tracer = ProvTracer()
     spacy_converter.set_prov_tracer(prov_tracer)
 
-    collection = spacy_converter.load([doc])
+    docs = spacy_converter.load([doc])
 
-    medkit_doc = collection.documents[0]
+    medkit_doc = docs[0]
     entity = medkit_doc.get_annotations_by_label("PERSON")[0]
 
     prov = prov_tracer.get_prov(entity.uid)

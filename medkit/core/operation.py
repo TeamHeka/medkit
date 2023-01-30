@@ -4,9 +4,9 @@ __all__ = ["Operation", "DocOperation"]
 
 import abc
 
-from typing import List, Union
+from typing import List
 
-from medkit.core.document import Collection, Document
+from medkit.core.document import Document
 from medkit.core.id import generate_id
 from medkit.core.operation_desc import OperationDescription
 from medkit.core.prov_tracer import ProvTracer
@@ -85,5 +85,5 @@ class DocOperation(Operation):
     """
 
     @abc.abstractmethod
-    def run(self, docs: Union[List[Document], Collection]) -> None:
+    def run(self, docs: List[Document]) -> None:
         raise NotImplementedError

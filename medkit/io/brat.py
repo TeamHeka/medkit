@@ -16,7 +16,6 @@ from medkit.io._brat_utils import (
 )
 from medkit.core import (
     Attribute,
-    Collection,
     InputConverter,
     OutputConverter,
     Store,
@@ -69,9 +68,9 @@ class BratInputConverter(InputConverter):
         dir_path: Union[str, Path],
         ann_ext: str = ANN_EXT,
         text_ext: str = TEXT_EXT,
-    ) -> Collection:
+    ) -> List[TextDocument]:
         """
-        Create a Collection of TextDocuments from a folder containting text files
+        Create a list of TextDocuments from a folder containing text files
         and associated brat annotations files.
 
         Parameters
@@ -86,8 +85,8 @@ class BratInputConverter(InputConverter):
 
         Returns
         -------
-        Collection
-            The collection of TextDocuments
+        List[TextDocument]
+            The list of TextDocuments
         """
         documents = list()
         dir_path = Path(dir_path)
@@ -113,7 +112,7 @@ class BratInputConverter(InputConverter):
         if not documents:
             logger.warning(f"Didn't load any document from dir {dir_path}")
 
-        return Collection(documents)
+        return documents
 
     def _load_doc(
         self, ann_path: Optional[Path] = None, text_path: Optional[Path] = None
@@ -205,7 +204,7 @@ class BratInputConverter(InputConverter):
 
 
 class BratOutputConverter(OutputConverter):
-    """Class in charge of converting a list/Collection of TextDocuments into a
+    """Class in charge of converting a list of TextDocuments into a
     brat collection file"""
 
     def __init__(
@@ -269,7 +268,7 @@ class BratOutputConverter(OutputConverter):
 
     def save(
         self,
-        docs: Union[List[TextDocument], Collection],
+        docs: List[TextDocument],
         dir_path: Union[str, Path],
         doc_names: Optional[List[str]] = None,
     ):
@@ -280,7 +279,7 @@ class BratOutputConverter(OutputConverter):
         Parameters
         ----------
         docs:
-            List or Collection of medkit doc objects to convert
+            List of medkit doc objects to convert
         dir_path:
             String or path object to save the generated files
         doc_names:
@@ -288,13 +287,6 @@ class BratOutputConverter(OutputConverter):
             be used as the name. Where 'uid.txt' has the raw text of the document and
             'uid.ann' the Brat annotation file.
         """
-
-        if isinstance(docs, Collection):
-            docs = [
-                medkit_doc
-                for medkit_doc in docs.documents
-                if isinstance(medkit_doc, TextDocument)
-            ]
 
         if doc_names is not None:
             assert len(doc_names) == len(docs)

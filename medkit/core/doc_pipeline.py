@@ -1,9 +1,9 @@
 __all__ = ["DocPipeline"]
 
-from typing import Dict, List, Optional, Tuple, Union, cast
+from typing import Dict, List, Optional, Tuple, cast
 
 from medkit.core.annotation import Annotation
-from medkit.core.document import Collection, Document
+from medkit.core.document import Document
 from medkit.core.operation import DocOperation
 from medkit.core.pipeline import Pipeline
 from medkit.core.prov_tracer import ProvTracer
@@ -60,7 +60,7 @@ class DocPipeline(DocOperation):
     def set_prov_tracer(self, prov_tracer: ProvTracer):
         self.pipeline.set_prov_tracer(prov_tracer)
 
-    def run(self, docs: Union[List[Document], Collection]) -> None:
+    def run(self, docs: List[Document]) -> None:
         """Run the pipeline on a list of documents, adding
         the output annotations to each document
 
@@ -72,9 +72,6 @@ class DocPipeline(DocOperation):
             annotations from each document, and all output annotations will also
             be added to each corresponding document.
         """
-
-        if isinstance(docs, Collection):
-            docs = [doc for doc in docs.documents]
 
         for doc in docs:
             self._process_doc(doc)
