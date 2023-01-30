@@ -1,5 +1,6 @@
 __all__ = [
     "Annotation",
+    "AnnotationContainer",
     "Attribute",
     "AttributeContainer",
     "Collection",
@@ -25,6 +26,7 @@ __all__ = [
 ]
 
 from .annotation import Annotation
+from .annotation_container import AnnotationContainer
 from .attribute import Attribute
 from .attribute_container import AttributeContainer
 from .collection import Collection
