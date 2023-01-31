@@ -61,8 +61,8 @@ docs = brat_converter.load(dir_path="./input/brat")
 medkit_doc = docs[0]
 
 # Explore annotations
-print(f"The document has {len(medkit_doc.get_annotations())} annotations")
-entities_disease = medkit_doc.get_annotations_by_label("disease")
+print(f"The document has {len(medkit_doc.anns)} annotations")
+entities_disease = medkit_doc.anns.get(label="disease")
 print(f"Where {len(entities_disease)} annotations have 'disease' as label")
 
 ```
@@ -73,7 +73,7 @@ The created document contains the annotations defined in the brat annotation fil
 We can show the entities information, for example.
 
 ```{code-cell} ipython3
-for entity in medkit_doc.get_entities():
+for entity in medkit_doc.anns.get_entities():
     print(f"label={entity.label}, spans={entity.spans}, text={entity.text!r}")
 ```
 

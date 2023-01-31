@@ -284,11 +284,11 @@ We know have an interesting set of annotations. We might want to process them
 directly, for instance to generate table-like data about patient treatment in
 order to compute some statistics. But we could also want to attach them back to
 our document in order to save them or export them to some format. This can be
-done with the `TextDocument.add_annotation()` method:
+done with `TextDocument.anns.add()`:
 
 ```{code-cell} ipython3
 for entity in entities:
-    doc.add_annotation(entity)
+    doc.anns.add(entity)
 ```
 
 The document and its entities can then be exported to supported external formats
