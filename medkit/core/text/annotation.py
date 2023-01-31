@@ -3,22 +3,46 @@ from __future__ import annotations
 __all__ = ["TextAnnotation", "Segment", "Entity", "Relation"]
 
 import abc
-from typing import Any, Dict, List, Optional, Set, TYPE_CHECKING
+import dataclasses
+from typing import Any, ClassVar, Dict, List, Optional, Set, TYPE_CHECKING
 
 from medkit.core.attribute import Attribute
 from medkit.core.attribute_container import AttributeContainer
 from medkit.core.id import generate_id
 from medkit.core.store import Store
-from medkit.core.text import span_utils
 from medkit.core.text.normalization import EntityNormalization
 from medkit.core.text.span import AnySpan, AnySpanType
+import medkit.core.text.span_utils as span_utils
 
 if TYPE_CHECKING:
     from medkit.core.text.document import TextDocument
 
 
+@dataclasses.dataclass(init=False)
 class TextAnnotation(abc.ABC):
-    """Base abstract class for all text annotations"""
+    """Base abstract class for all text annotations
+
+    Attributes
+    ----------
+    uid:
+        Unique identifier of the annotation.
+    label:
+        The label for this annotation (e.g., SENTENCE)
+    attrs:
+        Attributes of the annotation. Stored in a
+        :class:{~medkit.core.AttributeContainer} but can be passed as a list at
+        init.
+    metadata:
+        The metadata of the annotation
+    keys:
+        Pipeline output keys to which the annotation belongs to.
+    """
+
+    uid: str
+    label: str
+    attrs: AttributeContainer
+    metadata: Dict[str, Any]
+    keys: Set[str]
 
     @abc.abstractmethod
     def __init__(
@@ -29,37 +53,23 @@ class TextAnnotation(abc.ABC):
         uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
-        """
-        Parameters
-        ----------
-        label: str
-            The annotation label
-        attrs:
-            The attributes of the annotation
-        metadata: dict
-            The dictionary containing the annotation metadata
-        uid:
-            The annotation identifier.
-        store:
-            Optional shared store to hold the attributes. If none provided,
-            an internal store will be used.
-        """
-        if uid is None:
-            uid = generate_id()
         if attrs is None:
             attrs = []
         if metadata is None:
             metadata = {}
+        if uid is None:
+            uid = generate_id()
 
-        self.uid: str = uid
-        self.label: str = label
-        self.metadata: Dict[str, Any] = metadata
-        self.keys: Set[str] = set()
+        self.uid = uid
+        self.label = label
+        self.metadata = metadata
+        self.keys = set()
 
         self.attrs = AttributeContainer(store=store)
         for attr in attrs:
             self.attrs.add(attr)
 
+    @abc.abstractmethod
     def to_dict(self) -> Dict[str, Any]:
         attrs = [a.to_dict() for a in self.attrs]
         return dict(
@@ -70,56 +80,56 @@ class TextAnnotation(abc.ABC):
             class_name=self.__class__.__name__,
         )
 
-    @classmethod
-    @abc.abstractmethod
-    def from_dict(cls, annotation_dict: Dict[str, Any]) -> TextAnnotation:
-        pass
 
-    def __repr__(self):
-        return str(self.to_dict())
-
-
+@dataclasses.dataclass(init=False)
 class Segment(TextAnnotation):
+    """
+    Text segment referencing part of an {class}`~medkit.core.text.TextDocument`.
+
+    Attributes
+    ----------
+    uid:
+        The segment identifier.
+    label:
+        The label for this segment (e.g., SENTENCE)
+    text:
+        Text of the segment.
+    spans:
+        List of spans indicating which parts of the segment text correspond to
+        which part of the document's full text.
+    attrs:
+        Attributes of the segment. Stored in a
+        :class:{~medkit.core.AttributeContainer} but can be passed as a list at
+        init.
+    metadata:
+        The metadata of the segment
+    keys:
+        Pipeline output keys to which the segment belongs to.
+    """
+
+    spans: List[AnySpanType]
+    text: str
+
     def __init__(
         self,
         label: str,
-        spans: List[AnySpanType],
         text: str,
+        spans: List[AnySpanType],
         attrs: Optional[List[Attribute]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
-        """
-        Initialize a medkit segment
-
-        Parameters
-        ----------
-        label: str
-            The label for this annotation (e.g., SENTENCE)
-        spans:
-            The annotation span
-        text: str
-            The annotation text
-        attrs:
-            The attributes of the segment
-        metadata: dict[str, Any], Optional
-            The metadata of the annotation
-        uid:
-            The identifier of the annotation (if existing).
-        store:
-            Optional shared store to hold the attributes. If none provided,
-            an internal store will be used.
-        """
         super().__init__(
             label=label, attrs=attrs, metadata=metadata, uid=uid, store=store
         )
-        self.spans: List[AnySpanType] = spans
-        self.text: str = text
+
+        self.text = text
+        self.spans = spans
 
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
-        data.update(spans=[s.to_dict() for s in self.spans], text=self.text)
+        data.update(text=self.text, spans=[s.to_dict() for s in self.spans])
         data.update(class_name=self.__class__.__name__)
         return data
 
@@ -140,8 +150,8 @@ class Segment(TextAnnotation):
             uid=segment_dict["uid"],
             label=segment_dict["label"],
             attrs=attrs,
-            spans=spans,
             text=segment_dict["text"],
+            spans=spans,
             metadata=segment_dict["metadata"],
         )
 
@@ -172,52 +182,36 @@ class Segment(TextAnnotation):
         return doc.text[start_extended:end_extended]
 
 
+@dataclasses.dataclass(init=False)
 class Entity(Segment):
-    NORM_LABEL = "NORMALIZATION"
+    """
+    Text entity referencing part of an {class}`~medkit.core.text.TextDocument`.
+
+    Attributes
+    ----------
+    uid:
+        The entity identifier.
+    label:
+        The label for this entity (e.g., DISEASE)
+    text:
+        Text of the entity.
+    spans:
+        List of spans indicating which parts of the entity text correspond to
+        which part of the document's full text.
+    attrs:
+        Attributes of the entity. Stored in a
+        :class:{~medkit.core.AttributeContainer} but can be passed as a list at
+        init.
+    metadata:
+        The metadata of the entity
+    keys:
+        Pipeline output keys to which the entity belongs to.
+    """
+
+    NORM_LABEL: ClassVar[str] = "NORMALIZATION"
     """
     Label to use for normalization attributes
     """
-
-    def __init__(
-        self,
-        label: str,
-        spans: List[AnySpanType],
-        text: str,
-        attrs: Optional[List[Attribute]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        uid: Optional[str] = None,
-        store: Optional[Store] = None,
-    ):
-        """
-        Initialize a medkit text entity
-
-        Parameters
-        ----------
-        label: str
-            The entity label
-        spans:
-            The entity span
-        text: str
-            The entity text
-        attrs:
-            The attributes of the entity
-        metadata: dict[str, Any], Optional
-            The metadata of the entity
-        uid:
-            The identifier of the entity (if existing)
-        store:
-            Optional shared store to hold the attributes. If none provided,
-            an internal store will be used.
-        """
-        super().__init__(
-            label=label,
-            spans=spans,
-            text=text,
-            attrs=attrs,
-            metadata=metadata,
-            uid=uid,
-            store=store,
-        )
 
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
@@ -284,7 +278,32 @@ class Entity(Segment):
         return [a.value for a in self.attrs.get(label=self.NORM_LABEL)]
 
 
+@dataclasses.dataclass(init=False)
 class Relation(TextAnnotation):
+    """
+    Relation between two text entities.
+
+    Attributes
+    ----------
+    uid:
+        The identifier of the relation
+    label:
+        The relation label
+    source_id:
+        The identifier of the entity from which the relation is defined
+    target_id:
+        The identifier of the entity to which the relation is defined
+    attrs:
+        The attributes of the relation
+    metadata:
+        The metadata of the relation
+    keys:
+        Pipeline output keys to which the relation belongs to
+    """
+
+    source_id: str
+    target_id: str
+
     def __init__(
         self,
         label: str,
@@ -295,32 +314,12 @@ class Relation(TextAnnotation):
         uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
-        """
-        Initialize the medkit relation
-
-        Parameters
-        ----------
-        label: str
-            The relation label
-        source_id: str
-            The identifier of the entity from which the relation is defined
-        target_id: str
-            The identifier of the entity to which the relation is defined
-        attrs:
-            The attributes of the relation
-        metadata: Dict[str, Any], Optional
-            The metadata of the relation
-        uid:
-            The identifier of the relation (if existing)
-        store:
-            Optional shared store to hold the attributes. If none provided,
-            an internal store will be used.
-        """
         super().__init__(
             label=label, attrs=attrs, metadata=metadata, uid=uid, store=store
         )
-        self.source_id: str = source_id
-        self.target_id: str = target_id
+
+        self.source_id = source_id
+        self.target_id = target_id
 
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
