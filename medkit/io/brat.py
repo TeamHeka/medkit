@@ -24,6 +24,7 @@ from medkit.core import (
     OperationDescription,
 )
 from medkit.core.text import (
+    TextAnnotation,
     Entity,
     Relation,
     Segment,
@@ -101,12 +102,24 @@ class BratInputConverter(InputConverter):
         # load doc for each base_path
         for base_path in sorted(base_paths):
             text_path = base_path.with_suffix(text_ext)
-            if not text_path.exists():
-                text_path = None
             ann_path = base_path.with_suffix(ann_ext)
+
+            if not text_path.exists():
+                # ignore .ann without .txt
+                logging.warning(
+                    f"Didn't find corresponding .txt for '{ann_path}', ignoring"
+                    " document"
+                )
+                continue
+
             if not ann_path.exists():
-                ann_path = None
-            doc = self._load_doc(ann_path=ann_path, text_path=text_path)
+                # directly load .txt without .ann
+                text = text_path.read_text(encoding="utf-8")
+                metadata = dict(path_to_text=str(text_path))
+                doc = TextDocument(text=text, metadata=metadata, store=self.store)
+            else:
+                # load both .txt and .ann
+                doc = self.load_doc(ann_path=ann_path, text_path=text_path)
             documents.append(doc)
 
         if not documents:
@@ -114,11 +127,11 @@ class BratInputConverter(InputConverter):
 
         return documents
 
-    def _load_doc(
-        self, ann_path: Optional[Path] = None, text_path: Optional[Path] = None
+    def load_doc(
+        self, ann_path: Union[str, Path], text_path: Union[str, Path]
     ) -> TextDocument:
         """
-        Create a TextDocument from text file and its associated annotation file (.ann)
+        Create a TextDocument from a .ann file and its associated .txt file
 
         Parameters
         ----------
@@ -132,21 +145,16 @@ class BratInputConverter(InputConverter):
         TextDocument
             The document containing the text and the annotations
         """
-        assert ann_path is not None or text_path is not None
 
-        metadata = dict()
-        if text_path is not None:
-            metadata.update(path_to_text=text_path)
-            with open(text_path, encoding="utf-8") as text_file:
-                text = text_file.read()
-        else:
-            text = None
+        ann_path = Path(ann_path)
+        text_path = Path(text_path)
 
-        if ann_path is not None:
-            metadata.update(path_to_ann=ann_path)
-            anns = self._load_anns(ann_path)
-        else:
-            anns = []
+        with open(text_path, encoding="utf-8") as fp:
+            text = fp.read()
+
+        anns = self.load_annotations(ann_path)
+
+        metadata = dict(path_to_text=str(text_path), path_to_ann=str(ann_path))
 
         doc = TextDocument(text=text, metadata=metadata, store=self.store)
         for ann in anns:
@@ -154,10 +162,20 @@ class BratInputConverter(InputConverter):
 
         return doc
 
-    def _load_anns(
-        self, ann_path: Path
-    ) -> ValuesView[Union[Entity, Relation, Attribute]]:
-        brat_doc = brat_utils.parse_file(ann_path)
+    def load_annotations(self, ann_file: Union[str, Path]) -> List[TextAnnotation]:
+        """
+        Load a .ann file and return a list of
+        :class:`~medkit.core.text.annotation.Annotation` objects.
+
+        Parameters
+        ----------
+        ann_file:
+            Path to the .ann file.
+        """
+
+        ann_file = Path(ann_file)
+
+        brat_doc = brat_utils.parse_file(ann_file)
         anns_by_brat_id = dict()
 
         # First convert entities, then relations, finally attributes
@@ -200,7 +218,7 @@ class BratInputConverter(InputConverter):
                     attribute, self.description, source_data_items=[]
                 )
 
-        return anns_by_brat_id.values()
+        return list(anns_by_brat_id.values())
 
 
 class BratOutputConverter(OutputConverter):
@@ -298,10 +316,6 @@ class BratOutputConverter(OutputConverter):
         for i, medkit_doc in enumerate(docs):
             text = medkit_doc.text
             doc_id = medkit_doc.uid if doc_names is None else doc_names[i]
-
-            if text is None:
-                logger.warning(f"The medkit doc {doc_id} has no text, it was ignored.")
-                continue
 
             # convert medkit anns to brat format
             segments, relations = self._get_anns_from_medkit_doc(medkit_doc)

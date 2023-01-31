@@ -38,11 +38,7 @@ def medkit_doc_to_displacy(
         Data to be passed to `displacy.render()` as `docs` argument
         (with `manual=True` and `style="ent"`)
     """
-    if medkit_doc.text is None:
-        raise RuntimeError(
-            "Document cannot be visualized with displacy because it doesn't contain its"
-            " full text"
-        )
+
     if segment_labels:
         segments = [
             e

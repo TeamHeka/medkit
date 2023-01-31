@@ -24,46 +24,47 @@ class AudioDocument(Document[AudioAnnotation]):
 
     def __init__(
         self,
+        audio: AudioBuffer,
         uid: Optional[str] = None,
-        audio: Optional[AudioBuffer] = None,
         metadata: Optional[Dict[str, Any]] = None,
         store: Optional[Store] = None,
     ):
         """
         Parameters
         ----------
-        uid:
-            Document identifier, if pre-existing.
         audio:
             Audio buffer containing the whole signal for the document.
+        uid:
+            Document identifier, if pre-existing.
         metadata:
             Document metadata.
         store:
             Store to use for annotations.
         """
         super().__init__(uid=uid, metadata=metadata, store=store)
-        self.audio: Optional[AudioBuffer] = audio
 
         # auto-generated RAW_AUDIO segment
         # not stored with other annotations but injected in calls to get_annotations_by_label()
         # and get_annotation_by_id()
-        self.raw_segment: Optional[Segment] = self._generate_raw_segment()
+        self.raw_segment: Segment = self._generate_raw_segment(audio, self.uid)
 
-    def _generate_raw_segment(self) -> Optional[Segment]:
-        if self.audio is None:
-            return None
-
+    @classmethod
+    def _generate_raw_segment(cls, audio: AudioBuffer, doc_id: str) -> Segment:
         # generate deterministic uuid based on document identifier
         # so that the annotation identifier is the same if the doc identifier is the same
-        rng = random.Random(self.uid)
+        rng = random.Random(doc_id)
         uid = str(uuid.UUID(int=rng.getrandbits(128)))
 
         return Segment(
-            label=self.RAW_LABEL,
-            span=Span(0.0, self.audio.duration),
-            audio=self.audio,
+            label=cls.RAW_LABEL,
+            span=Span(0.0, audio.duration),
+            audio=audio,
             uid=uid,
         )
+
+    @property
+    def audio(self) -> AudioBuffer:
+        return self.raw_segment.audio
 
     def add_annotation(self, annotation: AudioAnnotation):
         """
@@ -89,13 +90,13 @@ class AudioDocument(Document[AudioAnnotation]):
 
     def get_annotations_by_label(self, label) -> List[AudioAnnotation]:
         # inject RAW_AUDIO segment
-        if self.raw_segment is not None and label == self.RAW_LABEL:
+        if label == self.RAW_LABEL:
             return [self.raw_segment]
         return super().get_annotations_by_label(label)
 
     def get_annotation_by_id(self, annotation_id) -> Optional[AudioAnnotation]:
         # inject RAW_AUDIO segment
-        if self.raw_segment is not None and annotation_id == self.raw_segment.uid:
+        if annotation_id == self.raw_segment.uid:
             return self.raw_segment
         return super().get_annotation_by_id(annotation_id)
 

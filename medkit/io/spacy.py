@@ -1,5 +1,5 @@
 __all__ = ["SpacyInputConverter", "SpacyOutputConverter"]
-import warnings
+
 from typing import List, Optional
 
 from spacy import Language
@@ -205,13 +205,6 @@ class SpacyOutputConverter:
 
         spacy_docs = []
         for medkit_doc in medkit_docs:
-            if medkit_doc.text is None:
-                warnings.warn(
-                    f"The document with identifier {medkit_doc.uid} has no text, it is"
-                    " not converted"
-                )
-                continue
-
             # create a spacy document from medkit with the selected annotations
             spacy_doc = build_spacy_doc_from_medkit_doc(
                 nlp=self.nlp,
