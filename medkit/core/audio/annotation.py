@@ -2,6 +2,7 @@ from __future__ import annotations
 
 __all__ = ["Segment"]
 
+import dataclasses
 from typing import Any, Dict, List, Optional, Set
 
 from medkit.core.attribute import Attribute
@@ -16,9 +17,41 @@ from medkit.core.id import generate_id
 from medkit.core.store import Store
 
 
+@dataclasses.dataclass(init=False)
 class Segment:
     """Audio segment referencing part of an {class}`~medkit.core.audio.AudioDocument`.
+
+    Attributes
+    ----------
+    uid:
+        Unique identifier of the segment.
+    label:
+        Label of the segment.
+    audio:
+        The audio signal of the segment. It must be consistent with the span,
+        in the sense that it must correspond to the audio signal of the document
+        at the span boundaries. But it can be a modified, processed version of this
+        audio signal.
+    span:
+        Span (in seconds) indicating the part of the document's full signal that
+        this segment references.
+    attrs:
+        Attributes of the segment. Stored in a
+        :class:{~medkit.core.AttributeContainer} but can be passed as a list at
+        init.
+    metadata:
+        Metadata of the segment.
+    keys:
+        Pipeline output keys to which the annotation belongs to.
     """
+
+    uid: str
+    label: str
+    audio: AudioBuffer
+    span: Span
+    attrs: AttributeContainer
+    metadata: Dict[str, Any]
+    keys: Set[str]
 
     def __init__(
         self,
@@ -30,42 +63,19 @@ class Segment:
         uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
-        """
-        Parameters
-        ----------
-        label:
-            Label of the segment.
-        audio:
-            The audio signal of the segment. It must be consistent with the span,
-            in the sense that it must correspond to the audio signal of the document
-            at the span boundaries. But it can be a modified, processed version of this
-            audio signal.
-        span:
-            Span (in seconds) referenced by the segment
-        attrs:
-            Attributes of the segment.
-        metadata:
-            Metadata of the segment.
-        uid:
-            Identifier of the segment.
-        store:
-            Optional shared store to hold the attributes. If none provided,
-            an internal store will be used.
-        """
-
-        if uid is None:
-            uid = generate_id()
         if attrs is None:
             attrs = []
         if metadata is None:
             metadata = {}
+        if uid is None:
+            uid = generate_id()
 
-        self.uid: str = uid
-        self.label: str = label
+        self.label = label
         self.audio = audio
         self.span = span
-        self.metadata: Dict[str, Any] = metadata
-        self.keys: Set[str] = set()
+        self.metadata = metadata
+        self.keys = set()
+        self.uid = uid
 
         self.attrs = AttributeContainer(store=store)
         for attr in attrs:
@@ -102,6 +112,3 @@ class Segment:
             uid=data["uid"],
             metadata=data["metadata"],
         )
-
-    def __repr__(self):
-        return str(self.to_dict())
