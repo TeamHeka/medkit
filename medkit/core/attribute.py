@@ -2,42 +2,33 @@ from __future__ import annotations
 
 __all__ = ["Attribute"]
 
+import dataclasses
 from typing import Any, Dict, Optional
 
 from medkit.core.id import generate_id
 
 
+@dataclasses.dataclass
 class Attribute:
-    def __init__(
-        self,
-        label: str,
-        value: Optional[Any] = None,
-        uid: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-    ):
-        """
-        Initialize a medkit attribute, to be added to an annotation
+    """
+    Medkit attribute, to be added to an annotation
 
-        Parameters
-        ----------
-        label: str
-            The attribute label
-        value: str, Optional
-            The value of the attribute
-        uid: str, Optional
-            The identifier of the attribute (if existing)
-        metadata: Dict[str, Any], Optional
-            The metadata of the attribute
-        """
-        if uid is None:
-            uid = generate_id()
-        if metadata is None:
-            metadata = {}
+    Attributes
+    ----------
+    label:
+        The attribute label
+    value:
+        The value of the attribute
+    metadata:
+        The metadata of the attribute
+    uid:
+        The identifier of the attribute
+    """
 
-        self.uid: str = uid
-        self.label: str = label
-        self.value: Optional[Any] = value
-        self.metadata: Dict[str, Any] = metadata
+    label: str
+    value: Optional[Any] = None
+    metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
+    uid: str = dataclasses.field(default_factory=generate_id)
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
@@ -62,10 +53,4 @@ class Attribute:
             label=attribute_dict["label"],
             value=attribute_dict["value"],
             metadata=attribute_dict["metadata"],
-        )
-
-    def __repr__(self):
-        return (
-            f"{self.__class__.__qualname__} : uid={self.uid!r}, label={self.label!r},"
-            f" value={self.value}"
         )
