@@ -1,21 +1,24 @@
+import datetime
 import logging
 import os
 import random
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Tuple
 
 import numpy as np
 import torch
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.utils.data import DataLoader
-from transformers.optimization import SchedulerType, get_scheduler
+from torch.utils.data import DataLoader, Dataset
 
 from medkit.core.trainable_operation import TrainableOperation
-from medkit.training.metrics import Metric
-from medkit.training.utils import BatchData, MedkitDataset
+from medkit.training.trainers.base.train_config import TrainConfig
+from medkit.training.utils import BatchData, TrainerEvaluator
 
-from .train_config import TrainConfig
+# checkpoint constants
+OPTIMIZER_NAME = "optimizer.pt"
+SCHEDULER_NAME = "scheduler.pt"
+
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +30,22 @@ def set_seed(seed: int = 0):
     torch.manual_seed(seed)
 
 
-# checkpoint constants
-OPTIMIZER_NAME = "optimizer.pt"
-SCHEDULER_NAME = "scheduler.pt"
+class _TrainerDataset(Dataset):
+    """Dataset to use in a TrainableOperation. This class is inspired from
+    the ``PipelineDataset`` class from hugginface transformers library
+    """
+
+    def __init__(self, dataset, operation: TrainableOperation):
+        self.dataset = dataset
+        self.operation = operation
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, i):
+        item = self.dataset[i]
+        processed = self.operation.preprocess(item, inference_mode=False)
+        return processed
 
 
 class Trainer:
@@ -39,12 +55,17 @@ class Trainer:
         config: TrainConfig,
         train_data: Any,
         eval_data: Any,
-        metric: Optional[Metric] = None,
+        evaluator: Optional[TrainerEvaluator] = None,
+        lr_scheduler_builder: Optional[Callable[[torch.optim.Optimizer], Any]] = None,
     ):
         # enable deterministic operation
-        set_seed()
+        set_seed(0)
 
-        self.output_dir = Path(config.output_dir)
+        self.output_dir = (
+            Path(config.output_dir)
+            if config.output_dir
+            else operation.__class__.__name__
+        )
         os.makedirs(self.output_dir, exist_ok=True)
 
         self.operation = operation
@@ -53,33 +74,28 @@ class Trainer:
         self.dataloader_num_workers = config.dataloader_num_workers
         self.dataloader_pin_memory = False
 
-        self.device = torch.device(config.device)
+        self.device = self.operation.device
 
-        self.train_dataloader = self.get_dataloader(train_data)
-        self.eval_dataloader = self.get_dataloader(eval_data)
-        self.logging_interval = config.logging_interval
+        self.train_dataloader = self.get_dataloader(train_data, shuffle=True)
+        self.eval_dataloader = self.get_dataloader(eval_data, shuffle=False)
         self.num_train_epochs = config.num_training_epochs
 
         # config with some optional params
         self.config = config
 
-        # model to device
-        self.operation.to(self.device)
         self.optimizer, self.lr_scheduler = self.create_optimizer_and_scheduler(
-            self.operation, config
+            self.operation, config.learning_rate, lr_scheduler_builder
         )
-        self.metric = metric
+        self.evaluator = evaluator
 
-    def get_dataloader(self, train_data: any):
+    def get_dataloader(self, data: any, shuffle: bool) -> DataLoader:
         # prepare data: we could add a data processor here
-        medkit_dataset = MedkitDataset(
-            train_data, self.operation.preprocess, {"inference_mode": False}
-        )
-        collate_fn = self.operation.collate_fn
+        dataset = _TrainerDataset(data, self.operation)
+        collate_fn = self.operation.collate
         return DataLoader(
-            medkit_dataset,
+            dataset,
             batch_size=self.batch_size,
-            shuffle=True,
+            shuffle=shuffle,
             collate_fn=collate_fn,
             drop_last=self.dataloader_drop_last,
             num_workers=self.dataloader_num_workers,
@@ -88,39 +104,34 @@ class Trainer:
 
     @staticmethod
     def create_optimizer_and_scheduler(
-        operation: TrainableOperation, train_cfg: TrainConfig
-    ):
-        optimizer = operation.configure_optimizer(lr=train_cfg.learning_rate)
-        lr_scheduler_type = train_cfg.lr_scheduler_type
+        operation: TrainableOperation,
+        lr: float,
+        lr_scheduler_builder: Optional[Callable[[torch.optim.Optimizer], Any]],
+    ) -> Tuple[torch.optim.Optimizer, Optional[Any]]:
+        optimizer = operation.configure_optimizer(lr=lr)
 
-        if lr_scheduler_type in list(SchedulerType):
-            lr_scheduler = get_scheduler(
-                name=lr_scheduler_type,
-                optimizer=optimizer,
-                num_warmup_steps=train_cfg.num_warmup_steps,
-                num_training_steps=train_cfg.num_training_steps,
-            )
-        elif lr_scheduler_type == "reduce_lr_with_metric":
-            lr_scheduler = ReduceLROnPlateau(optimizer)
+        if lr_scheduler_builder is not None:
+            lr_scheduler = lr_scheduler_builder(optimizer)
         else:
-            raise ValueError(f"{lr_scheduler_type} is not a valid scheduler type")
+            lr_scheduler = None
+
         return optimizer, lr_scheduler
 
-    def data_to_device(self, data: BatchData) -> Dict[str, torch.Tensor]:
-        return {k: item.to(self.device) for k, item in data.items()}
-
-    def training_epoch(self, epoch_idx: int):
+    def training_epoch(self) -> Dict[str, float]:
         config = self.config
         total_loss_epoch = 0.0
+
         # steps_in_training = 0
         # len_dataloader = len(self.train_dataloader)
         # on train epoch begin
+        if self.evaluator is not None and config.do_metrics_in_training:
+            data_for_metrics = {key: [] for key in self.evaluator.keys}
+
         for step, samples in enumerate(self.train_dataloader):
             # on train step begin
-
-            _samples = self.data_to_device(samples)
-            model_output = self.ensure_model_output(_samples, eval_mode=False)
-            loss = model_output.loss
+            model_output, loss = self.make_forward_pass(
+                samples, return_loss=True, eval_mode=False
+            )
 
             if config.gradient_accumulation_steps > 1:
                 loss = loss / config.gradient_accumulation_steps
@@ -135,97 +146,145 @@ class Trainer:
 
             total_loss_epoch += loss.item()
 
-            # do metrics
-            self.metric.add_batch(model_output, _samples)
-
-            # on train step end
-            if (step + 1) % self.logging_interval == 0:
-                metrics_msg = f"{self.metric.name}: {self.metric.compute():8.3f}"
-                print(
-                    "| epoch {} | steps {} | {}".format(
-                        epoch_idx,
-                        step + 1,
-                        metrics_msg,
-                    )
+            if config.do_metrics_in_training and self.evaluator is not None:
+                output_for_metric = self.evaluator.prepare_output_for_metric(
+                    model_output, samples
                 )
-        total_loss_epoch /= len(self.train_dataloader)
-        return total_loss_epoch
+                for key, values in output_for_metric.items():
+                    data_for_metrics[key].append(values)
 
-    def evaluation_epoch(self, eval_dataloader):
-        total_epoch_loss = 0.0
-        self.metric.reset()
+        metrics = {}
+        total_loss_epoch /= len(self.train_dataloader)
+        metrics["train_loss_epoch"] = total_loss_epoch
+
+        if config.do_metrics_in_training and self.evaluator is not None:
+            all_metrics = {
+                f"train_{k}": v
+                for k, v in self.evaluator.compute_metrics(data_for_metrics).items()
+            }
+            metrics.update(all_metrics)
+
+        return metrics
+
+    def evaluation_epoch(self, eval_dataloader) -> Dict[str, float]:
+        total_loss_epoch = 0.0
+
+        if self.evaluator is not None:
+            data_for_metrics = {key: [] for key in self.evaluator.keys}
+
         with torch.no_grad():
             for _, samples in enumerate(eval_dataloader):
-                _samples = self.data_to_device(samples)
-                model_output = self.ensure_model_output(_samples, eval_mode=True)
-                total_epoch_loss += model_output.loss.item()
-                self.metric.add_batch(model_output, _samples)
+                model_output, loss = self.make_forward_pass(
+                    samples, return_loss=True, eval_mode=True
+                )
+                total_loss_epoch += loss.item()
 
-        total_metrics = {self.metric.name: self.metric.compute()}
+                if self.evaluator is not None:
+                    output_for_metric = self.evaluator.prepare_output_for_metric(
+                        model_output, samples
+                    )
+                    for key, values in output_for_metric.items():
+                        data_for_metrics[key].append(values)
 
-        total_epoch_loss /= len(eval_dataloader)
-        total_metrics["total_eval_loss"] = total_epoch_loss
-        return total_metrics
+        metrics = {}
+        total_loss_epoch /= len(self.train_dataloader)
+        metrics["eval_loss_epoch"] = total_loss_epoch
 
-    def update_learning_rate(self, metric_to_track: Optional[float] = None):
+        if self.evaluator is not None:
+            all_metrics = {
+                f"eval_{k}": v
+                for k, v in self.evaluator.compute_metrics(data_for_metrics).items()
+            }
+            metrics.update(all_metrics)
+
+        return metrics
+
+    def make_forward_pass(
+        self, inputs: BatchData, return_loss: bool, eval_mode=bool
+    ) -> Tuple[BatchData, Optional[torch.Tensor]]:
+        inputs = inputs.to_device(self.device)
+        model_output, loss = self.operation.forward(
+            inputs, return_loss=return_loss, eval_mode=eval_mode
+        )
+
+        if return_loss and loss is None:
+            raise ValueError("The operation did not return a 'loss' from the input.")
+
+        return model_output, loss
+
+    def update_learning_rate(self, eval_metrics: Dict[str, float]):
+        if self.lr_scheduler is None:
+            return
+
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
-            if metric_to_track is None:
+            metric_to_track_lr = eval_metrics.get(self.config.metric_to_track_lr)
+            if metric_to_track_lr is None:
                 raise RuntimeError(
                     "Learning schedule needs a metric to update the learning rate,"
                     " `None` was provided"
                 )
-            self.lr_scheduler.step(metric_to_track)
+            self.lr_scheduler.step(metric_to_track_lr)
         else:
             self.lr_scheduler.step()
 
     def train(self):
+        logger.warning("---Running training---")
+        logger.warning(f" Num epochs = {self.config.num_training_epochs}")
+        logger.warning(f" Train batch size = {self.batch_size}")
+        logger.warning(
+            f" Gradient Accum steps = {self.config.gradient_accumulation_steps}"
+        )
+
         for epoch in range(1, self.num_train_epochs + 1):
             epoch_start_time = time.time()
-            total_train_loss = self.training_epoch(epoch)
-
-            metrics = self.evaluation_epoch(self.eval_dataloader)
-            metric_to_track = metrics.get(self.metric.name)
-            self.update_learning_rate(metric_to_track)
-
-            # on
+            train_metrics = self.training_epoch()
+            # logging at the end of train epoch
             print("-" * 59)
-            print(
-                "| end of epoch {:3d} | time: {:5.2f}s | valid accuracy {:8.3f} "
-                .format(epoch, time.time() - epoch_start_time, metric_to_track)
+            msg = "|".join(
+                f"{metric_key}:{value:8.3f}"
+                for metric_key, value in train_metrics.items()
             )
             print(
-                "train loss: {:8.3f}, eval loss: {:8.3f}".format(
-                    total_train_loss, metrics.get("total_eval_loss")
+                "| End of training epoch {:3d} | time: {:5.2f}s |  {}".format(
+                    epoch, time.time() - epoch_start_time, msg
+                )
+            )
+
+            epoch_start_time = time.time()
+            eval_metrics = self.evaluation_epoch(self.eval_dataloader)
+            self.update_learning_rate(eval_metrics)
+
+            # logging at the end of train epoch
+            msg = "|".join(
+                f"{metric_key}:{value:8.3f}"
+                for metric_key, value in eval_metrics.items()
+            )
+            print(
+                "| end of evaluation epoch {:3d} | time: {:5.2f}s |  {}".format(
+                    epoch, time.time() - epoch_start_time, msg
                 )
             )
             print("-" * 59)
 
-        self.save_checkpoint(epoch)
+        current_date = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M")
+        self.save_checkpoint(f"checkpoint_{current_date}")
+        logger.warning("Training is completed")
 
-    def ensure_model_output(self, samples: Dict[str, torch.tensor], eval_mode: bool):
-        model_output = self.operation.forward(samples, eval_mode=eval_mode)
-
-        if "loss" not in model_output:
-            raise ValueError(
-                "The operation did not return a 'loss' from the input. Please see"
-                " 'operation.forward' method."
-            )
-
-        return model_output
-
-    def save_checkpoint(self, epoch_idx: int):
+    def save_checkpoint(self, name):
         """Save a trainer state. It saves the optimizer, scheduler and model state"""
 
-        checkpoint_dir = os.path.join(self.output_dir, f"checkpoint_epoch_{epoch_idx}")
-        logger.info(f"Saving checkpoint in {checkpoint_dir}")
+        checkpoint_dir = os.path.join(self.output_dir, name)
+        logger.warning(f"Saving checkpoint in {checkpoint_dir}")
 
         os.makedirs(checkpoint_dir, exist_ok=True)
         torch.save(
             self.optimizer.state_dict(), os.path.join(checkpoint_dir, OPTIMIZER_NAME)
         )
 
-        torch.save(
-            self.lr_scheduler.state_dict(), os.path.join(checkpoint_dir, SCHEDULER_NAME)
-        )
+        if self.lr_scheduler is not None:
+            torch.save(
+                self.lr_scheduler.state_dict(),
+                os.path.join(checkpoint_dir, SCHEDULER_NAME),
+            )
 
         self.operation.save(checkpoint_dir)
