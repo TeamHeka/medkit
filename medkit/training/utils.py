@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from typing import Any, Dict, List, Union
+from typing_extensions import Protocol, runtime_checkable
 
 import torch
 
@@ -34,13 +35,14 @@ class BatchData(OrderedDict):
         """
         Ensure that Tensors in the BatchData object are on the specified `device`
 
-        Parameters:
+        Parameters
         ----------
         device:
             A `torch.device` object representing the device on which tensors
             will be allocated.
 
-        Returns:
+        Returns
+        -------
         BatchData
             A new object with the tensors on the proper device.
         """
@@ -51,3 +53,20 @@ class BatchData(OrderedDict):
             else:
                 inner_batch[key] = value
         return inner_batch
+
+
+@runtime_checkable
+class TrainerEvaluator(Protocol):
+    "Protocol for a trainer evaluator"
+
+    @property
+    def keys(self) -> List[str]:
+        ...
+
+    def prepare_output_for_metric(
+        self, model_output: BatchData, samples: BatchData
+    ) -> Dict[str, List[any]]:
+        pass
+
+    def compute_metrics(self, eval_output: Dict[str, List[any]]) -> Dict[str, float]:
+        pass
