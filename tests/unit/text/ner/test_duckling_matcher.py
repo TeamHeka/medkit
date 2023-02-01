@@ -66,10 +66,10 @@ def _mock_requests_post(url, data):
     return _MockHTTPResponse(response_data)
 
 
-@pytest.fixture
-def _mocked_requests(mocker):
-    mocker.patch("requests.get", _mock_requests_get)
-    mocker.patch("requests.post", _mock_requests_post)
+@pytest.fixture(scope="module", autouse=True)
+def _mocked_requests(module_mocker):
+    module_mocker.patch("requests.get", _mock_requests_get)
+    module_mocker.patch("requests.post", _mock_requests_post)
 
 
 def _get_sentence_segment(text=_TEXT):
@@ -80,7 +80,7 @@ def _get_sentence_segment(text=_TEXT):
     )
 
 
-def test_single_dim(_mocked_requests):
+def test_single_dim():
     sentence = _get_sentence_segment()
 
     matcher = DucklingMatcher(
@@ -107,7 +107,7 @@ def test_single_dim(_mocked_requests):
     assert attr.metadata["version"] == "MOCK"
 
 
-def test_multiple_dims(_mocked_requests):
+def test_multiple_dims():
     sentence = _get_sentence_segment()
 
     matcher = DucklingMatcher(
@@ -140,7 +140,7 @@ def test_multiple_dims(_mocked_requests):
     assert attr_2.value == _DURATION_VALUE
 
 
-def test_all_dims(_mocked_requests):
+def test_all_dims():
     sentence = _get_sentence_segment()
 
     matcher = DucklingMatcher(
@@ -153,7 +153,7 @@ def test_all_dims(_mocked_requests):
     assert len(entities) == 2
 
 
-def test_attrs_to_copy(_mocked_requests):
+def test_attrs_to_copy():
     sentence = _get_sentence_segment()
     # copied attribute
     sentence.attrs.add(Attribute(label="negation", value=True))
@@ -176,7 +176,7 @@ def test_attrs_to_copy(_mocked_requests):
     assert len(entity.attrs.get(label="hypothesis")) == 0
 
 
-def test_prov(_mocked_requests):
+def test_prov():
     sentence = _get_sentence_segment()
 
     matcher = DucklingMatcher(
