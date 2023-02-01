@@ -79,7 +79,7 @@ class PyTextClassificator:
 
         logits = self.model.forward(model_inputs["inputs_ids"], model_inputs["offsets"])
         if return_loss:
-            if "labels" not in model_inputs or not model_inputs["labels"]:
+            if "labels" not in model_inputs or len(model_inputs["labels"]) == 0:
                 raise ValueError("Labels not in 'model_inputs', can not compute loss")
             loss = self.model.compute_loss(logits, model_inputs["labels"])
         else:
