@@ -8,7 +8,7 @@ import torch
 
 
 class BatchData(OrderedDict):
-    """Pack together data allowing both column and row access"""
+    """A BatchData pack data allowing both column and row access"""
 
     def __getitem__(self, index: int) -> Dict[str, Union[List[Any], torch.Tensor]]:
         if isinstance(index, str):
@@ -56,17 +56,40 @@ class BatchData(OrderedDict):
 
 
 @runtime_checkable
-class TrainerEvaluator(Protocol):
-    "Protocol for a trainer evaluator"
+class MetricsCalculator(Protocol):
+    "A MetricsCalculator is the base protocol to compute metrics in training"
 
-    @property
-    def keys(self) -> List[str]:
-        ...
-
-    def prepare_output_for_metric(
-        self, model_output: BatchData, samples: BatchData
+    def prepare_batch(
+        self, model_output: BatchData, input_batch: BatchData
     ) -> Dict[str, List[any]]:
+        """Prepare a batch of data to compute the metrics
+
+        Parameters
+        ----------
+        model_output: BatchData
+            Output data after a model forward pass.
+        input_batch: BatchData
+            Preprocessed input batch
+
+        Returns
+        -------
+        Dict[str, List[any]]
+            A dictionary with the required data to calculate the metric
+        """
         pass
 
-    def compute_metrics(self, eval_output: Dict[str, List[any]]) -> Dict[str, float]:
+    def compute(self, all_data: Dict[str, List[any]]) -> Dict[str, float]:
+        """Compute metrics using 'all_data'
+
+        Parameters
+        ----------
+        all_data: Dict[str, List[any]]
+            A dictionary to compute the metrics.
+            i.e. A dictionary with a list of 'references' and a list of 'predictions'.
+
+        Returns
+        -------
+        Dict[str, float]
+            A dictionary with the results
+        """
         pass
