@@ -197,7 +197,8 @@ def test_ambiguous_match():
 def test_attrs_to_copy():
     sentence = _get_sentence_segment("The patient has asthma.")
     # copied attribute
-    sentence.attrs.add(Attribute(label="negation", value=True))
+    neg_attr = Attribute(label="negation", value=True)
+    sentence.attrs.add(neg_attr)
     # uncopied attribute
     sentence.attrs.add(Attribute(label="hypothesis", value=True))
 
@@ -212,8 +213,13 @@ def test_attrs_to_copy():
     assert len(norms) == 1
     # only negation attribute was copied
     neg_attrs = entity.attrs.get(label="negation")
-    assert len(neg_attrs) == 1 and neg_attrs[0].value is True
+    assert len(neg_attrs) == 1
     assert len(entity.attrs.get(label="hypothesis")) == 0
+
+    # copied attribute has same value but new id
+    copied_neg_attr = neg_attrs[0]
+    assert copied_neg_attr.value == neg_attr.value
+    assert copied_neg_attr.uid != neg_attr.uid
 
 
 def test_prov():

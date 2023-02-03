@@ -162,7 +162,8 @@ def test_attrs_to_copy():
 
     audio_seg = _get_audio_segment(audio_span)
     # copied attribute
-    audio_seg.attrs.add(Attribute(label="speaker", value="Bob"))
+    speaker_attr = Attribute(label="speaker", value="Bob")
+    audio_seg.attrs.add(speaker_attr)
     # uncopied attribute
     audio_seg.attrs.add(Attribute(label="loud", value=True))
 
@@ -179,8 +180,13 @@ def test_attrs_to_copy():
     text_seg = text_doc.anns.get(label=_TEXT_LABEL)[0]
     # only negation attribute was copied
     speaker_attrs = text_seg.attrs.get(label="speaker")
-    assert len(speaker_attrs) == 1 and speaker_attrs[0].value == "Bob"
+    assert len(speaker_attrs) == 1
     assert len(text_seg.attrs.get(label="loud")) == 0
+
+    # copied attribute has same value but new id
+    copied_speaker_attr = speaker_attrs[0]
+    assert copied_speaker_attr.value == speaker_attr.value
+    assert copied_speaker_attr.uid != speaker_attr.uid
 
 
 class _CustomDocTranscriber(DocTranscriber):

@@ -38,6 +38,16 @@ class Attribute:
             metadata=self.metadata,
         )
 
+    def copy_with_new_uid(self) -> Attribute:
+        """
+        Create a new attribute that is a copy of the current instance, but
+        with a new identifier
+
+        This is used when we want to duplicate an existing attribute onto a
+        different annotation.
+        """
+        return dataclasses.replace(self, uid=generate_id())
+
     @classmethod
     def from_dict(cls, attribute_dict: Dict[str, Any]) -> Attribute:
         """
