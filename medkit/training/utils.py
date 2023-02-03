@@ -56,8 +56,8 @@ class BatchData(OrderedDict):
 
 
 @runtime_checkable
-class MetricsCalculator(Protocol):
-    "A MetricsCalculator is the base protocol to compute metrics in training"
+class MetricsComputer(Protocol):
+    "A MetricsComputer is the base protocol to compute metrics in training"
 
     def prepare_batch(
         self, model_output: BatchData, input_batch: BatchData

@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, Dataset
 
 from medkit.core.trainable_operation import TrainableOperation
 from medkit.training.trainers.base.train_config import TrainConfig
-from medkit.training.utils import BatchData, MetricsCalculator
+from medkit.training.utils import BatchData, MetricsComputer
 from medkit.training.callbacks import TrainerCallback, DefaultPrinterCallback
 
 # checkpoint constants
@@ -60,7 +60,7 @@ class Trainer:
         config: TrainConfig,
         train_data: Any,
         eval_data: Any,
-        metrics_calculator: Optional[MetricsCalculator] = None,
+        metrics_computer: Optional[MetricsComputer] = None,
         lr_scheduler_builder: Optional[Callable[[torch.optim.Optimizer], Any]] = None,
         callback: Optional[TrainerCallback] = None,
     ):
@@ -92,7 +92,7 @@ class Trainer:
         self.optimizer, self.lr_scheduler = self.create_optimizer_and_scheduler(
             self.operation, config.learning_rate, lr_scheduler_builder
         )
-        self.metrics_calculator = metrics_calculator
+        self.metrics_computer = metrics_computer
 
         if callback is None:
             self.callback = DefaultPrinterCallback()
@@ -152,8 +152,8 @@ class Trainer:
 
             total_loss_epoch += loss.item()
 
-            if config.do_metrics_in_training and self.metrics_calculator is not None:
-                prepared_batch = self.metrics_calculator.prepare_batch(
+            if config.do_metrics_in_training and self.metrics_computer is not None:
+                prepared_batch = self.metrics_computer.prepare_batch(
                     model_output, samples
                 )
                 for key, values in prepared_batch.items():
@@ -164,9 +164,9 @@ class Trainer:
         metrics = {"train": {}}
         metrics["train"]["loss"] = total_loss_epoch
 
-        if config.do_metrics_in_training and self.metrics_calculator is not None:
+        if config.do_metrics_in_training and self.metrics_computer is not None:
             metrics["train"].update(
-                self.metrics_calculator.compute(dict(data_for_metrics))
+                self.metrics_computer.compute(dict(data_for_metrics))
             )
         return metrics
 
@@ -184,8 +184,8 @@ class Trainer:
                 )
                 total_loss_epoch += loss.item()
 
-                if self.metrics_calculator is not None:
-                    prepared_batch = self.metrics_calculator.prepare_batch(
+                if self.metrics_computer is not None:
+                    prepared_batch = self.metrics_computer.prepare_batch(
                         model_output, samples
                     )
                     for key, values in prepared_batch.items():
@@ -196,9 +196,9 @@ class Trainer:
         metrics = {"eval": {}}
         metrics["eval"]["loss"] = total_loss_epoch
 
-        if self.metrics_calculator is not None:
+        if self.metrics_computer is not None:
             metrics["eval"].update(
-                self.metrics_calculator.compute(dict(data_for_metrics))
+                self.metrics_computer.compute(dict(data_for_metrics))
             )
         return metrics
 
