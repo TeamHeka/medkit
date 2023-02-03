@@ -3,6 +3,8 @@ import logging
 import os
 import random
 import time
+
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple
 
@@ -13,7 +15,8 @@ from torch.utils.data import DataLoader, Dataset
 
 from medkit.core.trainable_operation import TrainableOperation
 from medkit.training.trainers.base.train_config import TrainConfig
-from medkit.training.utils import BatchData, TrainerEvaluator
+from medkit.training.utils import BatchData, MetricsCalculator
+from medkit.training.callbacks import TrainerCallback, DefaultPrinterCallback
 
 # checkpoint constants
 OPTIMIZER_NAME = "optimizer.pt"
@@ -21,6 +24,8 @@ SCHEDULER_NAME = "scheduler.pt"
 
 
 logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.INFO)
 
 
 def set_seed(seed: int = 0):
@@ -55,8 +60,9 @@ class Trainer:
         config: TrainConfig,
         train_data: Any,
         eval_data: Any,
-        evaluator: Optional[TrainerEvaluator] = None,
+        metrics_calculator: Optional[MetricsCalculator] = None,
         lr_scheduler_builder: Optional[Callable[[torch.optim.Optimizer], Any]] = None,
+        callback: Optional[TrainerCallback] = None,
     ):
         # enable deterministic operation
         set_seed(0)
@@ -86,7 +92,10 @@ class Trainer:
         self.optimizer, self.lr_scheduler = self.create_optimizer_and_scheduler(
             self.operation, config.learning_rate, lr_scheduler_builder
         )
-        self.evaluator = evaluator
+        self.metrics_calculator = metrics_calculator
+
+        if callback is None:
+            self.callback = DefaultPrinterCallback()
 
     def get_dataloader(self, data: any, shuffle: bool) -> DataLoader:
         # prepare data: we could add a data processor here
@@ -117,18 +126,15 @@ class Trainer:
 
         return optimizer, lr_scheduler
 
-    def training_epoch(self) -> Dict[str, float]:
+    def training_epoch(self) -> Dict[str, Dict[str, float]]:
         config = self.config
         total_loss_epoch = 0.0
+        data_for_metrics = defaultdict(list)
 
-        # steps_in_training = 0
-        # len_dataloader = len(self.train_dataloader)
-        # on train epoch begin
-        if self.evaluator is not None and config.do_metrics_in_training:
-            data_for_metrics = {key: [] for key in self.evaluator.keys}
+        self.callback.on_epoch_begin()
 
         for step, samples in enumerate(self.train_dataloader):
-            # on train step begin
+            # train step begin
             model_output, loss = self.make_forward_pass(
                 samples, return_loss=True, eval_mode=False
             )
@@ -146,57 +152,54 @@ class Trainer:
 
             total_loss_epoch += loss.item()
 
-            if config.do_metrics_in_training and self.evaluator is not None:
-                output_for_metric = self.evaluator.prepare_output_for_metric(
+            if config.do_metrics_in_training and self.metrics_calculator is not None:
+                prepared_batch = self.metrics_calculator.prepare_batch(
                     model_output, samples
                 )
-                for key, values in output_for_metric.items():
+                for key, values in prepared_batch.items():
                     data_for_metrics[key].append(values)
+            # train step end
 
-        metrics = {}
         total_loss_epoch /= len(self.train_dataloader)
-        metrics["train_loss_epoch"] = total_loss_epoch
+        metrics = {"train": {}}
+        metrics["train"]["loss"] = total_loss_epoch
 
-        if config.do_metrics_in_training and self.evaluator is not None:
-            all_metrics = {
-                f"train_{k}": v
-                for k, v in self.evaluator.compute_metrics(data_for_metrics).items()
-            }
-            metrics.update(all_metrics)
-
+        if config.do_metrics_in_training and self.metrics_calculator is not None:
+            metrics["train"].update(
+                self.metrics_calculator.compute(dict(data_for_metrics))
+            )
         return metrics
 
-    def evaluation_epoch(self, eval_dataloader) -> Dict[str, float]:
+    def evaluation_epoch(self, eval_dataloader) -> Dict[str, Dict[str, float]]:
         total_loss_epoch = 0.0
+        data_for_metrics = defaultdict(list)
 
-        if self.evaluator is not None:
-            data_for_metrics = {key: [] for key in self.evaluator.keys}
+        self.callback.on_epoch_begin()
 
         with torch.no_grad():
             for _, samples in enumerate(eval_dataloader):
+                # eval step begin
                 model_output, loss = self.make_forward_pass(
                     samples, return_loss=True, eval_mode=True
                 )
                 total_loss_epoch += loss.item()
 
-                if self.evaluator is not None:
-                    output_for_metric = self.evaluator.prepare_output_for_metric(
+                if self.metrics_calculator is not None:
+                    prepared_batch = self.metrics_calculator.prepare_batch(
                         model_output, samples
                     )
-                    for key, values in output_for_metric.items():
+                    for key, values in prepared_batch.items():
                         data_for_metrics[key].append(values)
+                # eval step end
 
-        metrics = {}
         total_loss_epoch /= len(self.train_dataloader)
-        metrics["eval_loss_epoch"] = total_loss_epoch
+        metrics = {"eval": {}}
+        metrics["eval"]["loss"] = total_loss_epoch
 
-        if self.evaluator is not None:
-            all_metrics = {
-                f"eval_{k}": v
-                for k, v in self.evaluator.compute_metrics(data_for_metrics).items()
-            }
-            metrics.update(all_metrics)
-
+        if self.metrics_calculator is not None:
+            metrics["eval"].update(
+                self.metrics_calculator.compute(dict(data_for_metrics))
+            )
         return metrics
 
     def make_forward_pass(
@@ -217,64 +220,65 @@ class Trainer:
             return
 
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
-            metric_to_track_lr = eval_metrics.get(self.config.metric_to_track_lr)
+            metric_to_track_lr = eval_metrics["eval"].get(
+                self.config.metric_to_track_lr
+            )
             if metric_to_track_lr is None:
                 raise RuntimeError(
-                    "Learning schedule needs a metric to update the learning rate,"
-                    " `None` was provided"
+                    "Learning schedule needs a eval metric to update the learning rate,"
+                    " `None` was found"
                 )
             self.lr_scheduler.step(metric_to_track_lr)
         else:
             self.lr_scheduler.step()
 
     def train(self):
-        logger.warning("---Running training---")
-        logger.warning(f" Num epochs = {self.config.num_training_epochs}")
-        logger.warning(f" Train batch size = {self.batch_size}")
-        logger.warning(
+        logger.info("---Running training---")
+        logger.info(f" Num epochs = {self.config.num_training_epochs}")
+        logger.info(f" Train batch size = {self.batch_size}")
+        logger.info(
             f" Gradient Accum steps = {self.config.gradient_accumulation_steps}"
         )
+
+        self.callback.on_train_begin()
 
         for epoch in range(1, self.num_train_epochs + 1):
             epoch_start_time = time.time()
             train_metrics = self.training_epoch()
-            # logging at the end of train epoch
-            print("-" * 59)
-            msg = "|".join(
-                f"{metric_key}:{value:8.3f}"
-                for metric_key, value in train_metrics.items()
-            )
-            print(
-                "| End of training epoch {:3d} | time: {:5.2f}s |  {}".format(
-                    epoch, time.time() - epoch_start_time, msg
-                )
+
+            self.callback.on_epoch_end()
+            self.callback.on_log(
+                logger=logger,
+                metrics=train_metrics,
+                epoch_state=dict(
+                    epoch=epoch, time_epoch=time.time() - epoch_start_time
+                ),
             )
 
             epoch_start_time = time.time()
             eval_metrics = self.evaluation_epoch(self.eval_dataloader)
-            self.update_learning_rate(eval_metrics)
 
-            # logging at the end of train epoch
-            msg = "|".join(
-                f"{metric_key}:{value:8.3f}"
-                for metric_key, value in eval_metrics.items()
+            self.callback.on_epoch_end()
+            self.callback.on_log(
+                logger=logger,
+                metrics=eval_metrics,
+                epoch_state=dict(
+                    epoch=epoch, time_epoch=time.time() - epoch_start_time
+                ),
             )
-            print(
-                "| end of evaluation epoch {:3d} | time: {:5.2f}s |  {}".format(
-                    epoch, time.time() - epoch_start_time, msg
-                )
-            )
-            print("-" * 59)
+
+            self.update_learning_rate(eval_metrics)
 
         current_date = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M")
         self.save_checkpoint(f"checkpoint_{current_date}")
-        logger.warning("Training is completed")
+        logger.info("Training is completed")
+        self.callback.on_train_end()
 
     def save_checkpoint(self, name):
         """Save a trainer state. It saves the optimizer, scheduler and model state"""
 
         checkpoint_dir = os.path.join(self.output_dir, name)
-        logger.warning(f"Saving checkpoint in {checkpoint_dir}")
+        logger.info(f"Saving checkpoint in {checkpoint_dir}")
 
         os.makedirs(checkpoint_dir, exist_ok=True)
         torch.save(

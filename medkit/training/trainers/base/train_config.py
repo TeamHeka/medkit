@@ -17,4 +17,4 @@ class TrainConfig:
     )
     gradient_accumulation_steps: int = field(default=1)
     do_metrics_in_training: bool = False
-    metric_to_track_lr: str = field(default="eval_loss_epoch")
+    metric_to_track_lr: str = field(default="loss")
