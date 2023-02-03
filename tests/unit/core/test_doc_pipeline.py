@@ -43,10 +43,6 @@ class _TextAnnotation:
         self.keys = set()
         self.attrs = AttributeContainer(ann_id=self.uid)
 
-    @classmethod
-    def from_dict(cls, annotation_dict: Dict[str, Any]) -> _TextAnnotation:
-        pass
-
 
 def _get_doc():
     doc = _TextDocument()
