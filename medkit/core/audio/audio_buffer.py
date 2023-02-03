@@ -191,7 +191,6 @@ class FileAudioBuffer(AudioBuffer):
         return cls(**data)
 
 
-@dict_serializable
 class MemoryAudioBuffer(AudioBuffer):
     """Audio buffer giving acces to signals stored in memory
     (to use when reading/writing a modified audio signal)."""
@@ -232,17 +231,10 @@ class MemoryAudioBuffer(AudioBuffer):
         assert start <= end
         return MemoryAudioBuffer(self._signal[:, start:end], self.sample_rate)
 
-    def to_dict(self) -> Dict[str, Any]:
-        # TODO fin a way to serialize back to PlaceholderAudioBuffer because signal is not kept
-        return dict(
-            sample_rate=self.sample_rate,
-            nb_samples=self.nb_samples,
-            nb_channels=self.nb_channels,
-        )
-
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> MemoryAudioBuffer:
-        raise NotImplementedError("MemoryAudioBuffer can't be reinstantiated from dict")
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return np.array_equal(self._signal, other._signal)
 
 
 @dict_serializable
@@ -257,6 +249,14 @@ class PlaceholderAudioBuffer(AudioBuffer):
 
     def __init__(self, sample_rate: int, nb_samples: int, nb_channels: int):
         super().__init__(sample_rate, nb_samples, nb_channels)
+
+    @classmethod
+    def from_audio_buffer(cls, audio_buffer: AudioBuffer) -> PlaceholderAudioBuffer:
+        return cls(
+            sample_rate=audio_buffer.sample_rate,
+            nb_samples=audio_buffer.nb_samples,
+            nb_channels=audio_buffer.nb_channels,
+        )
 
     def read(self, copy: bool = False) -> np.ndarray:
         raise NotImplementedError(

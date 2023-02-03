@@ -8,8 +8,16 @@ from typing import Any, Dict, List, Optional, Set
 from medkit.core.attribute import Attribute
 from medkit.core.attribute_container import AttributeContainer
 from medkit.core.audio.span import Span
-from medkit.core.audio.audio_buffer import AudioBuffer
-from medkit.core.dict_serialization import dict_serializable, serialize, deserialize
+from medkit.core.audio.audio_buffer import (
+    AudioBuffer,
+    PlaceholderAudioBuffer,
+)
+from medkit.core.dict_serialization import (
+    DictSerializable,
+    dict_serializable,
+    serialize,
+    deserialize,
+)
 from medkit.core.id import generate_id
 
 
@@ -78,7 +86,13 @@ class Segment:
             self.attrs.add(attr)
 
     def to_dict(self) -> Dict[str, Any]:
-        audio = serialize(self.audio)
+        if isinstance(self.audio, DictSerializable):
+            audio = serialize(self.audio)
+        else:
+            # convert MemoryAudioBuffer to PlaceholderAudioBuffer
+            # because we can't serialize the actual signal
+            placeholder = PlaceholderAudioBuffer.from_audio_buffer(self.audio)
+            audio = serialize(placeholder)
         span = serialize(self.span)
         attrs = [serialize(a) for a in self.attrs]
         return dict(

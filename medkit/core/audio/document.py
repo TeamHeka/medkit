@@ -10,8 +10,16 @@ import uuid
 from medkit.core.audio.annotation import Segment
 from medkit.core.audio.annotation_container import AudioAnnotationContainer
 from medkit.core.audio.span import Span
-from medkit.core.audio.audio_buffer import AudioBuffer
-from medkit.core.dict_serialization import dict_serializable, serialize, deserialize
+from medkit.core.audio.audio_buffer import (
+    AudioBuffer,
+    PlaceholderAudioBuffer,
+)
+from medkit.core.dict_serialization import (
+    DictSerializable,
+    dict_serializable,
+    serialize,
+    deserialize,
+)
 from medkit.core.id import generate_id
 
 
@@ -89,7 +97,13 @@ class AudioDocument:
         return self.raw_segment.audio
 
     def to_dict(self) -> Dict[str, Any]:
-        audio = serialize(self.audio)
+        if isinstance(self.audio, DictSerializable):
+            audio = serialize(self.audio)
+        else:
+            # convert MemoryAudioBuffer to PlaceholderAudioBuffer
+            # because we can't serialize the actual signal
+            placeholder = PlaceholderAudioBuffer.from_audio_buffer(self.audio)
+            audio = serialize(placeholder)
         anns = [serialize(a) for a in self.anns]
         return dict(
             uid=self.uid,
