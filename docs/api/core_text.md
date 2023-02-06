@@ -84,5 +84,14 @@ development of text operations according to `run` operations.
 
 ```{eval-rst}
 .. automodule:: medkit.core.text.operation
-    :members:
+    :members: ContextOperation, NEROperation, SegmentationOperation
+```
+
+### Custom operations
+
+You can also use the following function for instantiating a custom text operation.
+
+```{eval-rst}
+.. autofunction:: medkit.core.text.operation.create_text_operation
+.. autoclass:: medkit.core.text.operation.CustomTextOpType
 ```

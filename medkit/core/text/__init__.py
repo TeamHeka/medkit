@@ -10,6 +10,8 @@ __all__ = [
     "ContextOperation",
     "NEROperation",
     "SegmentationOperation",
+    "CustomTextOpType",
+    "create_text_operation",
     "Span",
     "ModifiedSpan",
     "AnySpanType",
@@ -24,5 +26,7 @@ from .operation import (
     ContextOperation,
     NEROperation,
     SegmentationOperation,
+    CustomTextOpType,
+    create_text_operation,
 )
 from .span import Span, ModifiedSpan, AnySpanType

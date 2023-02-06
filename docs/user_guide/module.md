@@ -3,6 +3,8 @@
 Here is a tutorial for developing your own operation module.
 For more information, you can refer to [API documentation](api:core:operations).
 
+If you want to create a custom text operation from a user-defined function, you can refer to this [example](../examples/custom_text_operation).
+
 ## 1. Creating your class
 
 We have defined several abstract classes you can use as parent class.

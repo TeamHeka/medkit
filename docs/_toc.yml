@@ -14,6 +14,7 @@ parts:
   - file: examples/cleaning_text
   - file: examples/brat_io
   - file: examples/spacy_io
+  - file: examples/custom_text_operation
 - caption: API reference
   chapters:
   - file: api/core.rst
