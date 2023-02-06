@@ -2,8 +2,9 @@ from __future__ import annotations
 
 __all__ = ["AudioDocument"]
 
+import dataclasses
 import random
-from typing import Any, Dict, Optional
+from typing import Any, ClassVar, Dict, List, Optional
 import uuid
 
 from medkit.core.audio.annotation import Segment
@@ -18,52 +19,74 @@ from medkit.core.id import generate_id
 from medkit.core.store import Store, DictStore
 
 
+@dataclasses.dataclass(init=False)
 class AudioDocument:
-    """Document holding audio annotations."""
+    """
+    Document holding audio annotations.
 
-    RAW_LABEL = "RAW_AUDIO"
+    Attributes
+    ----------
+    uid:
+        Unique identifier of the document.
+    audio:
+        Audio buffer containing the entire signal of the document.
+    anns:
+        Annotations of the document. Stored in an
+        :class:`~.AudioAnnotationContainer` but can be passed as a list at init.
+    metadata:
+        Document metadata.
+    raw_segment:
+        Auto-generated segment containing the full unprocessed document audio.
+    store:
+        Optional store to hold the annotations. If none provided, a simple
+        internal :class:`~medkit.core.DictStore` will be used.
+    has_shared_stored:
+        Whether the store is a shared stored provided by the used or an internal
+        store.
+    """
+
+    RAW_LABEL: ClassVar[str] = "RAW_AUDIO"
+    """Label to be used for raw segment"""
+
+    uid: str
+    anns: AudioAnnotationContainer
+    metadata: Dict[str, Any]
+    raw_segment: Segment
+    store: Store = dataclasses.field(compare=False)
+    has_shared_store: bool = dataclasses.field(compare=False)
 
     def __init__(
         self,
         audio: AudioBuffer,
+        anns: Optional[List[Segment]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
-        """
-        Parameters
-        ----------
-        audio:
-            Audio buffer containing the whole signal for the document.
-        uid:
-            Document identifier, if pre-existing.
-        metadata:
-            Document metadata.
-        uid:
-            Document identifier, if pre-existing.
-        store:
-            Optional shared store to hold the document annotations. If none provided,
-            an internal store will be used.
-        """
-
-        if uid is None:
-            uid = generate_id()
+        if anns is None:
+            anns = []
         if metadata is None:
             metadata = {}
+        if uid is None:
+            uid = generate_id()
         if store is None:
             store = DictStore()
             has_shared_store = False
         else:
+            store = store
             has_shared_store = True
 
-        self.uid: str = uid
-        self.metadata: Dict[str, Any] = metadata  # TODO: what is metadata format ?
-        self.store: Store = store
+        self.uid = uid
+        self.metadata = metadata
+        self.store = store
         self.has_shared_store = has_shared_store
 
         # auto-generated raw segment to hold the audio buffer
-        self.raw_segment: Segment = self._generate_raw_segment(audio, uid)
-        self.anns = AudioAnnotationContainer(self.raw_segment, store)
+        self.raw_segment = self._generate_raw_segment(audio, uid)
+
+        self.anns = AudioAnnotationContainer(self.raw_segment, self.store)
+        for ann in anns:
+            self.anns.add(ann)
 
     @classmethod
     def _generate_raw_segment(cls, audio: AudioBuffer, doc_id: str) -> Segment:
@@ -102,13 +125,9 @@ class AudioDocument:
 
         anns = [Segment.from_dict(ann_data) for ann_data in data["anns"]]
 
-        doc = cls(
+        return cls(
             uid=data["uid"],
             audio=audio,
+            anns=anns,
             metadata=data["metadata"],
         )
-
-        for ann in anns:
-            doc.anns.add(ann)
-
-        return doc

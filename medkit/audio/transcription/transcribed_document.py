@@ -1,5 +1,6 @@
 __all__ = ["TranscribedDocument"]
 
+import dataclasses
 from typing import Any, Dict, List, Optional
 
 from medkit.core import Store
@@ -10,46 +11,58 @@ from medkit.core.text import (
     Entity as TextEntity,
     Relation as TextRelation,
     Span as TextSpan,
+    TextAnnotation,
     AnySpanType as AnyTextSpanType,
     span_utils as text_span_utils,
 )
 
 
+@dataclasses.dataclass(init=False)
 class TranscribedDocument(TextDocument):
     """Subclass for :class:`~medkit.core.text.document.TextDocument` instances generated
-    by audio transcription."""
+    by audio transcription.
+
+    Attributes
+    ----------
+    uid:
+        Document identifier.
+    text:
+        The full transcribed text.
+    text_spans_to_audio_spans:
+        Mapping between text characters spans in this document and
+        corresponding audio spans in the original audio.
+    audio_doc_id:
+        Id of the original
+        :class:`~medkit.core.audio.document.AudioDocument` that was
+        transcribed, if known.
+    anns:
+        Annotations of the document.
+    metadata:
+        Document metadata.
+    raw_segment:
+        Auto-generated segment containing the raw full transcribed text.
+    store:
+        Store holding the document annotations.
+    has_shared_stored:
+        Whether the store is a shared stored provided by the used or an internal store
+    """
+
+    text_spans_to_audio_spans: Dict[TextSpan, AudioSpan]
+    audio_doc_id: Optional[str]
 
     def __init__(
         self,
         text: str,
         text_spans_to_audio_spans: Dict[TextSpan, AudioSpan],
         audio_doc_id: Optional[str],
-        uid: Optional[str] = None,
+        anns: Optional[List[TextAnnotation]] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
-        """
-        Parameters
-        ----------
-        text:
-            The full transcribed text.
-        text_spans_to_audio_spans:
-            Mapping between text characters spans in this document and
-            corresponding audio spans in the original audio.
-        audio_doc_id:
-            Id of the original
-            :class:`~medkit.core.audio.document.AudioDocument` that was
-            transcribed, if known.
-        uid:
-            Document identifier.
-        metadata:
-            Document metadata.
-        store:
-            Store to use for annotations.
-        """
         assert all(s.end <= len(text) for s in text_spans_to_audio_spans)
 
-        super().__init__(uid=uid, text=text, metadata=metadata, store=store)
+        super().__init__(text=text, anns=anns, metadata=metadata, uid=uid, store=store)
 
         self.audio_doc_id = audio_doc_id
         self.text_spans_to_audio_spans = text_spans_to_audio_spans
