@@ -2,73 +2,91 @@ from __future__ import annotations
 
 __all__ = ["TextDocument"]
 
+import dataclasses
 import random
-from typing import Any, Dict, Optional
+from typing import Any, ClassVar, Dict, List, Optional
 import uuid
 
 from medkit.core.id import generate_id
 from medkit.core.store import Store, DictStore
-from medkit.core.text.annotation import Segment, Entity, Relation
+from medkit.core.text.annotation import TextAnnotation, Segment, Entity, Relation
 from medkit.core.text.annotation_container import TextAnnotationContainer
 from medkit.core.text.span import Span
 
 
+@dataclasses.dataclass(init=False)
 class TextDocument:
-    """Document holding text annotations
+    """
+    Document holding text annotations
 
     Annotations must be subclasses of `TextAnnotation`.
 
+    Attributes
+    ----------
+    uid:
+        Unique identifier of the document.
+    text:
+        Full document text.
+    anns:
+        Annotations of the document. Stored in an
+        :class:`~.TextAnnotationContainer` but can be passed as a list at init.
+    metadata:
+        Document metadata.
+    raw_segment:
+        Auto-generated segment containing the full unprocessed document text. To
+        get the raw text as an annotation to pass to processing operations:
+
+        >>> doc = TextDocument(text="hello")
+        >>> raw_text = doc.anns.get(label=TextDocument.RAW_LABEL)[0]
+    store:
+        Optional store to hold the annotations. If none provided, a simple
+        internal :class:`~medkit.core.DictStore` will be used.
+    has_shared_stored:
+        Whether the store is a shared stored provided by the used or an internal
+        store.
     """
 
-    RAW_LABEL = "RAW_TEXT"
-    """Label to be used for raw text
-    """
+    RAW_LABEL: ClassVar[str] = "RAW_TEXT"
+
+    uid: str
+    anns: TextAnnotationContainer
+    metadata: Dict[str, Any]
+    raw_segment: Segment
+    store: Store = dataclasses.field(compare=False)
+    has_shared_store: bool = dataclasses.field(compare=False)
 
     def __init__(
         self,
         text: str,
+        anns: Optional[List[TextAnnotation]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
-        """
-        Parameters
-        ----------
-        text:
-            Document text
-        metadata: dict  # TODO
-            Document metadata
-        uid: str, Optional
-            Document identifier. If None, an uuid is generated.
-        store:
-            Optional shared store to hold the document annotations. If none provided,
-            an internal store will be used.
-
-        Examples
-        --------
-        To get the raw text as an annotation to pass to processing operations:
-
-        >>> doc = TextDocument(text="hello")
-        >>> raw_text = doc.anns.get(label=TextDocument.RAW_LABEL)[0]
-        """
-        if uid is None:
-            uid = generate_id()
+        if anns is None:
+            anns = []
         if metadata is None:
             metadata = {}
+        if uid is None:
+            uid = generate_id()
         if store is None:
             store = DictStore()
             has_shared_store = False
         else:
+            store = store
             has_shared_store = True
 
-        self.uid: str = uid
-        self.store: Store = store
+        self.uid = uid
+        self.metadata = metadata
+        self.store = store
         self.has_shared_store = has_shared_store
-        self.metadata: Dict[str, Any] = metadata  # TODO: what is metadata format ?
 
         # auto-generated raw segment to hold the text
-        self.raw_segment: Segment = self._generate_raw_segment(text, uid)
-        self.anns = TextAnnotationContainer(self.raw_segment, store)
+        self.raw_segment = self._generate_raw_segment(text, uid)
+
+        self.anns = TextAnnotationContainer(self.raw_segment, self.store)
+        for ann in anns:
+            self.anns.add(ann)
 
     @classmethod
     def _generate_raw_segment(cls, text: str, doc_id: str) -> Segment:
@@ -117,11 +135,9 @@ class TextDocument:
             elif annotation_dict["class_name"] == "Entity":
                 anns.append(Entity.from_dict(annotation_dict))
 
-        doc = cls(
-            uid=doc_dict["uid"], metadata=doc_dict["metadata"], text=doc_dict["text"]
+        return cls(
+            uid=doc_dict["uid"],
+            text=doc_dict["text"],
+            anns=anns,
+            metadata=doc_dict["metadata"],
         )
-
-        for ann in anns:
-            doc.anns.add(ann)
-
-        return doc
