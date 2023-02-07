@@ -139,7 +139,7 @@ class DocTranscriber(Operation):
 
     def _transcribe_doc(self, audio_doc: AudioDocument) -> TranscribedDocument:
         # get all audio segments with specified label
-        audio_segs = audio_doc.get_annotations_by_label(self.input_label)
+        audio_segs = audio_doc.anns.get(label=self.input_label)
         # transcribe them to text
         audios = [seg.audio for seg in audio_segs]
         texts = self.transcriber_func.transcribe(audios)
@@ -185,7 +185,7 @@ class DocTranscriber(Operation):
             store=store,
         )
         for text_seg in text_segs:
-            text_doc.add_annotation(text_seg)
+            text_doc.anns.add(text_seg)
         # TODO should this be handled by provenance?
         # if self._prov_tracer is not None:
         #     self._prov_tracer.add_prov(
