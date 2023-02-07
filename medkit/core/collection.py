@@ -25,7 +25,7 @@ class Collection:
         audio_docs: Optional[List[AudioDocument]] = None,
     ):
         """
-        Parameters:
+        Parameters
         -----------
         text_docs:
             List of text documents

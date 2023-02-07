@@ -199,7 +199,7 @@ class RTTMInputConverter(InputConverter):
 
         Returns
         -------
-        List[Segment]:
+        List[:class:`~medkit.core.audio.annotation.Segment`]:
             Turn segments as found in the .rttm file.
         """
 
