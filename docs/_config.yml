@@ -10,6 +10,8 @@ logo: img/medkit_logo.png
 # See https://jupyterbook.org/content/execute.html
 execute:
   execute_notebooks: auto
+  stderr_output: error
+  raise_on_error: true
 
 # Define the name of the latex output file for PDF builds
 latex:
@@ -51,8 +53,7 @@ sphinx:
       - spacy
       - speechbrain
       - pyannote.audio
-    autodoc_member_order: 'bysource'
-
+    execution_show_tb: True
   extra_extensions:
   - 'sphinx.ext.autodoc'
   - 'sphinx.ext.napoleon'

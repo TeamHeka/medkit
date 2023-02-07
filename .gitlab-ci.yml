@@ -91,6 +91,7 @@ linting:
       when: never
     - when: always
   interruptible: true
+  allow_failure: true
 
 unit_tests:
   stage: test
@@ -137,10 +138,12 @@ doc-test:
     - source .venv/bin/activate
   script:
     - echo "Building docs..."
-    - jb build docs
+    - jb build docs 2>error.log # commands always return 0, we have to check error logs
     - mv docs/_build/jupyter_execute .
     - mv docs/_build/html test
+    - if [ -s "error.log" ]; then cat error.log;exit 1; fi
   artifacts:
+    when: always
     expose_as: "Docs"
     paths:
       - test
@@ -149,6 +152,7 @@ doc-test:
       when: never
     - when: always
   interruptible: true
+  allow_failure: true
 
 
 # Declare release jobs

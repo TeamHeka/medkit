@@ -74,7 +74,7 @@ def keep_entities_with_label_problem(entity: Entity) -> bool:
 
 from medkit.core.text import CustomTextOpType, create_text_operation
 
-filter_operation = create_text_operation(function=keep_entities_with_label_problem, _type=CustomTextOpType.FILTER)
+filter_operation = create_text_operation(function=keep_entities_with_label_problem, function_type=CustomTextOpType.FILTER)
 
 # Same behavior as 
 # filter_operation = create_text_operation(
