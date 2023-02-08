@@ -3,7 +3,7 @@ from __future__ import annotations
 __all__ = ["TextDocument"]
 
 import random
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 import uuid
 
 from medkit.core.document import Document
@@ -126,29 +126,3 @@ class TextDocument(Document[TextAnnotation]):
             doc.anns.add(ann)
 
         return doc
-
-    def get_entities(self) -> List[Entity]:
-        """Return all entities attached to document
-
-        Returns
-        -------
-        List[Entity]:
-            Entities in document
-        """
-        return self.anns.get_entities()
-
-    def get_segments(self) -> List[Segment]:
-        """Return all segments attached to document (not including entities)
-
-        Returns
-        -------
-        List[~medkit.core.text.Segment]:
-            Segments in document
-        """
-        return self.anns.get_segments()
-
-    def get_relations_by_source_id(self, source_ann_id) -> List[Relation]:
-        return self.anns.get_relations(source_id=source_ann_id)
-
-    def get_relations(self) -> List[Relation]:
-        return self.anns.get_relations()
