@@ -9,7 +9,7 @@ from medkit.training.utils import BatchData
 
 @runtime_checkable
 class TrainableOperation(Protocol):
-    """Protocol for a trainable operation"""
+    """A TrainableOperation is the base protocol for an operation to be trainable"""
 
     @property
     def device(self) -> torch.device:
@@ -27,7 +27,7 @@ class TrainableOperation(Protocol):
         pass
 
     def collate(self, batch: List[Dict[str, Any]]) -> BatchData:
-        """Collate a list of samples (as returned by `preprocess`)"""
+        """Collate a list of data processed by `preprocess` to form a batch"""
         pass
 
     def forward(
@@ -42,7 +42,7 @@ class TrainableOperation(Protocol):
         pass
 
     def postprocess(self, model_output: Dict[str, Any]) -> Any:
-        """Create medkit annotations for model output"""
+        """Create a medkit annotation for model output"""
         pass
 
     def save(self, path: Union[str, Path]):

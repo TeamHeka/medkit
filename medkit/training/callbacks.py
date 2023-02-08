@@ -32,10 +32,6 @@ class TrainerCallback:
         """Event called at the end of a step in training"""
         pass
 
-    def on_log(self, **kwargs):
-        """Event called on log"""
-        pass
-
 
 class DefaultPrinterCallback(TrainerCallback):
     def __init__(self):
@@ -43,7 +39,7 @@ class DefaultPrinterCallback(TrainerCallback):
         self.logger.addHandler(logging.StreamHandler())
         self.logger.setLevel(logging.INFO)
 
-    def on_log(self, **kwargs):
+    def on_epoch_end(self, **kwargs):
         logger = kwargs.pop("logger", self.logger)
         metrics = kwargs.pop("metrics", None)
         epoch_state = kwargs.pop("epoch_state", None)
