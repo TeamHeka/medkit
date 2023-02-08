@@ -3,7 +3,6 @@ import logging
 import os
 import random
 import time
-
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -11,14 +10,13 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import numpy as np
 import torch
 import yaml
-
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, Dataset
 
 from medkit.core.trainable_operation import TrainableOperation
-from medkit.training.trainers.base.train_config import TrainConfig
+from medkit.training.callbacks import DefaultPrinterCallback, TrainerCallback
+from medkit.training.train_config import TrainConfig
 from medkit.training.utils import BatchData, MetricsComputer
-from medkit.training.callbacks import TrainerCallback, DefaultPrinterCallback
 
 # checkpoint constants
 OPTIMIZER_NAME = "optimizer.pt"
@@ -313,13 +311,30 @@ class Trainer:
             self.callback.on_epoch_end(
                 metrics=metrics, logger=logger, epoch_state=epoch_state
             )
-
+        self.save()
         logger.info("Training is completed")
         self.callback.on_train_end()
         return log_history
 
+    def save(self):
+        """Save a final checkpoint and the trainer configuration"""
+        current_date = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M")
+        name = f"checkpoint_{current_date}"
+
+        self.save_checkpoint(name)
+
+        # save config
+        with open(os.path.join(self.output_dir, name, CONFIG_NAME), mode="w") as fp:
+            yaml.safe_dump(
+                self.config.asdict(),
+                fp,
+                encoding="utf-8",
+                allow_unicode=True,
+                sort_keys=False,
+            )
+
     def save_checkpoint(self, name):
-        """Save a trainer state. It saves the optimizer, scheduler and model state"""
+        """Save a trainer state. It saves the optimizer, scheduler"""
 
         checkpoint_dir = os.path.join(self.output_dir, name)
         logger.info(f"Saving checkpoint in {checkpoint_dir}")
@@ -336,18 +351,3 @@ class Trainer:
             )
 
         self.operation.save(checkpoint_dir)
-
-    def save(self):
-        current_date = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M")
-        name = f"checkpoint_{current_date}"
-        self.save_checkpoint(name)
-
-        # save config
-        with open(os.path.join(name, CONFIG_NAME), mode="w") as fp:
-            yaml.safe_dump(
-                self.config.asdict(),
-                fp,
-                encoding="utf-8",
-                allow_unicode=True,
-                sort_keys=False,
-            )
