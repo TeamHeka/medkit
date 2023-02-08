@@ -3,12 +3,13 @@ from __future__ import annotations
 __all__ = ["AudioDocument"]
 
 import random
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 import uuid
 
 from medkit.core.document import Document
-from medkit.core.store import Store
+from medkit.core.store import Store, DictStore
 from medkit.core.audio.annotation import AudioAnnotation, Segment
+from medkit.core.audio.annotation_container import AudioAnnotationContainer
 from medkit.core.audio.span import Span
 from medkit.core.audio.audio_buffer import (
     AudioBuffer,
@@ -41,12 +42,26 @@ class AudioDocument(Document[AudioAnnotation]):
         store:
             Store to use for annotations.
         """
-        super().__init__(uid=uid, metadata=metadata, store=store)
 
-        # auto-generated RAW_AUDIO segment
-        # not stored with other annotations but injected in calls to get_annotations_by_label()
-        # and get_annotation_by_id()
+        if store is None:
+            store = DictStore()
+            has_shared_store = False
+        else:
+            has_shared_store = True
+
+        self.uid: str = uid
+        self.store: Store = store
+        self.has_shared_store = has_shared_store
+
+        # auto-generated raw segment to hold the audio buffer
         self.raw_segment: Segment = self._generate_raw_segment(audio, self.uid)
+
+        anns = AudioAnnotationContainer(self.raw_segment, store)
+        super().__init__(
+            anns=anns,
+            metadata=metadata,
+            uid=uid,
+        )
 
     @classmethod
     def _generate_raw_segment(cls, audio: AudioBuffer, doc_id: str) -> Segment:
@@ -66,40 +81,6 @@ class AudioDocument(Document[AudioAnnotation]):
     def audio(self) -> AudioBuffer:
         return self.raw_segment.audio
 
-    def add_annotation(self, annotation: AudioAnnotation):
-        """
-        Add an annotation to the document.
-
-        Parameters
-        ----------
-        annotation:
-            Audio annotation to add.
-
-        Raises
-        ------
-        RuntimeError
-            Raised when an annotation with the same identifier is already attached to
-            the document.
-        """
-        if annotation.label == self.RAW_LABEL:
-            raise RuntimeError(
-                f"Cannot add annotation with reserved label {self.RAW_LABEL}"
-            )
-
-        super().add_annotation(annotation)
-
-    def get_annotations_by_label(self, label) -> List[AudioAnnotation]:
-        # inject RAW_AUDIO segment
-        if label == self.RAW_LABEL:
-            return [self.raw_segment]
-        return super().get_annotations_by_label(label)
-
-    def get_annotation_by_id(self, annotation_id) -> Optional[AudioAnnotation]:
-        # inject RAW_AUDIO segment
-        if annotation_id == self.raw_segment.uid:
-            return self.raw_segment
-        return super().get_annotation_by_id(annotation_id)
-
     def to_dict(self) -> Dict[str, Any]:
         data = super().to_dict()
         data.update(audio=self.audio.to_dict())
@@ -113,7 +94,7 @@ class AudioDocument(Document[AudioAnnotation]):
             assert data["audio"]["class_name"] == "PlaceholderAudioBuffer"
             audio = PlaceholderAudioBuffer.from_dict(data["audio"])
 
-        annotations = [Segment.from_dict(ann_data) for ann_data in data["annotations"]]
+        anns = [Segment.from_dict(ann_data) for ann_data in data["anns"]]
 
         doc = cls(
             uid=data["uid"],
@@ -121,7 +102,7 @@ class AudioDocument(Document[AudioAnnotation]):
             metadata=data["metadata"],
         )
 
-        for annotation in annotations:
-            doc.add_annotation(annotation)
+        for ann in anns:
+            doc.anns.add(ann)
 
         return doc

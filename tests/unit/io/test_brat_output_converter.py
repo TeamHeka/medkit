@@ -147,7 +147,6 @@ def test_save(
 ):
     # create medkit_doc with 4 entities, 1 relation, 1 segment, 2 attrs
     medkit_doc = _get_medkit_doc()
-    medkit_doc.annotation_ids = sorted(medkit_doc.annotation_ids)
     output_path = tmp_path / "output"
     expected_txt_path = output_path / f"{medkit_doc.uid}.txt"
     expected_ann_path = output_path / f"{medkit_doc.uid}.ann"
@@ -367,7 +366,6 @@ T2\tgrade 26 32;43 44\tgrade 4
 
 def test_brat_output_from_modified_span(tmp_path: Path):
     medkit_doc = _get_modified_medkit_doc()
-    medkit_doc.annotation_ids = sorted(medkit_doc.annotation_ids)
     output_path = tmp_path / "output"
     expected_txt_path = output_path / f"{medkit_doc.uid}.txt"
     expected_ann_path = output_path / f"{medkit_doc.uid}.ann"

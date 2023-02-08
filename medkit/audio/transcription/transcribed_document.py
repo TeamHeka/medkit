@@ -116,14 +116,14 @@ class TranscribedDocument(TextDocument):
         audio_spans = [AudioSpan.from_dict(s) for s in doc_dict["audio_spans"]]
         text_spans_to_audio_spans = dict(zip(text_spans, audio_spans))
 
-        annotations = []
-        for annotation_dict in doc_dict["annotations"]:
+        anns = []
+        for annotation_dict in doc_dict["anns"]:
             if annotation_dict["class_name"] == "Relation":
-                annotations.add(TextRelation.from_dict(annotation_dict))
+                anns.add(TextRelation.from_dict(annotation_dict))
             elif annotation_dict["class_name"] == "Segment":
-                annotations.add(TextSegment.from_dict(annotation_dict))
+                anns.add(TextSegment.from_dict(annotation_dict))
             elif annotation_dict["class_name"] == "Entity":
-                annotations.add(TextEntity.from_dict(annotation_dict))
+                anns.add(TextEntity.from_dict(annotation_dict))
 
         doc = cls(
             uid=doc_dict["uid"],
@@ -133,7 +133,7 @@ class TranscribedDocument(TextDocument):
             metadata=doc_dict["metadata"],
         )
 
-        for annotation in annotations:
-            doc.annotations.add(annotation)
+        for ann in anns:
+            doc.anns.add(ann)
 
         return doc

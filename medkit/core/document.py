@@ -1,10 +1,10 @@
 __all__ = ["Document"]
 
-from typing import Any, Dict, Generic, List, Optional, Set, TypeVar, cast
+from typing import Any, Dict, Generic, List, Optional, TypeVar
 
 from medkit.core.id import generate_id
 from medkit.core.annotation import Annotation
-from medkit.core.store import Store, DictStore
+from medkit.core.annotation_container import AnnotationContainer
 
 AnnotationType = TypeVar("AnnotationType", bound=Annotation)
 
@@ -16,38 +16,30 @@ class Document(Generic[AnnotationType]):
 
     def __init__(
         self,
-        uid: Optional[str] = None,
+        anns: Optional[AnnotationContainer[AnnotationType]] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        store: Optional[Store] = None,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
         ----------
-        uid:
-            Id of the document in UUID format. Auto-generated if none provided
+        anns:
+            The document annotations, in an `AnnotationContainer`.
         metadata:
             Metadata of the document
-        store:
-            Optional shared store to hold the document annotations. If none provided,
-            an internal store will be used.
+        uid:
+            Id of the document in UUID format. Auto-generated if none provided
         """
+        if anns is None:
+            anns = AnnotationContainer()
         if uid is None:
             uid = generate_id()
         if metadata is None:
             metadata = {}
-        if store is None:
-            store = DictStore()
-            has_shared_store = False
-        else:
-            has_shared_store = True
 
-        self.uid: str = uid
-        self.store: Store = store
-        self.has_shared_store = has_shared_store
-        self.annotation_ids: Set[str] = set()
-        self.annotation_ids_by_label: Dict[str, List[str]] = {}
-        self.annotation_ids_by_key: Dict[str, List[str]] = {}
         self.metadata: Dict[str, Any] = metadata  # TODO: what is metadata format ?
+
+        self.anns = anns
 
     def add_annotation(self, annotation: AnnotationType):
         """
@@ -63,59 +55,25 @@ class Document(Generic[AnnotationType]):
         ValueError
             If `annotation.uid` is already in Document.annotations.
         """
-        uid = annotation.uid
-        if uid in self.annotation_ids:
-            raise ValueError(
-                f"Impossible to add this annotation.The uid {uid} already"
-                " exists in the document"
-            )
 
-        self.annotation_ids.add(uid)
-        self.store.store_data_item(annotation)
+        self.anns.add(annotation)
 
-        label = annotation.label
-        if label not in self.annotation_ids_by_label:
-            self.annotation_ids_by_label[label] = []
-        self.annotation_ids_by_label[label].append(uid)
-
-        for key in annotation.keys:
-            if key not in self.annotation_ids_by_key:
-                self.annotation_ids_by_key[key] = []
-            self.annotation_ids_by_key[key].append(uid)
-
-    def get_annotation_by_id(self, annotation_id) -> Optional[AnnotationType]:
+    def get_annotation_by_id(self, annotation_id) -> AnnotationType:
         """Returns the annotation corresponding to `annotation_id`."""
-
-        if annotation_id not in self.annotation_ids:
-            return None
-        else:
-            ann = self.store.get_data_item(annotation_id)
-            return cast(AnnotationType, ann)
+        return self.anns.get_by_id(annotation_id)
 
     def get_annotations(self) -> List[AnnotationType]:
         """Returns the list of annotations of the document"""
-        anns = [self.store.get_data_item(uid) for uid in self.annotation_ids]
-        return cast(List[AnnotationType], anns)
+        return self.anns.get()
 
     def get_annotations_by_key(self, key) -> List[AnnotationType]:
         """Returns the list of annotations of the document using the processing key"""
-        anns = [
-            self.store.get_data_item(uid)
-            for uid in self.annotation_ids_by_key.get(key, [])
-        ]
-        return cast(List[AnnotationType], anns)
+        return self.anns.get(key=key)
 
     def get_annotations_by_label(self, label) -> List[AnnotationType]:
         """Returns the list of annotations of the document using the label"""
-        anns = [
-            self.store.get_data_item(uid)
-            for uid in self.annotation_ids_by_label.get(label, [])
-        ]
-        return cast(List[AnnotationType], anns)
+        return self.anns.get(label=label)
 
     def to_dict(self) -> Dict[str, Any]:
-        anns = [
-            cast(AnnotationType, self.store.get_data_item(uid)).to_dict()
-            for uid in sorted(self.annotation_ids)
-        ]
-        return dict(uid=self.uid, annotations=anns, metadata=self.metadata)
+        anns = [ann.to_dict() for ann in self.anns]
+        return dict(uid=self.uid, anns=anns, metadata=self.metadata)
