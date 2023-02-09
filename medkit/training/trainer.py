@@ -4,6 +4,7 @@ import os
 import random
 import time
 from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -15,7 +16,6 @@ from torch.utils.data import DataLoader, Dataset
 
 from medkit.core.trainable_operation import TrainableOperation
 from medkit.training.callbacks import DefaultPrinterCallback, TrainerCallback
-from medkit.training.train_config import TrainConfig
 from medkit.training.utils import BatchData, MetricsComputer
 
 # checkpoint constants
@@ -52,6 +52,18 @@ class _TrainerDataset(Dataset):
         item = self.dataset[i]
         processed = self.operation.preprocess(item, inference_mode=False)
         return processed
+
+
+@dataclass
+class TrainConfig:
+    output_dir: str
+    learning_rate: float = 1e-5
+    nb_training_epochs: int = 3
+    dataloader_nb_workers: int = 0
+    batch_size: int = 8
+    gradient_accumulation_steps: int = 1
+    do_metrics_in_training: bool = False
+    metric_to_track_lr: str = "loss"
 
 
 class Trainer:
@@ -106,20 +118,24 @@ class Trainer:
         self.operation = operation
         self.batch_size = config.batch_size
         self.dataloader_drop_last = False
-        self.dataloader_num_workers = config.dataloader_num_workers
+        self.dataloader_nb_workers = config.dataloader_nb_workers
         self.dataloader_pin_memory = False
 
         self.device = self.operation.device
 
         self.train_dataloader = self.get_dataloader(train_data, shuffle=True)
         self.eval_dataloader = self.get_dataloader(eval_data, shuffle=False)
-        self.num_train_epochs = config.num_training_epochs
+        self.nb_training_epochs = config.nb_training_epochs
 
         self.config = config
 
-        self.optimizer, self.lr_scheduler = self.create_optimizer_and_scheduler(
-            self.operation, config.learning_rate, lr_scheduler_builder
+        self.optimizer = operation.configure_optimizer(self.config.learning_rate)
+        self.lr_scheduler = (
+            None
+            if lr_scheduler_builder is None
+            else lr_scheduler_builder(self.optimizer)
         )
+
         self.metrics_computer = metrics_computer
 
         if callback is None:
@@ -136,39 +152,22 @@ class Trainer:
             shuffle=shuffle,
             collate_fn=collate_fn,
             drop_last=self.dataloader_drop_last,
-            num_workers=self.dataloader_num_workers,
+            num_workers=self.dataloader_nb_workers,
             pin_memory=self.dataloader_pin_memory,
         )
 
-    @staticmethod
-    def create_optimizer_and_scheduler(
-        operation: TrainableOperation,
-        lr: float,
-        lr_scheduler_builder: Optional[Callable[[torch.optim.Optimizer], Any]],
-    ) -> Tuple[torch.optim.Optimizer, Optional[Any]]:
-        """
-        Define the optimizer and the learning rate scheduler if a builder is provided.
-        """
-        optimizer = operation.configure_optimizer(lr=lr)
-
-        if lr_scheduler_builder is not None:
-            lr_scheduler = lr_scheduler_builder(optimizer)
-        else:
-            lr_scheduler = None
-
-        return optimizer, lr_scheduler
-
-    def training_epoch(self) -> Dict[str, Dict[str, float]]:
+    def training_epoch(self) -> Dict[str, float]:
         """
         Perform an epoch using the training data.
 
         When the config enabled metrics in training ('do_metrics_in_training' is True),
-        the additional metrics are prepared per batch. Return a dictionary with metrics,
-        the dict uses 'train' as the main identifier.
+        the additional metrics are prepared per batch.
+
+        Return a dictionary with metrics.
         """
         config = self.config
         total_loss_epoch = 0.0
-        metrics = {"train": {}}
+        metrics = {}
         data_for_metrics = defaultdict(list)
 
         for step, samples in enumerate(self.train_dataloader):
@@ -199,24 +198,21 @@ class Trainer:
             # train step end
 
         total_loss_epoch /= len(self.train_dataloader)
-        metrics["train"]["loss"] = total_loss_epoch
+        metrics["loss"] = total_loss_epoch
 
         if config.do_metrics_in_training and self.metrics_computer is not None:
-            metrics["train"].update(
-                self.metrics_computer.compute(dict(data_for_metrics))
-            )
+            metrics.update(self.metrics_computer.compute(dict(data_for_metrics)))
         return metrics
 
-    def evaluation_epoch(self, eval_dataloader) -> Dict[str, Dict[str, float]]:
+    def evaluation_epoch(self, eval_dataloader) -> Dict[str, float]:
         """
         Perform an epoch using the evaluation data.
 
-        The additional metrics are prepared per batch. Return a dictionary with metrics,
-        the dict uses 'eval' as the main identifier.
+        The additional metrics are prepared per batch.
+        Return a dictionary with metrics.
         """
         total_loss_epoch = 0.0
-        phase = "eval"
-        metrics = {phase: {}}
+        metrics = {}
         data_for_metrics = defaultdict(list)
 
         with torch.no_grad():
@@ -236,10 +232,10 @@ class Trainer:
                 # eval step end
 
         total_loss_epoch /= len(self.eval_dataloader)
-        metrics[phase]["loss"] = total_loss_epoch
+        metrics["loss"] = total_loss_epoch
 
         if self.metrics_computer is not None:
-            metrics[phase].update(self.metrics_computer.compute(dict(data_for_metrics)))
+            metrics.update(self.metrics_computer.compute(dict(data_for_metrics)))
         return metrics
 
     def make_forward_pass(
@@ -274,25 +270,24 @@ class Trainer:
         else:
             self.lr_scheduler.step()
 
-    def train(self, return_history: bool = True) -> Optional[List[Dict]]:
+    def train(self) -> List[Dict]:
         """
-        Main training method. Call the training
+        Main training method. Call the training / eval loop.
 
+        Return a list with the metrics per epoch.
         """
         logger.info("---Running training---")
-        logger.info(f" Num epochs = {self.config.num_training_epochs}")
+        logger.info(f" Num epochs = {self.config.nb_training_epochs}")
         logger.info(f" Train batch size = {self.batch_size}")
         logger.info(
             f" Gradient Accum steps = {self.config.gradient_accumulation_steps}"
         )
 
         self.callback.on_train_begin()
-        log_history = [] if return_history else None
+        log_history = []
 
-        for epoch in range(1, self.num_train_epochs + 1):
+        for epoch in range(1, self.nb_training_epochs + 1):
             epoch_start_time = time.time()
-            metrics = {}
-
             self.callback.on_epoch_begin()
 
             train_metrics = self.training_epoch()
@@ -300,16 +295,13 @@ class Trainer:
             eval_metrics = self.evaluation_epoch(self.eval_dataloader)
             self.update_learning_rate(eval_metrics)
 
-            metrics.update(train_metrics)
-            metrics.update(eval_metrics)
-
-            if return_history:
-                log_history.append(metrics)
-
-            epoch_state = {"epoch": epoch, "time_epoch": time.time() - epoch_start_time}
+            metrics = {"train": train_metrics, "eval": eval_metrics}
+            log_history.append(metrics)
 
             self.callback.on_epoch_end(
-                metrics=metrics, logger=logger, epoch_state=epoch_state
+                metrics=metrics,
+                epoch=epoch,
+                epoch_time=time.time() - epoch_start_time,
             )
         self.save()
         logger.info("Training is completed")

@@ -4,31 +4,31 @@ import logging
 class TrainerCallback:
     """A TrainerCallback is the base class for trainer callbacks"""
 
-    def on_init_end(self, **kwargs):
+    def on_init_end(self):
         """Event called at the end of the initialization of a Trainer"""
         pass
 
-    def on_train_begin(self, **kwargs):
+    def on_train_begin(self):
         """Event called at the beginning of training"""
         pass
 
-    def on_train_end(self, **kwargs):
+    def on_train_end(self):
         """Event called at the end of training"""
         pass
 
-    def on_epoch_begin(self, **kwargs):
+    def on_epoch_begin(self):
         """Event called at the beginning of an epoch"""
         pass
 
-    def on_epoch_end(self, **kwargs):
+    def on_epoch_end(self):
         """Event called at the end of an epoch"""
         pass
 
-    def on_step_begin(self, **kwargs):
+    def on_step_begin(self):
         """Event called at the beginning of a step in training"""
         pass
 
-    def on_step_end(self, **kwargs):
+    def on_step_end(self):
         """Event called at the end of a step in training"""
         pass
 
@@ -40,9 +40,10 @@ class DefaultPrinterCallback(TrainerCallback):
         self.logger.setLevel(logging.INFO)
 
     def on_epoch_end(self, **kwargs):
-        logger = kwargs.pop("logger", self.logger)
+        logger = self.logger
         metrics = kwargs.pop("metrics", None)
-        epoch_state = kwargs.pop("epoch_state", None)
+        epoch = kwargs.pop("epoch", None)
+        epoch_time = kwargs.pop("epoch_time", None)
 
         if metrics is not None:
             train_metrics = metrics.get("train", None)
@@ -63,9 +64,9 @@ class DefaultPrinterCallback(TrainerCallback):
                 logger.info(f"Evaluation metrics : {msg}")
                 logger.info("-" * 59)
 
-        if epoch_state is not None:
+        if epoch is not None and epoch_time is not None:
             logger.info(
                 "Epoch state: |epoch_id: {:3d} | time: {:5.2f}s".format(
-                    epoch_state["epoch"], epoch_state["time_epoch"]
+                    epoch, epoch_time
                 )
             )
