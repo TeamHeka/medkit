@@ -4,7 +4,7 @@ import os
 import random
 import time
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -66,6 +66,13 @@ class TrainConfig:
     do_metrics_in_training: bool = False
     metric_to_track_lr: str = "loss"
 
+    def to_dict(self) -> Dict[str, Any]:
+        return dict(
+            (field.name, getattr(self, field.name))
+            for field in fields(self)
+            if field.name != "output_dir"
+        )
+
 
 class Trainer:
     """A trainer is a base training/eval loop for a TrainableOperation that uses PyTorch models
@@ -107,7 +114,7 @@ class Trainer:
             Optional callback to customize training.
         """
         # enable deterministic operation
-        set_seed(self.config.seed)
+        set_seed(config.seed)
 
         self.output_dir = (
             Path(config.output_dir)
@@ -317,9 +324,10 @@ class Trainer:
         self.save_checkpoint(name)
 
         # save config
-        with open(os.path.join(self.output_dir, name, CONFIG_NAME), mode="w") as fp:
+        config_path = os.path.join(self.output_dir, name, CONFIG_NAME)
+        with open(str(config_path), mode="w") as fp:
             yaml.safe_dump(
-                self.config.asdict(),
+                self.config.to_dict(),
                 fp,
                 encoding="utf-8",
                 allow_unicode=True,
