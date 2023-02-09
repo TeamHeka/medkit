@@ -61,6 +61,7 @@ class TrainConfig:
     nb_training_epochs: int = 3
     dataloader_nb_workers: int = 0
     batch_size: int = 8
+    seed: int = 0
     gradient_accumulation_steps: int = 1
     do_metrics_in_training: bool = False
     metric_to_track_lr: str = "loss"
@@ -106,7 +107,7 @@ class Trainer:
             Optional callback to customize training.
         """
         # enable deterministic operation
-        set_seed(0)
+        set_seed(self.config.seed)
 
         self.output_dir = (
             Path(config.output_dir)

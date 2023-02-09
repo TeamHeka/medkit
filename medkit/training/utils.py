@@ -61,7 +61,7 @@ class MetricsComputer(Protocol):
 
     def prepare_batch(
         self, model_output: BatchData, input_batch: BatchData
-    ) -> Dict[str, List[any]]:
+    ) -> Dict[str, List[Any]]:
         """Prepare a batch of data to compute the metrics
 
         Parameters
@@ -73,17 +73,17 @@ class MetricsComputer(Protocol):
 
         Returns
         -------
-        Dict[str, List[any]]
+        Dict[str, List[Any]]
             A dictionary with the required data to calculate the metric
         """
         pass
 
-    def compute(self, all_data: Dict[str, List[any]]) -> Dict[str, float]:
+    def compute(self, all_data: Dict[str, List[Any]]) -> Dict[str, float]:
         """Compute metrics using 'all_data'
 
         Parameters
         ----------
-        all_data: Dict[str, List[any]]
+        all_data: Dict[str, List[Any]]
             A dictionary to compute the metrics.
             i.e. A dictionary with a list of 'references' and a list of 'predictions'.
 
