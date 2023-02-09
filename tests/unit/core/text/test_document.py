@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import Attribute, generate_id, DictStore
+from medkit.core import Attribute, generate_id
 from medkit.core.text.document import TextDocument
 from medkit.core.text.annotation import Entity, Relation, Segment
 from medkit.core.text.span import Span
@@ -91,15 +91,3 @@ def test_raw_segment():
         RuntimeError, match=r"Cannot add annotation with reserved label .*"
     ):
         doc.anns.add(seg)
-
-
-def test_store():
-    """Init doc with own private store or shared store"""
-
-    doc_1 = TextDocument(text="")
-    assert doc_1.has_shared_store is False
-
-    store = DictStore()
-    doc_2 = TextDocument(text="", store=store)
-    assert doc_2.store is store
-    assert doc_2.has_shared_store is True

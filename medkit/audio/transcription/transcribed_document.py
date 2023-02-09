@@ -3,7 +3,6 @@ __all__ = ["TranscribedDocument"]
 import dataclasses
 from typing import Any, Dict, List, Optional
 
-from medkit.core import Store
 from medkit.core.audio import Span as AudioSpan
 from medkit.core.text import (
     TextDocument,
@@ -41,10 +40,6 @@ class TranscribedDocument(TextDocument):
         Document metadata.
     raw_segment:
         Auto-generated segment containing the raw full transcribed text.
-    store:
-        Store holding the document annotations.
-    has_shared_stored:
-        Whether the store is a shared stored provided by the used or an internal store
     """
 
     text_spans_to_audio_spans: Dict[TextSpan, AudioSpan]
@@ -58,11 +53,10 @@ class TranscribedDocument(TextDocument):
         anns: Optional[List[TextAnnotation]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
-        store: Optional[Store] = None,
     ):
         assert all(s.end <= len(text) for s in text_spans_to_audio_spans)
 
-        super().__init__(text=text, anns=anns, metadata=metadata, uid=uid, store=store)
+        super().__init__(text=text, anns=anns, metadata=metadata, uid=uid)
 
         self.audio_doc_id = audio_doc_id
         self.text_spans_to_audio_spans = text_spans_to_audio_spans

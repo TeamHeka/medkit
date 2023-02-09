@@ -14,7 +14,6 @@ from medkit.core.audio.audio_buffer import (
     PlaceholderAudioBuffer,
 )
 from medkit.core.id import generate_id
-from medkit.core.store import Store
 
 
 @dataclasses.dataclass(init=False)
@@ -61,7 +60,6 @@ class Segment:
         attrs: Optional[List[Attribute]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
-        store: Optional[Store] = None,
     ):
         if attrs is None:
             attrs = []
@@ -77,7 +75,7 @@ class Segment:
         self.keys = set()
         self.uid = uid
 
-        self.attrs = AttributeContainer(store=store)
+        self.attrs = AttributeContainer()
         for attr in attrs:
             self.attrs.add(attr)
 

@@ -1,6 +1,6 @@
 import pytest
 
-from medkit.core import generate_id, DictStore
+from medkit.core import generate_id
 from medkit.core.audio import Segment, Span, MemoryAudioBuffer
 from medkit.core.audio.document import AudioDocument
 from tests.audio_utils import generate_silence
@@ -89,19 +89,3 @@ def test_raw_segment():
         RuntimeError, match=r"Cannot add annotation with reserved label .*"
     ):
         doc.anns.add(seg)
-
-
-def test_store():
-    """Init doc with own private store or shared store"""
-
-    audio = MemoryAudioBuffer(
-        signal=generate_silence(0.5, _SAMPLE_RATE), sample_rate=_SAMPLE_RATE
-    )
-
-    doc_1 = AudioDocument(audio)
-    assert doc_1.has_shared_store is False
-
-    store = DictStore()
-    doc_2 = AudioDocument(audio, store=store)
-    assert doc_2.store is store
-    assert doc_2.has_shared_store is True

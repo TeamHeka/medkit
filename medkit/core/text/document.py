@@ -8,7 +8,7 @@ from typing import Any, ClassVar, Dict, List, Optional
 import uuid
 
 from medkit.core.id import generate_id
-from medkit.core.store import Store, DictStore
+from medkit.core.store import GlobalStore
 from medkit.core.text.annotation import TextAnnotation, Segment, Entity, Relation
 from medkit.core.text.annotation_container import TextAnnotationContainer
 from medkit.core.text.span import Span
@@ -38,12 +38,6 @@ class TextDocument:
 
         >>> doc = TextDocument(text="hello")
         >>> raw_text = doc.anns.get(label=TextDocument.RAW_LABEL)[0]
-    store:
-        Optional store to hold the annotations. If none provided, a simple
-        internal :class:`~medkit.core.DictStore` will be used.
-    has_shared_stored:
-        Whether the store is a shared stored provided by the used or an internal
-        store.
     """
 
     RAW_LABEL: ClassVar[str] = "RAW_TEXT"
@@ -52,8 +46,6 @@ class TextDocument:
     anns: TextAnnotationContainer
     metadata: Dict[str, Any]
     raw_segment: Segment
-    store: Store = dataclasses.field(compare=False)
-    has_shared_store: bool = dataclasses.field(compare=False)
 
     def __init__(
         self,
@@ -61,7 +53,6 @@ class TextDocument:
         anns: Optional[List[TextAnnotation]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
-        store: Optional[Store] = None,
     ):
         if anns is None:
             anns = []
@@ -69,22 +60,15 @@ class TextDocument:
             metadata = {}
         if uid is None:
             uid = generate_id()
-        if store is None:
-            store = DictStore()
-            has_shared_store = False
-        else:
-            store = store
-            has_shared_store = True
 
         self.uid = uid
         self.metadata = metadata
-        self.store = store
-        self.has_shared_store = has_shared_store
+        self.store = GlobalStore.get_store()
 
         # auto-generated raw segment to hold the text
         self.raw_segment = self._generate_raw_segment(text, uid)
 
-        self.anns = TextAnnotationContainer(self.raw_segment, self.store)
+        self.anns = TextAnnotationContainer(self.raw_segment)
         for ann in anns:
             self.anns.add(ann)
 

@@ -4,7 +4,7 @@ import typing
 from typing import Dict, List, Optional, Iterator
 
 from medkit.core.attribute import Attribute
-from medkit.core.store import Store, DictStore
+from medkit.core.store import Store, GlobalStore
 
 
 class AttributeContainer:
@@ -17,20 +17,13 @@ class AttributeContainer:
     The attributes will be stored in a :class:`~medkit.core.Store`, which can
     rely on a simple dict (cf :class:`~medkit.core.DictStore`) or something more
     complicated like a database.
+
+    This global store may be initialized using :class:~medkit.core.GlobalStore.
+    Otherwise, a default one (i.e. DictStore) is used.
     """
 
-    def __init__(self, store: Optional[Store] = None):
-        """
-        Parameters
-        ----------
-        store:
-            Optional store to hold the attributes. If none provided, an
-            internal store will be used.
-        """
-
-        if store is None:
-            store = DictStore()
-        self._store: Store = store
+    def __init__(self):
+        self._store: Store = GlobalStore.get_store()
         self._attr_ids: List[str] = []
         self._attr_ids_by_label: Dict[str, List[str]] = {}
 

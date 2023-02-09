@@ -23,6 +23,7 @@ __all__ = [
     "Prov",
     "Store",
     "DictStore",
+    "GlobalStore",
 ]
 
 from .annotation import Annotation
@@ -45,4 +46,4 @@ from .pipeline import (
     ProvCompatibleOperation,
 )
 from .prov_tracer import ProvTracer, Prov
-from .store import Store, DictStore
+from .store import Store, DictStore, GlobalStore

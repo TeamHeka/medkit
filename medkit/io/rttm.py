@@ -178,7 +178,7 @@ class RTTMInputConverter(InputConverter):
         full_audio = FileAudioBuffer(path=audio_file)
         turn_segments = [self._build_turn_segment(row, full_audio) for row in rows]
 
-        doc = AudioDocument(audio=full_audio, store=self.store)
+        doc = AudioDocument(audio=full_audio)
         for turn_segment in turn_segments:
             doc.anns.add(turn_segment)
 

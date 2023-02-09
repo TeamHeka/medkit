@@ -3,7 +3,7 @@ from medkit.audio.transcription.doc_transcriber import (
     TranscriberFunction,
     TranscriberFunctionDescription,
 )
-from medkit.core import Attribute, ProvTracer, DictStore
+from medkit.core import Attribute, ProvTracer
 from medkit.core.audio import (
     AudioDocument,
     Segment as AudioSegment,
@@ -227,32 +227,3 @@ def test_custom_full_text():
         " text number 2."
     )
     assert text_doc.text == expected_text
-
-
-def test_store():
-    """Overriding of full text reconstruction method"""
-
-    # audio doc with explicitly provided shared store
-    store = DictStore()
-    audio_doc_1 = AudioDocument(audio=_FULL_AUDIO, store=store)
-    audio_seg_1 = _get_audio_segment(AudioSpan(0.0, 0.5))
-    audio_doc_1.anns.add(audio_seg_1)
-    # audio doc with own "private" store
-    audio_doc_2 = AudioDocument(audio=_FULL_AUDIO)
-    audio_seg_2 = _get_audio_segment(AudioSpan(0.0, 0.5))
-    audio_doc_2.anns.add(audio_seg_2)
-
-    doc_transcriber = DocTranscriber(
-        input_label=_AUDIO_LABEL,
-        output_label=_TEXT_LABEL,
-        transcriber_func=_MockTranscriberFunction(),
-    )
-    text_docs = doc_transcriber.run([audio_doc_1, audio_doc_2])
-
-    # reuse same store for text doc when audio doc has public store
-    text_doc_1 = text_docs[0]
-    assert text_doc_1.store == audio_doc_1.store
-
-    # use new store instance for text doc when audio doc has own private store
-    text_doc_2 = text_docs[1]
-    assert text_doc_2.store != audio_doc_2.store

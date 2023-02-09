@@ -4,7 +4,7 @@ import typing
 from typing import Dict, Iterator, Generic, List, Optional, TypeVar
 
 from medkit.core.annotation import Annotation
-from medkit.core.store import Store, DictStore
+from medkit.core.store import Store, GlobalStore
 
 
 AnnotationType = TypeVar("AnnotationType", bound=Annotation)
@@ -20,20 +20,13 @@ class AnnotationContainer(Generic[AnnotationType]):
     The annotations will be stored in a :class:`~medkit.core.Store`, which can
     rely on a simple dict (cf :class:`~medkit.core.DictStore`) or something more
     complicated like a database.
+
+    This global store may be initialized using :class:~medkit.core.GlobalStore.
+    Otherwise, a default one (i.e. DictStore) is used.
     """
 
-    def __init__(self, store: Optional[Store] = None):
-        """
-        Parameters
-        ----------
-        store:
-            Optional store to hold the annotations. If none provided, a simple
-            internal :class:`~medkit.core.DictStore` will be used.
-        """
-        if store is None:
-            store = DictStore()
-
-        self._store: Store = store
+    def __init__(self):
+        self._store: Store = GlobalStore.get_store()
         self._ann_ids: List[str] = []
         self._ann_ids_by_label: Dict[str, List[str]] = {}
         self._ann_ids_by_key: Dict[str, List[str]] = {}

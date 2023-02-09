@@ -3,7 +3,6 @@ __all__ = ["AudioAnnotationContainer"]
 from typing import List, Optional
 
 from medkit.core.annotation_container import AnnotationContainer
-from medkit.core.store import Store
 from medkit.core.audio.annotation import Segment
 
 
@@ -17,8 +16,8 @@ class AudioAnnotationContainer(AnnotationContainer[Segment]):
     Also provides handling of raw segment.
     """
 
-    def __init__(self, raw_segment: Segment, store: Optional[Store] = None):
-        super().__init__(store)
+    def __init__(self, raw_segment: Segment):
+        super().__init__()
 
         # auto-generated RAW_AUDIO segment
         # not stored with other annotations but injected in calls to get()

@@ -51,7 +51,6 @@ class TextAnnotation(abc.ABC):
         attrs: Optional[List[Attribute]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
-        store: Optional[Store] = None,
     ):
         if attrs is None:
             attrs = []
@@ -65,7 +64,7 @@ class TextAnnotation(abc.ABC):
         self.metadata = metadata
         self.keys = set()
 
-        self.attrs = AttributeContainer(store=store)
+        self.attrs = AttributeContainer()
         for attr in attrs:
             self.attrs.add(attr)
 
@@ -120,9 +119,7 @@ class Segment(TextAnnotation):
         uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
-        super().__init__(
-            label=label, attrs=attrs, metadata=metadata, uid=uid, store=store
-        )
+        super().__init__(label=label, attrs=attrs, metadata=metadata, uid=uid)
 
         self.text = text
         self.spans = spans
@@ -314,9 +311,7 @@ class Relation(TextAnnotation):
         uid: Optional[str] = None,
         store: Optional[Store] = None,
     ):
-        super().__init__(
-            label=label, attrs=attrs, metadata=metadata, uid=uid, store=store
-        )
+        super().__init__(label=label, attrs=attrs, metadata=metadata, uid=uid)
 
         self.source_id = source_id
         self.target_id = target_id

@@ -4,7 +4,6 @@ import typing
 from typing import Dict, List, Optional
 
 from medkit.core.annotation_container import AnnotationContainer
-from medkit.core.store import Store
 from medkit.core.text.annotation import TextAnnotation, Segment, Entity, Relation
 
 
@@ -19,8 +18,8 @@ class TextAnnotationContainer(AnnotationContainer[TextAnnotation]):
     raw segment.
     """
 
-    def __init__(self, raw_segment: Segment, store: Optional[Store] = None):
-        super().__init__(store)
+    def __init__(self, raw_segment: Segment):
+        super().__init__()
 
         # auto-generated raw segment
         # not stored with other annotations but injected in calls to get()

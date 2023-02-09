@@ -1,6 +1,6 @@
-__all__ = ["Store", "DictStore"]
+__all__ = ["Store", "DictStore", "GlobalStore"]
 
-from typing import Dict
+from typing import Dict, Union
 from typing_extensions import Protocol, runtime_checkable
 
 from medkit.core.data_item import IdentifiableDataItem
@@ -38,3 +38,29 @@ class DictStore:
 
     def get_op_desc(self, operation_id: str) -> OperationDescription:
         return self._op_descs_by_id[operation_id]
+
+
+class GlobalStore:
+    _store: Union[Store, None] = None
+
+    @classmethod
+    def init_store(cls, store: Store) -> Store:
+        if cls._store is None:
+            cls._store = store
+        else:
+            raise RuntimeError(
+                "The global store has already been initialized. If it was not your"
+                " intention, please put this line at the beginning of your script to"
+                " make sure to set global store before any other initialization"
+            )
+        return cls._store
+
+    @classmethod
+    def get_store(cls) -> Store:
+        if cls._store is None:
+            cls._store = DictStore()
+        return cls._store
+
+    @classmethod
+    def del_store(cls):
+        cls._store = None

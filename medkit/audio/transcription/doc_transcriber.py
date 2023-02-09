@@ -74,12 +74,6 @@ class DocTranscriber(Operation):
     the text segments are created and how they are concatenated to form the full
     text.
 
-    If an audio document was initiated with a specific
-    :class:`~medkit.core.Store` instance explicitly provided, then the
-    corresponding text document will use the same instance. Otherwise, if the
-    audio document uses its own private store, then the text document will also
-    have its own private store.
-
     The actual transcription task is delegated to a :class:`~.TranscriberFunction`
     that must be provided.
     """
@@ -182,13 +176,10 @@ class DocTranscriber(Operation):
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(text_seg, self.description, [audio_seg])
 
-        # use shared store for new text doc if audio doc had shared store
-        store = audio_doc.store if audio_doc.has_shared_store else None
         text_doc = TranscribedDocument(
             text=full_text,
             audio_doc_id=audio_doc.uid,
             text_spans_to_audio_spans=text_spans_to_audio_spans,
-            store=store,
         )
         for text_seg in text_segs:
             text_doc.anns.add(text_seg)

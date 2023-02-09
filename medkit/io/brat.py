@@ -18,7 +18,6 @@ from medkit.core import (
     Attribute,
     InputConverter,
     OutputConverter,
-    Store,
     ProvTracer,
     generate_id,
     OperationDescription,
@@ -45,12 +44,11 @@ logger = logging.getLogger(__name__)
 class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
 
-    def __init__(self, store: Optional[Store] = None, uid: Optional[str] = None):
+    def __init__(self, uid: Optional[str] = None):
         if uid is None:
             uid = generate_id()
 
         self.uid = uid
-        self.store: Optional[Store] = store
         self._prov_tracer: Optional[ProvTracer] = None
 
     @property
@@ -116,7 +114,7 @@ class BratInputConverter(InputConverter):
                 # directly load .txt without .ann
                 text = text_path.read_text(encoding="utf-8")
                 metadata = dict(path_to_text=str(text_path))
-                doc = TextDocument(text=text, metadata=metadata, store=self.store)
+                doc = TextDocument(text=text, metadata=metadata)
             else:
                 # load both .txt and .ann
                 doc = self.load_doc(ann_path=ann_path, text_path=text_path)
@@ -156,7 +154,7 @@ class BratInputConverter(InputConverter):
 
         metadata = dict(path_to_text=str(text_path), path_to_ann=str(ann_path))
 
-        doc = TextDocument(text=text, metadata=metadata, store=self.store)
+        doc = TextDocument(text=text, metadata=metadata)
         for ann in anns:
             doc.anns.add(ann)
 
