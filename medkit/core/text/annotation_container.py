@@ -83,10 +83,10 @@ class TextAnnotationContainer(AnnotationContainer[TextAnnotation]):
         # get ids filtered by label/key
         uids = self.get_ids(label=label, key=key)
         # keep only segment ids
-        uids = (uid for uid in self._segment_ids)
+        uids = (uid for uid in uids if uid in self._segment_ids)
 
-        entities = [self.get_by_id(uid) for uid in uids]
-        return typing.cast(List[Segment], entities)
+        segments = [self.get_by_id(uid) for uid in uids]
+        return typing.cast(List[Segment], segments)
 
     def get_entities(
         self, *, label: Optional[str] = None, key: Optional[str] = None
@@ -106,7 +106,7 @@ class TextAnnotationContainer(AnnotationContainer[TextAnnotation]):
         # get ids filtered by label/key
         uids = self.get_ids(label=label, key=key)
         # keep only entity ids
-        uids = (uid for uid in self._entity_ids)
+        uids = (uid for uid in uids if uid in self._entity_ids)
 
         entities = [self.get_by_id(uid) for uid in uids]
         return typing.cast(List[Entity], entities)
@@ -137,10 +137,10 @@ class TextAnnotationContainer(AnnotationContainer[TextAnnotation]):
         # keep only relation ids
         # (either all relations or relations with specific source)
         if source_id is None:
-            uids = (uid for uid in self._relation_ids)
+            uids = (uid for uid in uids if uid in self._relation_ids)
         else:
             relation_ids = self._relation_ids_by_source_id.get(source_id, [])
-            uids = (uid for uid in relation_ids)
+            uids = (uid for uid in uids if uid in relation_ids)
 
         entities = [self.get_by_id(uid) for uid in uids]
         return typing.cast(List[Relation], entities)
