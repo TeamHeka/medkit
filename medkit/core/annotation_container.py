@@ -44,13 +44,13 @@ class AnnotationContainer(Generic[AnnotationType]):
 
         Parameters
         ----------
-        annotation:
+        ann:
             Annotation to add.
 
         Raises
         ------
         ValueError
-            If the annotation is already is already attached to the document
+            If the annotation is already attached to the document
             (based on `annotation.uid`)
         """
 
@@ -113,7 +113,7 @@ class AnnotationContainer(Generic[AnnotationType]):
         Return an iterator of the identifiers of the annotations of the
         document, optionally filtering by label or key.
 
-        This method is provided so it is easier to implement additional
+        This method is provided, so it is easier to implement additional
         filtering in subclasses.
 
         Parameters
