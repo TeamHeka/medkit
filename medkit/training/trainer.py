@@ -1,5 +1,4 @@
 import datetime
-import logging
 import os
 import random
 import time
@@ -22,11 +21,6 @@ from medkit.training.utils import BatchData, MetricsComputer
 OPTIMIZER_NAME = "optimizer.pt"
 SCHEDULER_NAME = "scheduler.pt"
 CONFIG_NAME = "config.yml"
-
-
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.INFO)
 
 
 def set_seed(seed: int = 0):
@@ -60,7 +54,7 @@ class TrainConfig:
     learning_rate: float = 1e-5
     nb_training_epochs: int = 3
     dataloader_nb_workers: int = 0
-    batch_size: int = 8
+    batch_size: int = 1
     seed: int = 0
     gradient_accumulation_steps: int = 1
     do_metrics_in_training: bool = False
@@ -95,8 +89,8 @@ class Trainer:
         operation:
             The operation to train, the operation must implement the `TrainableOperation` protocol.
         config:
-            A `TrainerConfig` with the parameters for training. If `output_dir` is empty
-            the name of the operation will be used as path in the current directory.
+            A `TrainerConfig` with the parameters for training, the parameter `output_dir` define the
+            path of the checkpoints
         train_data:
             The data to use for training. This should be a corpus of medkit objects. The data could be,
             for instance, a `torch.utils.data.Dataset` that returns medkit objects for training.
@@ -116,11 +110,7 @@ class Trainer:
         # enable deterministic operation
         set_seed(config.seed)
 
-        self.output_dir = (
-            Path(config.output_dir)
-            if config.output_dir
-            else operation.__class__.__name__
-        )
+        self.output_dir = Path(config.output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
 
         self.operation = operation
@@ -148,6 +138,8 @@ class Trainer:
 
         if callback is None:
             self.callback = DefaultPrinterCallback()
+
+        self.callback.on_init_end()
 
     def get_dataloader(self, data: any, shuffle: bool) -> DataLoader:
         """Return a DataLoader with transformations defined
@@ -266,15 +258,14 @@ class Trainer:
             return
 
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
-            metric_to_track_lr = eval_metrics["eval"].get(
-                self.config.metric_to_track_lr
-            )
-            if metric_to_track_lr is None:
-                raise RuntimeError(
-                    "Learning schedule needs an eval metric to update the learning"
-                    f" rate, '[eval]['{metric_to_track_lr}'] was not found"
+            name_metric_to_track_lr = self.config.metric_to_track_lr
+            eval_metric = eval_metrics.get(name_metric_to_track_lr)
+            if eval_metric is None:
+                raise ValueError(
+                    "Learning scheduler needs an eval metric to update the learning"
+                    f" rate, '{name_metric_to_track_lr}' was not found"
                 )
-            self.lr_scheduler.step(metric_to_track_lr)
+            self.lr_scheduler.step(eval_metric)
         else:
             self.lr_scheduler.step()
 
@@ -284,14 +275,7 @@ class Trainer:
 
         Return a list with the metrics per epoch.
         """
-        logger.info("---Running training---")
-        logger.info(f" Num epochs = {self.config.nb_training_epochs}")
-        logger.info(f" Train batch size = {self.batch_size}")
-        logger.info(
-            f" Gradient Accum steps = {self.config.gradient_accumulation_steps}"
-        )
-
-        self.callback.on_train_begin()
+        self.callback.on_train_begin(config=self.config)
         log_history = []
 
         for epoch in range(1, self.nb_training_epochs + 1):
@@ -312,7 +296,6 @@ class Trainer:
                 epoch_time=time.time() - epoch_start_time,
             )
         self.save()
-        logger.info("Training is completed")
         self.callback.on_train_end()
         return log_history
 
@@ -338,7 +321,7 @@ class Trainer:
         """Save a trainer state. It saves the optimizer, scheduler"""
 
         checkpoint_dir = os.path.join(self.output_dir, name)
-        logger.info(f"Saving checkpoint in {checkpoint_dir}")
+        self.callback.on_save(checkpoint_dir=checkpoint_dir)
 
         os.makedirs(checkpoint_dir, exist_ok=True)
         torch.save(
