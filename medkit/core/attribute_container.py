@@ -15,11 +15,10 @@ class AttributeContainer:
     supported. Additional filtering is available through the `get()` method.
 
     The attributes will be stored in a :class:`~medkit.core.Store`, which can
-    rely on a simple dict (cf :class:`~medkit.core.DictStore`) or something more
-    complicated like a database.
+    rely on a simple dict or something more complicated like a database.
 
     This global store may be initialized using :class:~medkit.core.GlobalStore.
-    Otherwise, a default one (i.e. DictStore) is used.
+    Otherwise, a default one (i.e. dict store) is used.
     """
 
     def __init__(self):

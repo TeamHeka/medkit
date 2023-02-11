@@ -2,7 +2,7 @@ import dataclasses
 import pytest
 
 from medkit.core.operation_desc import OperationDescription
-from medkit.core.store import DictStore, GlobalStore
+from medkit.core.store import _DictStore, GlobalStore
 
 
 class MockStore:
@@ -32,6 +32,6 @@ def test_global_store_init_store():
 
 def test_global_store_init_store_error():
     store = GlobalStore.get_store()
-    assert isinstance(store, DictStore)
+    assert isinstance(store, _DictStore)
     with pytest.raises(RuntimeError):
         GlobalStore.init_store(MockStore())
