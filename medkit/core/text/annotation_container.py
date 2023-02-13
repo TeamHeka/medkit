@@ -31,6 +31,18 @@ class TextAnnotationContainer(AnnotationContainer[TextAnnotation]):
         self._relation_ids: List[str] = []
         self._relation_ids_by_source_id: Dict[str, List[str]] = {}
 
+    @property
+    def segments(self) -> List[Segment]:
+        return self.get_segments()
+
+    @property
+    def entities(self) -> List[Entity]:
+        return self.get_entities()
+
+    @property
+    def relations(self) -> List[Relation]:
+        return self.get_relations()
+
     def add(self, ann: TextAnnotation):
         if ann.label == self.raw_segment.label:
             raise RuntimeError(
