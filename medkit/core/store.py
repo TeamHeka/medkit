@@ -39,7 +39,20 @@ class GlobalStore:
     _store: Union[Store, None] = None
 
     @classmethod
-    def init_store(cls, store: Store) -> Store:
+    def init_store(cls, store: Store):
+        """
+        Initialize the global store for your application
+
+        Parameters
+        ----------
+        store
+            Store for all the data items
+
+        Raises
+        ------
+        RuntimeError
+            If global store is already set
+        """
         if cls._store is None:
             cls._store = store
         else:
@@ -48,14 +61,24 @@ class GlobalStore:
                 " intention, please put this line at the beginning of your script to"
                 " make sure to set global store before any other initialization"
             )
-        return cls._store
 
     @classmethod
     def get_store(cls) -> Store:
+        """
+        Returns the global store object
+
+        Returns
+        -------
+        Store
+            the global store
+        """
         if cls._store is None:
             cls._store = _DictStore()
         return cls._store
 
     @classmethod
     def del_store(cls):
+        """
+        Delete the global store object
+        """
         cls._store = None
