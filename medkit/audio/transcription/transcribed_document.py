@@ -132,11 +132,11 @@ class TranscribedDocument(TextDocument):
         anns = []
         for annotation_dict in doc_dict["anns"]:
             if annotation_dict["class_name"] == "Relation":
-                anns.add(TextRelation.from_dict(annotation_dict))
+                anns.append(TextRelation.from_dict(annotation_dict))
             elif annotation_dict["class_name"] == "Segment":
-                anns.add(TextSegment.from_dict(annotation_dict))
+                anns.append(TextSegment.from_dict(annotation_dict))
             elif annotation_dict["class_name"] == "Entity":
-                anns.add(TextEntity.from_dict(annotation_dict))
+                anns.append(TextEntity.from_dict(annotation_dict))
 
         doc = cls(
             uid=doc_dict["uid"],
