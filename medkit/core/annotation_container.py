@@ -56,7 +56,7 @@ class AnnotationContainer(Generic[AnnotationType]):
             )
 
         self._ann_ids.append(uid)
-        self._store.store_data_item(ann)
+        self._store.store_data_item(data_item=ann, parent_id=self._doc_id)
 
         # update label index
         label = ann.label

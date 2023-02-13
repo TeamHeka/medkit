@@ -76,7 +76,7 @@ class AttributeContainer:
             raise ValueError(f"Attribute with uid {uid} already attached to annotation")
 
         self._attr_ids.append(uid)
-        self._store.store_data_item(attr)
+        self._store.store_data_item(data_item=attr, parent_id=self._ann_id)
 
         # update label index
         label = attr.label
