@@ -17,8 +17,8 @@ from .dummy_context_operation.dummy_operation import MockTrainableOperation
 
 class DummyMetricsComputer:
     def prepare_batch(self, model_output, input_batch):
-        predictions = model_output.logits.argmax(1).detach()
-        references = input_batch.labels.detach()
+        predictions = model_output["logits"].argmax(1).detach()
+        references = input_batch["labels"].detach()
         return {"predictions": predictions, "references": references}
 
     def compute(self, all_data):

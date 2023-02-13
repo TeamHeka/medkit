@@ -1,18 +1,15 @@
 import pytest
-
-pytest.importorskip(modname="torch", reason="torch is not installed")
-
-import torch  # noqa: E402
-from medkit.training.utils import BatchData  # noqa: E402
+import torch
+from medkit.training.utils import BatchData
 
 TEST_CUDA = torch.cuda.is_available()
 
 
 def test_get_attributes():
     data = BatchData(inputs=[0, 1, 2])
-    assert data.inputs == [0, 1, 2]
-    with pytest.raises(AttributeError):
-        _ = data.outputs
+    assert data["inputs"] == [0, 1, 2]
+    with pytest.raises(KeyError):
+        _ = data["outputs"]
     assert data[0] == {"inputs": 0}
 
 
@@ -42,7 +39,7 @@ def test_to_device():
         inputs=["hello", "world"], outputs=[torch.tensor(0), torch.tensor(1)]
     )
     new_data = data.to_device(gpu)
-    for tensor_cpu, tensor_gpu in zip(data.outputs, new_data.outputs):
+    for tensor_cpu, tensor_gpu in zip(data["outputs"], new_data["outputs"]):
         assert tensor_cpu.device == cpu
         assert tensor_gpu.device == gpu
         assert tensor_cpu.item() == tensor_gpu.item()
@@ -54,7 +51,7 @@ def test_to_cpu():
         inputs=["hello", "world"], outputs=[torch.tensor(0), torch.tensor(1)]
     )
     new_data = data.to_device(cpu)
-    for old_tensor, new_tensor in zip(data.outputs, new_data.outputs):
+    for old_tensor, new_tensor in zip(data["outputs"], new_data["outputs"]):
         assert old_tensor.device == cpu
         assert new_tensor.device == cpu
         assert old_tensor.item() == new_tensor.item()

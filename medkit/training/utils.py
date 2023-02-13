@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from collections import OrderedDict
 from typing import Any, Dict, List, Union
 from typing_extensions import Protocol, runtime_checkable
 
 import torch
 
 
-class BatchData(OrderedDict):
+class BatchData(dict):
     """A BatchData pack data allowing both column and row access"""
 
     def __getitem__(self, index: int) -> Dict[str, Union[List[Any], torch.Tensor]]:
@@ -15,17 +14,6 @@ class BatchData(OrderedDict):
             inner_dict = {key: values for (key, values) in self.items()}
             return inner_dict[index]
         return {key: values[index] for key, values in self.items()}
-
-    def __getattr__(self, name: str) -> Union[List[Any], torch.Tensor]:
-        if name in self.keys():
-            return self[name]
-        else:
-            raise AttributeError(f"Object has not attribute '{name}'")
-
-    def __setattr__(self, name, values):
-        if name in self.keys() and values is not None:
-            super().__setitem__(name, values)
-        super().__setattr__(name, values)
 
     def __setitem__(self, key, values):
         super().__setitem__(key, values)
