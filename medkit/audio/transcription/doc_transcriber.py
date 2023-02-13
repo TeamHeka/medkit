@@ -159,7 +159,7 @@ class DocTranscriber(Operation):
             # copy attrs from audio segment
             for label in self.attrs_to_copy:
                 for attr in audio_seg.attrs.get(label=label):
-                    copied_attr = attr.copy_with_new_uid()
+                    copied_attr = attr.copy()
                     text_seg.attrs.add(copied_attr)
                     # handle provenance
                     if self._prov_tracer is not None:

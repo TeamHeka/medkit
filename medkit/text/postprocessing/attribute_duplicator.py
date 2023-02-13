@@ -89,7 +89,7 @@ class AttributeDuplicator(Operation):
         return nested
 
     def _duplicate_attr(self, attr: Attribute, target: Segment):
-        target_attr = attr.copy_with_new_uid()
+        target_attr = attr.copy()
         target.attrs.add(target_attr)
 
         if self._prov_tracer is not None:

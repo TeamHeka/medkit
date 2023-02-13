@@ -124,7 +124,7 @@ class DucklingMatcher(NEROperation):
 
             for label in self.attrs_to_copy:
                 for attr in segment.attrs.get(label=label):
-                    copied_attr = attr.copy_with_new_uid()
+                    copied_attr = attr.copy()
                     entity.attrs.add(copied_attr)
                     # handle provenance
                     if self._prov_tracer is not None:

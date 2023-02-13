@@ -38,7 +38,7 @@ class Attribute:
             metadata=self.metadata,
         )
 
-    def copy_with_new_uid(self) -> Attribute:
+    def copy(self) -> Attribute:
         """
         Create a new attribute that is a copy of the current instance, but
         with a new identifier
