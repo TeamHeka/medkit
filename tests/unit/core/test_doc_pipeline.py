@@ -30,7 +30,7 @@ class _TextDocument:
 
     def __init__(self):
         self.uid = generate_id()
-        self.anns = AnnotationContainer()
+        self.anns = AnnotationContainer(doc_id=self.uid)
 
 
 class _TextAnnotation:
@@ -41,7 +41,7 @@ class _TextAnnotation:
         self.label = label
         self.text = text
         self.keys = set()
-        self.attrs = AttributeContainer()
+        self.attrs = AttributeContainer(ann_id=self.uid)
 
     @classmethod
     def from_dict(cls, annotation_dict: Dict[str, Any]) -> _TextAnnotation:

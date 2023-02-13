@@ -64,7 +64,7 @@ class TextAnnotation(abc.ABC):
         self.metadata = metadata
         self.keys = set()
 
-        self.attrs = AttributeContainer()
+        self.attrs = AttributeContainer(ann_id=self.uid)
         for attr in attrs:
             self.attrs.add(attr)
 

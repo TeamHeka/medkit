@@ -16,8 +16,8 @@ class AudioAnnotationContainer(AnnotationContainer[Segment]):
     Also provides handling of raw segment.
     """
 
-    def __init__(self, raw_segment: Segment):
-        super().__init__()
+    def __init__(self, doc_id: str, raw_segment: Segment):
+        super().__init__(doc_id=doc_id)
 
         # auto-generated RAW_AUDIO segment
         # not stored with other annotations but injected in calls to get()

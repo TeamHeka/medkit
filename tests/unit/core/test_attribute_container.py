@@ -4,7 +4,7 @@ from medkit.core import Attribute, AttributeContainer
 
 
 def test_basic():
-    attrs = AttributeContainer()
+    attrs = AttributeContainer(ann_id="id")
 
     # empty container
     assert len(attrs.get()) == 0
@@ -27,7 +27,7 @@ def test_basic():
 
 
 def test_add_same_attr():
-    attrs = AttributeContainer()
+    attrs = AttributeContainer(ann_id="id")
     attr = Attribute(label="negation", value=False)
     attrs.add(attr)
 

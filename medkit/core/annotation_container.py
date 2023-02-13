@@ -25,8 +25,9 @@ class AnnotationContainer(Generic[AnnotationType]):
     Otherwise, a default one (i.e. dict store) is used.
     """
 
-    def __init__(self):
+    def __init__(self, doc_id: str):
         self._store: Store = GlobalStore.get_store()
+        self._doc_id = doc_id
         self._ann_ids: List[str] = []
         self._ann_ids_by_label: Dict[str, List[str]] = {}
         self._ann_ids_by_key: Dict[str, List[str]] = {}

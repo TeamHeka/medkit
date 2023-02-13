@@ -21,8 +21,9 @@ class AttributeContainer:
     Otherwise, a default one (i.e. dict store) is used.
     """
 
-    def __init__(self):
+    def __init__(self, ann_id: str):
         self._store: Store = GlobalStore.get_store()
+        self._ann_id = ann_id
         self._attr_ids: List[str] = []
         self._attr_ids_by_label: Dict[str, List[str]] = {}
 

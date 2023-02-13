@@ -18,8 +18,8 @@ class TextAnnotationContainer(AnnotationContainer[TextAnnotation]):
     raw segment.
     """
 
-    def __init__(self, raw_segment: Segment):
-        super().__init__()
+    def __init__(self, doc_id: str, raw_segment: Segment):
+        super().__init__(doc_id=doc_id)
 
         # auto-generated raw segment
         # not stored with other annotations but injected in calls to get()

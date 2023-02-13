@@ -68,10 +68,11 @@ class AudioDocument:
         # auto-generated raw segment to hold the audio buffer
         self.raw_segment = self._generate_raw_segment(audio, uid)
 
-        self.anns = AudioAnnotationContainer(self.raw_segment)
+        self.anns = AudioAnnotationContainer(
+            doc_id=self.uid, raw_segment=self.raw_segment
+        )
         for ann in anns:
             self.anns.add(ann)
-
 
     @classmethod
     def _generate_raw_segment(cls, audio: AudioBuffer, doc_id: str) -> Segment:
