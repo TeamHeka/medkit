@@ -16,7 +16,6 @@ from medkit.core.audio.audio_buffer import (
     PlaceholderAudioBuffer,
 )
 from medkit.core.id import generate_id
-from medkit.core.store import GlobalStore
 
 
 @dataclasses.dataclass(init=False)
@@ -63,7 +62,6 @@ class AudioDocument:
 
         self.uid = uid
         self.metadata = metadata
-        self.store = GlobalStore.get_store()
 
         # auto-generated raw segment to hold the audio buffer
         self.raw_segment = self._generate_raw_segment(audio, uid)

@@ -8,7 +8,6 @@ from typing import Any, ClassVar, Dict, List, Optional
 import uuid
 
 from medkit.core.id import generate_id
-from medkit.core.store import GlobalStore
 from medkit.core.text.annotation import TextAnnotation, Segment, Entity, Relation
 from medkit.core.text.annotation_container import TextAnnotationContainer
 from medkit.core.text.span import Span
@@ -63,7 +62,6 @@ class TextDocument:
 
         self.uid = uid
         self.metadata = metadata
-        self.store = GlobalStore.get_store()
 
         # auto-generated raw segment to hold the text
         self.raw_segment = self._generate_raw_segment(text, uid)

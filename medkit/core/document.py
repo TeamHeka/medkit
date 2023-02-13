@@ -1,6 +1,6 @@
 __all__ = ["Document"]
 
-from typing import Generic, TypeVar
+from typing import TypeVar
 from typing_extensions import Protocol, runtime_checkable
 
 from medkit.core.annotation import Annotation
@@ -11,9 +11,9 @@ AnnotationType = TypeVar("AnnotationType", bound=Annotation)
 
 
 @runtime_checkable
-class Document(Protocol, Generic[AnnotationType]):
+class Document(Protocol[AnnotationType]):
     """
-    Base document protocol that must be implement by document classes of all
+    Base document protocol that must be implemented by document classes of all
     modalities (text, audio, etc).
 
     Documents can contain :class:`~medkit.core.annotation.Annotation` objects.
