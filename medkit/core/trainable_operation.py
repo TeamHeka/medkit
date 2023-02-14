@@ -4,6 +4,7 @@ from typing_extensions import Protocol, runtime_checkable
 
 import torch
 
+from medkit.core import IdentifiableDataItem
 from medkit.training.utils import BatchData
 
 
@@ -19,9 +20,11 @@ class TrainableOperation(Protocol):
         """Create optimizer using the learning rate"""
         pass
 
-    def preprocess(self, input: Any, inference_mode: bool) -> Dict[str, Any]:
+    def preprocess(
+        self, data_item: IdentifiableDataItem, inference_mode: bool
+    ) -> Dict[str, Any]:
         """
-        Preprocess the input and return a dictionary with
+        Preprocess the input data item and return a dictionary with
         everything needed for the forward pass.
 
         This method is intended to preprocess an input, `self.collate` must be
@@ -53,7 +56,7 @@ class TrainableOperation(Protocol):
         """
         pass
 
-    def postprocess(self, model_output: BatchData) -> Any:
+    def postprocess(self, model_output: BatchData) -> IdentifiableDataItem:
         """Create a medkit annotation for model output"""
         pass
 
