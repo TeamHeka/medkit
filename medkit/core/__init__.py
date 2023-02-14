@@ -1,5 +1,5 @@
 __all__ = [
-    "Annotation",
+    "AnnotationType",
     "AnnotationContainer",
     "Attribute",
     "AttributeContainer",
@@ -27,7 +27,7 @@ __all__ = [
     "create_prov_store",
 ]
 
-from .annotation import Annotation
+from .annotation import AnnotationType
 from .annotation_container import AnnotationContainer
 from .attribute import Attribute
 from .attribute_container import AttributeContainer

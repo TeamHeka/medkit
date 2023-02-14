@@ -1,6 +1,6 @@
-__all__ = ["Annotation"]
+__all__ = ["AnnotationType"]
 
-from typing import Set
+from typing import Set, TypeVar
 from typing_extensions import Protocol, runtime_checkable
 
 from medkit.core.attribute_container import AttributeContainer
@@ -35,3 +35,6 @@ class Annotation(Protocol):
     label: str
     keys: Set[str]
     attrs: AttributeContainer
+
+
+AnnotationType = TypeVar("AnnotationType", bound=Annotation)

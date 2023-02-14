@@ -1,13 +1,9 @@
 __all__ = ["Document"]
 
-from typing import TypeVar
 from typing_extensions import Protocol, runtime_checkable
 
-from medkit.core.annotation import Annotation
+from medkit.core.annotation import AnnotationType
 from medkit.core.annotation_container import AnnotationContainer
-
-
-AnnotationType = TypeVar("AnnotationType", bound=Annotation)
 
 
 @runtime_checkable

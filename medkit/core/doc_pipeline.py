@@ -1,15 +1,12 @@
 __all__ = ["DocPipeline"]
 
-from typing import Dict, Generic, List, Optional, Tuple, TypeVar, cast
+from typing import Dict, Generic, List, Optional, Tuple, cast
 
-from medkit.core.annotation import Annotation
+from medkit.core.annotation import AnnotationType
 from medkit.core.document import Document
 from medkit.core.operation import DocOperation
 from medkit.core.pipeline import Pipeline
 from medkit.core.prov_tracer import ProvTracer
-
-
-AnnotationType = TypeVar("AnnotationType", bound=Annotation)
 
 
 class DocPipeline(DocOperation, Generic[AnnotationType]):
