@@ -1,11 +1,17 @@
+from __future__ import annotations
+
+__all__ = ["TrainableOperation"]
+
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Protocol, runtime_checkable
 
 import torch
 
 from medkit.core import IdentifiableDataItem
-from medkit.training.utils import BatchData
+
+if TYPE_CHECKING:
+    from medkit.training.utils import BatchData
 
 
 @runtime_checkable
