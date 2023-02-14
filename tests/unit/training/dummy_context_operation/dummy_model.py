@@ -4,7 +4,7 @@ from typing import List
 import torch
 from torch import nn
 
-from medkit.training.utils import BatchData
+from medkit.training import BatchData
 
 
 @dataclass

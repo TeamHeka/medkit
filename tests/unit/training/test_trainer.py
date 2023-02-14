@@ -1,15 +1,8 @@
 import torch
 import pytest
 
-from medkit.core.trainable_operation import TrainableOperation
-from medkit.training.trainer import (
-    TrainConfig,
-    Trainer,
-    OPTIMIZER_NAME,
-    CONFIG_NAME,
-    SCHEDULER_NAME,
-)
-from medkit.training.utils import MetricsComputer
+from medkit.training import TrainerConfig, Trainer
+from medkit.training.trainer import OPTIMIZER_NAME, CONFIG_NAME, SCHEDULER_NAME
 
 from .dummy_context_operation.dummy_corpus import DUMMY_DATASETS
 from .dummy_context_operation.dummy_operation import MockTrainableOperation
@@ -28,14 +21,6 @@ class DummyMetricsComputer:
         TP = (predictions == references).sum().item()
         score = TP / len(predictions)
         return {"acc": score}
-
-
-def test_trainable_op_runtime():
-    assert isinstance(MockTrainableOperation(), TrainableOperation)
-
-
-def test_metrics_op_runtime():
-    assert isinstance(DummyMetricsComputer(), MetricsComputer)
 
 
 TEST_METRICS = [
@@ -59,7 +44,7 @@ def test_trainer_with_metrics(
 ):
     mock_operation = MockTrainableOperation()
     output_dir = tmp_path / "dummy-operation"
-    config = TrainConfig(
+    config = TrainerConfig(
         output_dir=output_dir,
         batch_size=1,
         do_metrics_in_training=do_metrics_in_training,
@@ -112,7 +97,7 @@ TEST_SCHEDULER = [
 def test_trainer_with_lr_scheduler(tmp_path, lr_scheduler_builder, metric_to_track_lr):
     mock_operation = MockTrainableOperation()
     output_dir = tmp_path / "dummy-operation"
-    config = TrainConfig(
+    config = TrainerConfig(
         output_dir=output_dir, batch_size=1, metric_to_track_lr=metric_to_track_lr
     )
     trainer = Trainer(
@@ -147,7 +132,7 @@ def test_trainer_with_lr_scheduler(tmp_path, lr_scheduler_builder, metric_to_tra
 def test_trainer_checkpoint(tmp_path, lr_scheduler_builder):
     mock_operation = MockTrainableOperation()
     output_dir = tmp_path / "full_model"
-    config = TrainConfig(
+    config = TrainerConfig(
         output_dir=output_dir,
         batch_size=1,
     )

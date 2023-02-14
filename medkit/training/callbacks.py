@@ -1,14 +1,18 @@
+from __future__ import annotations
+
+__all__ = ["TrainerCallback", "DefaultPrinterCallback"]
+
 import logging
+from typing import TYPE_CHECKING, Dict
+
+if TYPE_CHECKING:
+    from medkit.training.trainer import TrainerConfig
 
 
 class TrainerCallback:
     """A TrainerCallback is the base class for trainer callbacks"""
 
-    def on_init_end(self):
-        """Event called at the end of the initialization of a Trainer"""
-        pass
-
-    def on_train_begin(self):
+    def on_train_begin(self, config: TrainerConfig):
         """Event called at the beginning of training"""
         pass
 
@@ -20,7 +24,7 @@ class TrainerCallback:
         """Event called at the beginning of an epoch"""
         pass
 
-    def on_epoch_end(self):
+    def on_epoch_end(self, metrics: Dict[str, float], epoch: int, epoch_time: float):
         """Event called at the end of an epoch"""
         pass
 
@@ -32,7 +36,7 @@ class TrainerCallback:
         """Event called at the end of a step in training"""
         pass
 
-    def on_save(self):
+    def on_save(self, checkpoint_dir: str):
         """Event called on saving a checkpoint"""
         pass
 
@@ -51,10 +55,10 @@ class DefaultPrinterCallback(TrainerCallback):
         )
         console_handler.setFormatter(formatter)
 
+        # ensure a single handler for the logger
+        for handler in self.logger.handlers:
+            self.logger.removeHandler(handler)
         self.logger.addHandler(console_handler)
-
-    def on_init_end(self):
-        self.logger.info("Trainer has been configured correctly")
 
     def on_train_begin(self, config):
         self.logger.info("---Running training---")
@@ -64,7 +68,7 @@ class DefaultPrinterCallback(TrainerCallback):
             f" Gradient Accum steps = {config.gradient_accumulation_steps}"
         )
 
-    def on_epoch_end(self, metrics, epoch, epoch_time):
+    def on_epoch_end(self, metrics, epoch, epoch_duration):
         logger = self.logger
 
         train_metrics = metrics.get("train", None)
@@ -86,7 +90,9 @@ class DefaultPrinterCallback(TrainerCallback):
             logger.info("-" * 59)
 
         logger.info(
-            "Epoch state: |epoch_id: {:3d} | time: {:5.2f}s".format(epoch, epoch_time)
+            "Epoch state: |epoch_id: {:3d} | time: {:5.2f}s".format(
+                epoch, epoch_duration
+            )
         )
 
     def on_train_end(self):

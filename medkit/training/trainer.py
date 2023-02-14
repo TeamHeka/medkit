@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+__all__ = ["Trainer", "TrainerConfig"]
+
 import datetime
 import os
 import random
@@ -49,13 +53,13 @@ class _TrainerDataset(Dataset):
 
 
 @dataclass
-class TrainConfig:
+class TrainerConfig:
     output_dir: str
     learning_rate: float = 1e-5
     nb_training_epochs: int = 3
     dataloader_nb_workers: int = 0
     batch_size: int = 1
-    seed: int = 0
+    seed: Optional[int] = None
     gradient_accumulation_steps: int = 1
     do_metrics_in_training: bool = False
     metric_to_track_lr: str = "loss"
@@ -76,7 +80,7 @@ class Trainer:
     def __init__(
         self,
         operation: TrainableOperation,
-        config: TrainConfig,
+        config: TrainerConfig,
         train_data: Any,
         eval_data: Any,
         metrics_computer: Optional[MetricsComputer] = None,
@@ -108,7 +112,8 @@ class Trainer:
             Optional callback to customize training.
         """
         # enable deterministic operation
-        set_seed(config.seed)
+        if config.seed is not None:
+            set_seed(config.seed)
 
         self.output_dir = Path(config.output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
@@ -139,8 +144,6 @@ class Trainer:
         if callback is None:
             self.callback = DefaultPrinterCallback()
 
-        self.callback.on_init_end()
-
     def get_dataloader(self, data: any, shuffle: bool) -> DataLoader:
         """Return a DataLoader with transformations defined
         in the operation to train"""
@@ -170,11 +173,9 @@ class Trainer:
         metrics = {}
         data_for_metrics = defaultdict(list)
 
-        for step, samples in enumerate(self.train_dataloader):
+        for step, input_batch in enumerate(self.train_dataloader):
             # train step begin
-            model_output, loss = self.make_forward_pass(
-                samples, return_loss=True, eval_mode=False
-            )
+            model_output, loss = self.make_forward_pass(input_batch, eval_mode=False)
 
             if config.gradient_accumulation_steps > 1:
                 loss = loss / config.gradient_accumulation_steps
@@ -191,7 +192,7 @@ class Trainer:
 
             if config.do_metrics_in_training and self.metrics_computer is not None:
                 prepared_batch = self.metrics_computer.prepare_batch(
-                    model_output, samples
+                    model_output, input_batch
                 )
                 for key, values in prepared_batch.items():
                     data_for_metrics[key].append(values)
@@ -216,16 +217,14 @@ class Trainer:
         data_for_metrics = defaultdict(list)
 
         with torch.no_grad():
-            for _, samples in enumerate(eval_dataloader):
+            for _, input_batch in enumerate(eval_dataloader):
                 # eval step begin
-                model_output, loss = self.make_forward_pass(
-                    samples, return_loss=True, eval_mode=True
-                )
+                model_output, loss = self.make_forward_pass(input_batch, eval_mode=True)
                 total_loss_epoch += loss.item()
 
                 if self.metrics_computer is not None:
                     prepared_batch = self.metrics_computer.prepare_batch(
-                        model_output, samples
+                        model_output, input_batch
                     )
                     for key, values in prepared_batch.items():
                         data_for_metrics[key].append(values)
@@ -239,15 +238,15 @@ class Trainer:
         return metrics
 
     def make_forward_pass(
-        self, inputs: BatchData, return_loss: bool, eval_mode=bool
-    ) -> Tuple[BatchData, Optional[torch.Tensor]]:
+        self, inputs: BatchData, eval_mode: bool
+    ) -> Tuple[BatchData, torch.Tensor]:
         """Run forward safely, same device as the operation"""
         inputs = inputs.to_device(self.device)
         model_output, loss = self.operation.forward(
-            inputs, return_loss=return_loss, eval_mode=eval_mode
+            inputs, return_loss=True, eval_mode=eval_mode
         )
 
-        if return_loss and loss is None:
+        if loss is None:
             raise ValueError("The operation did not return a 'loss' from the input.")
 
         return model_output, loss
@@ -293,7 +292,7 @@ class Trainer:
             self.callback.on_epoch_end(
                 metrics=metrics,
                 epoch=epoch,
-                epoch_time=time.time() - epoch_start_time,
+                epoch_duration=time.time() - epoch_start_time,
             )
         self.save()
         self.callback.on_train_end()

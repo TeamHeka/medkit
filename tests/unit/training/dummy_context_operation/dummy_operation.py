@@ -4,7 +4,7 @@ from typing import Optional
 import torch
 
 from medkit.core.annotation import Attribute
-from medkit.training.utils import BatchData
+from medkit.training import BatchData
 
 from .dummy_model import DummyTextCat, DummyTextCatConfig, DummyTokenizer
 
