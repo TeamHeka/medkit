@@ -9,32 +9,43 @@ The {class}`~medkit.core.text.document.AudioDocument` class implements the
 {class}`~medkit.core.audio.annotation.Segment` class, which implements the
 {class}`~medkit.core.Annotation` protocol.
 
-`AudioDocument` relies on {class}`~medkit.core.text.document.AudioAnnotationContainer`, a
-subclass of {class}`~medkit.core.AnnotationContainer`, to store the annotations,
 
 ```{mermaid}
 :align: center
 :caption: Audio document and annotation hierarchy
 
 classDiagram
-    direction TD
+    direction TB
+    class Document~Annotation~{
+        <<protocol>>
+    }
+    class Annotation{
+        <<protocol>>
+    }
     class AudioDocument{
         uid: str
         anns: AudioAnnotationContainer
     }
-    class AudioAnnotationContainer{
-    }
-    class Segment{
-        <<abstract>>
+    class Segment {
         uid: str
         label: str
         attrs: AttributeContainer
     }
-    AudioDocument *-- AudioAnnotationContainer
-    AudioAnnotationContainer o-- AudioAnnotation
+    Document <|.. AudioDocument: implements
+    AudioDocument *-- Segment : contains\n(AudioAnnotationContainer)
+    
 ```
 
+
 ### Document
+
+`AudioDocument` relies on {class}`~medkit.core.text.document.AudioAnnotationContainer`, a
+subclass of {class}`~medkit.core.AnnotationContainer`, to manage the annotations,
+
+```{note}
+For common interfaces provided by core components, you can refer to
+[Document](api:core:document).
+```
 
 ```{eval-rst}
 .. automodule:: medkit.core.audio.document
@@ -44,10 +55,12 @@ classDiagram
 
 ### Annotations
 
+For audio modality, `AudioDocument` can only contain
+{class}`~medkit.core.audio.Segment`.
+
 ```{eval-rst}
-.. automodule:: medkit.core.audio.annotation
+.. autoclass:: medkit.core.audio::Segment
     :members:
-    :inherited-members:
 ```
 
 ## Span
@@ -65,20 +78,38 @@ the audio document that is annotated. Contrary to text annotations, multiple dis
 Access to the actual waveform data is handled through `AudioBuffer` instances. The same way text annotations
 store the text they refer to in their `text` property, which holds a string, audio annotations store the portion of the audio signal they refer to in an `audio` property holding an `AudioBuffer`.
 
-The contents of an `AudioBuffer` might be different from the intial raw signal if it has been preprocessed. If
+The contents of an `AudioBuffer` might be different from the initial raw signal if it has been preprocessed. If
 the signal is identical to the initial raw signal, then a `FileAudioBuffer` can be used (with appropriate `start` and `end` boundaries). Otherwise, a `MemoryAudioBuffer` has to be used as there is no corresponding audio file containing the signal.
 
 Creating a new `AudioBuffer` containing a portion of a pre-existing buffer is done through the `trim()` method.
 
 ```{eval-rst}
-.. automodule:: medkit.core.audio.audio_buffer
+.. autoclass:: medkit.core.audio::AudioBuffer
+    :members:
+```
+---
+```{eval-rst}
+.. autoclass:: medkit.core.audio::FileAudioBuffer
+    :members:
+```
+---
+```{eval-rst}
+.. autoclass:: medkit.core.audio::MemoryAudioBuffer
     :members:
 ```
 
 ## Operations
 
-Abstract sub-classes of `Operation` have been defined for audio to ease the
+Abstract subclasses of `Operation` have been defined for audio to ease the
 development of audio operations according to `run` operations.
+
+```{eval-rst}
+.. autoclasstree:: medkit.core.operation medkit.core.audio.operation
+    :strict:
+    :namespace: medkit.core
+    :align: center
+    :caption: Operation hierarchy
+```
 
 ```{eval-rst}
 .. automodule:: medkit.core.audio.operation
