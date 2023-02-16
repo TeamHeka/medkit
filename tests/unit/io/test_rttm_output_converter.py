@@ -19,8 +19,8 @@ def _get_doc():
         span=span_1,
         audio=full_audio.trim_duration(span_1.start, span_1.end),
     )
-    seg_1.add_attr(Attribute(label="speaker", value="Alice"))
-    doc.add_annotation(seg_1)
+    seg_1.attrs.add(Attribute(label="speaker", value="Alice"))
+    doc.anns.add(seg_1)
 
     span_2 = Span(start=2.904, end=5.056)
     seg_2 = Segment(
@@ -28,8 +28,8 @@ def _get_doc():
         span=span_2,
         audio=full_audio.trim_duration(span_2.start, span_2.end),
     )
-    seg_2.add_attr(Attribute(label="speaker", value="Bob"))
-    doc.add_annotation(seg_2)
+    seg_2.attrs.add(Attribute(label="speaker", value="Bob"))
+    doc.anns.add(seg_2)
 
     # segment that is not a turn and shouldn't end up in the .rttm
     span_3 = Span(start=0.161, end=5.056)
@@ -38,7 +38,7 @@ def _get_doc():
         span=span_3,
         audio=full_audio.trim_duration(span_3.start, span_3.end),
     )
-    doc.add_annotation(seg_3)
+    doc.anns.add(seg_3)
 
     return doc
 

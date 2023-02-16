@@ -1,6 +1,6 @@
 __all__ = ["AttributeDuplicator"]
 
-from typing import Dict, List, Optional
+from typing import List, Optional, Tuple
 from intervaltree import IntervalTree
 from medkit.core import Attribute, Operation
 from medkit.core.text import Segment, span_utils
@@ -44,11 +44,11 @@ class AttributeDuplicator(Operation):
         """
         nested = self._compute_nested_segments(source_segments, target_segments)
 
-        for parent, children in nested.items():
+        for parent, children in nested:
             attrs_to_copy = [
                 attr
                 for label in self.attr_labels
-                for attr in parent.get_attrs_by_label(label)
+                for attr in parent.attrs.get(label=label)
             ]
 
             # create a new attr in target from the source attr
@@ -58,7 +58,7 @@ class AttributeDuplicator(Operation):
 
     def _compute_nested_segments(
         self, source_segments: List[Segment], target_segments: List[Segment]
-    ) -> Dict[Segment, List[Segment]]:
+    ) -> List[Tuple[Segment, List[Segment]]]:
         tree = IntervalTree()
         for segment in target_segments:
             normalized_spans = span_utils.normalize_spans(segment.spans)
@@ -75,24 +75,22 @@ class AttributeDuplicator(Operation):
 
     def _find_nested(
         self, tree: IntervalTree, source_segments: List[Segment]
-    ) -> Dict[Segment, List[Segment]]:
-        nested = {}
-        for segment in source_segments:
-            normalized_spans = span_utils.normalize_spans(segment.spans)
+    ) -> List[Tuple[Segment, List[Segment]]]:
+        nested = []
+        for parent in source_segments:
+            normalized_spans = span_utils.normalize_spans(parent.spans)
 
             if not normalized_spans:
                 continue
 
             start, end = normalized_spans[0].start, normalized_spans[-1].end
-            nested[segment] = [child.data for child in tree.overlap(start, end)]
+            children = [child.data for child in tree.overlap(start, end)]
+            nested.append((parent, children))
         return nested
 
     def _duplicate_attr(self, attr: Attribute, target: Segment):
-        target_attr = Attribute(
-            label=attr.label, value=attr.value, metadata=attr.metadata
-        )
-
-        target.add_attr(target_attr)
+        target_attr = attr.copy()
+        target.attrs.add(target_attr)
 
         if self._prov_tracer is not None:
             self._prov_tracer.add_prov(

@@ -18,7 +18,6 @@ from medkit.core import (
     Attribute,
     InputConverter,
     OutputConverter,
-    Store,
     ProvTracer,
     generate_id,
     OperationDescription,
@@ -45,12 +44,11 @@ logger = logging.getLogger(__name__)
 class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
 
-    def __init__(self, store: Optional[Store] = None, uid: Optional[str] = None):
+    def __init__(self, uid: Optional[str] = None):
         if uid is None:
             uid = generate_id()
 
         self.uid = uid
-        self.store: Optional[Store] = store
         self._prov_tracer: Optional[ProvTracer] = None
 
     @property
@@ -116,7 +114,7 @@ class BratInputConverter(InputConverter):
                 # directly load .txt without .ann
                 text = text_path.read_text(encoding="utf-8")
                 metadata = dict(path_to_text=str(text_path))
-                doc = TextDocument(text=text, metadata=metadata, store=self.store)
+                doc = TextDocument(text=text, metadata=metadata)
             else:
                 # load both .txt and .ann
                 doc = self.load_doc(ann_path=ann_path, text_path=text_path)
@@ -156,9 +154,9 @@ class BratInputConverter(InputConverter):
 
         metadata = dict(path_to_text=str(text_path), path_to_ann=str(ann_path))
 
-        doc = TextDocument(text=text, metadata=metadata, store=self.store)
+        doc = TextDocument(text=text, metadata=metadata)
         for ann in anns:
-            doc.add_annotation(ann)
+            doc.anns.add(ann)
 
         return doc
 
@@ -212,7 +210,7 @@ class BratInputConverter(InputConverter):
                 value=brat_attribute.value,
                 metadata=dict(brat_id=brat_attribute.uid),
             )
-            anns_by_brat_id[brat_attribute.target].add_attr(attribute)
+            anns_by_brat_id[brat_attribute.target].attrs.add(attribute)
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     attribute, self.description, source_data_items=[]
@@ -340,11 +338,15 @@ class BratOutputConverter(OutputConverter):
         self, medkit_doc: TextDocument
     ) -> Tuple[List[Segment], List[Relation]]:
         """Return selected annotations from a medkit document"""
-        annotations = medkit_doc.get_annotations()
-
         if self.anns_labels is not None:
             # filter annotations by label
-            annotations = [ann for ann in annotations if ann.label in self.anns_labels]
+            annotations = [
+                ann
+                for label in self.anns_labels
+                for ann in medkit_doc.anns.get(label=label)
+            ]
+        else:
+            annotations = medkit_doc.anns.get()
 
         if self.anns_labels and annotations == []:
             # labels_anns were a list but none of the annotations
@@ -409,12 +411,12 @@ class BratOutputConverter(OutputConverter):
 
             # include selected attributes
             if self.attrs is None:
-                attrs = medkit_segment.get_attrs()
+                attrs = medkit_segment.attrs.get()
             else:
                 attrs = [
                     a
                     for label in self.attrs
-                    for a in medkit_segment.get_attrs_by_label(label)
+                    for a in medkit_segment.attrs.get(label=label)
                 ]
             for attr in attrs:
                 value = attr.value
@@ -453,12 +455,12 @@ class BratOutputConverter(OutputConverter):
             # Note: it seems that brat does not support attributes for relations
             # include selected attributes
             if self.attrs is None:
-                attrs = medkit_relation.get_attrs()
+                attrs = medkit_relation.attrs.get()
             else:
                 attrs = [
                     a
                     for label in self.attrs
-                    for a in medkit_relation.get_attrs_by_label(label)
+                    for a in medkit_relation.attrs.get(label=label)
                 ]
             for attr in attrs:
                 value = attr.value

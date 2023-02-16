@@ -27,18 +27,18 @@ def _get_doc():
     ent_1 = Entity(
         label="medication", spans=[Span(36, 46)], text="Lisinopril", attrs=[]
     )
-    medkit_doc.add_annotation(ent_1)
+    medkit_doc.anns.add(ent_1)
 
     ent_2_attr = Attribute(label="severity", value="high")
     ent_2 = Entity(
         label="disease", spans=[Span(84, 96)], text="hypertension", attrs=[ent_2_attr]
     )
-    medkit_doc.add_annotation(ent_2)
+    medkit_doc.anns.add(ent_2)
 
     ent_3 = Entity(
         label="medication", spans=[Span(120, 133)], text="Levothyroxine", attrs=[]
     )
-    medkit_doc.add_annotation(ent_3)
+    medkit_doc.anns.add(ent_3)
 
     # segments
     seg_1_attr = Attribute(label="family", value=True)
@@ -48,13 +48,13 @@ def _get_doc():
         text="The patient's father",
         attrs=[seg_1_attr],
     )
-    medkit_doc.add_annotation(seg_1)
+    medkit_doc.anns.add(seg_1)
 
     seg_2_attr = Attribute(label="family", value=False)
     seg_2 = Segment(
         label="PEOPLE", spans=[Span(98, 109)], text="The patient", attrs=[seg_2_attr]
     )
-    medkit_doc.add_annotation(seg_2)
+    medkit_doc.anns.add(seg_2)
     return medkit_doc
 
 

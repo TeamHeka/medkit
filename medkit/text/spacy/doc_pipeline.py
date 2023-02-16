@@ -105,7 +105,7 @@ class SpacyDocPipeline(DocOperation):
             # annotate
             # add new annotations
             for ann in anns:
-                medkit_doc.add_annotation(ann)
+                medkit_doc.anns.add(ann)
                 if self._prov_tracer is not None:
                     self._prov_tracer.add_prov(
                         ann,
@@ -115,9 +115,9 @@ class SpacyDocPipeline(DocOperation):
 
             # add new attributes in each annotation
             for ann_id, attrs in attrs_by_ann_id.items():
-                ann = medkit_doc.get_annotation_by_id(ann_id)
+                ann = medkit_doc.anns.get_by_id(ann_id)
                 for attr in attrs:
-                    ann.add_attr(attr)
+                    ann.attrs.add(attr)
                     if self._prov_tracer is not None:
                         # if ann is an existing annotation, in terms
                         # of provenance, the annotation was used to

@@ -1,6 +1,8 @@
 __all__ = [
-    "Annotation",
+    "AnnotationType",
+    "AnnotationContainer",
     "Attribute",
+    "AttributeContainer",
     "Collection",
     "InputConverter",
     "OutputConverter",
@@ -20,10 +22,15 @@ __all__ = [
     "ProvTracer",
     "Prov",
     "Store",
-    "DictStore",
+    "GlobalStore",
+    "ProvStore",
+    "create_prov_store",
 ]
 
-from .annotation import Annotation, Attribute
+from .annotation import AnnotationType
+from .annotation_container import AnnotationContainer
+from .attribute import Attribute
+from .attribute_container import AttributeContainer
 from .collection import Collection
 from .conversion import InputConverter, OutputConverter
 from .data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs
@@ -40,4 +47,5 @@ from .pipeline import (
     ProvCompatibleOperation,
 )
 from .prov_tracer import ProvTracer, Prov
-from .store import Store, DictStore
+from .store import Store, GlobalStore
+from .prov_store import ProvStore, create_prov_store

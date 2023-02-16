@@ -68,7 +68,7 @@ def _get_medkit_doc():
         ),
     ]
     for ann in medkit_anns:
-        doc.add_annotation(ann)
+        doc.anns.add(ann)
 
     return doc
 
@@ -147,7 +147,6 @@ def test_save(
 ):
     # create medkit_doc with 4 entities, 1 relation, 1 segment, 2 attrs
     medkit_doc = _get_medkit_doc()
-    medkit_doc.annotation_ids = sorted(medkit_doc.annotation_ids)
     output_path = tmp_path / "output"
     expected_txt_path = output_path / f"{medkit_doc.uid}.txt"
     expected_ann_path = output_path / f"{medkit_doc.uid}.ann"
@@ -356,7 +355,7 @@ def _get_modified_medkit_doc():
         ),
     ]
     for ann in medkit_anns:
-        doc.add_annotation(ann)
+        doc.anns.add(ann)
     return doc
 
 
@@ -367,7 +366,6 @@ T2\tgrade 26 32;43 44\tgrade 4
 
 def test_brat_output_from_modified_span(tmp_path: Path):
     medkit_doc = _get_modified_medkit_doc()
-    medkit_doc.annotation_ids = sorted(medkit_doc.annotation_ids)
     output_path = tmp_path / "output"
     expected_txt_path = output_path / f"{medkit_doc.uid}.txt"
     expected_ann_path = output_path / f"{medkit_doc.uid}.ann"
@@ -393,7 +391,7 @@ def test_normalization_attr(tmp_path: Path):
     entity.add_norm(
         EntityNormalization(kb_name="umls", kb_id="C0004096", kb_version="2021AB")
     )
-    doc.add_annotation(entity)
+    doc.anns.add(entity)
 
     brat_converter = BratOutputConverter()
     brat_converter.save([doc], tmp_path)

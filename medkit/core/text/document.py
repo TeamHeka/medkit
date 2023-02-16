@@ -2,68 +2,75 @@ from __future__ import annotations
 
 __all__ = ["TextDocument"]
 
+import dataclasses
 import random
-from typing import Any, Dict, List, Optional
+from typing import Any, ClassVar, Dict, List, Optional
 import uuid
 
-from medkit.core.document import Document
-from medkit.core.store import Store
+from medkit.core.id import generate_id
 from medkit.core.text.annotation import TextAnnotation, Segment, Entity, Relation
+from medkit.core.text.annotation_container import TextAnnotationContainer
 from medkit.core.text.span import Span
 
 
-class TextDocument(Document[TextAnnotation]):
-    """Document holding text annotations
+@dataclasses.dataclass(init=False)
+class TextDocument:
+    """
+    Document holding text annotations
 
     Annotations must be subclasses of `TextAnnotation`.
 
+    Attributes
+    ----------
+    uid:
+        Unique identifier of the document.
+    text:
+        Full document text.
+    anns:
+        Annotations of the document. Stored in an
+        :class:`~.TextAnnotationContainer` but can be passed as a list at init.
+    metadata:
+        Document metadata.
+    raw_segment:
+        Auto-generated segment containing the full unprocessed document text. To
+        get the raw text as an annotation to pass to processing operations:
+
+        >>> doc = TextDocument(text="hello")
+        >>> raw_text = doc.anns.get(label=TextDocument.RAW_LABEL)[0]
     """
 
-    RAW_LABEL = "RAW_TEXT"
-    """Label to be used for raw text
-    """
+    RAW_LABEL: ClassVar[str] = "RAW_TEXT"
+
+    uid: str
+    anns: TextAnnotationContainer
+    metadata: Dict[str, Any]
+    raw_segment: Segment
 
     def __init__(
         self,
         text: str,
+        anns: Optional[List[TextAnnotation]] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        store: Optional[Store] = None,
         uid: Optional[str] = None,
     ):
-        """
-        Initializes the text document
+        if anns is None:
+            anns = []
+        if metadata is None:
+            metadata = {}
+        if uid is None:
+            uid = generate_id()
 
-        The method uses the abstract class Document to initialize a part
-        and creates dictionary views for accessing entities and relations.
+        self.uid = uid
+        self.metadata = metadata
 
-        Parameters
-        ----------
-        text:
-            Document text
-        metadata: dict  # TODO
-            Document metadata
-        store:
-            Store to use for annotations
-        uid: str, Optional
-            Document identifier. If None, an uuid is generated.
+        # auto-generated raw segment to hold the text
+        self.raw_segment = self._generate_raw_segment(text, uid)
 
-        Examples
-        --------
-        To get the raw text as an annotation to pass to processing operations:
-
-        >>> doc = TextDocument(text="hello")
-        >>> raw_text = doc.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
-        """
-        super().__init__(uid=uid, metadata=metadata, store=store)
-
-        self._segment_ids: List[str] = []
-        self._entity_ids: List[str] = []
-        self.relations_by_source: Dict[str, List[str]] = dict()  # Key: source_id
-
-        # auto-generated raw segment
-        # not stored with other annotations but injected in calls to get_annotations_by_label()
-        # and get_annotation_by_id()
-        self.raw_segment: Segment = self._generate_raw_segment(text, self.uid)
+        self.anns = TextAnnotationContainer(
+            doc_id=self.uid, raw_segment=self.raw_segment
+        )
+        for ann in anns:
+            self.anns.add(ann)
 
     @classmethod
     def _generate_raw_segment(cls, text: str, doc_id: str) -> Segment:
@@ -83,63 +90,15 @@ class TextDocument(Document[TextAnnotation]):
     def text(self) -> str:
         return self.raw_segment.text
 
-    def add_annotation(self, annotation: TextAnnotation):
-        """
-        Add the annotation to this document
-
-        The method uses the abstract class method to add the annotation
-        in the Document.
-        It also adds the annotation uid to the corresponding dictionary view (segments,
-        entities, relations)
-        according to the annotation category (Segment, Entity, Relation).
-
-        Parameters
-        ----------
-        annotation:
-            Annotation to add.
-
-        Raises
-        ------
-        ValueError
-            If `annotation.uid` is already in Document.annotations.
-
-
-        """
-        if annotation.label == self.RAW_LABEL:
-            raise RuntimeError(
-                f"Cannot add annotation with reserved label {self.RAW_LABEL}"
-            )
-
-        try:
-            super().add_annotation(annotation)
-        except ValueError as err:
-            raise err
-
-        if isinstance(annotation, Entity):
-            self._entity_ids.append(annotation.uid)
-        elif isinstance(annotation, Segment):
-            self._segment_ids.append(annotation.uid)
-        elif isinstance(annotation, Relation):
-            if annotation.source_id not in self.relations_by_source:
-                self.relations_by_source[annotation.source_id] = []
-            self.relations_by_source[annotation.source_id].append(annotation.uid)
-
-    def get_annotations_by_label(self, label) -> List[TextAnnotation]:
-        # inject raw segment
-        if label == self.RAW_LABEL:
-            return [self.raw_segment]
-        return super().get_annotations_by_label(label)
-
-    def get_annotation_by_id(self, annotation_id) -> Optional[TextAnnotation]:
-        # inject raw segment
-        if annotation_id == self.raw_segment.uid:
-            return self.raw_segment
-        return super().get_annotation_by_id(annotation_id)
-
     def to_dict(self) -> Dict[str, Any]:
-        data = super().to_dict()
-        data.update(text=self.text, class_name=self.__class__.__name__)
-        return data
+        anns = [ann.to_dict() for ann in self.anns]
+        return dict(
+            uid=self.uid,
+            text=self.text,
+            anns=anns,
+            metadata=self.metadata,
+            class_name=self.__class__.__name__,
+        )
 
     @classmethod
     def from_dict(cls, doc_dict: Dict[str, Any]) -> TextDocument:
@@ -151,53 +110,18 @@ class TextDocument(Document[TextAnnotation]):
         doc_dict: dict
             A dictionary from a serialized TextDocument as generated by to_dict()
         """
-        annotations = []
-        for annotation_dict in doc_dict["annotations"]:
+        anns = []
+        for annotation_dict in doc_dict["anns"]:
             if annotation_dict["class_name"] == "Relation":
-                annotations.append(Relation.from_dict(annotation_dict))
+                anns.append(Relation.from_dict(annotation_dict))
             elif annotation_dict["class_name"] == "Segment":
-                annotations.append(Segment.from_dict(annotation_dict))
+                anns.append(Segment.from_dict(annotation_dict))
             elif annotation_dict["class_name"] == "Entity":
-                annotations.append(Entity.from_dict(annotation_dict))
+                anns.append(Entity.from_dict(annotation_dict))
 
-        doc = cls(
-            uid=doc_dict["uid"], metadata=doc_dict["metadata"], text=doc_dict["text"]
+        return cls(
+            uid=doc_dict["uid"],
+            text=doc_dict["text"],
+            anns=anns,
+            metadata=doc_dict["metadata"],
         )
-
-        for annotation in annotations:
-            doc.add_annotation(annotation)
-
-        return doc
-
-    def get_entities(self) -> List[Entity]:
-        """Return all entities attached to document
-
-        Returns
-        -------
-        List[Entity]:
-            Entities in document
-        """
-        return [self.get_annotation_by_id(uid) for uid in self._entity_ids]
-
-    def get_segments(self) -> List[Segment]:
-        """Return all segments attached to document (not including entities)
-
-        Returns
-        -------
-        List[~medkit.core.text.Segment]:
-            Segments in document
-        """
-        return [self.get_annotation_by_id(uid) for uid in self._segment_ids]
-
-    def get_relations_by_source_id(self, source_ann_id) -> List[Relation]:
-        relation_ids = self.relations_by_source.get(source_ann_id, [])
-        relations = [self.store.get_data_item(uid) for uid in relation_ids]
-        return relations
-
-    def get_relations(self) -> List[Relation]:
-        relations = [
-            self.store.get_data_item(ann_id)
-            for ids in self.relations_by_source.values()
-            for ann_id in ids
-        ]
-        return relations

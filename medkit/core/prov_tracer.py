@@ -9,7 +9,7 @@ from typing import List, Optional
 from medkit.core.data_item import IdentifiableDataItem
 from medkit.core.operation_desc import OperationDescription
 from medkit.core._prov_graph import ProvGraph, ProvNode
-from medkit.core.store import Store, DictStore
+from medkit.core.prov_store import ProvStore, create_prov_store
 
 
 @dataclasses.dataclass
@@ -67,7 +67,7 @@ class ProvTracer:
     """
 
     def __init__(
-        self, store: Optional[Store] = None, _graph: Optional[ProvGraph] = None
+        self, store: Optional[ProvStore] = None, _graph: Optional[ProvGraph] = None
     ):
         """
         Parameters
@@ -76,11 +76,11 @@ class ProvTracer:
             Store that will contain all traced data items.
         """
         if store is None:
-            store = DictStore()
+            store = create_prov_store()
         if _graph is None:
             _graph = ProvGraph()
 
-        self.store: Store = store
+        self.store: ProvStore = store
         self._graph: ProvGraph = _graph
 
     def add_prov(

@@ -280,8 +280,14 @@ class RegexpMatcher(NEROperation):
             )
 
             for label in self.attrs_to_copy:
-                for attr in segment.get_attrs_by_label(label):
-                    entity.add_attr(attr)
+                for attr in segment.attrs.get(label=label):
+                    copied_attr = attr.copy()
+                    entity.attrs.add(copied_attr)
+                    # handle provenance
+                    if self._prov_tracer is not None:
+                        self._prov_tracer.add_prov(
+                            copied_attr, self.description, [attr]
+                        )
 
             # create normalization attributes for each normalization descriptor
             # of the rule

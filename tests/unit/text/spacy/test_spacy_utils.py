@@ -48,7 +48,7 @@ def _get_doc():
     )
 
     for ann in [ent_1, ent_2, ent_3, seg_1, seg_2]:
-        medkit_doc.add_annotation(ann)
+        medkit_doc.anns.add(ann)
 
     return medkit_doc
 
@@ -106,7 +106,7 @@ def test_medkit_to_spacy_doc_selected_ents_list(nlp_spacy):
     # ents were transfer, 2 for medication, 1 for disease
     assert len(spacy_doc.ents) == 3
 
-    ents = medkit_doc.get_entities()
+    ents = medkit_doc.anns.get_entities()
     # guarantee the same order to compare
     doc_ents = sorted(
         spacy_doc.ents, key=lambda ent_spacy: ent_spacy._.get("medkit_id")
@@ -178,7 +178,7 @@ def test_medkit_to_spacy_doc_all_anns_family_attr(nlp_spacy):
 def test_medkit_segments_to_spacy_docs(nlp_spacy):
     # test medkit segments to spacy doc
     medkit_doc = _get_doc()
-    segments = medkit_doc.get_annotations_by_label("PEOPLE")
+    segments = medkit_doc.anns.get(label="PEOPLE")
 
     for ann_source in segments:
         doc = spacy_utils.build_spacy_doc_from_medkit_segment(
@@ -208,7 +208,7 @@ def test_normalization_attr(nlp_spacy):
     entity.add_norm(
         EntityNormalization(kb_name="umls", kb_id="C0004096", kb_version="2021AB")
     )
-    doc.add_annotation(entity)
+    doc.anns.add(entity)
 
     spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(
         nlp=nlp_spacy, medkit_doc=doc

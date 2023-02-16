@@ -188,7 +188,8 @@ To solve this kind of situations, medkit comes with context detectors, such as
 `NegationDetector.run()` receives a list of `Segment` objects. It doesn't return
 anything but it will append an {class}`~medkit.core.Attribute` object to each
 segment with a boolean value indicating whether a negation was detected or not
-(`Segment` and `Entity` objects can have a list of `Attribute` objects).
+(`Segment` and `Entity` objects can have a list of `Attribute` objects,
+accessible through their {class}`~medkit.core.AttributeContainer`).
 
 Let's instantiate a `NegationDetector` with a couple of simplistic handcrafted
 rules and run it on our sentences:
@@ -215,7 +216,7 @@ And now, let's look at which sentence have been detected as being negated:
 
 ```{code-cell} ipython3
 for sentence in sentences:
-    neg_attr = sentence.get_attrs_by_label("is_negated")[0]
+    neg_attr = sentence.attrs.get(label="is_negated")[0]
     if neg_attr.value:
         print(sentence.text)
 ```
@@ -245,7 +246,7 @@ syntagmas = synt_tokenizer.run(sentences)
 neg_detector.run(syntagmas)
 
 for syntagma in syntagmas:
-    neg_attr = syntagma.get_attrs_by_label("is_negated")[0]
+    neg_attr = syntagma.attrs.get(label="is_negated")[0]
     if neg_attr.value:
         print(syntagma.text)
 ```
@@ -271,7 +272,7 @@ regexp_matcher = RegexpMatcher(rules=regexp_rules, attrs_to_copy=["is_negated"])
 entities = regexp_matcher.run(syntagmas)
 
 for entity in entities:
-    neg_attr = entity.get_attrs_by_label("is_negated")[0]
+    neg_attr = entity.attrs.get(label="is_negated")[0]
     print(f"text='{entity.text}', label={entity.label}, is_negated={neg_attr.value}")
 ```
 
@@ -282,12 +283,16 @@ We now have a negation `Attribute` for each entity!
 We know have an interesting set of annotations. We might want to process them
 directly, for instance to generate table-like data about patient treatment in
 order to compute some statistics. But we could also want to attach them back to
-our document in order to save them or export them to some format. This can be
-done with the `TextDocument.add_annotation()` method:
+our document in order to save them or export them to some format.
+
+The annotations of a text document can be access with `TextDocument.anns`,
+an instance of {class}`~medkit.core.text.TextAnnotationContainer`) that behaves
+roughly like a list but also offers additional filtering methods. Annotations
+can be added by calling its `add()` method:
 
 ```{code-cell} ipython3
 for entity in entities:
-    doc.add_annotation(entity)
+    doc.anns.add(entity)
 ```
 
 The document and its entities can then be exported to supported external formats

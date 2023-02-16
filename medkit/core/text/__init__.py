@@ -5,6 +5,7 @@ __all__ = [
     "Segment",
     "Entity",
     "Relation",
+    "TextAnnotationContainer",
     "TextDocument",
     "EntityNormalization",
     "ContextOperation",
@@ -20,6 +21,7 @@ __all__ = [
 from . import utils
 from . import span_utils
 from .annotation import TextAnnotation, Segment, Entity, Relation
+from .annotation_container import TextAnnotationContainer
 from .document import TextDocument
 from .normalization import EntityNormalization
 from .operation import (

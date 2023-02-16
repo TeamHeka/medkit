@@ -220,7 +220,7 @@ class HypothesisDetector(ContextOperation):
         for segment in segments:
             hyp_attr = self._detect_hypothesis_in_segment(segment)
             if hyp_attr is not None:
-                segment.add_attr(hyp_attr)
+                segment.attrs.add(hyp_attr)
 
     def _detect_hypothesis_in_segment(self, segment: Segment) -> Optional[Attribute]:
         matched_verb = None

@@ -74,12 +74,6 @@ class DocTranscriber(Operation):
     the text segments are created and how they are concatenated to form the full
     text.
 
-    If an audio document was initiated with a specific
-    :class:`~medkit.core.Store` instance explicitly provided, then the
-    corresponding text document will use the same instance. Otherwise, if the
-    audio document uses its own private store, then the text document will also
-    have its own private store.
-
     The actual transcription task is delegated to a :class:`~.TranscriberFunction`
     that must be provided.
     """
@@ -139,7 +133,7 @@ class DocTranscriber(Operation):
 
     def _transcribe_doc(self, audio_doc: AudioDocument) -> TranscribedDocument:
         # get all audio segments with specified label
-        audio_segs = audio_doc.get_annotations_by_label(self.input_label)
+        audio_segs = audio_doc.anns.get(label=self.input_label)
         # transcribe them to text
         audios = [seg.audio for seg in audio_segs]
         texts = self.transcriber_func.transcribe(audios)
@@ -164,8 +158,14 @@ class DocTranscriber(Operation):
 
             # copy attrs from audio segment
             for label in self.attrs_to_copy:
-                for attr in audio_seg.get_attrs_by_label(label):
-                    text_seg.add_attr(attr)
+                for attr in audio_seg.attrs.get(label=label):
+                    copied_attr = attr.copy()
+                    text_seg.attrs.add(copied_attr)
+                    # handle provenance
+                    if self._prov_tracer is not None:
+                        self._prov_tracer.add_prov(
+                            copied_attr, self.description, [attr]
+                        )
 
             text_segs.append(text_seg)
 
@@ -176,16 +176,13 @@ class DocTranscriber(Operation):
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(text_seg, self.description, [audio_seg])
 
-        # use shared store for new text doc if audio doc had shared store
-        store = audio_doc.store if audio_doc.has_shared_store else None
         text_doc = TranscribedDocument(
             text=full_text,
             audio_doc_id=audio_doc.uid,
             text_spans_to_audio_spans=text_spans_to_audio_spans,
-            store=store,
         )
         for text_seg in text_segs:
-            text_doc.add_annotation(text_seg)
+            text_doc.anns.add(text_seg)
         # TODO should this be handled by provenance?
         # if self._prov_tracer is not None:
         #     self._prov_tracer.add_prov(

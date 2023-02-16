@@ -93,7 +93,7 @@ class SpacyInputConverter:
             medkit_doc = TextDocument(text=spacy_doc.text_with_ws)
             anns = self._load_anns(spacy_doc)
             for ann in anns:
-                medkit_doc.add_annotation(ann)
+                medkit_doc.anns.add(ann)
             medkit_docs.append(medkit_doc)
 
         return medkit_docs
@@ -117,7 +117,7 @@ class SpacyInputConverter:
             if ann.uid in attributes_by_ann.keys():
                 attrs = attributes_by_ann[ann.uid]
                 for attr in attrs:
-                    ann.add_attr(attr)
+                    ann.attrs.add(attr)
                     if self._prov_tracer is not None:
                         # the input converter does not know the source data item
                         self._prov_tracer.add_prov(

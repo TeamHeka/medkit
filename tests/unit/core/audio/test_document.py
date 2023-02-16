@@ -7,6 +7,8 @@ from tests.audio_utils import generate_silence
 
 _SAMPLE_RATE = 4000
 
+# TODO remove tests redundant with test_annotation_container
+
 
 def test_basic():
     """Basic AudioDocument behavior"""
@@ -25,7 +27,7 @@ def test_basic():
         span=span_1,
         audio=speech_audio_1,
     )
-    doc.add_annotation(speech_seg_1)
+    doc.anns.add(speech_seg_1)
 
     # add noise segment on 2d quarter
     span_2 = Span(duration / 4, duration / 2)
@@ -35,7 +37,7 @@ def test_basic():
         span=span_2,
         audio=noise_audio,
     )
-    doc.add_annotation(noise_seg)
+    doc.anns.add(noise_seg)
 
     # add speech segment on 2d half
     span_3 = Span(duration / 2, duration)
@@ -45,14 +47,14 @@ def test_basic():
         span=span_3,
         audio=speech_audio_2,
     )
-    doc.add_annotation(speech_seg_2)
+    doc.anns.add(speech_seg_2)
 
-    assert doc.get_annotations_by_label("speech") == [speech_seg_1, speech_seg_2]
-    assert doc.get_annotations_by_label("noise") == [noise_seg]
+    assert doc.anns.get(label="speech") == [speech_seg_1, speech_seg_2]
+    assert doc.anns.get(label="noise") == [noise_seg]
 
-    assert doc.get_annotation_by_id(speech_seg_1.uid) == speech_seg_1
-    assert doc.get_annotation_by_id(speech_seg_2.uid) == speech_seg_2
-    assert doc.get_annotation_by_id(noise_seg.uid) == noise_seg
+    assert doc.anns.get_by_id(speech_seg_1.uid) == speech_seg_1
+    assert doc.anns.get_by_id(speech_seg_2.uid) == speech_seg_2
+    assert doc.anns.get_by_id(noise_seg.uid) == noise_seg
 
 
 def test_raw_segment():
@@ -66,13 +68,11 @@ def test_raw_segment():
     raw_seg = doc_with_raw_audio.raw_segment
     assert raw_seg.audio == audio
 
-    # also available trough get_annotations_by_label and get_annotation_by_id
-    assert doc_with_raw_audio.get_annotations_by_label(AudioDocument.RAW_LABEL) == [
-        raw_seg
-    ]
-    assert doc_with_raw_audio.get_annotation_by_id(raw_seg.uid) == raw_seg
+    # also available trough get() and get_by_id()
+    assert doc_with_raw_audio.anns.get(label=AudioDocument.RAW_LABEL) == [raw_seg]
+    assert doc_with_raw_audio.anns.get_by_id(raw_seg.uid) == raw_seg
     # but not included in full annotations list
-    assert raw_seg not in doc_with_raw_audio.get_annotations()
+    assert raw_seg not in doc_with_raw_audio.anns
 
     # docs with same ids should have raw audio segments with same uid
     uid = generate_id()
@@ -88,4 +88,4 @@ def test_raw_segment():
     with pytest.raises(
         RuntimeError, match=r"Cannot add annotation with reserved label .*"
     ):
-        doc.add_annotation(seg)
+        doc.anns.add(seg)

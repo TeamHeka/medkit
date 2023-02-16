@@ -231,7 +231,7 @@ class SyntacticRelationExtractor(DocOperation):
         self, medkit_doc: TextDocument, relations: List[Relation]
     ):
         for relation in relations:
-            medkit_doc.add_annotation(relation)
+            medkit_doc.anns.add(relation)
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     relation,

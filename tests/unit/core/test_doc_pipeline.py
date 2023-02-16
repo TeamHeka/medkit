@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from typing import Dict, Any
 
 from medkit.core import (
     generate_id,
-    Document,
-    Annotation,
+    AnnotationContainer,
     Attribute,
+    AttributeContainer,
     Pipeline,
     PipelineStep,
 )
@@ -23,27 +25,38 @@ _ALT_SENTENCES = [
 _ENTITIES = ["Entity1", "Entity2"]
 
 
-class _TextAnnotation(Annotation):
+class _TextDocument:
+    """Mock text document"""
+
+    def __init__(self):
+        self.uid = generate_id()
+        self.anns = AnnotationContainer(doc_id=self.uid)
+
+
+class _TextAnnotation:
     """Mock text annotation"""
 
     def __init__(self, label, text):
-        super().__init__(label=label)
+        self.uid = generate_id()
+        self.label = label
         self.text = text
+        self.keys = set()
+        self.attrs = AttributeContainer(ann_id=self.uid)
 
     @classmethod
-    def from_dict(cls, annotation_dict: Dict[str, Any]) -> Annotation:
+    def from_dict(cls, annotation_dict: Dict[str, Any]) -> _TextAnnotation:
         pass
 
 
 def _get_doc():
-    doc = Document()
+    doc = _TextDocument()
     for text in _SENTENCES:
         ann = _TextAnnotation(label="sentence", text=text)
-        doc.add_annotation(ann)
+        doc.anns.add(ann)
     for text in _ALT_SENTENCES:
-        doc.add_annotation(_TextAnnotation(label="alt_sentence", text=text))
+        doc.anns.add(_TextAnnotation(label="alt_sentence", text=text))
     for text in _ENTITIES:
-        doc.add_annotation(_TextAnnotation(label="entity", text=text))
+        doc.anns.add(_TextAnnotation(label="entity", text=text))
     return doc
 
 
@@ -93,7 +106,7 @@ class _AttributeAdder:
 
     def run(self, anns):
         for ann in anns:
-            ann.add_attr(Attribute(label=self.output_label, value=True))
+            ann.attrs.add(Attribute(label=self.output_label, value=True))
 
 
 def test_single_step():
@@ -117,10 +130,10 @@ def test_single_step():
     doc = _get_doc()
     doc_pipeline.run([doc])
 
-    sentence_anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = doc.anns.get(label="sentence")
 
     # new annotations were added to the document
-    uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
+    uppercased_anns = doc.anns.get(label="uppercased_sentence")
 
     # operation was properly called to generate new annotations
     assert [a.text.upper() for a in sentence_anns] == [a.text for a in uppercased_anns]
@@ -155,12 +168,10 @@ def test_multiple_steps():
     doc = _get_doc()
     doc_pipeline.run([doc])
 
-    sentence_anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = doc.anns.get(label="sentence")
 
     # new annotations were added to the document
-    prefixed_uppercased_anns = doc.get_annotations_by_label(
-        "prefixed_uppercased_sentence"
-    )
+    prefixed_uppercased_anns = doc.anns.get(label="prefixed_uppercased_sentence")
     assert len(prefixed_uppercased_anns) == len(sentence_anns)
 
     # operations were properly called and in the correct order to generate new annotations
@@ -186,9 +197,9 @@ def test_no_output():
     doc = _get_doc()
     doc_pipeline.run([doc])
 
-    sentence_anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = doc.anns.get(label="sentence")
     for ann in sentence_anns:
-        attrs = ann.get_attrs_by_label("validated")
+        attrs = ann.attrs.get(label="validated")
         assert len(attrs) == 1 and attrs[0].value is True
 
 
@@ -221,9 +232,9 @@ def test_multiple_outputs():
     doc = _get_doc()
     doc_pipeline.run([doc])
 
-    sentence_anns = doc.get_annotations_by_label("sentence")
-    uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
-    prefixed_anns = doc.get_annotations_by_label("prefixed_sentence")
+    sentence_anns = doc.anns.get(label="sentence")
+    uppercased_anns = doc.anns.get(label="uppercased_sentence")
+    prefixed_anns = doc.anns.get(label="prefixed_sentence")
 
     expected_texts = [a.text.upper() for a in sentence_anns]
     assert [a.text for a in uppercased_anns] == expected_texts
@@ -268,16 +279,16 @@ def test_labels_for_input_key():
         labels_by_input_key=labels_by_input_key,
     )
     doc_pipeline.run([doc])
-    sentence_anns = doc.get_annotations_by_label("sentence")
-    alt_sentence_anns = doc.get_annotations_by_label("alt_sentence")
-    uppercased_sentence_anns = doc.get_annotations_by_label("uppercased_sentence")
+    sentence_anns = doc.anns.get(label="sentence")
+    alt_sentence_anns = doc.anns.get(label="alt_sentence")
+    uppercased_sentence_anns = doc.anns.get(label="uppercased_sentence")
     assert len(uppercased_sentence_anns) == len(sentence_anns) + len(alt_sentence_anns)
 
     expected_texts = [a.text.upper() for a in (sentence_anns + alt_sentence_anns)]
     assert [a.text for a in uppercased_sentence_anns] == expected_texts
 
-    entity_anns = doc.get_annotations_by_label("entity")
-    prefixed_entity_anns = doc.get_annotations_by_label("prefixed_entity")
+    entity_anns = doc.anns.get(label="entity")
+    prefixed_entity_anns = doc.anns.get(label="prefixed_entity")
     assert len(prefixed_entity_anns) == len(entity_anns)
 
     expected_texts = [prefix + a.text for a in entity_anns]
@@ -323,13 +334,13 @@ def test_labels_for_input_key_different_order():
     )
     doc_pipeline.run([doc])
 
-    sentence_anns = doc.get_annotations_by_label("sentence")
-    uppercased_sentence_anns = doc.get_annotations_by_label("uppercased_sentence")
+    sentence_anns = doc.anns.get(label="sentence")
+    uppercased_sentence_anns = doc.anns.get(label="uppercased_sentence")
     expected_texts = [a.text.upper() for a in (sentence_anns)]
     assert [a.text for a in uppercased_sentence_anns] == expected_texts
 
-    entity_anns = doc.get_annotations_by_label("entity")
-    prefixed_entity_anns = doc.get_annotations_by_label("prefixed_entity")
+    entity_anns = doc.anns.get(label="entity")
+    prefixed_entity_anns = doc.anns.get(label="prefixed_entity")
     expected_texts = [prefix + a.text for a in entity_anns]
     assert [a.text for a in prefixed_entity_anns] == expected_texts
 
@@ -364,9 +375,9 @@ def test_nested_pipeline():
 
     doc = _get_doc()
     pipeline.run([doc])
-    sentence_anns = doc.get_annotations_by_label("sentence")
+    sentence_anns = doc.anns.get(label="sentence")
     # new annotations were added to the document
-    uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
+    uppercased_anns = doc.anns.get(label="uppercased_sentence")
     # operation was properly called to generate new annotations
     assert [a.text.upper() for a in sentence_anns] == [a.text for a in uppercased_anns]
 
@@ -392,6 +403,6 @@ def test_key_group():
     doc = _get_doc()
     doc_pipeline.run([doc])
 
-    uppercased_anns = doc.get_annotations_by_label("uppercased_sentence")
+    uppercased_anns = doc.anns.get(label="uppercased_sentence")
     for ann in uppercased_anns:
         assert ann.keys == {"UPPERCASE"}

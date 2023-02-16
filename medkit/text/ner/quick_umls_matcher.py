@@ -323,8 +323,14 @@ class QuickUMLSMatcher(NEROperation):
             )
 
             for attr_label in self.attrs_to_copy:
-                for attr in segment.get_attrs_by_label(attr_label):
-                    entity.add_attr(attr)
+                for attr in segment.attrs.get(label=attr_label):
+                    copied_attr = attr.copy()
+                    entity.attrs.add(copied_attr)
+                    # handle provenance
+                    if self._prov_tracer is not None:
+                        self._prov_tracer.add_prov(
+                            copied_attr, self.description, [attr]
+                        )
 
             norm = UMLSNormalization(
                 cui=match["cui"],

@@ -66,10 +66,10 @@ def _mock_requests_post(url, data):
     return _MockHTTPResponse(response_data)
 
 
-@pytest.fixture
-def _mocked_requests(mocker):
-    mocker.patch("requests.get", _mock_requests_get)
-    mocker.patch("requests.post", _mock_requests_post)
+@pytest.fixture(scope="module", autouse=True)
+def _mocked_requests(module_mocker):
+    module_mocker.patch("requests.get", _mock_requests_get)
+    module_mocker.patch("requests.post", _mock_requests_post)
 
 
 def _get_sentence_segment(text=_TEXT):
@@ -80,7 +80,7 @@ def _get_sentence_segment(text=_TEXT):
     )
 
 
-def test_single_dim(_mocked_requests):
+def test_single_dim():
     sentence = _get_sentence_segment()
 
     matcher = DucklingMatcher(
@@ -99,7 +99,7 @@ def test_single_dim(_mocked_requests):
     assert entity.spans == [Span(25, 38)]
 
     # normalization attribute
-    attrs = entity.get_attrs_by_label(_OUTPUT_LABEL)
+    attrs = entity.attrs.get(label=_OUTPUT_LABEL)
     assert len(attrs) == 1
     attr = attrs[0]
     assert attr.label == _OUTPUT_LABEL
@@ -107,7 +107,7 @@ def test_single_dim(_mocked_requests):
     assert attr.metadata["version"] == "MOCK"
 
 
-def test_multiple_dims(_mocked_requests):
+def test_multiple_dims():
     sentence = _get_sentence_segment()
 
     matcher = DucklingMatcher(
@@ -125,7 +125,7 @@ def test_multiple_dims(_mocked_requests):
     assert entity_1.text == "on 01/02/2001"
     assert entity_1.spans == [Span(25, 38)]
 
-    attr_1 = entity_1.get_attrs_by_label(_OUTPUT_LABEL)[0]
+    attr_1 = entity_1.attrs.get(label=_OUTPUT_LABEL)[0]
     assert attr_1.label == "duckling"
     assert attr_1.value == _TIME_VALUE
 
@@ -135,12 +135,12 @@ def test_multiple_dims(_mocked_requests):
     assert entity_2.text == "3 days"
     assert entity_2.spans == [Span(54, 60)]
 
-    attr_2 = entity_2.get_attrs_by_label(_OUTPUT_LABEL)[0]
+    attr_2 = entity_2.attrs.get(label=_OUTPUT_LABEL)[0]
     assert attr_2.label == "duckling"
     assert attr_2.value == _DURATION_VALUE
 
 
-def test_all_dims(_mocked_requests):
+def test_all_dims():
     sentence = _get_sentence_segment()
 
     matcher = DucklingMatcher(
@@ -153,12 +153,13 @@ def test_all_dims(_mocked_requests):
     assert len(entities) == 2
 
 
-def test_attrs_to_copy(_mocked_requests):
+def test_attrs_to_copy():
     sentence = _get_sentence_segment()
     # copied attribute
-    sentence.add_attr(Attribute(label="negation", value=True))
+    neg_attr = Attribute(label="negation", value=True)
+    sentence.attrs.add(neg_attr)
     # uncopied attribute
-    sentence.add_attr(Attribute(label="hypothesis", value=True))
+    sentence.attrs.add(Attribute(label="hypothesis", value=True))
 
     matcher = DucklingMatcher(
         output_label=_OUTPUT_LABEL,
@@ -169,14 +170,19 @@ def test_attrs_to_copy(_mocked_requests):
     )
     entity = matcher.run([sentence])[0]
 
-    assert len(entity.get_attrs_by_label(_OUTPUT_LABEL)) == 1
+    assert len(entity.attrs.get(label=_OUTPUT_LABEL)) == 1
     # only negation attribute was copied
-    neg_attrs = entity.get_attrs_by_label("negation")
-    assert len(neg_attrs) == 1 and neg_attrs[0].value is True
-    assert len(entity.get_attrs_by_label("hypothesis")) == 0
+    neg_attrs = entity.attrs.get(label="negation")
+    assert len(neg_attrs) == 1
+    assert len(entity.attrs.get(label="hypothesis")) == 0
+
+    # copied attribute has same value but new id
+    copied_neg_attr = neg_attrs[0]
+    assert copied_neg_attr.value == neg_attr.value
+    assert copied_neg_attr.uid != neg_attr.uid
 
 
-def test_prov(_mocked_requests):
+def test_prov():
     sentence = _get_sentence_segment()
 
     matcher = DucklingMatcher(
@@ -195,7 +201,7 @@ def test_prov(_mocked_requests):
     assert entity_prov.op_desc == matcher.description
     assert entity_prov.source_data_items == [sentence]
 
-    attr = entity.get_attrs_by_label(_OUTPUT_LABEL)[0]
+    attr = entity.attrs.get(label=_OUTPUT_LABEL)[0]
     attr_prov = prov_tracer.get_prov(attr.uid)
     assert attr_prov.data_item == attr
     assert attr_prov.op_desc == matcher.description

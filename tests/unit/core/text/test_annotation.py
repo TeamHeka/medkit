@@ -11,7 +11,7 @@ def test_snippet():
         spans=[Span(739, 755)],
         text="neurofibromatose",
     )
-    doc.add_annotation(entity)
+    doc.anns.add(entity)
 
     snippet = entity.get_snippet(doc, max_extend_length=49)
     expected = "tats de la suspicion de neurofibromatose, je proposerai ou pas un"
@@ -32,7 +32,7 @@ def test_normalization():
 
     # should create an Attribute with Entity.NORM_LABEL as label
     # and the EntityNormalization object as value
-    norm_attrs = entity.get_attrs_by_label(Entity.NORM_LABEL)
+    norm_attrs = entity.attrs.get(label=Entity.NORM_LABEL)
     assert len(norm_attrs) == 1
     assert norm_attrs[0].value == norm
 

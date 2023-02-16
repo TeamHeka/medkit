@@ -197,9 +197,10 @@ def test_ambiguous_match():
 def test_attrs_to_copy():
     sentence = _get_sentence_segment("The patient has asthma.")
     # copied attribute
-    sentence.add_attr(Attribute(label="negation", value=True))
+    neg_attr = Attribute(label="negation", value=True)
+    sentence.attrs.add(neg_attr)
     # uncopied attribute
-    sentence.add_attr(Attribute(label="hypothesis", value=True))
+    sentence.attrs.add(Attribute(label="hypothesis", value=True))
 
     umls_matcher = QuickUMLSMatcher(
         version="2021AB",
@@ -211,9 +212,14 @@ def test_attrs_to_copy():
     norms = entity.get_norms()
     assert len(norms) == 1
     # only negation attribute was copied
-    neg_attrs = entity.get_attrs_by_label("negation")
-    assert len(neg_attrs) == 1 and neg_attrs[0].value is True
-    assert len(entity.get_attrs_by_label("hypothesis")) == 0
+    neg_attrs = entity.attrs.get(label="negation")
+    assert len(neg_attrs) == 1
+    assert len(entity.attrs.get(label="hypothesis")) == 0
+
+    # copied attribute has same value but new id
+    copied_neg_attr = neg_attrs[0]
+    assert copied_neg_attr.value == neg_attr.value
+    assert copied_neg_attr.uid != neg_attr.uid
 
 
 def test_prov():
@@ -231,7 +237,7 @@ def test_prov():
     assert entity_prov.op_desc == umls_matcher.description
     assert entity_prov.source_data_items == [sentence]
 
-    attr = entity.get_attrs_by_label(Entity.NORM_LABEL)[0]
+    attr = entity.attrs.get(label=Entity.NORM_LABEL)[0]
     attr_prov = prov_tracer.get_prov(attr.uid)
     assert attr_prov.data_item == attr
     assert attr_prov.op_desc == umls_matcher.description

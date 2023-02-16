@@ -16,7 +16,7 @@ def init_data():
         start = text.find(word)
         end = start + len(word)
         segment = Segment(label="word", spans=[Span(start, end)], text=word)
-        doc.add_annotation(segment)
+        doc.anns.add(segment)
     return doc, words
 
 
@@ -43,7 +43,7 @@ def test_create_text_operation(init_data, prov_enabled):
     if prov_enabled:
         operation.set_prov_tracer(prov_tracer)
 
-    segm_inputs = doc.get_annotations()
+    segm_inputs = doc.anns.get()
     res = operation.run(segm_inputs)
 
     for index, segment in enumerate(res):
@@ -58,8 +58,7 @@ def test_create_text_operation_extract(init_data):
     doc, words = init_data
 
     def extract_annotations_from_doc(document: TextDocument) -> List[TextAnnotation]:
-        anns = document.get_annotations()
-        return anns
+        return document.anns.get()
 
     operation = create_text_operation(
         name="extract_anns_from_doc",
@@ -83,7 +82,7 @@ def test_create_text_operation_filter(init_data):
             return True
         return False
 
-    anns = doc.get_annotations()
+    anns = doc.anns.get()
     filter = create_text_operation(
         function=keep_hello_segment,
         function_type=CustomTextOpType.FILTER,

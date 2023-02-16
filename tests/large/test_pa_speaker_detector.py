@@ -72,6 +72,6 @@ def test_basic():
     assert _AUDIO.duration - _MARGIN <= span_2.end <= _AUDIO.duration
 
     # segments must have different speakers
-    speaker_1 = turn_1.get_attrs_by_label("speaker")[0].value
-    speaker_2 = turn_2.get_attrs_by_label("speaker")[0].value
+    speaker_1 = turn_1.attrs.get(label="speaker")[0].value
+    speaker_2 = turn_2.attrs.get(label="speaker")[0].value
     assert speaker_1 != speaker_2

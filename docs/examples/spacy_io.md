@@ -127,14 +127,14 @@ medkit_doc = docs[0]
 +++
 
 ```{code-cell} ipython3
-print(f"The medkit doc has {len(medkit_doc.get_annotations())} annotations.")
-print(f"The medkit doc has {len(medkit_doc.get_entities())} entities.")
-print(f"The medkit doc has {len(medkit_doc.get_segments())} segment.")
+print(f"The medkit doc has {len(medkit_doc.anns)} annotations.")
+print(f"The medkit doc has {len(medkit_doc.anns.get_entities())} entities.")
+print(f"The medkit doc has {len(medkit_doc.anns.get_segments())} segment.")
 ```
 **What about 'LOC' entity?**
 ```{code-cell} ipython3
-entity = medkit_doc.get_annotations_by_label('LOC')[0]
-attributes = entity.get_attrs_by_label("country")
+entity = medkit_doc.anns.get(label="LOC")[0]
+attributes = entity.attrs.get(label="country")
 print(f"Entity label={entity.label}, Entity text={entity.text}")
 print("Attributes loaded from spacy")
 print(attributes)

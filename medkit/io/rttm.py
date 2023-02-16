@@ -178,9 +178,9 @@ class RTTMInputConverter(InputConverter):
         full_audio = FileAudioBuffer(path=audio_file)
         turn_segments = [self._build_turn_segment(row, full_audio) for row in rows]
 
-        doc = AudioDocument(audio=full_audio, store=self.store)
+        doc = AudioDocument(audio=full_audio)
         for turn_segment in turn_segments:
-            doc.add_annotation(turn_segment)
+            doc.anns.add(turn_segment)
 
         return doc
 
@@ -234,7 +234,7 @@ class RTTMInputConverter(InputConverter):
         audio = full_audio.trim_duration(start, end)
         segment = Segment(label=self.turn_label, span=Span(start, end), audio=audio)
         speaker_attr = Attribute(label=self.speaker_label, value=row["speaker_name"])
-        segment.add_attr(speaker_attr)
+        segment.attrs.add(speaker_attr)
 
         if self._prov_tracer is not None:
             self._prov_tracer.add_prov(segment, self.description, source_data_items=[])
@@ -331,7 +331,7 @@ class RTTMOutputConverter(OutputConverter):
         if rttm_doc_id is None:
             rttm_doc_id = doc.uid
 
-        turns = doc.get_annotations_by_label(self.turn_label)
+        turns = doc.anns.get(label=self.turn_label)
         self.save_turn_segments(turns, rttm_file, rttm_doc_id)
 
     def save_turn_segments(
@@ -364,7 +364,7 @@ class RTTMOutputConverter(OutputConverter):
     def _build_rttm_row(
         self, turn_segment: Segment, rttm_doc_id: Optional[str]
     ) -> Dict[str, Any]:
-        speaker_attrs = turn_segment.get_attrs_by_label(self.speaker_label)
+        speaker_attrs = turn_segment.attrs.get(label=self.speaker_label)
         if len(speaker_attrs) == 0:
             raise RuntimeError(
                 f"Found no attribute with label '{self.speaker_label}' on turn segment"
