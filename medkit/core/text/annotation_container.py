@@ -33,14 +33,17 @@ class TextAnnotationContainer(AnnotationContainer[TextAnnotation]):
 
     @property
     def segments(self) -> List[Segment]:
+        """Return the list of segments"""
         return self.get_segments()
 
     @property
     def entities(self) -> List[Entity]:
+        """Return the list of entities"""
         return self.get_entities()
 
     @property
     def relations(self) -> List[Relation]:
+        """Return the list of relations"""
         return self.get_relations()
 
     def add(self, ann: TextAnnotation):

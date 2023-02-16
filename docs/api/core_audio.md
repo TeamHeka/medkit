@@ -32,6 +32,7 @@ classDiagram
         attrs: AttributeContainer
     }
     Document <|.. AudioDocument: implements
+    Annotation <|.. Segment: implements
     AudioDocument *-- Segment : contains\n(AudioAnnotationContainer)
     
 ```
@@ -48,9 +49,13 @@ For common interfaces provided by core components, you can refer to
 ```
 
 ```{eval-rst}
-.. automodule:: medkit.core.audio.document
+.. autoclass:: medkit.core.audio::AudioDocument
     :members:
-    :inherited-members:
+```
+---
+```{eval-rst}
+.. autoclass:: medkit.core.audio::AudioAnnotationContainer
+    :members:
 ```
 
 ### Annotations

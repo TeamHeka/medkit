@@ -70,11 +70,14 @@ For common interfaces provided by core components, you can refer to
 ```
 
 ```{eval-rst}
-.. automodule:: medkit.core.text.document
+.. autoclass:: medkit.core.text::TextDocument
     :members:
-    :inherited-members:
 ```
-
+---
+```{eval-rst}
+.. autoclass:: medkit.core.text::TextAnnotationContainer
+    :members:
+```
 ### Annotations
 
 For text modality, `TextDocument` can only contain 
