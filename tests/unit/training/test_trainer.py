@@ -48,6 +48,7 @@ def test_trainer_with_metrics(
         output_dir=output_dir,
         batch_size=1,
         do_metrics_in_training=do_metrics_in_training,
+        seed=0,
     )
     trainer = Trainer(
         mock_operation,
@@ -98,7 +99,10 @@ def test_trainer_with_lr_scheduler(tmp_path, lr_scheduler_builder, metric_to_tra
     mock_operation = MockTrainableOperation()
     output_dir = tmp_path / "dummy-operation"
     config = TrainerConfig(
-        output_dir=output_dir, batch_size=1, metric_to_track_lr=metric_to_track_lr
+        output_dir=output_dir,
+        batch_size=1,
+        metric_to_track_lr=metric_to_track_lr,
+        seed=0,
     )
     trainer = Trainer(
         mock_operation,
@@ -135,6 +139,7 @@ def test_trainer_checkpoint(tmp_path, lr_scheduler_builder):
     config = TrainerConfig(
         output_dir=output_dir,
         batch_size=1,
+        seed=0,
     )
     trainer = Trainer(
         mock_operation,

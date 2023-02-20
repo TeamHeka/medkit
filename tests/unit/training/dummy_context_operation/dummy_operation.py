@@ -3,7 +3,7 @@ from typing import Optional
 
 import torch
 
-from medkit.core.annotation import Attribute
+from medkit.core import Attribute
 from medkit.training import BatchData
 
 from .dummy_model import DummyTextCat, DummyTextCatConfig, DummyTokenizer
@@ -40,13 +40,13 @@ class MockTrainableOperation:
         optimizer = torch.optim.SGD(parameters, lr=lr)
         return optimizer
 
-    def preprocess(self, input, inference_mode):
+    def preprocess(self, data_item, inference_mode):
         model_inputs = {}
 
         model_inputs["inputs_ids"] = torch.tensor(
-            self.tokenizer(input.text), dtype=torch.int64
+            self.tokenizer(data_item.text), dtype=torch.int64
         )
-        attribute = input.get_attrs_by_label(self.output_label)
+        attribute = data_item.attrs.get(label=self.output_label)
         if not inference_mode:
             if not attribute:
                 raise ValueError(
