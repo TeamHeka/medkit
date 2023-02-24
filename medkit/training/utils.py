@@ -17,10 +17,6 @@ class BatchData(dict):
             return inner_dict[index]
         return {key: values[index] for key, values in self.items()}
 
-    def __setitem__(self, key, values):
-        super().__setitem__(key, values)
-        super().__setattr__(key, values)
-
     def to_device(self, device: torch.device) -> BatchData:
         """
         Ensure that Tensors in the BatchData object are on the specified `device`
