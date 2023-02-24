@@ -63,6 +63,7 @@ class TrainerConfig:
     gradient_accumulation_steps: int = 1
     do_metrics_in_training: bool = False
     metric_to_track_lr: str = "loss"
+    log_step_interval: Optional[int] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
@@ -174,7 +175,8 @@ class Trainer:
         data_for_metrics = defaultdict(list)
 
         for step, input_batch in enumerate(self.train_dataloader):
-            # train step begin
+            self.callback.on_step_begin(step)
+
             model_output, loss = self.make_forward_pass(input_batch, eval_mode=False)
 
             if config.gradient_accumulation_steps > 1:
@@ -196,7 +198,10 @@ class Trainer:
                 )
                 for key, values in prepared_batch.items():
                     data_for_metrics[key].append(values)
-            # train step end
+
+            self.callback.on_step_end(
+                step, nb_batches=len(self.train_dataloader), phase="train"
+            )
 
         total_loss_epoch /= len(self.train_dataloader)
         metrics["loss"] = total_loss_epoch
@@ -217,8 +222,9 @@ class Trainer:
         data_for_metrics = defaultdict(list)
 
         with torch.no_grad():
-            for _, input_batch in enumerate(eval_dataloader):
-                # eval step begin
+            for step, input_batch in enumerate(eval_dataloader):
+                self.callback.on_step_begin(step)
+
                 model_output, loss = self.make_forward_pass(input_batch, eval_mode=True)
                 total_loss_epoch += loss.item()
 
@@ -228,7 +234,10 @@ class Trainer:
                     )
                     for key, values in prepared_batch.items():
                         data_for_metrics[key].append(values)
-                # eval step end
+
+                self.callback.on_step_end(
+                    step, nb_batches=len(eval_dataloader), phase="eval"
+                )
 
         total_loss_epoch /= len(self.eval_dataloader)
         metrics["loss"] = total_loss_epoch
