@@ -27,7 +27,9 @@ class TrainableOperation(Protocol):
         pass
 
     def preprocess(
-        self, data_item: IdentifiableDataItem, inference_mode: bool
+        self,
+        data_item: Union[IdentifiableDataItem, List[IdentifiableDataItem]],
+        inference_mode: bool,
     ) -> Dict[str, Any]:
         """
         Preprocess the input data item and return a dictionary with
@@ -62,7 +64,9 @@ class TrainableOperation(Protocol):
         """
         pass
 
-    def postprocess(self, model_output: BatchData) -> IdentifiableDataItem:
+    def postprocess(
+        self, model_output: BatchData
+    ) -> Union[IdentifiableDataItem, List[IdentifiableDataItem]]:
         """Create a medkit annotation for model output"""
         pass
 
