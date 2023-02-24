@@ -3,15 +3,63 @@ from medkit.core.text import Entity, Segment
 
 from transformers.tokenization_utils_fast import EncodingFast
 
+SPECIAL_TAG_ID_HF: int = -100
 
-def get_labels_aligned_from_tokens(
-    text_tokenized: EncodingFast,
+
+def transform_entities_to_tags(
     segment: Segment,
     entities: List[Entity],
+    text_encoding: EncodingFast,
     use_bilou_scheme=True,
 ) -> List[str]:
+    """
+    Transform a segment with entities into a list of BILOU/IOB2 tags.
+
+    Parameters
+    ----------
+    segment:
+        The reference segment
+    entities:
+        The list of entities in the `segment`
+    text_encoding:
+        Text encoding of the segment after tokenization with a HuggingFace fast tokenizer
+    use_bilou_scheme:
+        Whether use BILOU or IOB2 scheme to tag the tokens
+
+    Returns
+    -------
+    tags:
+        A list of strings describing the segment with tags. By default the tags
+        could be "B", "I", "L", "O","U", if `use_bilou_scheme` is False, the tags
+        could be "B", "I","O".
+
+    Examples
+    --------
+    >>> # Define a fast tokenizer, i.e. : bert tokenizer
+    >>> from transformers import AutoTokenizer
+    >>> tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased", use_fast=True)
+
+    >>> segment = Segment(text="medkit",spans=[Span(start=0, end=6)],label="SENTENCE")
+    >>> entities = [Entity(label="corporation", spans=[Span(start=0, end=6)], text='medkit')]
+    >>> # Get text encoding of the segment using the tokenizer
+    >>> text_encoding = tokenizer(segment.text).encodings[0]
+    >>> print(text_encoding.tokens)
+    ['[CLS]', 'med',##kit', '[SEP]']
+
+    Transform to BILOU tags
+
+    >>> tags = transform_entities_to_tags(segment, entities,text_encoding)
+    >>> assert tags == ['O', 'B-corporation', 'L-corporation', 'O']
+
+    Transform to IOB2 tags
+
+    >>> tags = transform_entities_to_tags(segment, entities,text_encoding,False)
+    >>> assert tags == ['O', 'B-corporation', 'I-corporation', 'O']
+
+
+    """
     offset_segment = segment.spans[0].start
-    labels = ["O"] * len(text_tokenized)
+    tags = ["O"] * len(text_encoding)
 
     for ent in entities:
         label = ent.label
@@ -19,8 +67,13 @@ def get_labels_aligned_from_tokens(
         end_char = ent.spans[-1].end - offset_segment
         tokens_entity = set()
 
+        if start_char < 0:
+            # 'ent' is not in the segment
+            continue
+
         for idx in range(start_char, end_char):
-            token_id = text_tokenized.char_to_token(idx)
+            token_id = text_encoding.char_to_token(idx)
+
             if token_id is not None:
                 tokens_entity.add(token_id)
 
@@ -31,45 +84,85 @@ def get_labels_aligned_from_tokens(
 
         if len(tokens_entity) == 1:
             prefix = "U" if use_bilou_scheme else "B"
-            labels[tokens_entity[0]] = f"{prefix}-{label}"
+            tags[tokens_entity[0]] = f"{prefix}-{label}"
         else:
-            labels[tokens_entity[0]] = f"B-{label}"
+            tags[tokens_entity[0]] = f"B-{label}"
             prefix = "L" if use_bilou_scheme else "I"
-            labels[tokens_entity[-1]] = f"{prefix}-{label}"
+            tags[tokens_entity[-1]] = f"{prefix}-{label}"
 
             inside_tokens = tokens_entity[1:-1]
             for token_idx in inside_tokens:
-                labels[token_idx] = f"I-{label}"
-    return labels
+                tags[token_idx] = f"I-{label}"
+    return tags
 
 
-def get_labels_ids_from_anns(
+def align_and_map_tokens_with_tags(
     text_encoding: EncodingFast,
-    segment: Segment,
-    entities: List[Entity],
-    label_to_id: Dict[str, int],
-    use_bilou_scheme: bool = True,
-    tag_all_labels: bool = True,
-):
-    special_tokens_mask = text_encoding.special_tokens_mask
-    labels = get_labels_aligned_from_tokens(
-        text_encoding, segment, entities, use_bilou_scheme=use_bilou_scheme
-    )
+    tags: List[str],
+    tag_to_id: Dict[str, int],
+    map_sub_tokens: bool = True,
+) -> List[int]:
+    """
+    Return a list of tags_ids aligned with the text encoding.
+    Tags considered as special tokens will have the `SPECIAL_TAG_ID_HF`.
 
-    labels_ids = [-1] * len(labels)
+    Parameters
+    ----------
+    text_encoding:
+        Text encoding after tokenization with a HuggingFace fast tokenizer
+    tags:
+        A list of tags i.e BILOU tags
+    tag_to_id:
+        Mapping tag to id
+    map_sub_tokens:
+        When a token is not in the vocabulary of the tokenizer, it could split
+        the token into multiple subtokens.
+        If `map_sub_tokens` is True, all tags inside a token will be converted.
+        If `map_sub_tokens` is False, only the first subtoken of a split token will be
+        converted.
+
+    Returns
+    -------
+    tags_ids:
+        A list with the mapping tag to int
+
+    Examples
+    --------
+    >>> # Define a fast tokenizer, i.e. : bert tokenizer
+    >>> from transformers import AutoTokenizer
+    >>> tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased", use_fast=True)
+
+    >>> # define data to map
+    >>> text_encoding = tokenizer("medkit").encodings[0]
+    >>> tags = ["O","B-corporation","I-corporation","O"]
+    >>> tag_to_id = {"O":0, "B-corporation":1, "I-corporation":2}
+    >>> print(text_encoding.tokens)
+    ['[CLS]', 'med',##kit', '[SEP]']
+
+    Maping all tags to tags_ids
+    >>> tags_ids = align_and_map_tokens_with_tags(text_encoding, tags,tag_to_id)
+    >>> assert tags_ids == [-100, 1, 2, -100]
+
+    Maping only first tag in tokens
+    >>> tags_ids = align_and_map_tokens_with_tags(text_encoding, tags, tag_to_id,False)
+    >>> assert tags_ids == [-100, 1, -100, -100]
+    """
+    special_tokens_mask = text_encoding.special_tokens_mask
+
+    tags_ids = [SPECIAL_TAG_ID_HF] * len(tags)
     words = text_encoding.word_ids
 
     prev_word = None
-    for idx, label in enumerate(labels):
+    for idx, label in enumerate(tags):
         if special_tokens_mask[idx]:
             continue
 
         current_word = words[idx]
         if current_word != prev_word:
-            # tag the first token of the word
-            labels_ids[idx] = label_to_id[label]
+            # map the first token of the word
+            tags_ids[idx] = tag_to_id[label]
             prev_word = current_word
 
-        if tag_all_labels:
-            labels_ids[idx] = label_to_id[label]
-    return labels_ids
+        if map_sub_tokens:
+            tags_ids[idx] = tag_to_id[label]
+    return tags_ids
