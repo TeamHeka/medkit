@@ -217,6 +217,19 @@ Each operation is described as follows:
     :members:
 ```
 
+## Trainable Operations 
+
+The medkit `TrainableOperation` protocol describes all the necessary methods to make an operation trainable in medkit.
+
+:::{important}
+Currently, medkit only supports the training of operations using **PyTorch** models.
+:::
+
+```{eval-rst}
+.. autoclass:: medkit.core.trainable_operation::TrainableOperation
+    :members:
+```
+
 ## Converters
 
 Two abstract classes have been defined for managing document conversion

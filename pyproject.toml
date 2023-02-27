@@ -102,6 +102,7 @@ sb-transcriber-function = [
     "transformers",
 ]
 spacy = ["spacy"]
+training = ["torch"]
 umls-coder-normalizer = [
     "feather-format",
     "pandas",
