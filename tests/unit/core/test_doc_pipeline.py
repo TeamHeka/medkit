@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict, Any
-
 from medkit.core import (
     generate_id,
     AnnotationContainer,
