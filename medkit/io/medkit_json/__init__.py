@@ -10,7 +10,7 @@ __all__ = [
     "load_text_anns",
     "save_text_document",
     "save_text_documents",
-    "save_text_ans",
+    "save_text_anns",
 ]
 
 from .audio_reader import (
