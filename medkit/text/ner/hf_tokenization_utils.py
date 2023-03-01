@@ -1,7 +1,10 @@
+__all__ = ["transform_entities_to_tags", "align_and_map_tokens_with_tags"]
+
 from typing import Dict, List
-from medkit.core.text import Entity, Segment
 
 from transformers.tokenization_utils_fast import EncodingFast
+
+from medkit.core.text import Entity, Segment
 
 SPECIAL_TAG_ID_HF: int = -100
 
@@ -28,8 +31,8 @@ def transform_entities_to_tags(
 
     Returns
     -------
-    tags:
-        A list of strings describing the segment with tags. By default the tags
+    List[str]:
+        A list describing the segment with tags. By default the tags
         could be "B", "I", "L", "O","U", if `use_bilou_scheme` is False, the tags
         could be "B", "I","O".
 
@@ -123,8 +126,8 @@ def align_and_map_tokens_with_tags(
 
     Returns
     -------
-    tags_ids:
-        A list with the mapping tag to int
+    List[int]:
+        A list of tags ids
 
     Examples
     --------
@@ -140,10 +143,12 @@ def align_and_map_tokens_with_tags(
     ['[CLS]', 'med',##kit', '[SEP]']
 
     Maping all tags to tags_ids
+
     >>> tags_ids = align_and_map_tokens_with_tags(text_encoding, tags,tag_to_id)
     >>> assert tags_ids == [-100, 1, 2, -100]
 
     Maping only first tag in tokens
+
     >>> tags_ids = align_and_map_tokens_with_tags(text_encoding, tags, tag_to_id,False)
     >>> assert tags_ids == [-100, 1, -100, -100]
     """
