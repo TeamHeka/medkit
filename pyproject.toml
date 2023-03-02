@@ -67,7 +67,7 @@ jupyter-book = "^0.13"
 matplotlib = "*"
 spacy = "^3.4"
 sphinx = ">=4.3.3"
-sphinxcontrib-mermaid = "*"
+sphinxcontrib-mermaid = ">=0.8"
 sphinx-toolbox = "*"
 
 [tool.poetry.extras]
