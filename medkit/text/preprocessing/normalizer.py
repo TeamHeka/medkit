@@ -32,7 +32,6 @@ class Normalizer(Operation):
         uid: Optional[str] = None,
     ):
         """
-        TODO: change default output_label
         Parameters
         ----------
         output_label
