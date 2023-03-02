@@ -1,4 +1,4 @@
-__all__ = ["AnnotationType"]
+__all__ = ["Annotation", "AnnotationType"]
 
 from typing import Set, TypeVar
 from typing_extensions import Protocol, runtime_checkable
@@ -37,4 +37,5 @@ class Annotation(Protocol):
     attrs: AttributeContainer
 
 
+#: Annotation type
 AnnotationType = TypeVar("AnnotationType", bound=Annotation)

@@ -1,13 +1,10 @@
 __all__ = ["AnnotationContainer"]
 
 import typing
-from typing import Dict, Iterator, Generic, List, Optional, TypeVar
+from typing import Dict, Iterator, Generic, List, Optional
 
-from medkit.core.annotation import Annotation
+from medkit.core.annotation import AnnotationType
 from medkit.core.store import Store, GlobalStore
-
-
-AnnotationType = TypeVar("AnnotationType", bound=Annotation)
 
 
 class AnnotationContainer(Generic[AnnotationType]):
@@ -26,6 +23,14 @@ class AnnotationContainer(Generic[AnnotationType]):
     """
 
     def __init__(self, doc_id: str):
+        """
+        Instantiate the annotation container
+
+        Parameters
+        ----------
+        doc_id:
+            The identifier of the document which annotations belong to.
+        """
         self._store: Store = GlobalStore.get_store()
         self._doc_id = doc_id
         self._ann_ids: List[str] = []
