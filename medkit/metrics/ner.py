@@ -25,6 +25,8 @@ class SeqEvalMetricsComputer:
     ):
         self.id_to_label = id_to_label
         self.scheme = BILOU if use_bilou_scheme else IOB2
+        # bilou only works in strict mode
+        self._mode = "strict" if use_bilou_scheme else None
         self.return_entity_metrics = return_entity_metrics
 
     def prepare_batch(
@@ -68,6 +70,7 @@ class SeqEvalMetricsComputer:
             scheme=self.scheme,
             output_dict=True,
             zero_division=0,
+            mode=self._mode,
         )
         # add overall_metrics
         scores = {f"overall_{key}": value for key, value in report["micro avg"].items()}
