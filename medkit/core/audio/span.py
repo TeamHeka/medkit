@@ -28,7 +28,7 @@ class Span(NamedTuple):
         """Length of the span, in seconds"""
         return self.end - self.start
 
-    def to_dict(self, deep: bool = False) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return dict(start=self.start, end=self.end)
 
     @classmethod

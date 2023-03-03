@@ -11,7 +11,7 @@ from medkit.io.medkit_json._common import ContentType, Modality, build_header
 
 def save_text_document(doc: TextDocument, output_file: Path):
     data = build_header(content_type=ContentType.DOCUMENT, modality=Modality.TEXT)
-    data["content"] = serialize(doc, deep=True)
+    data["content"] = serialize(doc)
     with open(output_file, mode="w") as fp:
         json.dump(data, fp, indent=4)
 
@@ -24,7 +24,7 @@ def save_text_documents(docs: Iterable[TextDocument], output_file: Path):
         fp.write(json.dumps(header) + "\n")
 
         for doc in docs:
-            doc_data = serialize(doc, deep=True)
+            doc_data = serialize(doc)
             fp.write(json.dumps(doc_data) + "\n")
 
 
@@ -36,5 +36,5 @@ def save_text_anns(anns: Iterable[TextAnnotation], output_file: Path):
         fp.write(json.dumps(header) + "\n")
 
         for ann in anns:
-            ann_data = serialize(ann, deep=True)
+            ann_data = serialize(ann)
             fp.write(json.dumps(ann_data) + "\n")

@@ -51,7 +51,7 @@ class UMLSNormalization(EntityNormalization):
     def umls_version(self):
         return self.kb_version
 
-    def to_dict(self, deep: bool = False) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return dict(
             cui=self.cui,
             umls_version=self.umls_version,

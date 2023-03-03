@@ -183,7 +183,7 @@ class FileAudioBuffer(AudioBuffer):
         assert new_trim_start <= new_trim_end
         return FileAudioBuffer(self.path, new_trim_start, new_trim_end, self._sf_info)
 
-    def to_dict(self, deep: bool = False) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return dict(
             path=str(self.path),
             trim_start=self._trim_start,
@@ -281,7 +281,7 @@ class PlaceholderAudioBuffer(AudioBuffer):
             "Cannot call trim() on a PlaceholderAudioBuffer, signal is unknown"
         )
 
-    def to_dict(self, deep: bool = False) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         return dict(
             sample_rate=self.sample_rate,
             nb_samples=self.nb_samples,

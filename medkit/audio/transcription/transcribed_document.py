@@ -98,8 +98,8 @@ class TranscribedDocument(TextDocument):
         ]
         return audio_spans
 
-    def to_dict(self, deep: bool = False) -> Dict[str, Any]:
-        data = super().to_dict(deep)
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
         text_spans = [serialize(s) for s in self.text_spans_to_audio_spans]
         audio_spans = [serialize(s) for s in self.text_spans_to_audio_spans.values()]
         data.update(
@@ -123,7 +123,7 @@ class TranscribedDocument(TextDocument):
         text_spans = [deserialize(s) for s in doc_dict["text_spans"]]
         audio_spans = [deserialize(s) for s in doc_dict["audio_spans"]]
         text_spans_to_audio_spans = dict(zip(text_spans, audio_spans))
-        anns = [deserialize(a) for a in doc_dict.get("anns", [])]
+        anns = [deserialize(a) for a in doc_dict["anns"]]
         return cls(
             uid=doc_dict["uid"],
             text=doc_dict["text"],

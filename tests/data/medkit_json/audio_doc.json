@@ -10,7 +10,6 @@
             "trim_end": 134099,
             "_class_name": "medkit.core.audio.audio_buffer.FileAudioBuffer"
         },
-        "metadata": {},
         "anns": [
             {
                 "uid": "s1",
@@ -26,7 +25,6 @@
                     "end": 3.6,
                     "_class_name": "medkit.core.audio.span.Span"
                 },
-                "metadata": {},
                 "attrs": [
                     {
                         "uid": "a1",
@@ -36,6 +34,7 @@
                         "_class_name": "medkit.core.attribute.Attribute"
                     }
                 ],
+                "metadata": {},
                 "_class_name": "medkit.core.audio.annotation.Segment"
             },
             {
@@ -52,11 +51,12 @@
                     "end": 8.0,
                     "_class_name": "medkit.core.audio.span.Span"
                 },
-                "metadata": {},
                 "attrs": [],
+                "metadata": {},
                 "_class_name": "medkit.core.audio.annotation.Segment"
             }
         ],
+        "metadata": {},
         "_class_name": "medkit.core.audio.document.AudioDocument"
     }
 }

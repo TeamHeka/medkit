@@ -85,7 +85,7 @@ class Segment:
         for attr in attrs:
             self.attrs.add(attr)
 
-    def to_dict(self, deep: bool = False) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         if isinstance(self.audio, DictSerializable):
             audio = serialize(self.audio)
         else:
@@ -94,22 +94,21 @@ class Segment:
             placeholder = PlaceholderAudioBuffer.from_audio_buffer(self.audio)
             audio = serialize(placeholder)
         span = serialize(self.span)
-        data = dict(
+        attrs = [serialize(a) for a in self.attrs]
+        return dict(
             uid=self.uid,
             label=self.label,
             audio=audio,
             span=span,
+            attrs=attrs,
             metadata=self.metadata,
         )
-        if deep:
-            data["attrs"] = [serialize(a, deep=True) for a in self.attrs]
-        return data
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]):
         audio = deserialize(data["audio"])
         span = deserialize(data["span"])
-        attrs = [deserialize(a) for a in data.get("attrs", [])]
+        attrs = [deserialize(a) for a in data["attrs"]]
         return cls(
             label=data["label"],
             audio=audio,

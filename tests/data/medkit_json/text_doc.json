@@ -5,7 +5,6 @@
     "content": {
         "uid": "d1",
         "text": "I have diabetes and asthma.",
-        "metadata": {},
         "anns": [
             {
                 "uid": "e1",
@@ -18,8 +17,8 @@
                         "_class_name": "medkit.core.text.span.Span"
                     }
                 ],
-                "metadata": {},
                 "attrs": [],
+                "metadata": {},
                 "_class_name": "medkit.core.text.annotation.Entity"
             },
             {
@@ -33,7 +32,6 @@
                         "_class_name": "medkit.core.text.span.Span"
                     }
                 ],
-                "metadata": {},
                 "attrs": [
                     {
                         "uid": "a1",
@@ -43,9 +41,11 @@
                         "_class_name": "medkit.core.attribute.Attribute"
                     }
                 ],
+                "metadata": {},
                 "_class_name": "medkit.core.text.annotation.Entity"
             }
         ],
+        "metadata": {},
         "_class_name": "medkit.core.text.document.TextDocument"
     }
 }

@@ -16,7 +16,7 @@ DictSerializableType = TypeVar("DictSerializableType", bound="DictSerializable")
 
 @runtime_checkable
 class DictSerializable(Protocol):
-    def to_dict(self, deep: bool = False) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         pass
 
     @classmethod
@@ -48,7 +48,7 @@ def is_deserializable(object: Dict):
     return isinstance(object, dict) and object.get(_CLASS_NAME_KEY) is not None
 
 
-def serialize(object: DictSerializable, deep: bool = False) -> Dict[str, Any]:
+def serialize(object: DictSerializable) -> Dict[str, Any]:
     class_name = _get_class_name(object.__class__)
     if class_name not in _class_name_to_class:
         raise ValueError(
@@ -56,7 +56,7 @@ def serialize(object: DictSerializable, deep: bool = False) -> Dict[str, Any]:
             " decorate the class with @dict_serializable"
         )
 
-    data = object.to_dict(deep=deep)
+    data = object.to_dict()
     data[_CLASS_NAME_KEY] = class_name
     return data
 

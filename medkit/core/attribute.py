@@ -38,7 +38,7 @@ class Attribute:
     metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
     uid: str = dataclasses.field(default_factory=generate_id)
 
-    def to_dict(self, deep: bool = False) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         value = self.value
         # handle non-scalar value
         if isinstance(value, DictSerializable):
