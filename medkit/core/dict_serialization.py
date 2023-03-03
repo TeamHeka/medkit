@@ -8,7 +8,7 @@ __all__ = [
 
 
 from typing import Any, Dict, Type, TypeVar
-from typing_extensions import Protocol, runtime_checkable
+from typing_extensions import Self, Protocol, runtime_checkable
 
 
 DictSerializableType = TypeVar("DictSerializableType", bound="DictSerializable")
@@ -20,9 +20,7 @@ class DictSerializable(Protocol):
         pass
 
     @classmethod
-    def from_dict(
-        cls: Type[DictSerializableType], data: Dict[str, Any]
-    ) -> DictSerializableType:
+    def from_dict(cls, data: Dict[str, Any]) -> Self:
         pass
 
 

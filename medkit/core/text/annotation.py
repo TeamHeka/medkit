@@ -11,10 +11,9 @@ from typing import (
     List,
     Optional,
     Set,
-    Type,
-    TypeVar,
     TYPE_CHECKING,
 )
+from typing_extensions import Self
 
 from medkit.core.attribute import Attribute
 from medkit.core.attribute_container import AttributeContainer
@@ -80,9 +79,6 @@ class TextAnnotation(abc.ABC):
             self.attrs.add(attr)
 
 
-SegmentType = TypeVar("SegmentType", bound="Segment")
-
-
 @dict_serializable
 @dataclasses.dataclass(init=False)
 class Segment(TextAnnotation):
@@ -141,7 +137,7 @@ class Segment(TextAnnotation):
         )
 
     @classmethod
-    def from_dict(cls: Type[SegmentType], segment_dict: Dict[str, Any]) -> SegmentType:
+    def from_dict(cls, segment_dict: Dict[str, Any]) -> Self:
         """
         Creates a Segment from a dict
 
