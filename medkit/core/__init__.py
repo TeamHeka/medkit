@@ -26,6 +26,7 @@ __all__ = [
     "GlobalStore",
     "ProvStore",
     "create_prov_store",
+    "TrainableOperation",
 ]
 
 from . import dict_conv
@@ -51,3 +52,5 @@ from .pipeline import (
 from .prov_tracer import ProvTracer, Prov
 from .store import Store, GlobalStore
 from .prov_store import ProvStore, create_prov_store
+
+from .trainable_operation import TrainableOperation

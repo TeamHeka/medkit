@@ -1,9 +1,17 @@
-__all__ = ["Normalizer", "NormalizerRule", "LIGATURE_RULES", "EDSCleaner"]
+__all__ = [
+    "Normalizer",
+    "NormalizerRule",
+    "LIGATURE_RULES",
+    "FRACTION_RULES",
+    "SIGN_RULES",
+    "SPACE_RULES",
+    "EDSCleaner",
+]
 
 from .normalizer import Normalizer, NormalizerRule
 from .eds_cleaner import EDSCleaner
 
-#: Normalizer rules for ligatures (medkit.text.preprocessing.LIGATURE_RULES)
+#: Normalizer rules for ligatures
 LIGATURE_RULES = [
     NormalizerRule(*rule)
     for rule in [
