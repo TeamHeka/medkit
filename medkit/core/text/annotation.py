@@ -29,9 +29,6 @@ if TYPE_CHECKING:
     from medkit.core.text.document import TextDocument
 
 
-TextAnnotationType = TypeVar("TextAnnotationType", bound="TextAnnotation")
-
-
 @dataclasses.dataclass(init=False)
 class TextAnnotation(abc.ABC):
     """Base abstract class for all text annotations
