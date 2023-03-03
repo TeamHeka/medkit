@@ -166,7 +166,7 @@ class Segment(TextAnnotation):
         )
 
     def get_snippet(self, doc: TextDocument, max_extend_length: int) -> str:
-        """Return a portion of the original text contaning the annotation
+        """Return a portion of the original text containing the annotation
 
         Parameters
         ----------
