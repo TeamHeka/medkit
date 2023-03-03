@@ -1,9 +1,10 @@
+import dataclasses
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 import transformers
-import logging
 
 from medkit.core import IdentifiableDataItem
 from medkit.core.text.annotation import Entity, Segment
@@ -16,6 +17,14 @@ from medkit.training.utils import BatchData
 logger = logging.getLogger(__name__)
 
 
+@dataclasses.dataclass
+class PreprocessingConfig:
+    labels: List[str]
+    use_bilou_scheme: bool = False
+    tag_subtokens: bool = False
+    max_length: int = 512
+
+
 class HFEntityMatcherTrainable:
     """
     Trainable entity matcher based on HuggingFace transformers model
@@ -26,10 +35,7 @@ class HFEntityMatcherTrainable:
     def __init__(
         self,
         model_name_or_path: Union[str, Path],
-        label_to_id: Dict[str, int],
-        use_bilou_scheme: bool = True,
-        max_length: int = 512,
-        map_sub_tokens=True,
+        preprocessing_config: PreprocessingConfig,
         device: int = -1,
         cache_dir: Optional[Union[str, Path]] = None,
         name: Optional[str] = None,
@@ -66,13 +72,13 @@ class HFEntityMatcherTrainable:
                 )
         # define mapping
         self.model_config = self._ensure_config_model_HF(
-            self.model_name_or_path, label_to_id
+            self.model_name_or_path, preprocessing_config.labels
         )
         self.label_to_id = self.model_config.label2id
         self.id_to_label = self.model_config.id2label
-        self.use_bilou_scheme = use_bilou_scheme
-        self.map_sub_tokens = map_sub_tokens
-        self.max_length = max_length
+        self.use_bilou_scheme = preprocessing_config.use_bilou_scheme
+        self.tag_subtokens = preprocessing_config.tag_subtokens
+        self.max_length = preprocessing_config.max_length
 
         # load tokenizer and model using the model path
         self.load(self.model_name_or_path)
@@ -105,7 +111,7 @@ class HFEntityMatcherTrainable:
                 text_encoding=text_encoding,
                 tags=tags,
                 tag_to_id=self.label_to_id,
-                map_sub_tokens=self.map_sub_tokens,
+                map_sub_tokens=self.tag_subtokens,
             )
 
         model_input = {}
@@ -190,22 +196,22 @@ class HFEntityMatcherTrainable:
         self._model = model
 
     @staticmethod
-    def _ensure_config_model_HF(model_path_or_name, label_to_id: Dict[str, int]):
-        nb_labels = len(label_to_id)
+    def _ensure_config_model_HF(model_path_or_name, labels: List[str]):
+        nb_labels = len(labels)
         config = transformers.AutoConfig.from_pretrained(
             model_path_or_name, num_labels=nb_labels
         )
 
         # If the model has labels, use them (note HF)
-        if sorted(config.label2id.keys()) != sorted(label_to_id.keys()):
+        if sorted(config.label2id.keys()) != sorted(labels):
             logger.warning(
                 "The operation model seems to have been trained with different labels.",
                 f"PreTrained with labels: {sorted(config.label2id.keys())}, new labels"
-                f" {sorted(label_to_id.keys())}.\nIgnoring the model labels as a"
+                f" {sorted(labels)}.\nIgnoring the model labels as a"
                 " result.",
             )
-            config.label2id = {label: idx for label, idx in label_to_id.items()}
-            config.id2label = {idx: label for label, idx in label_to_id.items()}
+            config.label2id = {label: idx for idx, label in enumerate(labels)}
+            config.id2label = {idx: label for idx, label in enumerate(labels)}
 
         # Easier finetunning
         logger.info(
