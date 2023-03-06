@@ -2,12 +2,17 @@
 
 This page contains all core text concepts of medkit.
 
+:::{note}
+For more details about public APIs, refer to
+{mod}`medkit.core.text`.
+:::
+
 ## Document, Annotations & Attributes
 
-The {class}`~medkit.core.text.document.TextDocument` class implements the
-{class}`~medkit.core.Document` protocol. It allows to store subclasses of
-{class}`~medkit.core.text.annotation.TextAnnotation`, which implements the
-{class}`~medkit.core.Annotation` protocol. 
+The {class}`~.text.TextDocument` class implements the
+{class}`~.core.Document` protocol. It allows to store subclasses of
+{class}`~.text.TextAnnotation`, which implements the
+{class}`~.core.annotation.Annotation` protocol.
 
 
 ```{mermaid}
@@ -39,8 +44,8 @@ classDiagram
 
 ### Document
 
-`TextDocument` relies on {class}`~medkit.core.text.TextAnnotationContainer`, a
-subclass of {class}`~medkit.core.AnnotationContainer`, to manage the annotations,
+{class}`~.text.TextDocument` relies on {class}`~.text.TextAnnotationContainer`,
+a subclass of {class}`~.core.AnnotationContainer`, to manage the annotations,
 
 Given a text document named `doc`
 
@@ -48,10 +53,10 @@ Given a text document named `doc`
   ```
   for entity in doc.anns.entities:
     ...
-  
+
   for segment in doc.anns.segments:
     ...
-  
+
   for relation in doc.anns.relations:
     ...
   ```
@@ -59,7 +64,7 @@ Given a text document named `doc`
   ```
     sentences_segments = doc.get_segments(label="sentences")
     disorder_entities = doc.get_entities(label="disorder)
-    
+
     entity = <my entity>
     relations = doc.get_relations(label="before", source_id=entity.uid)
   ```
@@ -69,19 +74,14 @@ For common interfaces provided by core components, you can refer to
 [Document](api:core:document).
 ```
 
-```{eval-rst}
-.. autoclass:: medkit.core.text::TextDocument
-    :members:
-```
----
-```{eval-rst}
-.. autoclass:: medkit.core.text::TextAnnotationContainer
-    :members:
-```
 ### Annotations
 
-For text modality, `TextDocument` can only contain 
-{class}`~medkit.core.text.TextAnnotation`.
+For text modality, {class}`~.text.TextDocument` can only contain
+{class}`~.text.TextAnnotation`s.
+
+:::{note}
+For more details about public APIs, refer to {mod}`medkit.core.text.annotation`).
+:::
 
 Three subclasses are defined:
 {class}`~medkit.core.text.annotation.Segment`,
@@ -101,95 +101,68 @@ classDiagram
         <<abstract>>
     }
     Annotation <|.. TextAnnotation: implements
-    TextAnnotation <|-- Segment 
+    TextAnnotation <|-- Segment
     TextAnnotation <|-- Relation
     Segment <|-- Entity
 ```
 
-```{note}
+:::{note}
 Each text annotation class inherits from the common interfaces provided by the
 core component (cf. [Annotation](api:core:annotation))
-```
-
-```{eval-rst}
-.. autoclass:: medkit.core.text::TextAnnotation
-    :members:
-```
----
-```{eval-rst}
-.. autoclass:: medkit.core.text::Segment
-    :members:
-```
----
-```{eval-rst}
-.. autoclass:: medkit.core.text::Entity
-    :members:
-```
----
-```{eval-rst}
-.. autoclass:: medkit.core.text::Relation
-    :members:
-```
-
+:::
 
 ### Attributes
 
 Text annotations can receive attributes, which will be instances of the core
-{class}`~medkit.core.Attribute` class.
+{class}`~.core.Attribute` class.
 
----
-`medkit.core.text` defines
+Among attributes, {mod}`medkit.core.text` proposes
 {class}`~medkit.core.text.normalization.EntityNormalization`, to be used for
 values of normalization attributes, in order to have a common structure for
 normalization information, independently of the operation used to create it.
 
-```{eval-rst}
-.. automodule:: medkit.core.text.normalization
-    :members:
-    :inherited-members:
-```
 
 (api:core-text:span)=
 ## Spans
 
-```{eval-rst}
-.. automodule:: medkit.core.text.span
-    :members:
-```
+medkit relies on the concept of spans for following all text modifications
+made by the different operations.
 
-## Span utilities
-
-:::{seealso}
-cf. [spans notebook example](../examples/spans).
+:::{note}
+For more details about public APIs, refer to
+{mod}`medkit.core.text.span`.
 :::
 
-```{eval-rst}
-.. automodule:: medkit.core.text.span_utils
-    :members:
-```
+medkit also proposes a set of utilities for manipulating these spans if we need
+it when implementing a new medkit operation.
+
+:::{note}
+For more details about public APIs, refer to  {mod}`medkit.core.text.span_utils`.
+:::
+
+:::{seealso}
+You may also take a look to the [spans notebook example](../examples/spans).
+:::
+
 
 ## Text utilities
 
 These utilities have some preconfigured patterns for preprocessing text documents without destruction. They are not really supposed to be used directly, but rather inside a cleaning operation.
 
+:::{note}
+For more details about public APIs, refer to {mod}`medkit.core.text.utils`.
+:::
+
 :::{seealso}
  Medkit provides the {class}`~medkit.text.preprocessing.eds_cleaner.EDSCleaner` class that combines all these utilities to clean french documents (related to EDS documents coming from PDF).
 :::
 
-```{eval-rst}
-.. automodule:: medkit.core.text.utils
-    :members:
-```
 
 ## Operations
 
-Abstract subclasses of `Operation` have been defined for text to ease the
-development of text operations according to `run` operations.
+Abstract subclasses of {class}`~.core.Operation` have been defined for text
+to ease the development of text operations according to `run` operations.
 
-```{note}
-Refer to [custom operations](api:core:text:custom_op) for more details on how
-to use internal class `_CustomTextOperation`.
-```
 
 ```{eval-rst}
 .. autoclasstree:: medkit.core.operation medkit.core.text.operation
@@ -199,18 +172,15 @@ to use internal class `_CustomTextOperation`.
     :caption: Operation hierarchy
 ```
 
-```{eval-rst}
-.. automodule:: medkit.core.text.operation
-    :members: ContextOperation, NEROperation, SegmentationOperation
-```
+:::{note}
+For more details about public APIs, refer to {mod}`medkit.core.text.operation`.
+:::
 
-(api:core:text:custom_op)=
-### Custom operations
+Internal class `_CustomTextOperation` has been implemented to allow user to
+call {func}`~.text.create_text_operation` for easily instantiating a custom
+text operation.
 
-You can also use the following function for instantiating a custom text operation.
-The internal class `_CustomTextOperation` is instantiated by this function.
-
-```{eval-rst}
-.. autofunction:: medkit.core.text.operation.create_text_operation
-.. autoclass:: medkit.core.text.operation.CustomTextOpType
-```
+:::{seealso}
+You may refer to this [tutorial](../examples/custom_text_operation) as example
+of definition of custom operation.
+:::

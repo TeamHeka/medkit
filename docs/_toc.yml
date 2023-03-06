@@ -18,9 +18,10 @@ parts:
 - caption: Medkit concepts
   chapters:
   - file: api/core
-  - file: api/core_text
+    sections:
+    - file: api/core_text
+    - file: api/core_audio
   - file: api/text
-  - file: api/core_audio
   - file: api/audio
   - file: api/io
   - file: api/training

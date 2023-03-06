@@ -33,7 +33,7 @@ class AudioDocument(dict_conv.SubclassMapping):
         Audio buffer containing the entire signal of the document.
     anns:
         Annotations of the document. Stored in an
-        :class:`~.AudioAnnotationContainer` but can be passed as a list at init.
+        :class:`~.audio.AudioAnnotationContainer` but can be passed as a list at init.
     metadata:
         Document metadata.
     raw_segment:

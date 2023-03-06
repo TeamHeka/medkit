@@ -31,7 +31,7 @@ class TextDocument(dict_conv.SubclassMapping):
         Full document text.
     anns:
         Annotations of the document. Stored in an
-        :class:`~.TextAnnotationContainer` but can be passed as a list at init.
+        :class:`~.text.TextAnnotationContainer` but can be passed as a list at init.
     metadata:
         Document metadata.
     raw_segment:

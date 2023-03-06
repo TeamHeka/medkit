@@ -2,11 +2,21 @@
 
 This page lists all components for converting and loading/saving data.
 
+```{eval-rst}
+.. automodule:: medkit.io
+      :autosummary-members:
+```
+
 (api:io:brat)=
 ## Brat
 
 ```{eval-rst}
 .. automodule:: medkit.io.brat
+    :noindex:
+    :no-members:
+    :autosummary-members:
+
+.. autoclass:: medkit.io::BratInputConverter
     :members:
 ```
 
