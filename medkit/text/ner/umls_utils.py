@@ -39,8 +39,8 @@ def load_umls(
 ) -> Iterator[UMLSEntry]:
     """Load all terms and associated CUIs found in a UMLS MRCONSO.RRF file
 
-    Params
-    ------
+    Parameters
+    ----------
     mrconso_file:
         Path to the UMLS MRCONSO.RRF file
     sources:
