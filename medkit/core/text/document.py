@@ -13,6 +13,7 @@ from medkit.core.id import generate_id
 from medkit.core.text.annotation import TextAnnotation, Segment
 from medkit.core.text.annotation_container import TextAnnotationContainer
 from medkit.core.text.span import Span
+from medkit.core.text import span_utils
 
 
 @dataclasses.dataclass(init=False)
@@ -132,3 +133,27 @@ class TextDocument(dict_conv.SubclassMapping):
             anns=anns,
             metadata=doc_dict["metadata"],
         )
+
+    def get_snippet(self, segment: Segment, max_extend_length: int) -> str:
+        """Return a portion of the original text containing the annotation
+
+        Parameters
+        ----------
+        segment:
+            The annotation
+
+        max_extend_length:
+            Maximum number of characters to use around the annotation
+
+        Returns
+        -------
+        str:
+            A portion of the text around the annotation
+        """
+        spans_normalized = span_utils.normalize_spans(segment.spans)
+        start = min(s.start for s in spans_normalized)
+        end = max(s.end for s in spans_normalized)
+        start_extended = max(start - max_extend_length // 2, 0)
+        remaining_max_extend_length = max_extend_length - (start - start_extended)
+        end_extended = min(end + remaining_max_extend_length, len(self.text))
+        return self.text[start_extended:end_extended]

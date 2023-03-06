@@ -4,6 +4,7 @@ from medkit.core import Attribute, generate_id
 from medkit.core.text.document import TextDocument
 from medkit.core.text.annotation import Entity, Relation, Segment
 from medkit.core.text.span import Span
+from tests.data_utils import get_text_document
 
 # TODO remove tests redundant with test_annotation_container
 
@@ -91,3 +92,17 @@ def test_raw_segment():
         RuntimeError, match=r"Cannot add annotation with reserved label .*"
     ):
         doc.anns.add(seg)
+
+
+def test_snippet():
+    doc = get_text_document("doc1")
+    entity = Segment(
+        label="disease",
+        spans=[Span(739, 755)],
+        text="neurofibromatose",
+    )
+    doc.anns.add(entity)
+
+    snippet = doc.get_snippet(entity, max_extend_length=49)
+    expected = "tats de la suspicion de neurofibromatose, je proposerai ou pas un"
+    assert snippet == expected

@@ -15,12 +15,15 @@ parts:
   - file: examples/brat_io
   - file: examples/spacy_io
   - file: examples/custom_text_operation
+- caption: Medkit concepts
+  chapters:
+  - file: api/core
+  - file: api/core_text
+  - file: api/text
+  - file: api/core_audio
+  - file: api/audio
+  - file: api/io
+  - file: api/training
 - caption: API reference
   chapters:
-  - file: api/core.rst
-  - file: api/core_text.rst
-  - file: api/text.rst
-  - file: api/core_audio.rst
-  - file: api/audio.rst
-  - file: api/io.rst
-  - file: api/training.rst
+  - file: api-gen/index
