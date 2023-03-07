@@ -2,6 +2,7 @@ __all__ = [
     "AnnotationType",
     "AnnotationContainer",
     "Attribute",
+    "AttributeValue",
     "AttributeContainer",
     "Collection",
     "InputConverter",
@@ -34,7 +35,7 @@ __all__ = [
 
 from .annotation import AnnotationType
 from .annotation_container import AnnotationContainer
-from .attribute import Attribute
+from .attribute import Attribute, AttributeValue
 from .attribute_container import AttributeContainer
 from .collection import Collection
 from .conversion import InputConverter, OutputConverter

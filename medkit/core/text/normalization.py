@@ -4,11 +4,12 @@ __all__ = ["EntityNormalization"]
 
 from typing import Any, Dict, Optional
 
+from medkit.core.attribute import AttributeValue
 from medkit.core.dict_serialization import dict_serializable
 
 
 @dict_serializable
-class EntityNormalization:
+class EntityNormalization(AttributeValue):
     """Normalization linking an entity to an ID in a knowledge base.
 
     To be used as the value of a normalization attribute.
@@ -45,6 +46,13 @@ class EntityNormalization:
         self.kb_version = kb_version
         self.term = term
         self.score = score
+
+    def get_simple_representation(self) -> str:
+        # special case when we just have a normalized term
+        if self.kb_name is None and self.kb_id is None:
+            return self.term
+
+        return f"{self.kb_name}:{self.kb_id}"
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(

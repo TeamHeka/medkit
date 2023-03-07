@@ -12,7 +12,7 @@ from spacy.tokens import Span as SpacySpan
 from spacy.tokens.underscore import Underscore
 from spacy.util import filter_spans
 
-from medkit.core import Attribute
+from medkit.core import Attribute, AttributeValue
 from medkit.core.text import (
     Entity,
     Segment,
@@ -20,7 +20,6 @@ from medkit.core.text import (
     AnySpan,
     Span,
     span_utils,
-    EntityNormalization,
 )
 
 
@@ -441,14 +440,9 @@ def _segment_to_spacy_span(
                 # in medkit having an attribute, indicates that the attribute exists
                 # for the given annotation, we force True as value
                 value = True
-            elif isinstance(attr.value, EntityNormalization):
-                # convert normalization objects to string
-                norm = attr.value
-                if norm.kb_name is not None and norm.kb_id is not None:
-                    value = f"{norm.kb_name}:{norm.kb_id}"
-                else:
-                    # special case when we use an EntityNormalization containing just a normalized term
-                    value = norm.term
+            elif isinstance(attr.value, AttributeValue):
+                # convert object values to string/float/int/bool
+                value = attr.value.get_simple_representation()
             else:
                 value = attr.value
             # set attributes as extensions

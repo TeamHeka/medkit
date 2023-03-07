@@ -1,18 +1,42 @@
 from __future__ import annotations
 
-__all__ = ["Attribute"]
+__all__ = ["Attribute", "AttributeValue"]
 
+import abc
 import dataclasses
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
+from typing_extensions import Self
 
 from medkit.core.dict_serialization import (
-    DictSerializable,
     dict_serializable,
     is_deserializable,
     serialize,
     deserialize,
 )
 from medkit.core.id import generate_id
+
+
+class AttributeValue(abc.ABC):
+    """
+    Abstract base class for custom attributes values
+    """
+
+    @classmethod
+    def from_dict(ann_dict: Dict[str, Any]) -> Self:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def to_dict(self) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_simple_representation(self) -> Union[int, float, bool, str]:
+        """
+        Return a numeric or string representation of the value to be used when
+        exporting to format that do not support complex attributes values, such
+        as Brat
+        """
+        raise NotImplementedError()
 
 
 @dict_serializable
@@ -26,7 +50,9 @@ class Attribute:
     label:
         The attribute label
     value:
-        The value of the attribute
+        The value of the attribute. Should be either simple built-in types (int,
+        float, bool, str) or collections of these types (list, dict, tuple). For
+        more complex data use subclasses of :class:`~.AttributeValue`.
     metadata:
         The metadata of the attribute
     uid:
@@ -40,8 +66,8 @@ class Attribute:
 
     def to_dict(self) -> Dict[str, Any]:
         value = self.value
-        # handle non-scalar value
-        if isinstance(value, DictSerializable):
+        # handle object value
+        if isinstance(value, AttributeValue):
             value = serialize(value)
 
         return dict(
@@ -73,7 +99,7 @@ class Attribute:
         """
 
         value = attribute_dict["value"]
-        # handle non-scalar value
+        # handle object value
         if is_deserializable(value):
             value = deserialize(value)
         return cls(
