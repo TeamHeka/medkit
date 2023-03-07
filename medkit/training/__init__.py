@@ -16,3 +16,10 @@ if not modules_are_available(["torch"]):
 from .callbacks import TrainerCallback, DefaultPrinterCallback
 from .trainer import Trainer, TrainerConfig
 from .utils import BatchData, MetricsComputer
+
+
+if modules_are_available(["transformers"]):
+    # fmt: off
+    from .utils import check_model_for_task_HF  # noqa: F401
+    __all__ += ["check_model_for_task_HF"]
+    # fmt: on
