@@ -21,7 +21,7 @@ from medkit.core.dict_serialization import dict_serializable, serialize, deseria
 from medkit.core.id import generate_id
 from medkit.core.store import Store
 from medkit.core.text.normalization import EntityNormalization
-from medkit.core.text.span import AnySpanType
+from medkit.core.text.span import AnySpan
 import medkit.core.text.span_utils as span_utils
 
 if TYPE_CHECKING:
@@ -106,14 +106,14 @@ class Segment(TextAnnotation):
         Pipeline output keys to which the segment belongs to.
     """
 
-    spans: List[AnySpanType]
+    spans: List[AnySpan]
     text: str
 
     def __init__(
         self,
         label: str,
         text: str,
-        spans: List[AnySpanType],
+        spans: List[AnySpan],
         attrs: Optional[List[Attribute]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,

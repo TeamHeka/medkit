@@ -1,20 +1,25 @@
 from __future__ import annotations
 
 __all__ = [
+    "AnySpan",
     "Span",
     "ModifiedSpan",
-    "AnySpanType",
 ]
 
+import abc
 import dataclasses
-from typing import Any, Dict, List, NamedTuple, Union
-from typing_extensions import TypeAlias
+from typing import Any, Dict, List
 
 from medkit.core.dict_serialization import dict_serializable, serialize, deserialize
 
 
+class AnySpan(abc.ABC):
+    pass
+
+
 @dict_serializable
-class Span(NamedTuple):
+@dataclasses.dataclass(frozen=True)
+class Span(AnySpan):
     """
     Slice of text extracted from the original text
 
@@ -55,7 +60,7 @@ class Span(NamedTuple):
 
 @dict_serializable
 @dataclasses.dataclass
-class ModifiedSpan:
+class ModifiedSpan(AnySpan):
     """
     Slice of text not present in the original text
 
@@ -90,6 +95,3 @@ class ModifiedSpan:
 
         replaced_spans = [deserialize(s) for s in modified_span_dict["replaced_spans"]]
         return cls(modified_span_dict["length"], replaced_spans)
-
-
-AnySpanType: TypeAlias = Union[Span, ModifiedSpan]

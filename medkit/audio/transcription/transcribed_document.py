@@ -10,8 +10,8 @@ from medkit.core.audio import Span as AudioSpan
 from medkit.core.text import (
     TextDocument,
     Span as TextSpan,
+    AnySpan as AnyTextSpan,
     TextAnnotation,
-    AnySpanType as AnyTextSpanType,
     span_utils as text_span_utils,
 )
 
@@ -63,7 +63,7 @@ class TranscribedDocument(TextDocument):
         self.text_spans_to_audio_spans = text_spans_to_audio_spans
 
     def get_containing_audio_spans(
-        self, text_ann_spans: List[AnyTextSpanType]
+        self, text_ann_spans: List[AnyTextSpan]
     ) -> List[AudioSpan]:
         """Return the audio spans used to transcribe the text referenced by a text
         annotation.

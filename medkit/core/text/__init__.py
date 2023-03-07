@@ -15,7 +15,7 @@ __all__ = [
     "create_text_operation",
     "Span",
     "ModifiedSpan",
-    "AnySpanType",
+    "AnySpan",
 ]
 
 from . import utils
@@ -31,4 +31,4 @@ from .operation import (
     CustomTextOpType,
     create_text_operation,
 )
-from .span import Span, ModifiedSpan, AnySpanType
+from .span import Span, ModifiedSpan, AnySpan
