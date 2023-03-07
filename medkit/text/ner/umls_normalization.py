@@ -3,12 +3,12 @@ from __future__ import annotations
 __all__ = ["UMLSNormalization"]
 
 from typing import Any, Dict, List, Optional
+from typing_extensions import Self
 
-from medkit.core import dict_serializable
+from medkit.core import dict_conv
 from medkit.core.text import EntityNormalization
 
 
-@dict_serializable
 class UMLSNormalization(EntityNormalization):
     """Normalization attribute linking an entity to a CUI in the UMLS knowledge base."""
 
@@ -52,14 +52,23 @@ class UMLSNormalization(EntityNormalization):
         return self.kb_version
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(
+        norm_dict = dict(
             cui=self.cui,
             umls_version=self.umls_version,
             term=self.term,
             score=self.score,
             sem_types=self.sem_types,
         )
+        dict_conv.add_class_name_to_data_dict(self, norm_dict)
+        return norm_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> UMLSNormalization:
-        return cls(**data)
+    def from_dict(cls, data: Dict[str, Any]) -> Self:
+        dict_conv.check_class_matches_data_dict(cls, data)
+        return cls(
+            cui=data["cui"],
+            umls_version=data["umls_version"],
+            term=data["term"],
+            score=data["score"],
+            sem_types=data["sem_types"],
+        )

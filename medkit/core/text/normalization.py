@@ -3,12 +3,12 @@ from __future__ import annotations
 __all__ = ["EntityNormalization"]
 
 from typing import Any, Dict, Optional
+from typing_extensions import Self
 
+from medkit.core import dict_conv
 from medkit.core.attribute import AttributeValue
-from medkit.core.dict_serialization import dict_serializable
 
 
-@dict_serializable
 class EntityNormalization(AttributeValue):
     """Normalization linking an entity to an ID in a knowledge base.
 
@@ -55,14 +55,23 @@ class EntityNormalization(AttributeValue):
         return f"{self.kb_name}:{self.kb_id}"
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(
+        norm_dict = dict(
             kb_name=self.kb_name,
             kb_id=self.kb_id,
             kb_version=self.kb_version,
             term=self.term,
             score=self.score,
         )
+        dict_conv.add_class_name_to_data_dict(self, norm_dict)
+        return norm_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> EntityNormalization:
-        return cls(**data)
+    def from_dict(cls, data: Dict[str, Any]) -> Self:
+        dict_conv.check_class_matches_data_dict(cls, data)
+        return cls(
+            kb_name=data["kb_name"],
+            kb_id=data["kb_id"],
+            kb_version=data["kb_version"],
+            term=data["term"],
+            score=data["score"],
+        )

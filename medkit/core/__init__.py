@@ -1,4 +1,5 @@
 __all__ = [
+    "dict_conv",
     "AnnotationType",
     "AnnotationContainer",
     "Attribute",
@@ -9,10 +10,6 @@ __all__ = [
     "OutputConverter",
     "IdentifiableDataItem",
     "IdentifiableDataItemWithAttrs",
-    "DictSerializable",
-    "dict_serializable",
-    "is_deserializable",
-    "serialize",
     "deserialize",
     "DocPipeline",
     "Document",
@@ -33,6 +30,7 @@ __all__ = [
     "create_prov_store",
 ]
 
+from . import dict_conv
 from .annotation import AnnotationType
 from .annotation_container import AnnotationContainer
 from .attribute import Attribute, AttributeValue
@@ -40,13 +38,6 @@ from .attribute_container import AttributeContainer
 from .collection import Collection
 from .conversion import InputConverter, OutputConverter
 from .data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs
-from .dict_serialization import (
-    DictSerializable,
-    dict_serializable,
-    is_deserializable,
-    serialize,
-    deserialize,
-)
 from .doc_pipeline import DocPipeline
 from .document import Document
 from .id import generate_id

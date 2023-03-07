@@ -4,12 +4,13 @@ __all__ = ["AudioBuffer", "FileAudioBuffer", "MemoryAudioBuffer"]
 
 import abc
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Type, Union
+from typing_extensions import Self
 
 import numpy as np
 import soundfile as sf
 
-from medkit.core.dict_serialization import dict_serializable
+from medkit.core import dict_conv
 
 
 class AudioBuffer(abc.ABC):
@@ -102,12 +103,26 @@ class AudioBuffer(abc.ABC):
         )
         return self.trim(start, end)
 
+    def __init_subclass__(cls):
+        super().__init_subclass__()
+        # type-annotated intermediary variable needed to keep mypy happy
+        parent_class: Type = AudioBuffer
+        dict_conv.register_subclass(parent_class, cls)
+
+    @staticmethod
+    def from_dict(ann_dict: Dict[str, Any]) -> AudioBuffer:
+        subclass = dict_conv.get_subclass_for_data_dict(AudioBuffer, ann_dict)
+        return subclass.from_dict(ann_dict)
+
+    @abc.abstractmethod
+    def to_dict(self) -> Dict[str, Any]:
+        raise NotImplementedError()
+
     @abc.abstractmethod
     def __eq__(self, other: object) -> bool:
         pass
 
 
-@dict_serializable
 class FileAudioBuffer(AudioBuffer):
     """Audio buffer giving access to audio files stored on the filesystem
     (to use when manipulating unmodified raw audio)."""
@@ -184,15 +199,20 @@ class FileAudioBuffer(AudioBuffer):
         return FileAudioBuffer(self.path, new_trim_start, new_trim_end, self._sf_info)
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(
+        buffer_dict = dict(
             path=str(self.path),
             trim_start=self._trim_start,
             trim_end=self._trim_end,
         )
+        dict_conv.add_class_name_to_data_dict(self, buffer_dict)
+        return buffer_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> FileAudioBuffer:
-        return cls(**data)
+    def from_dict(cls, data: Dict[str, Any]) -> Self:
+        dict_conv.check_class_matches_data_dict(cls, data)
+        return cls(
+            path=data["path"], trim_start=data["trim_start"], trim_end=data["trim_end"]
+        )
 
     def __eq__(self, other: object) -> bool:
         if not type(other) is self.__class__:
@@ -244,13 +264,19 @@ class MemoryAudioBuffer(AudioBuffer):
         assert start <= end
         return MemoryAudioBuffer(self._signal[:, start:end], self.sample_rate)
 
+    def to_dict(self) -> Dict[str, Any]:
+        raise NotImplementedError("MemoryBuffer can't be converted to dict")
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> Self:
+        raise NotImplementedError("MemoryBuffer can't be instantiated from dict")
+
     def __eq__(self, other: object) -> bool:
         if not type(other) is self.__class__:
             return False
         return np.array_equal(self._signal, other._signal)
 
 
-@dict_serializable
 class PlaceholderAudioBuffer(AudioBuffer):
     """Placeholder representing a MemoryAudioBuffer for which we have lost the actual signal.
 
@@ -282,14 +308,17 @@ class PlaceholderAudioBuffer(AudioBuffer):
         )
 
     def to_dict(self) -> Dict[str, Any]:
-        return dict(
+        buffer_dict = dict(
             sample_rate=self.sample_rate,
             nb_samples=self.nb_samples,
             nb_channels=self.nb_channels,
         )
+        dict_conv.add_class_name_to_data_dict(self, buffer_dict)
+        return buffer_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> PlaceholderAudioBuffer:
+    def from_dict(cls, data: Dict[str, Any]) -> Self:
+        dict_conv.check_class_matches_data_dict(cls, data)
         return cls(
             sample_rate=data["sample_rate"],
             nb_samples=data["nb_samples"],

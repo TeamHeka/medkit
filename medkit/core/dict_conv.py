@@ -1,0 +1,227 @@
+__all__ = [
+    "DictConvertible",
+    "register_subclass",
+    "get_subclass_for_data_dict",
+    "add_class_name_to_data_dict",
+    "check_class_matches_data_dict",
+    "is_convertible_data_dict",
+]
+
+from typing import Any, Dict, Generic, Type, TypeVar
+from typing_extensions import Protocol, Self, runtime_checkable
+
+
+@runtime_checkable
+class DictConvertible(Protocol):
+    """
+    Base protocol that must be implemented for all classes supporting conversion
+    to a data dict and re-instantiation from a data dict.
+    """
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert current instance into a data dict that can later be used to rebuild
+        the exact same instance
+
+        Returns
+        -------
+        Dict[str, Any]:
+            A daata dict containing all the information needed to re-instantiate the object
+        """
+        pass
+
+    @classmethod
+    def from_dict(cls, data_dict: Dict[str, Any]) -> Self:
+        """
+        Re-instantiate an object from a datadict obtained via `to_dict()`
+
+        Parameters
+        ----------
+            data_dict:
+                Data dict returned by `to_dict()`
+        Returns
+        -------
+        Self:
+            An instance of the class `to_dict()` was called on.
+        """
+        pass
+
+
+# represents a class that implements DictConvertible
+DictConvertibleClassType = TypeVar(
+    "DictConvertibleClassType", bound=Type[DictConvertible]
+)
+
+
+class _SubclassMapping(Generic[DictConvertibleClassType]):
+    """
+    Equivalent to Dict[str, Type[DictConvertible]] but with generic typing and custom checks
+    """
+
+    def __init__(self, parent_class: DictConvertibleClassType):
+        self.parent_class = parent_class
+        self._subclasses_by_name: Dict[str, DictConvertibleClassType] = {}
+
+    def register_subclass(self, subclass: DictConvertibleClassType):
+        subclass_name = _get_class_name(subclass)
+        if subclass_name in self._subclasses_by_name:
+            other_subclass = self._subclasses_by_name[subclass_name]
+            raise Exception(
+                f"Trying to register child class {subclass} of {self.parent_class} with"
+                f" name {subclass_name}, but other child class {other_subclass} is"
+                " already registered with identical name"
+            )
+        self._subclasses_by_name[subclass_name] = subclass
+
+    def get_subclass(self, name: str) -> DictConvertibleClassType:
+        subclass = self._subclasses_by_name.get(name)
+        if subclass is None:
+            raise ValueError(
+                f"Class name '{name}' doesn't to any registered subclass of"
+                f" {self.parent_class}."
+            )
+        return subclass
+
+
+# for each parent class, mapping between child class names and child classes
+_SUBCLASS_MAPPINGS: Dict[Type[DictConvertible], _SubclassMapping] = {}
+
+
+def register_subclass(
+    parent_class: DictConvertibleClassType,
+    subclass: DictConvertibleClassType,
+):
+    """
+    Register a subclass of a :class:`~.DictConvertible` class
+
+    Parameters
+    ----------
+    parent_class:
+        The parent class, must implement the `DictConvertible` protocol
+    subclass:
+        The child class, must inherit from `parent_class`.
+    """
+
+    subclass_mapping = _SUBCLASS_MAPPINGS.get(parent_class)
+    if subclass_mapping is None:
+        subclass_mapping = _SubclassMapping(parent_class)
+        _SUBCLASS_MAPPINGS[parent_class] = subclass_mapping
+    subclass_mapping.register_subclass(subclass)
+
+
+# key appended to data dict to store the class name
+_CLASS_NAME_KEY = "_class_name"
+
+
+def get_subclass_for_data_dict(
+    parent_class: DictConvertibleClassType,
+    data_dict: Dict[str, Any],
+) -> DictConvertibleClassType:
+    """
+    Return the subclass of a :class:`~.DictConvertible` parent class that corresponds to the class name
+    found in a data dict
+
+    Parameters
+    ----------
+    parent_class:
+        Parent class for which the subclasses have been registered with :func:`~.register_subclass`
+    data_dict:
+        Data dict returned by the `to_dict()` method of a subclass of `parent_class`
+
+    Returns
+    -------
+    DictConvertibleClassType:
+        Subclass of `parent_class` that generated `data_dict`
+    """
+
+    class_name = data_dict.get(_CLASS_NAME_KEY, None)
+    if class_name is None:
+        raise ValueError(
+            f"Data dict does not contain expected '{_CLASS_NAME_KEY}' key. Make sure it"
+            " was created by a to_dict() method and that this method called the"
+            " 'add_class_name_to_data_dict()' helper function"
+        )
+
+    subclass_mapping = _SUBCLASS_MAPPINGS.get(parent_class)
+    subclass = subclass_mapping.get_subclass(class_name) if subclass_mapping else None
+    if subclass is None:
+        raise ValueError(
+            f"Found class name '{class_name}' in data dict but it doesn't"
+            " correspond to any registered subclass. Make sure"
+            " the data dict wasn't generated by the to_dict() method of another class."
+        )
+    return subclass
+
+
+def add_class_name_to_data_dict(object: DictConvertible, data_dict: Dict[str, Any]):
+    """
+    Add a class name to a data dict returned by a `to_dict()` method, so we
+    later know upon which class to call `from_dict()` when re-instantiating the
+    corresponding object.
+
+    Parameters
+    ----------
+    object:
+        The :class:`~.DictConvertible` object to which `data_dict` corresponds
+    data_dict:
+        The data dict on which to add the class name
+    """
+
+    if _CLASS_NAME_KEY in data_dict:
+        raise ValueError(
+            f"Found pre-existing entry for key {_CLASS_NAME_KEY} in data dict"
+        )
+    data_dict[_CLASS_NAME_KEY] = _get_class_name(object.__class__)
+
+
+def check_class_matches_data_dict(
+    class_: Type[DictConvertible], data_dict: Dict[str, Any], should_raise: bool = True
+) -> bool:
+    """
+    Check that the class name found in a data dict returned by a `to_dict()`
+    method correspond to a specific :class:`~.DictConvertible` class.
+
+    Parameters
+    ----------
+    class_:
+        The :class:`~.DictConvertible` to which `data_dict` should correspond
+    data_dict:
+        The data dict expected to have been generated by the `to_dict()` of `class_`
+    should_raise:
+        Whether to raise when the class name does not match `class_`
+
+    Returns
+    -------
+        True if the class name in `data_dict` corresponds to `class_` , False
+        otherwise
+    """
+
+    class_name = data_dict.get(_CLASS_NAME_KEY, None)
+    if class_name is None:
+        raise ValueError(
+            f"Data dict does not contain expected '{_CLASS_NAME_KEY}' key. Make sure it"
+            " was created by a to_dict() method and that this method called the"
+            " 'add_class_name_to_data_dict()' helper function"
+        )
+    expected_class_name = _get_class_name(class_)
+    has_same_class_name = class_name == expected_class_name
+    if should_raise and not has_same_class_name:
+        raise ValueError(
+            f"Found class name '{class_name}' in data dict but it doesn't"
+            f" correspond to expected class name '{expected_class_name}'. Make sure"
+            " the data dict wasn't generated by the to_dict() method of another"
+            " class."
+        )
+    return has_same_class_name
+
+
+def is_convertible_data_dict(any_dict: Dict) -> bool:
+    """
+    Return True if a dict is a data dict generated by the to_dict()` method of
+    :class:`~.DictConvertible` class.
+    """
+    return _CLASS_NAME_KEY in any_dict
+
+
+def _get_class_name(class_: Type) -> str:
+    return class_.__module__ + "." + class_.__qualname__
