@@ -5,20 +5,18 @@ from pathlib import Path
 from typing import Iterable
 
 from medkit.core.audio import AudioDocument, Segment
-from medkit.io.medkit_json._common import ContentType, Modality, build_header
+from medkit.io.medkit_json._common import ContentType, build_header
 
 
 def save_audio_document(doc: AudioDocument, output_file: Path):
-    data = build_header(content_type=ContentType.DOCUMENT, modality=Modality.AUDIO)
+    data = build_header(content_type=ContentType.AUDIO_DOCUMENT)
     data["content"] = doc.to_dict()
     with open(output_file, mode="w") as fp:
         json.dump(data, fp, indent=4)
 
 
 def save_audio_documents(docs: Iterable[AudioDocument], output_file: Path):
-    header = build_header(
-        content_type=ContentType.DOCUMENT_LIST, modality=Modality.AUDIO
-    )
+    header = build_header(content_type=ContentType.AUDIO_DOCUMENT_LIST)
     with open(output_file, mode="w") as fp:
         fp.write(json.dumps(header) + "\n")
 
@@ -28,9 +26,7 @@ def save_audio_documents(docs: Iterable[AudioDocument], output_file: Path):
 
 
 def save_audio_anns(anns: Iterable[Segment], output_file: Path):
-    header = build_header(
-        content_type=ContentType.ANNOTATION_LIST, modality=Modality.AUDIO
-    )
+    header = build_header(content_type=ContentType.AUDIO_ANNOTATION_LIST)
     with open(output_file, mode="w") as fp:
         fp.write(json.dumps(header) + "\n")
 

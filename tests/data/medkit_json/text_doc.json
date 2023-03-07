@@ -1,7 +1,6 @@
 {
     "version": "0.1",
-    "content_type": "document",
-    "modality": "text",
+    "content_type": "text_document",
     "content": {
         "uid": "d1",
         "text": "I have diabetes and asthma.",

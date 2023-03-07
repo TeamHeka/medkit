@@ -1,7 +1,6 @@
 {
     "version": "0.1",
-    "content_type": "document",
-    "modality": "audio",
+    "content_type": "audio_document",
     "content": {
         "uid": "d1",
         "audio": {

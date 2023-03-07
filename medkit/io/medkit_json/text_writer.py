@@ -5,20 +5,18 @@ from pathlib import Path
 from typing import Iterable
 
 from medkit.core.text import TextDocument, TextAnnotation
-from medkit.io.medkit_json._common import ContentType, Modality, build_header
+from medkit.io.medkit_json._common import ContentType, build_header
 
 
 def save_text_document(doc: TextDocument, output_file: Path):
-    data = build_header(content_type=ContentType.DOCUMENT, modality=Modality.TEXT)
+    data = build_header(content_type=ContentType.TEXT_DOCUMENT)
     data["content"] = doc.to_dict()
     with open(output_file, mode="w") as fp:
         json.dump(data, fp, indent=4)
 
 
 def save_text_documents(docs: Iterable[TextDocument], output_file: Path):
-    header = build_header(
-        content_type=ContentType.DOCUMENT_LIST, modality=Modality.TEXT
-    )
+    header = build_header(content_type=ContentType.TEXT_DOCUMENT_LIST)
     with open(output_file, mode="w") as fp:
         fp.write(json.dumps(header) + "\n")
 
@@ -28,9 +26,7 @@ def save_text_documents(docs: Iterable[TextDocument], output_file: Path):
 
 
 def save_text_anns(anns: Iterable[TextAnnotation], output_file: Path):
-    header = build_header(
-        content_type=ContentType.ANNOTATION_LIST, modality=Modality.TEXT
-    )
+    header = build_header(content_type=ContentType.TEXT_ANNOTATION_LIST)
     with open(output_file, mode="w") as fp:
         fp.write(json.dumps(header) + "\n")
 
