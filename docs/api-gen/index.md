@@ -6,4 +6,5 @@
     :recursive:
 
     medkit.core
+    medkit.text
 ```

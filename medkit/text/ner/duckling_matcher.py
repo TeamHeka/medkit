@@ -9,7 +9,7 @@ from medkit.core.text import Entity, NEROperation, Segment, span_utils
 
 
 class DucklingMatcher(NEROperation):
-    """Entity annotator using Ducking (https://github.com/facebook/duckling).
+    """Entity annotator using Duckling (https://github.com/facebook/duckling).
 
     This annotator can parse several types of information in multiple languages:
         amount of money, credit card numbers, distance, duration, email, numeral,
