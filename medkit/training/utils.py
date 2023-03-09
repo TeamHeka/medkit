@@ -93,7 +93,7 @@ def check_model_for_task_HF(model: Union[str, Path], task: str) -> bool:
         Name (on the HuggingFace models hub) or path of the model.
 
     task:
-        A string representing tha HF task to check i.e : 'token-classification'
+        A string representing the HF task to check i.e : 'token-classification'
 
     Returns
     -------
@@ -103,12 +103,12 @@ def check_model_for_task_HF(model: Union[str, Path], task: str) -> bool:
     try:
         config = transformers.AutoConfig.from_pretrained(model)
     except Exception as err:
-        raise ValueError("Impossible to get the task from model. Reason : %s" % err)
+        raise ValueError("Impossible to get the task from model") from err
 
-    valid_config_name = [
+    valid_config_names = [
         config_class.__name__
         for supported_classes in transformers.pipelines.SUPPORTED_TASKS[task]["pt"]
         for config_class in supported_classes._model_mapping.keys()
     ]
 
-    return config.__class__.__name__ in valid_config_name
+    return config.__class__.__name__ in valid_config_names
