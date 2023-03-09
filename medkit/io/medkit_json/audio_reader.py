@@ -2,13 +2,13 @@ __all__ = ["load_audio_document", "load_audio_documents", "load_audio_anns"]
 
 import json
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Union
 
 from medkit.core.audio import AudioDocument, Segment
 from medkit.io.medkit_json._common import ContentType, check_header
 
 
-def load_audio_document(input_file: Path) -> AudioDocument:
+def load_audio_document(input_file: Union[str, Path]) -> AudioDocument:
     """
     Load an audio document from a medkit-json file generated with
     :func:`~medkit.io.medkit_json.save_audio_document`
@@ -24,6 +24,8 @@ def load_audio_document(input_file: Path) -> AudioDocument:
         The audio document in the file
     """
 
+    input_file = Path(input_file)
+
     with open(input_file) as fp:
         data = json.load(fp)
     check_header(data, ContentType.AUDIO_DOCUMENT)
@@ -31,7 +33,7 @@ def load_audio_document(input_file: Path) -> AudioDocument:
     return doc
 
 
-def load_audio_documents(input_file: Path) -> Iterator[AudioDocument]:
+def load_audio_documents(input_file: Union[str, Path]) -> Iterator[AudioDocument]:
     """
     Load audio documents from a medkit-json file generated with
     :func:`~medkit.io.medkit_json.save_audio_documents`
@@ -47,6 +49,8 @@ def load_audio_documents(input_file: Path) -> Iterator[AudioDocument]:
         An iterator to the audio documents in the file
     """
 
+    input_file = Path(input_file)
+
     with open(input_file) as fp:
         line = fp.readline()
         data = json.loads(line)
@@ -58,7 +62,7 @@ def load_audio_documents(input_file: Path) -> Iterator[AudioDocument]:
             yield doc
 
 
-def load_audio_anns(input_file: Path) -> Iterator[Segment]:
+def load_audio_anns(input_file: Union[str, Path]) -> Iterator[Segment]:
     """
     Load audio annotations from a medkit-json file generated with
     :func:`~medkit.io.medkit_json.save_audio_anns`
@@ -73,6 +77,8 @@ def load_audio_anns(input_file: Path) -> Iterator[Segment]:
     Iterator[Segment]
         An iterator to the audio annotations in the file
     """
+
+    input_file = Path(input_file)
 
     with open(input_file) as fp:
         line = fp.readline()

@@ -2,13 +2,13 @@ __all__ = ["save_audio_document", "save_audio_documents", "save_audio_anns"]
 
 import json
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Union
 
 from medkit.core.audio import AudioDocument, Segment
 from medkit.io.medkit_json._common import ContentType, build_header
 
 
-def save_audio_document(doc: AudioDocument, output_file: Path):
+def save_audio_document(doc: AudioDocument, output_file: Union[str, Path]):
     """
     Save an audio document into a medkit-json file.
 
@@ -20,13 +20,15 @@ def save_audio_document(doc: AudioDocument, output_file: Path):
         Path of the generated medkit-json file
     """
 
+    output_file = Path(output_file)
+
     data = build_header(content_type=ContentType.AUDIO_DOCUMENT)
     data["content"] = doc.to_dict()
     with open(output_file, mode="w") as fp:
         json.dump(data, fp, indent=4)
 
 
-def save_audio_documents(docs: Iterable[AudioDocument], output_file: Path):
+def save_audio_documents(docs: Iterable[AudioDocument], output_file: Union[str, Path]):
     """
     Save audio documents into a medkit-json file.
 
@@ -38,6 +40,8 @@ def save_audio_documents(docs: Iterable[AudioDocument], output_file: Path):
         Path of the generated medkit-json file
     """
 
+    output_file = Path(output_file)
+
     header = build_header(content_type=ContentType.AUDIO_DOCUMENT_LIST)
     with open(output_file, mode="w") as fp:
         fp.write(json.dumps(header) + "\n")
@@ -47,7 +51,7 @@ def save_audio_documents(docs: Iterable[AudioDocument], output_file: Path):
             fp.write(json.dumps(doc_data) + "\n")
 
 
-def save_audio_anns(anns: Iterable[Segment], output_file: Path):
+def save_audio_anns(anns: Iterable[Segment], output_file: Union[str, Path]):
     """
     Save audio annotations into a medkit-json file.
 
@@ -58,6 +62,8 @@ def save_audio_anns(anns: Iterable[Segment], output_file: Path):
     output_file:
         Path of the generated medkit-json file
     """
+
+    output_file = Path(output_file)
 
     header = build_header(content_type=ContentType.AUDIO_ANNOTATION_LIST)
     with open(output_file, mode="w") as fp:

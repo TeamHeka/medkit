@@ -2,13 +2,13 @@ __all__ = ["load_text_document", "load_text_documents", "load_text_anns"]
 
 import json
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Union
 
 from medkit.core.text import TextDocument, TextAnnotation
 from medkit.io.medkit_json._common import ContentType, check_header
 
 
-def load_text_document(input_file: Path) -> TextDocument:
+def load_text_document(input_file: Union[str, Path]) -> TextDocument:
     """
     Load a text document from a medkit-json file generated with
     :func:`~medkit.io.medkit_json.save_text_document`.
@@ -24,6 +24,8 @@ def load_text_document(input_file: Path) -> TextDocument:
         The text document in the file
     """
 
+    input_file = Path(input_file)
+
     with open(input_file) as fp:
         data = json.load(fp)
     check_header(data, ContentType.TEXT_DOCUMENT)
@@ -31,7 +33,7 @@ def load_text_document(input_file: Path) -> TextDocument:
     return doc
 
 
-def load_text_documents(input_file: Path) -> Iterator[TextDocument]:
+def load_text_documents(input_file: Union[str, Path]) -> Iterator[TextDocument]:
     """
     Load text documents from a medkit-json file generated with
     :func:`~medkit.io.medkit_json.save_text_documents`
@@ -47,6 +49,8 @@ def load_text_documents(input_file: Path) -> Iterator[TextDocument]:
         An iterator to the text documents in the file
     """
 
+    input_file = Path(input_file)
+
     with open(input_file) as fp:
         line = fp.readline()
         data = json.loads(line)
@@ -58,7 +62,7 @@ def load_text_documents(input_file: Path) -> Iterator[TextDocument]:
             yield doc
 
 
-def load_text_anns(input_file: Path) -> Iterator[TextAnnotation]:
+def load_text_anns(input_file: Union[str, Path]) -> Iterator[TextAnnotation]:
     """
     Load text annotations from a medkit-json file generated with
     :func:`~medkit.io.medkit_json.save_audio_anns`
@@ -73,6 +77,8 @@ def load_text_anns(input_file: Path) -> Iterator[TextAnnotation]:
     Iterator[TextAnnotation]
         An iterator to the text annotations in the file
     """
+
+    input_file = Path(input_file)
 
     with open(input_file) as fp:
         line = fp.readline()

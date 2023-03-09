@@ -2,13 +2,13 @@ __all__ = ["save_text_document", "save_text_documents", "save_text_anns"]
 
 import json
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Union
 
 from medkit.core.text import TextDocument, TextAnnotation
 from medkit.io.medkit_json._common import ContentType, build_header
 
 
-def save_text_document(doc: TextDocument, output_file: Path):
+def save_text_document(doc: TextDocument, output_file: Union[str, Path]):
     """
     Save a text document into a medkit-json file.
 
@@ -20,13 +20,15 @@ def save_text_document(doc: TextDocument, output_file: Path):
         Path of the generated medkit-json file
     """
 
+    output_file = Path(output_file)
+
     data = build_header(content_type=ContentType.TEXT_DOCUMENT)
     data["content"] = doc.to_dict()
     with open(output_file, mode="w") as fp:
         json.dump(data, fp, indent=4)
 
 
-def save_text_documents(docs: Iterable[TextDocument], output_file: Path):
+def save_text_documents(docs: Iterable[TextDocument], output_file: Union[str, Path]):
     """
     Save text documents into a medkit-json file.
 
@@ -38,6 +40,8 @@ def save_text_documents(docs: Iterable[TextDocument], output_file: Path):
         Path of the generated medkit-json file
     """
 
+    output_file = Path(output_file)
+
     header = build_header(content_type=ContentType.TEXT_DOCUMENT_LIST)
     with open(output_file, mode="w") as fp:
         fp.write(json.dumps(header) + "\n")
@@ -47,7 +51,7 @@ def save_text_documents(docs: Iterable[TextDocument], output_file: Path):
             fp.write(json.dumps(doc_data) + "\n")
 
 
-def save_text_anns(anns: Iterable[TextAnnotation], output_file: Path):
+def save_text_anns(anns: Iterable[TextAnnotation], output_file: Union[str, Path]):
     """
     Save text annotations into a medkit-json file.
 
@@ -58,6 +62,8 @@ def save_text_anns(anns: Iterable[TextAnnotation], output_file: Path):
     output_file:
         Path of the generated medkit-json file
     """
+
+    output_file = Path(output_file)
 
     header = build_header(content_type=ContentType.TEXT_ANNOTATION_LIST)
     with open(output_file, mode="w") as fp:
