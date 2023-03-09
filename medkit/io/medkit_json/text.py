@@ -1,11 +1,18 @@
-__all__ = ["load_text_document", "load_text_documents", "load_text_anns"]
+__all__ = [
+    "load_text_document",
+    "load_text_documents",
+    "load_text_anns",
+    "save_text_document",
+    "save_text_documents",
+    "save_text_anns",
+]
 
 import json
 from pathlib import Path
-from typing import Iterator, Union
+from typing import Iterable, Iterator, Union
 
 from medkit.core.text import TextDocument, TextAnnotation
-from medkit.io.medkit_json._common import ContentType, check_header
+from medkit.io.medkit_json._common import ContentType, build_header, check_header
 
 
 def load_text_document(input_file: Union[str, Path]) -> TextDocument:
@@ -89,3 +96,69 @@ def load_text_anns(input_file: Union[str, Path]) -> Iterator[TextAnnotation]:
             ann_data = json.loads(line)
             ann = TextAnnotation.from_dict(ann_data)
             yield ann
+
+
+def save_text_document(doc: TextDocument, output_file: Union[str, Path]):
+    """
+    Save a text document into a medkit-json file.
+
+    Parameters
+    ----------
+    doc:
+        The text document to save
+    output_file:
+        Path of the generated medkit-json file
+    """
+
+    output_file = Path(output_file)
+
+    data = build_header(content_type=ContentType.TEXT_DOCUMENT)
+    data["content"] = doc.to_dict()
+    with open(output_file, mode="w") as fp:
+        json.dump(data, fp, indent=4)
+
+
+def save_text_documents(docs: Iterable[TextDocument], output_file: Union[str, Path]):
+    """
+    Save text documents into a medkit-json file.
+
+    Parameters
+    ----------
+    docs:
+        The text documents to save
+    output_file:
+        Path of the generated medkit-json file
+    """
+
+    output_file = Path(output_file)
+
+    header = build_header(content_type=ContentType.TEXT_DOCUMENT_LIST)
+    with open(output_file, mode="w") as fp:
+        fp.write(json.dumps(header) + "\n")
+
+        for doc in docs:
+            doc_data = doc.to_dict()
+            fp.write(json.dumps(doc_data) + "\n")
+
+
+def save_text_anns(anns: Iterable[TextAnnotation], output_file: Union[str, Path]):
+    """
+    Save text annotations into a medkit-json file.
+
+    Parameters
+    ----------
+    docs:
+        The text annotations to save
+    output_file:
+        Path of the generated medkit-json file
+    """
+
+    output_file = Path(output_file)
+
+    header = build_header(content_type=ContentType.TEXT_ANNOTATION_LIST)
+    with open(output_file, mode="w") as fp:
+        fp.write(json.dumps(header) + "\n")
+
+        for ann in anns:
+            ann_data = ann.to_dict()
+            fp.write(json.dumps(ann_data) + "\n")
