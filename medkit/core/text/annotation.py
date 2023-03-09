@@ -6,7 +6,6 @@ import abc
 import dataclasses
 from typing import (
     Any,
-    ClassVar,
     Dict,
     List,
     Optional,
@@ -21,7 +20,7 @@ from medkit.core.attribute_container import AttributeContainer
 from medkit.core import dict_conv
 from medkit.core.id import generate_id
 from medkit.core.store import Store
-from medkit.core.text.normalization import EntityNormalization
+from medkit.core.text.entity_norm_attribute import EntityNormAttribute
 from medkit.core.text.span import AnySpan
 import medkit.core.text.span_utils as span_utils
 
@@ -227,45 +226,17 @@ class Entity(Segment):
         Pipeline output keys to which the entity belongs to.
     """
 
-    NORM_LABEL: ClassVar[str] = "NORMALIZATION"
-    """
-    Label to use for normalization attributes
-    """
-
-    def add_norm(self, normalization: EntityNormalization) -> Attribute:
+    def get_norm_attrs(self) -> List[EntityNormAttribute]:
         """
-        Attach an :class:`~medkit.core.text.normalization.EntityNormalization`
-        object to the entity.
-
-        This helper will wrap `normalization` in an
-        :class:`~medkit.core.annotation.Attribute` with
-        :attr:`Entity.NORM_LABEL` as label and add it to the entity.
-
-        Returns
-        -------
-        Attribute:
-            The attribute that was created and added to the entity
-        """
-
-        attr = Attribute(label=self.NORM_LABEL, value=normalization)
-        self.attrs.add(attr)
-        return attr
-
-    def get_norms(self) -> List[EntityNormalization]:
-        """
-        Return all :class:`~medkit.core.text.normalization.EntityNormalization`
+        Return all :class:`~medkit.core.text.normalization.EntityNormAttribute`
         objects attached to the entity.
 
-        This helper will retrieve all the entity attributes with
-        :attr:`Entity.NORM_LABEL` as label and return their
-        :class:`~medkit.core.text.normalization.EntityNormalization` values.
-
         Returns
         -------
-        List[EntityNormalization]:
-            All normalizations attached to the entity.
+        List[EntityNormAttribute]:
+            All normalization attributes attached to the entity.
         """
-        return [a.value for a in self.attrs.get(label=self.NORM_LABEL)]
+        return [a for a in self.attrs.get(label=EntityNormAttribute.LABEL)]
 
 
 @dataclasses.dataclass(init=False)

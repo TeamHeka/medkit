@@ -10,7 +10,7 @@ import quickumls.constants
 from quickumls import QuickUMLS
 
 from medkit.core.text import Entity, NEROperation, Segment, span_utils
-from medkit.text.ner.umls_normalization import UMLSNormalization
+from medkit.text.ner.umls_norm_attribute import UMLSNormAttribute
 
 # workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/issues/68
 _spacy_language_map_fixed = False
@@ -288,11 +288,7 @@ class QuickUMLSMatcher(NEROperation):
         Returns
         -------
         entities: List[Entity]
-            Entities found in `segments`, with UMLS normalization attributes.
-            The value of each normalization attribute is a
-            :class:`~medkit.text.ner.umls_normalization.UMLSNormalization` object
-            that can be retrieved on the entity with the
-            :meth:`~medkit.core.text.annotation.Entity.get_norms` method.
+            Entities found in `segments`, with :class:`~UMLSNormAttribute` attributes.
         """
         return [
             entity
@@ -332,14 +328,14 @@ class QuickUMLSMatcher(NEROperation):
                             copied_attr, self.description, [attr]
                         )
 
-            norm = UMLSNormalization(
+            norm_attr = UMLSNormAttribute(
                 cui=match["cui"],
                 umls_version=self.version,
                 term=match["term"],
                 score=match["similarity"],
                 sem_types=list(match["semtypes"]),
             )
-            norm_attr = entity.add_norm(norm)
+            entity.attrs.add(norm_attr)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(

@@ -21,10 +21,10 @@ from medkit.core.text import (
     Entity,
     NEROperation,
     Segment,
-    EntityNormalization,
+    EntityNormAttribute,
     span_utils,
 )
-from medkit.text.ner.umls_normalization import UMLSNormalization
+from medkit.text.ner.umls_norm_attribute import UMLSNormAttribute
 
 
 logger = logging.getLogger(__name__)
@@ -291,11 +291,9 @@ class RegexpMatcher(NEROperation):
 
             # create normalization attributes for each normalization descriptor
             # of the rule
-            norms = [self._create_norm_attr(norm) for norm in rule.normalizations]
-            norm_attrs = []
-            for norm in norms:
-                norm_attr = entity.add_norm(norm)
-                norm_attrs.append(norm_attr)
+            norm_attrs = [self._create_norm_attr(norm) for norm in rule.normalizations]
+            for norm_attr in norm_attrs:
+                entity.attrs.add(norm_attr)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
@@ -309,14 +307,14 @@ class RegexpMatcher(NEROperation):
             yield entity
 
     @staticmethod
-    def _create_norm_attr(norm: RegexpMatcherNormalization) -> EntityNormalization:
+    def _create_norm_attr(norm: RegexpMatcherNormalization) -> EntityNormAttribute:
         if norm.kb_name == "umls":
-            norm = UMLSNormalization(cui=norm.id, umls_version=norm.kb_version)
+            norm_attr = UMLSNormAttribute(cui=norm.id, umls_version=norm.kb_version)
         else:
-            norm = EntityNormalization(
+            norm_attr = EntityNormAttribute(
                 kb_name=norm.kb_name, kb_id=norm.id, kb_version=norm.kb_version
             )
-        return norm
+        return norm_attr
 
     @staticmethod
     def load_rules(path_to_rules) -> List[RegexpMatcherRule]:

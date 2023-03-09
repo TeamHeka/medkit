@@ -9,7 +9,7 @@ from medkit.core.text import (
     Span,
     ModifiedSpan,
     TextDocument,
-    EntityNormalization,
+    EntityNormAttribute,
 )
 from medkit.io._brat_utils import (
     BratAttribute,
@@ -388,8 +388,8 @@ def test_normalization_attr(tmp_path: Path):
     text = "Le patient souffre d'asthme"
     doc = TextDocument(text=text)
     entity = Entity(label="maladie", text="asthme", spans=[Span(21, 27)])
-    entity.add_norm(
-        EntityNormalization(kb_name="umls", kb_id="C0004096", kb_version="2021AB")
+    entity.attrs.add(
+        EntityNormAttribute(kb_name="umls", kb_id="C0004096", kb_version="2021AB")
     )
     doc.anns.add(entity)
 

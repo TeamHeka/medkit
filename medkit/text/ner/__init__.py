@@ -1,5 +1,5 @@
 __all__ = [
-    "UMLSNormalization",
+    "UMLSNormAttribute",
     "DucklingMatcher",
     "RegexpMatcher",
     "RegexpMatcherRule",
@@ -10,7 +10,7 @@ __all__ = [
 from medkit.core.utils import modules_are_available
 
 from .duckling_matcher import DucklingMatcher
-from .umls_normalization import UMLSNormalization
+from .umls_norm_attribute import UMLSNormAttribute
 from .regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,

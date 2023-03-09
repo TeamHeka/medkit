@@ -64,6 +64,23 @@ class Attribute:
     metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
     uid: str = dataclasses.field(default_factory=generate_id)
 
+    def __init__(
+        self,
+        label: str,
+        value: Optional[Any] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        uid: Optional[str] = None,
+    ):
+        if metadata is None:
+            metadata = {}
+        if uid is None:
+            uid = generate_id()
+
+        self.uid = uid
+        self.label = label
+        self.value = value
+        self.metadata = metadata
+
     def __init_subclass__(cls):
         super().__init_subclass__()
         # type-annotated intermediary variable needed to keep mypy happy
