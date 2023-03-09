@@ -9,7 +9,7 @@ from transformers import TokenClassificationPipeline
 
 from medkit.core import Attribute
 from medkit.core.text import NEROperation, Segment, span_utils, Entity
-from medkit.training import utils
+from medkit.tools import hf_utils
 
 
 class HFEntityMatcher(NEROperation):
@@ -72,7 +72,7 @@ class HFEntityMatcher(NEROperation):
         self.attrs_to_copy = attrs_to_copy
 
         if isinstance(self.model, str):
-            valid_model = utils.check_model_for_task_HF(
+            valid_model = hf_utils.check_model_for_task_HF(
                 self.model, "token-classification"
             )
             if not valid_model:

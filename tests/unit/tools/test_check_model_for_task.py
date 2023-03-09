@@ -1,7 +1,8 @@
 import json
 
 import pytest
-from medkit.training import check_model_for_task_HF
+
+from medkit.tools.hf_utils import check_model_for_task_HF
 
 
 def test_with_local_file(tmpdir):
