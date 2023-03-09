@@ -8,14 +8,7 @@ parts:
   - file: user_guide/pipeline
   - file: user_guide/provenance
   - file: user_guide/module
-- caption: Examples
-  chapters:
-  - file: examples/spans
-  - file: examples/cleaning_text
-  - file: examples/brat_io
-  - file: examples/spacy_io
-  - file: examples/custom_text_operation
-- caption: Medkit concepts
+- caption: Medkit components
   chapters:
   - file: api/core
     sections:
@@ -25,6 +18,14 @@ parts:
   - file: api/audio
   - file: api/io
   - file: api/training
+- caption: Examples
+  chapters:
+  - file: examples/spans
+  - file: examples/cleaning_text
+  - file: examples/brat_io
+  - file: examples/spacy_io
+  - file: examples/custom_text_operation
 - caption: API reference
+  maxdepth: 2
   chapters:
   - file: api-gen/index
