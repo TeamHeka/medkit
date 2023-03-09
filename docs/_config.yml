@@ -61,7 +61,7 @@ sphinx:
     napoleon_use_param: False
     napoleon_use_rtype: False
     templates_path: ["_templates"]
-    suppress_warnings: ["etoc.toctree"]
+    suppress_warnings: ["etoc.toctree", "myst.domains"]
     exclude_patterns: ["_build", "_templates"]
   extra_extensions:
   - 'sphinx.ext.autodoc'
