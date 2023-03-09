@@ -1,6 +1,4 @@
 __all__ = [
-    "utils",
-    "span_utils",
     "TextAnnotation",
     "Segment",
     "Entity",
@@ -17,10 +15,11 @@ __all__ = [
     "Span",
     "ModifiedSpan",
     "AnySpan",
+    # not imported
+    "utils",
+    "span_utils",
 ]
 
-from . import utils
-from . import span_utils
 from .annotation import TextAnnotation, Segment, Entity, Relation
 from .annotation_container import TextAnnotationContainer
 from .document import TextDocument
