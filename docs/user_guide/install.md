@@ -4,9 +4,15 @@ The medkit package supports a version of python >= 3.7.
 
 ## Install an official version
 
+:::{important}
+From 0.4 version, medkit package will be available on PyPi.
+:::
+
 Releases are published on <https://github.com/TeamHeka/medkit/releases>.
 
-To install medkit, download the package in release assets and install the package.
+To install medkit, you may download the package in release assets and install
+the package.
+
 For example:
 
 ```
@@ -43,6 +49,8 @@ poetry install --all-extras
 For documentation:
 ```shell
 poetry install --with docs
+
+make docs # for generating documentation
 ```
 
 Then, a `.venv` folder is created at the root of the project. To activate the
@@ -56,10 +64,8 @@ To make sure everything is set up properly, you may run the tests :
 ```
 # For unit/small tests
 pytest -v tests/unit
-
-# For large tests
-pytest -v tests/large
 ```
+
 ## Troubleshooting
 
 Sometimes, for documentation and/or testing, you may need some additional packages:
