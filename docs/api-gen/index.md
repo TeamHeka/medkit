@@ -9,4 +9,5 @@
     medkit.text
     medkit.audio
     medkit.io
+    medkit.training
 ```

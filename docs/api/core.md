@@ -169,23 +169,7 @@ def __init__(self, ..., uid=None):
 Each operation is described with {class}`~.core.OperationDescription`.
 
 
-## Trainable Operations
 
-The medkit {class}`~.core.TrainableOperation` protocol describes all the
-necessary methods to make an operation trainable in medkit.
-
-:::{important}
-Currently, medkit only supports the training of operations using **PyTorch**
-models.
-:::
-
-```{eval-rst}
-.. autoclass:: medkit.core::TrainableOperation
-    :noindex:
-    :no-members:
-    :autosummary:
-    :autosummary-members:
-```
 
 ## Converters
 
