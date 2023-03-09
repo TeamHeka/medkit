@@ -7,4 +7,5 @@
 
     medkit.core
     medkit.text
+    medkit.io
 ```
