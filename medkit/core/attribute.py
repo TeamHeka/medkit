@@ -1,43 +1,12 @@
 from __future__ import annotations
 
-__all__ = ["Attribute", "AttributeValue"]
+__all__ = ["Attribute"]
 
-import abc
 import dataclasses
-from typing import Any, Dict, Optional, Type, Union
+from typing import Any, Dict, Optional, Type
 
 from medkit.core import dict_conv
 from medkit.core.id import generate_id
-
-
-class AttributeValue(abc.ABC):
-    """
-    Abstract base class for custom attributes values
-    """
-
-    def __init_subclass__(cls):
-        super().__init_subclass__()
-        # type-annotated intermediary variable needed to keep mypy happy
-        parent_class: Type = AttributeValue
-        dict_conv.register_subclass(parent_class, cls)
-
-    @staticmethod
-    def from_dict(ann_dict: Dict[str, Any]) -> AttributeValue:
-        subclass = dict_conv.get_subclass_for_data_dict(AttributeValue, ann_dict)
-        return subclass.from_dict(ann_dict)
-
-    @abc.abstractmethod
-    def to_dict(self) -> Dict[str, Any]:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_simple_representation(self) -> Union[int, float, bool, str]:
-        """
-        Return a numeric or string representation of the value to be used when
-        exporting to format that do not support complex attributes values, such
-        as Brat
-        """
-        raise NotImplementedError()
 
 
 @dataclasses.dataclass
@@ -51,8 +20,9 @@ class Attribute:
         The attribute label
     value:
         The value of the attribute. Should be either simple built-in types (int,
-        float, bool, str) or collections of these types (list, dict, tuple). For
-        more complex data use subclasses of :class:`~.AttributeValue`.
+        float, bool, str) or collections of these types (list, dict, tuple). If
+        you need structured complex data you should create a subclass of
+        `Attribute`.
     metadata:
         The metadata of the attribute
     uid:
@@ -88,15 +58,10 @@ class Attribute:
         dict_conv.register_subclass(parent_class, cls)
 
     def to_dict(self) -> Dict[str, Any]:
-        value = self.value
-        # handle object value
-        if isinstance(value, AttributeValue):
-            value = value.to_dict()
-
         attribute_dict = dict(
             uid=self.uid,
             label=self.label,
-            value=value,
+            value=self.value,
             metadata=self.metadata,
         )
         dict_conv.add_class_name_to_data_dict(self, attribute_dict)
@@ -130,13 +95,9 @@ class Attribute:
             subclass = dict_conv.get_subclass_for_data_dict(Attribute, attribute_dict)
             return subclass.from_dict(attribute_dict)
 
-        value = attribute_dict["value"]
-        # handle object value
-        if isinstance(value, dict) and dict_conv.is_convertible_data_dict(value):
-            value = AttributeValue.from_dict(value)
         return Attribute(
             uid=attribute_dict["uid"],
-            label=attribute_dict["label"],
-            value=value,
+            label=attribute_dict["value"],
+            value=attribute_dict["value"],
             metadata=attribute_dict["metadata"],
         )

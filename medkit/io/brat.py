@@ -16,7 +16,6 @@ from medkit.io._brat_utils import (
 )
 from medkit.core import (
     Attribute,
-    AttributeValue,
     InputConverter,
     OutputConverter,
     ProvTracer,
@@ -600,10 +599,6 @@ class BratOutputConverter(OutputConverter):
         assert nb_attribute != 0
         brat_id = f"A{nb_attribute}"
         type = label.replace(" ", "_")
-
-        # convert object values to string/float/int/bool
-        if isinstance(value, AttributeValue):
-            value = value.get_simple_representation()
 
         value: str = brat_utils.ensure_attr_value(value)
         attr_conf = AttributeConf(from_entity=is_from_entity, type=type, value=value)

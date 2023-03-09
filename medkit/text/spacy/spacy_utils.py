@@ -12,7 +12,7 @@ from spacy.tokens import Span as SpacySpan
 from spacy.tokens.underscore import Underscore
 from spacy.util import filter_spans
 
-from medkit.core import Attribute, AttributeValue
+from medkit.core import Attribute
 from medkit.core.text import (
     Entity,
     Segment,
@@ -440,9 +440,6 @@ def _segment_to_spacy_span(
                 # in medkit having an attribute, indicates that the attribute exists
                 # for the given annotation, we force True as value
                 value = True
-            elif isinstance(attr.value, AttributeValue):
-                # convert object values to string/float/int/bool
-                value = attr.value.get_simple_representation()
             else:
                 value = attr.value
             # set attributes as extensions
