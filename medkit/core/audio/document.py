@@ -92,7 +92,6 @@ class AudioDocument:
         return self.raw_segment.audio
 
     def __init_subclass__(cls):
-        raise Exception("HI")
         super().__init_subclass__()
         # type-annotated intermediary variable needed to keep mypy happy
         parent_class: Type = AudioDocument
