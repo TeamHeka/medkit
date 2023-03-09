@@ -9,6 +9,17 @@ from medkit.io.medkit_json._common import ContentType, build_header
 
 
 def save_audio_document(doc: AudioDocument, output_file: Path):
+    """
+    Save an audio document into a medkit-json file.
+
+    Parameters
+    ----------
+    doc:
+        The audio document to save
+    output_file:
+        Path of the generated medkit-json file
+    """
+
     data = build_header(content_type=ContentType.AUDIO_DOCUMENT)
     data["content"] = doc.to_dict()
     with open(output_file, mode="w") as fp:
@@ -16,6 +27,17 @@ def save_audio_document(doc: AudioDocument, output_file: Path):
 
 
 def save_audio_documents(docs: Iterable[AudioDocument], output_file: Path):
+    """
+    Save audio documents into a medkit-json file.
+
+    Parameters
+    ----------
+    docs:
+        The audio documents to save
+    output_file:
+        Path of the generated medkit-json file
+    """
+
     header = build_header(content_type=ContentType.AUDIO_DOCUMENT_LIST)
     with open(output_file, mode="w") as fp:
         fp.write(json.dumps(header) + "\n")
@@ -26,6 +48,17 @@ def save_audio_documents(docs: Iterable[AudioDocument], output_file: Path):
 
 
 def save_audio_anns(anns: Iterable[Segment], output_file: Path):
+    """
+    Save audio annotations into a medkit-json file.
+
+    Parameters
+    ----------
+    docs:
+        The audio annotations to save
+    output_file:
+        Path of the generated medkit-json file
+    """
+
     header = build_header(content_type=ContentType.AUDIO_ANNOTATION_LIST)
     with open(output_file, mode="w") as fp:
         fp.write(json.dumps(header) + "\n")

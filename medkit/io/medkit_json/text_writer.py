@@ -9,6 +9,17 @@ from medkit.io.medkit_json._common import ContentType, build_header
 
 
 def save_text_document(doc: TextDocument, output_file: Path):
+    """
+    Save a text document into a medkit-json file.
+
+    Parameters
+    ----------
+    doc:
+        The text document to save
+    output_file:
+        Path of the generated medkit-json file
+    """
+
     data = build_header(content_type=ContentType.TEXT_DOCUMENT)
     data["content"] = doc.to_dict()
     with open(output_file, mode="w") as fp:
@@ -16,6 +27,17 @@ def save_text_document(doc: TextDocument, output_file: Path):
 
 
 def save_text_documents(docs: Iterable[TextDocument], output_file: Path):
+    """
+    Save text documents into a medkit-json file.
+
+    Parameters
+    ----------
+    docs:
+        The text documents to save
+    output_file:
+        Path of the generated medkit-json file
+    """
+
     header = build_header(content_type=ContentType.TEXT_DOCUMENT_LIST)
     with open(output_file, mode="w") as fp:
         fp.write(json.dumps(header) + "\n")
@@ -26,6 +48,17 @@ def save_text_documents(docs: Iterable[TextDocument], output_file: Path):
 
 
 def save_text_anns(anns: Iterable[TextAnnotation], output_file: Path):
+    """
+    Save text annotations into a medkit-json file.
+
+    Parameters
+    ----------
+    docs:
+        The text annotations to save
+    output_file:
+        Path of the generated medkit-json file
+    """
+
     header = build_header(content_type=ContentType.TEXT_ANNOTATION_LIST)
     with open(output_file, mode="w") as fp:
         fp.write(json.dumps(header) + "\n")

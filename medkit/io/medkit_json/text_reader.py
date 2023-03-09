@@ -9,6 +9,21 @@ from medkit.io.medkit_json._common import ContentType, check_header
 
 
 def load_text_document(input_file: Path) -> TextDocument:
+    """
+    Load a text document from a medkit-json file generated with
+    :func:`~medkit.io.medkit_json.save_text_document`.
+
+    Parameters
+    ----------
+    input_file:
+        Path to the medkit-json file containing the document
+
+    Returns
+    -------
+    TextDocument
+        The text document in the file
+    """
+
     with open(input_file) as fp:
         data = json.load(fp)
     check_header(data, ContentType.TEXT_DOCUMENT)
@@ -17,6 +32,21 @@ def load_text_document(input_file: Path) -> TextDocument:
 
 
 def load_text_documents(input_file: Path) -> Iterator[TextDocument]:
+    """
+    Load text documents from a medkit-json file generated with
+    :func:`~medkit.io.medkit_json.save_text_documents`
+
+    Parameters
+    ----------
+    input_file:
+        Path to the medkit-json file containing the documents
+
+    Returns
+    -------
+    Iterator[TextDocument]
+        An iterator to the text documents in the file
+    """
+
     with open(input_file) as fp:
         line = fp.readline()
         data = json.loads(line)
@@ -29,6 +59,21 @@ def load_text_documents(input_file: Path) -> Iterator[TextDocument]:
 
 
 def load_text_anns(input_file: Path) -> Iterator[TextAnnotation]:
+    """
+    Load text annotations from a medkit-json file generated with
+    :func:`~medkit.io.medkit_json.save_audio_anns`
+
+    Parameters
+    ----------
+    input_file:
+        Path to the medkit-json file containing the annotations
+
+    Returns
+    -------
+    Iterator[TextAnnotation]
+        An iterator to the text annotations in the file
+    """
+
     with open(input_file) as fp:
         line = fp.readline()
         data = json.loads(line)

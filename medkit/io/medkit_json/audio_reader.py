@@ -9,6 +9,21 @@ from medkit.io.medkit_json._common import ContentType, check_header
 
 
 def load_audio_document(input_file: Path) -> AudioDocument:
+    """
+    Load an audio document from a medkit-json file generated with
+    :func:`~medkit.io.medkit_json.save_audio_document`
+
+    Parameters
+    ----------
+    input_file:
+        Path to the medkit-json file containing the document
+
+    Returns
+    -------
+    AudioDocument
+        The audio document in the file
+    """
+
     with open(input_file) as fp:
         data = json.load(fp)
     check_header(data, ContentType.AUDIO_DOCUMENT)
@@ -17,6 +32,21 @@ def load_audio_document(input_file: Path) -> AudioDocument:
 
 
 def load_audio_documents(input_file: Path) -> Iterator[AudioDocument]:
+    """
+    Load audio documents from a medkit-json file generated with
+    :func:`~medkit.io.medkit_json.save_audio_documents`
+
+    Parameters
+    ----------
+    input_file:
+        Path to the medkit-json file containing the documents
+
+    Returns
+    -------
+    Iterator[AudioDocument]
+        An iterator to the audio documents in the file
+    """
+
     with open(input_file) as fp:
         line = fp.readline()
         data = json.loads(line)
@@ -29,6 +59,21 @@ def load_audio_documents(input_file: Path) -> Iterator[AudioDocument]:
 
 
 def load_audio_anns(input_file: Path) -> Iterator[Segment]:
+    """
+    Load audio annotations from a medkit-json file generated with
+    :func:`~medkit.io.medkit_json.save_audio_anns`
+
+    Parameters
+    ----------
+    input_file:
+        Path to the medkit-json file containing the annotations
+
+    Returns
+    -------
+    Iterator[Segment]
+        An iterator to the audio annotations in the file
+    """
+
     with open(input_file) as fp:
         line = fp.readline()
         data = json.loads(line)
