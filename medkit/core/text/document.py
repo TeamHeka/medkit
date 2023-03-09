@@ -97,14 +97,15 @@ class TextDocument:
         parent_class: Type = TextDocument
         dict_conv.register_subclass(parent_class, cls)
 
-    def to_dict(self) -> Dict[str, Any]:
-        anns = [a.to_dict() for a in self.anns]
+    def to_dict(self, with_anns: bool = True) -> Dict[str, Any]:
         doc_dict = dict(
             uid=self.uid,
             text=self.text,
-            anns=anns,
             metadata=self.metadata,
         )
+        if with_anns:
+            doc_dict["anns"] = [a.to_dict() for a in self.anns]
+
         dict_conv.add_class_name_to_data_dict(self, doc_dict)
         return doc_dict
 
@@ -127,7 +128,7 @@ class TextDocument:
             return subclass.from_dict(doc_dict)
 
         dict_conv.check_class_matches_data_dict(TextDocument, doc_dict)
-        anns = [TextAnnotation.from_dict(a) for a in doc_dict["anns"]]
+        anns = [TextAnnotation.from_dict(a) for a in doc_dict.get("anns", [])]
         return TextDocument(
             uid=doc_dict["uid"],
             text=doc_dict["text"],

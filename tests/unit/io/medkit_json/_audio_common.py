@@ -5,6 +5,8 @@ __all__ = [
     "DOC_JSON_FILE",
     "DOCS_JSONL_FILE",
     "ANNS_JSONL_FILE",
+    "SPLIT_DOC_JSON_FILE",
+    "SPLIT_DOC_ANNS_JSONL_FILE",
 ]
 
 from pathlib import Path
@@ -15,6 +17,8 @@ from medkit.core.audio import AudioDocument, Segment, Span, FileAudioBuffer
 DOC_JSON_FILE = Path("tests/data/medkit_json/audio_doc.json")
 DOCS_JSONL_FILE = Path("tests/data/medkit_json/audio_docs.jsonl")
 ANNS_JSONL_FILE = Path("tests/data/medkit_json/audio_anns.jsonl")
+SPLIT_DOC_JSON_FILE = Path("tests/data/medkit_json/split_audio_doc.json")
+SPLIT_DOC_ANNS_JSONL_FILE = Path("tests/data/medkit_json/split_audio_doc_anns.jsonl")
 
 _AUDIO_FILE_1 = Path("tests/data/audio/dialog_long.ogg")
 _AUDIO_FILE_2 = Path("tests/data/audio/dialog.ogg")

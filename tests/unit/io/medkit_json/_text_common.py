@@ -5,6 +5,8 @@ __all__ = [
     "DOC_JSON_FILE",
     "DOCS_JSONL_FILE",
     "ANNS_JSONL_FILE",
+    "SPLIT_DOC_JSON_FILE",
+    "SPLIT_DOC_ANNS_JSONL_FILE",
 ]
 
 from pathlib import Path
@@ -15,6 +17,8 @@ from medkit.core.text import TextDocument, Segment, Entity, Span
 DOC_JSON_FILE = Path("tests/data/medkit_json/text_doc.json")
 DOCS_JSONL_FILE = Path("tests/data/medkit_json/text_docs.jsonl")
 ANNS_JSONL_FILE = Path("tests/data/medkit_json/text_anns.jsonl")
+SPLIT_DOC_JSON_FILE = Path("tests/data/medkit_json/split_text_doc.json")
+SPLIT_DOC_ANNS_JSONL_FILE = Path("tests/data/medkit_json/split_text_doc_anns.jsonl")
 
 
 def build_doc():

@@ -9,13 +9,20 @@ __all__ = [
 
 import json
 from pathlib import Path
-from typing import Iterable, Iterator, Union
+from typing import Iterable, Iterator, Optional, Union
+import warnings
 
 from medkit.core.text import TextDocument, TextAnnotation
 from medkit.io.medkit_json._common import ContentType, build_header, check_header
 
 
-def load_text_document(input_file: Union[str, Path]) -> TextDocument:
+_DOC_ANNS_SUFFIX = "_anns.jsonl"
+
+
+def load_text_document(
+    input_file: Union[str, Path],
+    anns_input_file: Optional[Union[str, Path]] = None,
+) -> TextDocument:
     """
     Load a text document from a medkit-json file generated with
     :func:`~medkit.io.medkit_json.save_text_document`.
@@ -24,6 +31,9 @@ def load_text_document(input_file: Union[str, Path]) -> TextDocument:
     ----------
     input_file:
         Path to the medkit-json file containing the document
+    anns_input_file:
+        Optional medkit-json file containing separate annotations of the
+        document.
 
     Returns
     -------
@@ -37,6 +47,11 @@ def load_text_document(input_file: Union[str, Path]) -> TextDocument:
         data = json.load(fp)
     check_header(data, ContentType.TEXT_DOCUMENT)
     doc = TextDocument.from_dict(data["content"])
+
+    if anns_input_file is not None:
+        for ann in load_text_anns(anns_input_file):
+            doc.anns.add(ann)
+
     return doc
 
 
@@ -98,7 +113,12 @@ def load_text_anns(input_file: Union[str, Path]) -> Iterator[TextAnnotation]:
             yield ann
 
 
-def save_text_document(doc: TextDocument, output_file: Union[str, Path]):
+def save_text_document(
+    doc: TextDocument,
+    output_file: Union[str, Path],
+    split_anns: bool = False,
+    anns_output_file: Optional[Union[str, Path]] = None,
+):
     """
     Save a text document into a medkit-json file.
 
@@ -108,14 +128,31 @@ def save_text_document(doc: TextDocument, output_file: Union[str, Path]):
         The text document to save
     output_file:
         Path of the generated medkit-json file
+    split_anns:
+        If True, the annotations will be saved in a separate medkit-json file
+        instead of being included in the main document file
+    anns_output_file:
+        Path of the medkit-json file storing the annotations if `split_anns` is True.
+        If not provided, `output_file` will be used with an extra "_anns" suffix.
     """
 
     output_file = Path(output_file)
+    anns_output_file = Path(anns_output_file) if anns_output_file is not None else None
+
+    if not split_anns and anns_output_file is not None:
+        warnings.warn(
+            "anns_output_file provided but split_anns is False so it will not be used"
+        )
 
     data = build_header(content_type=ContentType.TEXT_DOCUMENT)
-    data["content"] = doc.to_dict()
+    data["content"] = doc.to_dict(with_anns=not split_anns)
     with open(output_file, mode="w") as fp:
         json.dump(data, fp, indent=4)
+
+    if split_anns:
+        if anns_output_file is None:
+            anns_output_file = output_file.with_suffix(_DOC_ANNS_SUFFIX)
+        save_text_anns(doc.anns, anns_output_file)
 
 
 def save_text_documents(docs: Iterable[TextDocument], output_file: Union[str, Path]):

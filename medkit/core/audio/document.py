@@ -97,7 +97,7 @@ class AudioDocument:
         parent_class: Type = AudioDocument
         dict_conv.register_subclass(parent_class, cls)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, with_anns: bool = True) -> Dict[str, Any]:
         # convert MemoryAudioBuffer to PlaceholderAudioBuffer
         # because we can't serialize the actual signal
         if isinstance(self.audio, MemoryAudioBuffer):
@@ -105,13 +105,14 @@ class AudioDocument:
             audio = placeholder.to_dict()
         else:
             audio = self.audio.to_dict()
-        anns = [a.to_dict() for a in self.anns]
         doc_dict = dict(
             uid=self.uid,
             audio=audio,
-            anns=anns,
             metadata=self.metadata,
         )
+        if with_anns:
+            doc_dict["anns"] = [a.to_dict() for a in self.anns]
+
         dict_conv.add_class_name_to_data_dict(self, doc_dict)
         return doc_dict
 
@@ -126,7 +127,7 @@ class AudioDocument:
 
         dict_conv.check_class_matches_data_dict(AudioDocument, data)
         audio = AudioBuffer.from_dict(data["audio"])
-        anns = [Segment.from_dict(a) for a in data["anns"]]
+        anns = [Segment.from_dict(a) for a in data.get("anns", [])]
         return AudioDocument(
             uid=data["uid"],
             audio=audio,

@@ -5,6 +5,8 @@ from tests.unit.io.medkit_json._text_common import (
     DOC_JSON_FILE,
     DOCS_JSONL_FILE,
     ANNS_JSONL_FILE,
+    SPLIT_DOC_JSON_FILE,
+    SPLIT_DOC_ANNS_JSONL_FILE,
     build_doc,
     build_docs,
     build_anns,
@@ -42,3 +44,16 @@ def test_save_anns(tmp_path):
     medkit_json.save_text_anns(anns, output_file)
 
     _check_json_files_are_equal(output_file, ANNS_JSONL_FILE)
+
+
+def test_save_document_split(tmp_path):
+    doc = build_doc()
+
+    output_file = tmp_path / "split_doc.json"
+    anns_output_file = tmp_path / "split_doc_anns.jsonl"
+    medkit_json.save_text_document(
+        doc, output_file, split_anns=True, anns_output_file=anns_output_file
+    )
+
+    _check_json_files_are_equal(output_file, SPLIT_DOC_JSON_FILE)
+    _check_json_files_are_equal(anns_output_file, SPLIT_DOC_ANNS_JSONL_FILE)
