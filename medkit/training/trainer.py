@@ -1,23 +1,23 @@
 from __future__ import annotations
 
-__all__ = ["Trainer", "TrainerConfig"]
+__all__ = ["Trainer"]
 
 import datetime
 import os
 import random
 import time
 from collections import defaultdict
-from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
 import yaml
+from medkit.training.trainer_config import TrainerConfig
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, Dataset
 
-from medkit.core.trainable_operation import TrainableOperation
+from medkit.training.trainable_operation import TrainableOperation
 from medkit.training.callbacks import DefaultPrinterCallback, TrainerCallback
 from medkit.training.utils import BatchData, MetricsComputer
 
@@ -50,27 +50,6 @@ class _TrainerDataset(Dataset):
         item = self.dataset[i]
         processed = self.operation.preprocess(item, inference_mode=False)
         return processed
-
-
-@dataclass
-class TrainerConfig:
-    output_dir: str
-    learning_rate: float = 1e-5
-    nb_training_epochs: int = 3
-    dataloader_nb_workers: int = 0
-    batch_size: int = 1
-    seed: Optional[int] = None
-    gradient_accumulation_steps: int = 1
-    do_metrics_in_training: bool = False
-    metric_to_track_lr: str = "loss"
-    log_step_interval: Optional[int] = None
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            (field.name, getattr(self, field.name))
-            for field in fields(self)
-            if field.name != "output_dir"
-        )
 
 
 class Trainer:
