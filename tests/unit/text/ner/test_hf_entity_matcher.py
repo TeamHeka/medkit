@@ -8,7 +8,6 @@ from medkit.core import Attribute, ProvTracer  # noqa: E402
 from medkit.core.text import Segment, Span  # noqa: E402
 from medkit.text.ner.hf_entity_matcher import HFEntityMatcher  # noqa: E402
 
-
 _SPAN_OFFSET = 10
 
 
@@ -43,7 +42,8 @@ class _MockedPipeline:
 @pytest.fixture(scope="module", autouse=True)
 def _mocked_pipeline(module_mocker):
     module_mocker.patch(
-        "transformers.pipelines.get_task", lambda m: "token-classification"
+        "medkit.text.ner.hf_entity_matcher.hf_utils.check_model_for_task_HF",
+        lambda m, t: True,
     )
     module_mocker.patch("transformers.pipeline", _MockedPipeline)
 

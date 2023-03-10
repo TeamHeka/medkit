@@ -9,6 +9,7 @@ from transformers import TokenClassificationPipeline
 
 from medkit.core import Attribute
 from medkit.core.text import NEROperation, Segment, span_utils, Entity
+from medkit.tools import hf_utils
 
 
 class HFEntityMatcher(NEROperation):
@@ -71,8 +72,10 @@ class HFEntityMatcher(NEROperation):
         self.attrs_to_copy = attrs_to_copy
 
         if isinstance(self.model, str):
-            task = transformers.pipelines.get_task(self.model)
-            if task != "token-classification":
+            valid_model = hf_utils.check_model_for_task_HF(
+                self.model, "token-classification"
+            )
+            if not valid_model:
                 raise ValueError(
                     f"Model {self.model} is not associated to a"
                     " token-classification/ner task and cannot be used with"
@@ -80,7 +83,7 @@ class HFEntityMatcher(NEROperation):
                 )
 
         self._pipeline = transformers.pipeline(
-            task=task,
+            task="token-classification",
             model=self.model,
             aggregation_strategy=aggregation_strategy,
             pipeline_class=TokenClassificationPipeline,

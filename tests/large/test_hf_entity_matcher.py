@@ -8,6 +8,7 @@ from medkit.text.ner.hf_entity_matcher import HFEntityMatcher  # noqa: E402
 
 
 _MODEL = "samrawal/bert-base-uncased_clinical-ner"
+_MODEL_NO_VALID = "Helsinki-NLP/opus-mt-en-es"
 
 
 def _get_sentence_segment(text):
@@ -45,3 +46,8 @@ def test_basic():
     assert entity_3.label == "problem"
     assert entity_3.text == "diabetes"
     assert entity_3.spans == [Span(16, 24)]
+
+
+def test_model_error():
+    with pytest.raises(ValueError, match="Model .* is not associated to .*"):
+        HFEntityMatcher(model=_MODEL_NO_VALID)
