@@ -11,7 +11,7 @@ def check_model_for_task_HF(model: Union[str, Path], task: str) -> bool:
 
     Parameters
     ----------
-    model_name_or_path:
+    model:
         Name (on the HuggingFace models hub) or path of the model.
 
     task:
