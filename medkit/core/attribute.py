@@ -30,9 +30,9 @@ class Attribute:
     """
 
     label: str
-    value: Optional[Any] = None
-    metadata: Dict[str, Any] = dataclasses.field(default_factory=dict)
-    uid: str = dataclasses.field(default_factory=generate_id)
+    value: Optional[Any]
+    metadata: Dict[str, Any]
+    uid: str
 
     def __init__(
         self,
