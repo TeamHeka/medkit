@@ -9,7 +9,6 @@ __all__ = [
     "OutputConverter",
     "IdentifiableDataItem",
     "IdentifiableDataItemWithAttrs",
-    "deserialize",
     "DocPipeline",
     "Document",
     "generate_id",
