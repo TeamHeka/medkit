@@ -69,9 +69,9 @@ class EntityNormAttribute(Attribute):
             if kb_name is not None:
                 value = f"{kb_name}:{kb_id}"
             else:
-                value = kb_name
+                value = kb_id
         else:
-            value = term
+            value = str(term)
 
         super().__init__(label=self.LABEL, value=value, metadata=metadata, uid=uid)
 
