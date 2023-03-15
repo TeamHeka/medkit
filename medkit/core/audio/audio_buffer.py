@@ -9,7 +9,7 @@ __all__ = [
 
 import abc
 from pathlib import Path
-from typing import Any, Dict, Optional, Type, Union
+from typing import Any, Dict, Optional, Union
 from typing_extensions import Self
 
 import numpy as np
@@ -18,7 +18,7 @@ import soundfile as sf
 from medkit.core import dict_conv
 
 
-class AudioBuffer(abc.ABC):
+class AudioBuffer(abc.ABC, dict_conv.SubclassMapping):
     """Audio buffer base class. Gives access to raw audio samples."""
 
     @abc.abstractmethod
@@ -109,15 +109,20 @@ class AudioBuffer(abc.ABC):
         return self.trim(start, end)
 
     def __init_subclass__(cls):
+        AudioBuffer.register_subclass(cls)
         super().__init_subclass__()
-        # type-annotated intermediary variable needed to keep mypy happy
-        parent_class: Type = AudioBuffer
-        dict_conv.register_subclass(parent_class, cls)
 
-    @staticmethod
-    def from_dict(ann_dict: Dict[str, Any]) -> AudioBuffer:
-        subclass = dict_conv.get_subclass_for_data_dict(AudioBuffer, ann_dict)
-        return subclass.from_dict(ann_dict)
+    @classmethod
+    def from_dict(cls, data_dict: Dict[str, Any]) -> Self:
+        subclass = cls.get_subclass_for_data_dict(data_dict)
+        if dict_conv.has_same_from_dict(subclass, AudioBuffer) or subclass is None:
+            raise NotImplementedError(
+                "AudioBuffer is an abstract class. Its class method `from_dict` is"
+                " only used for calling the correct subclass `from_dict`. Subclass is"
+                f" {subclass}"
+            )
+
+        return subclass.from_dict(data_dict)
 
     @abc.abstractmethod
     def to_dict(self) -> Dict[str, Any]:
@@ -214,7 +219,6 @@ class FileAudioBuffer(AudioBuffer):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> Self:
-        dict_conv.check_class_matches_data_dict(cls, data)
         return cls(
             path=data["path"], trim_start=data["trim_start"], trim_end=data["trim_end"]
         )
@@ -323,7 +327,6 @@ class PlaceholderAudioBuffer(AudioBuffer):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> Self:
-        dict_conv.check_class_matches_data_dict(cls, data)
         return cls(
             sample_rate=data["sample_rate"],
             nb_samples=data["nb_samples"],

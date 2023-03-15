@@ -3,8 +3,9 @@ from __future__ import annotations
 __all__ = ["Segment"]
 
 import dataclasses
-from typing import Any, Dict, List, Optional, Set, Type
+from typing import Any, Dict, List, Optional, Set
 
+from medkit.core import dict_conv
 from medkit.core.attribute import Attribute
 from medkit.core.attribute_container import AttributeContainer
 from medkit.core.audio.span import Span
@@ -13,12 +14,11 @@ from medkit.core.audio.audio_buffer import (
     MemoryAudioBuffer,
     PlaceholderAudioBuffer,
 )
-from medkit.core import dict_conv
 from medkit.core.id import generate_id
 
 
 @dataclasses.dataclass(init=False)
-class Segment:
+class Segment(dict_conv.SubclassMapping):
     """Audio segment referencing part of an {class}`~medkit.core.audio.AudioDocument`.
 
     Attributes
@@ -81,10 +81,8 @@ class Segment:
             self.attrs.add(attr)
 
     def __init_subclass__(cls):
+        Segment.register_subclass(cls)
         super().__init_subclass__()
-        # type-annotated intermediary variable needed to keep mypy happy
-        parent_class: Type = Segment
-        dict_conv.register_subclass(parent_class, cls)
 
     def to_dict(self) -> Dict[str, Any]:
         # convert MemoryAudioBuffer to PlaceholderAudioBuffer
@@ -108,20 +106,17 @@ class Segment:
         dict_conv.add_class_name_to_data_dict(self, segment_dict)
         return segment_dict
 
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> Segment:
-        # dispatch to subclass from_dict() if class_name in dict corresponds to a subclass
-        if not dict_conv.check_class_matches_data_dict(
-            Segment, data, should_raise=False
-        ):
-            subclass = dict_conv.get_subclass_for_data_dict(Segment, data)
-            return subclass.from_dict(data)
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> Segment:
+        if not dict_conv.has_same_from_dict(cls, Segment):
+            subclass = cls.get_subclass_for_data_dict(data)
+            if subclass is not None:
+                return subclass.from_dict(data)
 
-        dict_conv.check_class_matches_data_dict(Segment, data)
         audio = AudioBuffer.from_dict(data["audio"])
         span = Span.from_dict(data["span"])
         attrs = [Attribute.from_dict(a) for a in data["attrs"]]
-        return Segment(
+        return cls(
             label=data["label"],
             audio=audio,
             span=span,

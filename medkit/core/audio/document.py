@@ -4,9 +4,11 @@ __all__ = ["AudioDocument"]
 
 import dataclasses
 import random
-from typing import Any, ClassVar, Dict, List, Optional, Type
 import uuid
+from typing import Any, ClassVar, Dict, List, Optional
+from typing_extensions import Self
 
+from medkit.core import dict_conv
 from medkit.core.audio.annotation import Segment
 from medkit.core.audio.annotation_container import AudioAnnotationContainer
 from medkit.core.audio.span import Span
@@ -15,12 +17,11 @@ from medkit.core.audio.audio_buffer import (
     MemoryAudioBuffer,
     PlaceholderAudioBuffer,
 )
-from medkit.core import dict_conv
 from medkit.core.id import generate_id
 
 
 @dataclasses.dataclass(init=False)
-class AudioDocument:
+class AudioDocument(dict_conv.SubclassMapping):
     """
     Document holding audio annotations.
 
@@ -92,10 +93,8 @@ class AudioDocument:
         return self.raw_segment.audio
 
     def __init_subclass__(cls):
+        AudioDocument.register_subclass(cls)
         super().__init_subclass__()
-        # type-annotated intermediary variable needed to keep mypy happy
-        parent_class: Type = AudioDocument
-        dict_conv.register_subclass(parent_class, cls)
 
     def to_dict(self, with_anns: bool = True) -> Dict[str, Any]:
         # convert MemoryAudioBuffer to PlaceholderAudioBuffer
@@ -105,7 +104,7 @@ class AudioDocument:
             audio = placeholder.to_dict()
         else:
             audio = self.audio.to_dict()
-        doc_dict = dict(
+        doc_dict: Dict[str, Any] = dict(
             uid=self.uid,
             audio=audio,
             metadata=self.metadata,
@@ -116,19 +115,16 @@ class AudioDocument:
         dict_conv.add_class_name_to_data_dict(self, doc_dict)
         return doc_dict
 
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> AudioDocument:
-        # dispatch to subclass from_dict() if class_name in dict corresponds to a subclass
-        if not dict_conv.check_class_matches_data_dict(
-            AudioDocument, data, should_raise=False
-        ):
-            subclass = dict_conv.get_subclass_for_data_dict(AudioDocument, data)
-            return subclass.from_dict(data)
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> Self:
+        if not dict_conv.has_same_from_dict(cls, AudioDocument):
+            subclass = cls.get_subclass_for_data_dict(data)
+            if subclass is not None:
+                return subclass.from_dict(data)
 
-        dict_conv.check_class_matches_data_dict(AudioDocument, data)
         audio = AudioBuffer.from_dict(data["audio"])
         anns = [Segment.from_dict(a) for a in data.get("anns", [])]
-        return AudioDocument(
+        return cls(
             uid=data["uid"],
             audio=audio,
             anns=anns,

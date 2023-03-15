@@ -96,15 +96,13 @@ class EntityNormAttribute(Attribute):
         return norm_dict
 
     @classmethod
-    def from_dict(cls, norm_dict: Dict[str, Any]) -> Self:
-        dict_conv.check_class_matches_data_dict(cls, norm_dict)
+    def from_dict(cls, data_dict: Dict[str, Any]) -> Self:
         return cls(
-            uid=norm_dict["uid"],
-            label=norm_dict["label"],
-            kb_name=norm_dict["kb_name"],
-            kb_id=norm_dict["kb_id"],
-            kb_version=norm_dict["kb_version"],
-            term=norm_dict["term"],
-            score=norm_dict["score"],
-            metadata=norm_dict["metadata"],
+            uid=data_dict["uid"],
+            kb_name=data_dict["kb_name"],
+            kb_id=data_dict["kb_id"],
+            kb_version=data_dict["kb_version"],
+            term=data_dict["term"],
+            score=data_dict["score"],
+            metadata=data_dict["metadata"],
         )

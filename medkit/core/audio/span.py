@@ -11,7 +11,7 @@ class Span(NamedTuple):
     """
     Boundaries of a slice of audio.
 
-    Parameters
+    Attributes
     ----------
     start:
         Starting point in the original audio, in seconds.
@@ -34,7 +34,6 @@ class Span(NamedTuple):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> Span:
-        dict_conv.check_class_matches_data_dict(cls, data)
         return cls(start=data["start"], end=data["end"])
 
 

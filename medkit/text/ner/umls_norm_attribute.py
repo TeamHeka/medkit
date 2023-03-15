@@ -89,7 +89,6 @@ class UMLSNormAttribute(EntityNormAttribute):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> Self:
-        dict_conv.check_class_matches_data_dict(cls, data)
         return cls(
             uid=data["uid"],
             cui=data["cui"],
