@@ -1,6 +1,11 @@
 from __future__ import annotations
 
-__all__ = ["AudioBuffer", "FileAudioBuffer", "MemoryAudioBuffer"]
+__all__ = [
+    "AudioBuffer",
+    "FileAudioBuffer",
+    "MemoryAudioBuffer",
+    "PlaceholderAudioBuffer",
+]
 
 import abc
 from pathlib import Path
