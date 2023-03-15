@@ -1,6 +1,10 @@
-__all__ = ["transform_entities_to_tags", "align_and_map_tokens_with_tags"]
+__all__ = [
+    "transform_entities_to_tags",
+    "align_and_map_tokens_with_tags",
+    "convert_labels_to_tags",
+]
 
-from typing import Dict, List
+from typing import Dict, List, Literal
 
 from transformers.tokenization_utils_fast import EncodingFast
 
@@ -9,11 +13,51 @@ from medkit.core.text import Entity, Segment
 SPECIAL_TAG_ID_HF: int = -100
 
 
+def convert_labels_to_tags(
+    labels: List[str],
+    tagging_scheme: Literal["bilou", "iob2"] = "bilou",
+) -> Dict[str, int]:
+    """Convert a list of labels in a mapping of NER tags
+
+    Parameters
+    ----------
+    labels:
+        List of labels to convert
+    tagging_scheme:
+        Scheme to use in the conversion, "iob2" follows the BIO scheme.
+
+    Returns
+    -------
+    label_to_id: Dict[str, int]:
+        Mapping with NER tags.
+
+    Examples
+    --------
+    >>> label_to_id = convert_labels_to_tags(labels=["test","problem"],tagging_scheme="iob2")
+    >>> print(labels.keys())
+    {'O': 0, 'B-test': 1, 'I-test': 2, 'B-problem': 3, 'I-problem': 4}
+
+    """
+    label_to_id = {}
+    label_to_id["O"] = 0
+
+    if tagging_scheme == "bilou":
+        scheme = ["B", "I", "L", "U"]
+    else:
+        scheme = ["B", "I"]
+
+    all_labels = [f"{prefix}-{label}" for label in labels for prefix in scheme]
+
+    for idx, label in enumerate(all_labels):
+        label_to_id[label] = idx + 1
+    return label_to_id
+
+
 def transform_entities_to_tags(
     segment: Segment,
     entities: List[Entity],
     text_encoding: EncodingFast,
-    use_bilou_scheme=True,
+    tagging_scheme: Literal["bilou", "iob2"] = "bilou",
 ) -> List[str]:
     """
     Transform a segment with entities into a list of BILOU/IOB2 tags.
@@ -26,15 +70,15 @@ def transform_entities_to_tags(
         The list of entities in the `segment`
     text_encoding:
         Text encoding of the segment after tokenization with a HuggingFace fast tokenizer
-    use_bilou_scheme:
-        Whether use BILOU or IOB2 scheme to tag the tokens
+    tagging_scheme:
+        Scheme to tag the tokens, it can be `bilou` or `iob2`
 
     Returns
     -------
     List[str]:
         A list describing the segment with tags. By default the tags
-        could be "B", "I", "L", "O","U", if `use_bilou_scheme` is False, the tags
-        could be "B", "I","O".
+        could be "B", "I", "L", "O","U", if `tagging_scheme` is `iob2`
+        the tags could be "B", "I","O".
 
     Examples
     --------
@@ -56,7 +100,7 @@ def transform_entities_to_tags(
 
     Transform to IOB2 tags
 
-    >>> tags = transform_entities_to_tags(segment, entities,text_encoding,False)
+    >>> tags = transform_entities_to_tags(segment, entities,text_encoding,"iob2")
     >>> assert tags == ['O', 'B-corporation', 'I-corporation', 'O']
 
 
@@ -86,11 +130,11 @@ def transform_entities_to_tags(
             continue
 
         if len(tokens_entity) == 1:
-            prefix = "U" if use_bilou_scheme else "B"
+            prefix = "U" if tagging_scheme == "bilou" else "B"
             tags[tokens_entity[0]] = f"{prefix}-{label}"
         else:
             tags[tokens_entity[0]] = f"B-{label}"
-            prefix = "L" if use_bilou_scheme else "I"
+            prefix = "L" if tagging_scheme == "bilou" else "I"
             tags[tokens_entity[-1]] = f"{prefix}-{label}"
 
             inside_tokens = tokens_entity[1:-1]

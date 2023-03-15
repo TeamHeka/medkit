@@ -79,16 +79,3 @@ class MetricsComputer(Protocol):
             A dictionary with the results
         """
         pass
-
-
-def get_tags_from_labels(
-    labels_set: List[str], use_bilou_scheme: bool = True
-) -> Dict[str, int]:
-    label_to_id = {}
-    label_to_id["O"] = 0
-    scheme = ["B", "I", "L", "U"] if use_bilou_scheme else ["B", "I"]
-    all_labels = [f"{prefix}-{label}" for label in labels_set for prefix in scheme]
-
-    for idx, label in enumerate(all_labels):
-        label_to_id[label] = idx + 1
-    return label_to_id
