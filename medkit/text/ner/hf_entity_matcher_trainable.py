@@ -13,6 +13,7 @@ from medkit.text.ner.hf_tokenization_utils import (
     transform_entities_to_tags,
 )
 from medkit.training.utils import BatchData
+from medkit.tools import hf_utils
 
 logger = logging.getLogger(__name__)
 
@@ -63,8 +64,10 @@ class HFEntityMatcherTrainable:
         self.cache_dir = cache_dir
 
         if isinstance(self.model_name_or_path, str):
-            task = transformers.pipelines.get_task(self.model_name_or_path)
-            if task != "token-classification":
+            valid_model = hf_utils.check_model_for_task_HF(
+                self.model_name_or_path, "token-classification"
+            )
+            if not valid_model:
                 raise ValueError(
                     f"Model {self.model_name_or_path} is not associated to a"
                     " token-classification/ner task and cannot be used with"
