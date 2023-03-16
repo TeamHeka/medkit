@@ -76,16 +76,16 @@ class HFEntityMatcher(NEROperation):
         self.model = model
         self.attrs_to_copy = attrs_to_copy
 
-        if isinstance(self.model, str):
-            valid_model = hf_utils.check_model_for_task_HF(
-                self.model, "token-classification"
+        valid_model = hf_utils.check_model_for_task_HF(
+            self.model, "token-classification"
+        )
+
+        if not valid_model:
+            raise ValueError(
+                f"Model {self.model} is not associated to a"
+                " token-classification/ner task and cannot be used with"
+                " HFEntityMatcher"
             )
-            if not valid_model:
-                raise ValueError(
-                    f"Model {self.model} is not associated to a"
-                    " token-classification/ner task and cannot be used with"
-                    " HFEntityMatcher"
-                )
 
         self._pipeline = transformers.pipeline(
             task="token-classification",
