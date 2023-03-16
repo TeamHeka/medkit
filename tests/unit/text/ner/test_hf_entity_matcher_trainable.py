@@ -1,0 +1,115 @@
+from pathlib import Path
+import pytest
+import torch
+import logging
+import transformers
+from medkit.core.text import Entity, Segment, Span
+from medkit.text.ner import HFEntityMatcherTrainable
+from medkit.training.utils import BatchData
+
+_PATH_TO_VOCAB_FILE = Path(__file__).parent / "dummy_hf_vocab" / "vocab.txt"
+
+
+@pytest.fixture(autouse=True)
+def create_model_and_tokenizer(tmp_path):
+    tokenizer = transformers.BertTokenizerFast(_PATH_TO_VOCAB_FILE, model_max_length=32)
+    config = transformers.BertConfig(
+        vocab_size=tokenizer.vocab_size,
+        hidden_size=20,
+        num_hidden_layers=1,
+        num_attention_heads=1,
+        intermediate_size=10,
+        max_position_embeddings=32,
+    )
+    # mock a bert model pretrained with 3 labels
+    config.label2id = {"B-corporation": 0, "I-corporation": 1, "O": 2}
+    config.id2label = {0: "B-corporation", 1: "I-corporation", 2: "O"}
+    config.num_labels = 3
+
+    model = transformers.BertForTokenClassification(config=config)
+    # save model and tokenizer
+    model.save_pretrained(tmp_path / "dummy-bert")
+    tokenizer.save_pretrained(tmp_path / "dummy-bert")
+
+
+@pytest.fixture()
+def matcher(tmp_path):
+    hf_matcher = HFEntityMatcherTrainable(
+        model_name_or_path=tmp_path / "dummy-bert",
+        labels=["corporation"],
+        tagging_scheme="iob2",
+        tokenizer_max_length=8,
+    )
+    return hf_matcher
+
+
+@pytest.fixture()
+def input_data():
+    return [
+        Segment(text="a test medkit", label="sentence", spans=[Span(0, 13)]),
+        [Entity(text="medkit", label="corporation", spans=[Span(7, 13)])],
+    ]
+
+
+def test_preprocessing(matcher: HFEntityMatcherTrainable, input_data):
+    features = matcher.preprocess(data_item=input_data, inference_mode=False)
+    assert "input_ids" in features
+    assert "attention_masks" in features
+    assert "labels" in features
+    assert features["labels"] == [-100, 2, 2, 0, -100, -100, -100, -100]
+
+
+def test_collate_and_forward(matcher: HFEntityMatcherTrainable, input_data):
+    batch = [matcher.preprocess(input_data, False) for i in range(4)]
+    collated_data = matcher.collate(batch)
+    assert isinstance(collated_data, BatchData)
+    assert isinstance(collated_data["input_ids"], torch.Tensor)
+    assert all(tensor.size() == torch.Size([4, 8]) for tensor in collated_data.values())
+
+    # returning loss
+    model_output, loss = matcher.forward(
+        collated_data, return_loss=True, eval_mode=True
+    )
+    assert isinstance(model_output, BatchData)
+    assert "logits" in model_output
+    assert isinstance(model_output["logits"], torch.Tensor)
+    assert model_output["logits"].size() == torch.Size(([4, 8, 3]))
+    assert loss is not None and isinstance(loss, torch.Tensor)
+
+    # without loss
+    model_output, loss = matcher.forward(
+        collated_data, return_loss=False, eval_mode=True
+    )
+    assert isinstance(model_output, BatchData)
+    assert isinstance(model_output["logits"], torch.Tensor)
+    assert loss is None
+
+
+def test_initialization_warnings(tmp_path, caplog):
+    # Finetunning with bilou will be show a warning
+    # The model has 3 labels, trying to finetunning with 5
+    # with is ok if we do training
+    with caplog.at_level(logging.WARNING):
+        HFEntityMatcherTrainable(
+            model_name_or_path=tmp_path / "dummy-bert",
+            labels=["corporation"],
+            tagging_scheme="bilou",
+        )
+    assert "The operation model seems to have different labels" in caplog.text
+
+    # Trying with a model no compatible
+    with pytest.raises(ValueError, match="Model .* is not associated to .*"):
+        HFEntityMatcherTrainable(
+            model_name_or_path="Helsinki-NLP/opus-mt-en-es",
+            labels=["corporation"],
+            tagging_scheme="bilou",
+        )
+
+
+def test_save(tmp_path, matcher: HFEntityMatcherTrainable):
+    output_path = tmp_path / "bert_output"
+    matcher.save(output_path)
+    expected_files = ["config.json", "pytorch_model.bin", "tokenizer.json", "vocab.txt"]
+    assert all(Path(output_path / filename).exists() for filename in expected_files)
+    # test loading with the path
+    matcher.load(output_path)

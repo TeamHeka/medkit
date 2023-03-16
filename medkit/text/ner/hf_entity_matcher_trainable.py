@@ -1,29 +1,18 @@
-import dataclasses
+__all__ = ["HFEntityMatcherTrainable"]
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import torch
 import transformers
 
 from medkit.core import IdentifiableDataItem
 from medkit.core.text.annotation import Entity, Segment
-from medkit.text.ner.hf_tokenization_utils import (
-    align_and_map_tokens_with_tags,
-    transform_entities_to_tags,
-)
-from medkit.training.utils import BatchData
+from medkit.text.ner import hf_tokenization_utils
 from medkit.tools import hf_utils
+from medkit.training.utils import BatchData
 
 logger = logging.getLogger(__name__)
-
-
-@dataclasses.dataclass
-class PreprocessingConfig:
-    labels: List[str]
-    use_bilou_scheme: bool = False
-    tag_subtokens: bool = False
-    max_length: int = 512
 
 
 class HFEntityMatcherTrainable:
@@ -36,9 +25,11 @@ class HFEntityMatcherTrainable:
     def __init__(
         self,
         model_name_or_path: Union[str, Path],
-        preprocessing_config: PreprocessingConfig,
+        labels: List[str],
+        tagging_scheme: Literal["bilou", "iob2"],
+        tag_subtokens: bool = False,
+        tokenizer_max_length: Optional[int] = None,
         device: int = -1,
-        cache_dir: Optional[Union[str, Path]] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
     ):
@@ -48,40 +39,46 @@ class HFEntityMatcherTrainable:
         model_name_or_path:
             Name (on the HuggingFace models hub) or path of the NER model. Must be a model compatible
             with the `TokenClassification` transformers class.
+        labels:
+            List of labels to detect
+        tagging_scheme:
+            Tagging scheme to use in the segment-entities preprocessing and label mapping definition.
+        tag_subtokens:
+            Whether tag subtokens in a word. PreTrained models require a tokenization step.
+            If any word of the segment is not in the vocabulary of the tokenizer used by the PreTrained model,
+            the word is split into subtokens.
+            It is recommended to only tag the first subtoken of a word. However, it is possible to tag all subtokens
+            by setting this value to `True`. It could influence the time and results of fine-tunning.
+        tokenizer_max_length:
+            Optional max length for the tokenizer, by default the `model_max_length` will be used.
         device:
             Device to use for the transformer model. Follows the HuggingFace convention
             (-1 for "cpu" and device number for gpu, for instance 0 for "cuda:0").
-        cache_dir:
-            Directory where to store downloaded models. If not set, the default
-            HuggingFace cache dir is used.
         name:
             Name describing the matcher (defaults to the class name).
         uid:
             Identifier of the matcher.
         """
 
-        self.model_name_or_path = model_name_or_path
-        self.cache_dir = cache_dir
-
-        if isinstance(self.model_name_or_path, str):
-            valid_model = hf_utils.check_model_for_task_HF(
-                self.model_name_or_path, "token-classification"
-            )
-            if not valid_model:
-                raise ValueError(
-                    f"Model {self.model_name_or_path} is not associated to a"
-                    " token-classification/ner task and cannot be used with"
-                    " HFEntityMatcher"
-                )
-        # define mapping
-        self.model_config = self._ensure_config_model_HF(
-            self.model_name_or_path, preprocessing_config.labels
+        valid_model = hf_utils.check_model_for_task_HF(
+            model_name_or_path, "token-classification"
         )
+        if not valid_model:
+            raise ValueError(
+                f"Model {model_name_or_path} is not associated to a"
+                " token-classification/ner task and cannot be used with"
+                " HFEntityMatcher"
+            )
+
+        self.model_name_or_path = model_name_or_path
+        self.tagging_scheme = tagging_scheme
+        self.tag_subtokens = tag_subtokens
+        self.tokenizer_max_length = tokenizer_max_length
+        self.model_config = self._get_valid_model_config(labels)
+
+        # update labels mapping using the configuration
         self.label_to_id = self.model_config.label2id
         self.id_to_label = self.model_config.id2label
-        self.use_bilou_scheme = preprocessing_config.use_bilou_scheme
-        self.tag_subtokens = preprocessing_config.tag_subtokens
-        self.max_length = preprocessing_config.max_length
 
         # load tokenizer and model using the model path
         self.load(self.model_name_or_path)
@@ -104,13 +101,13 @@ class HFEntityMatcherTrainable:
         tags_ids = []
 
         if not inference_mode:
-            tags = transform_entities_to_tags(
+            tags = hf_tokenization_utils.transform_entities_to_tags(
                 segment=segment,
                 entities=entities,
                 text_encoding=text_encoding,
-                use_bilou_scheme=self.use_bilou_scheme,
+                tagging_scheme=self.tagging_scheme,
             )
-            tags_ids = align_and_map_tokens_with_tags(
+            tags_ids = hf_tokenization_utils.align_and_map_tokens_with_tags(
                 text_encoding=text_encoding,
                 tags=tags,
                 tag_to_id=self.label_to_id,
@@ -129,7 +126,7 @@ class HFEntityMatcherTrainable:
         text_tokenized = self._tokenizer(
             text,
             padding="max_length",
-            max_length=self.max_length,
+            max_length=self.tokenizer_max_length,
             truncation=True,
             return_special_tokens_mask=True,
         )
@@ -178,9 +175,7 @@ class HFEntityMatcherTrainable:
             self._tokenizer.save_pretrained(path)
 
     def load(self, path: Union[str, Path]):
-        tokenizer = transformers.AutoTokenizer.from_pretrained(
-            path, cache_dir=self.cache_dir, use_fast=True
-        )
+        tokenizer = transformers.AutoTokenizer.from_pretrained(path, use_fast=True)
 
         if not isinstance(tokenizer, transformers.PreTrainedTokenizerFast):
             raise ValueError(
@@ -191,35 +186,34 @@ class HFEntityMatcherTrainable:
         model = transformers.AutoModelForTokenClassification.from_pretrained(
             path,
             config=self.model_config,
-            cache_dir=self.cache_dir,
             ignore_mismatched_sizes=True,
         )
 
         self._tokenizer = tokenizer
         self._model = model
 
-    @staticmethod
-    def _ensure_config_model_HF(model_path_or_name, labels: List[str]):
-        nb_labels = len(labels)
+    def _get_valid_model_config(self, labels: List[str]):
+        """Return a config file with the correct mapping of labels"""
+        # get possible tags from labels list
+        label_to_id = hf_tokenization_utils.convert_labels_to_tags(
+            labels=labels, tagging_scheme=self.tagging_scheme
+        )
+        nb_labels = len(label_to_id)
+
+        # load configuration with the correct number of NER labels
         config = transformers.AutoConfig.from_pretrained(
-            model_path_or_name, num_labels=nb_labels
+            self.model_name_or_path, num_labels=nb_labels
         )
 
-        # If the model has labels, use them (note HF)
-        if sorted(config.label2id.keys()) != sorted(labels):
-            logger.warning(
-                "The operation model seems to have been trained with different labels.",
-                f"PreTrained with labels: {sorted(config.label2id.keys())}, new labels"
-                f" {sorted(labels)}.\nIgnoring the model labels as a"
-                " result.",
-            )
-            config.label2id = {label: idx for idx, label in enumerate(labels)}
-            config.id2label = {idx: label for idx, label in enumerate(labels)}
-
+        # If the model has the same labels, we kept the original mapping
         # Easier finetunning
-        logger.info(
-            "The operation model was pretrained with the same set of labels.\nKeeping"
-            " the mapping from the model."
-        )
+        if sorted(config.label2id.keys()) != sorted(label_to_id.keys()):
+            logger.warning(
+                f"""The operation model seems to have different labels.
+            PreTrained with labels: {sorted(config.label2id.keys())}, new labels
+            {sorted(label_to_id.keys())}. Ignoring the model labels as result."""
+            )
+            config.label2id = {label: idx for idx, label in label_to_id.items()}
+            config.id2label = {idx: label for idx, label in label_to_id.items()}
 
         return config
