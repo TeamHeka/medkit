@@ -1,3 +1,4 @@
+from pathlib import Path
 import pytest
 
 from medkit.text.ner.hf_tokenization_utils import (
@@ -9,9 +10,11 @@ from medkit.text.ner.hf_tokenization_utils import (
 
 pytest.importorskip(modname="torch", reason="torch is not installed")
 pytest.importorskip(modname="transformers", reason="transformers is not installed")
-# TBD: change to a mocker tokenizer/text_encoding ?
-from transformers import AutoTokenizer  # noqa: E402
+
+from transformers import BertTokenizerFast  # noqa: E402
 from medkit.core.text import Segment, Entity, Span  # noqa: E402
+
+_PATH_TO_VOCAB_FILE = Path(__file__).parent / "dummy_hf_vocab" / "vocab.txt"
 
 
 def _get_segment_entities(offset_span):
@@ -35,9 +38,9 @@ def _get_segment_entities(offset_span):
     return [segment, entities]
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture()
 def tokenizer():
-    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased", use_fast=True)
+    tokenizer = BertTokenizerFast(_PATH_TO_VOCAB_FILE)
     return tokenizer
 
 
@@ -112,7 +115,7 @@ def test_transform_entities_no_aligned(tokenizer):
 
 def test_aligned_tokens_with_tags(tokenizer):
     text_encoding = tokenizer("medkit").encodings[0]
-    tag_mapping = {"B-corporation": 0, "L-corporation": 1}
+    tag_mapping = {"O": 0, "B-corporation": 1, "L-corporation": 2}
 
     tags_to_aligned = ["O", "B-corporation", "L-corporation", "O"]
     # tag all subtokens by word
@@ -122,7 +125,7 @@ def test_aligned_tokens_with_tags(tokenizer):
         tag_to_id=tag_mapping,
         map_sub_tokens=True,
     )
-    assert tags_ids == [SPECIAL_TAG_ID_HF, 0, 1, SPECIAL_TAG_ID_HF]
+    assert tags_ids == [SPECIAL_TAG_ID_HF, 1, 2, SPECIAL_TAG_ID_HF]
 
     # tag only the first token by word, recommended
     tags_ids = align_and_map_tokens_with_tags(
@@ -131,7 +134,7 @@ def test_aligned_tokens_with_tags(tokenizer):
         tag_to_id=tag_mapping,
         map_sub_tokens=False,
     )
-    assert tags_ids == [SPECIAL_TAG_ID_HF, 0, SPECIAL_TAG_ID_HF, SPECIAL_TAG_ID_HF]
+    assert tags_ids == [SPECIAL_TAG_ID_HF, 1, SPECIAL_TAG_ID_HF, SPECIAL_TAG_ID_HF]
 
 
 def test_convert_labels_to_tags():
