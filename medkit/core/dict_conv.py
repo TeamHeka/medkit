@@ -112,6 +112,10 @@ class SubclassMapping:
 
     _subclasses: Dict[str, Type[Self]] = {}
 
+    def __init_subclass__(cls):
+        # make sure we have a distinct list of subclasses for each class relying on SubclassMapping
+        cls._subclasses = {}
+
     @classmethod
     def register_subclass(cls, subclass: Type[Self]):
         subclass_name = get_class_name(subclass)
