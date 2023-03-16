@@ -3,6 +3,7 @@ import pytest
 from medkit.text.ner.hf_tokenization_utils import (
     transform_entities_to_tags,
     align_and_map_tokens_with_tags,
+    convert_labels_to_tags,
     SPECIAL_TAG_ID_HF,
 )
 
@@ -43,29 +44,29 @@ def tokenizer():
 TEST_CONFIG = (
     (
         0,
-        True,
+        "bilou",
         ["O", "B-corporation", "L-corporation", "O", "O", "U-language", "O", "O"],
     ),
     (
         10,
-        True,
+        "bilou",
         ["O", "B-corporation", "L-corporation", "O", "O", "U-language", "O", "O"],
     ),
     (
         0,
-        False,
+        "iob2",
         ["O", "B-corporation", "I-corporation", "O", "O", "B-language", "O", "O"],
     ),
     (
         10,
-        False,
+        "iob2",
         ["O", "B-corporation", "I-corporation", "O", "O", "B-language", "O", "O"],
     ),
 )
 
 
 @pytest.mark.parametrize(
-    "offset_span,use_bilou_scheme,expected_tags",
+    "offset_span,tagging_scheme,expected_tags",
     TEST_CONFIG,
     ids=[
         "span_no_offset_bilou",
@@ -75,20 +76,22 @@ TEST_CONFIG = (
     ],
 )
 def test_transform_entities_offset(
-    tokenizer, offset_span, use_bilou_scheme, expected_tags
+    tokenizer, offset_span, tagging_scheme, expected_tags
 ):
+    # Testing transformation with span starting at 0 and starting in other position
     segment, entities = _get_segment_entities(offset_span=offset_span)
     text_encoding = tokenizer(segment.text).encodings[0]
     tags = transform_entities_to_tags(
         segment=segment,
         entities=entities,
         text_encoding=text_encoding,
-        use_bilou_scheme=use_bilou_scheme,
+        tagging_scheme=tagging_scheme,
     )
     assert tags == expected_tags
 
 
 def test_transform_entities_no_aligned(tokenizer):
+    # Testing aligned between span and entities
     segment, entities = _get_segment_entities(offset_span=10)
     text_encoding = tokenizer(segment.text).encodings[0]
 
@@ -112,6 +115,7 @@ def test_aligned_tokens_with_tags(tokenizer):
     tag_mapping = {"B-corporation": 0, "L-corporation": 1}
 
     tags_to_aligned = ["O", "B-corporation", "L-corporation", "O"]
+    # tag all subtokens by word
     tags_ids = align_and_map_tokens_with_tags(
         text_encoding=text_encoding,
         tags=tags_to_aligned,
@@ -128,3 +132,20 @@ def test_aligned_tokens_with_tags(tokenizer):
         map_sub_tokens=False,
     )
     assert tags_ids == [SPECIAL_TAG_ID_HF, 0, SPECIAL_TAG_ID_HF, SPECIAL_TAG_ID_HF]
+
+
+def test_convert_labels_to_tags():
+    tags = convert_labels_to_tags(labels=["procedure"], tagging_scheme="bilou")
+    assert tags == {
+        "O": 0,
+        "B-procedure": 1,
+        "I-procedure": 2,
+        "L-procedure": 3,
+        "U-procedure": 4,
+    }
+    tags = convert_labels_to_tags(labels=["procedure"], tagging_scheme="iob2")
+    assert tags == {
+        "O": 0,
+        "B-procedure": 1,
+        "I-procedure": 2,
+    }
