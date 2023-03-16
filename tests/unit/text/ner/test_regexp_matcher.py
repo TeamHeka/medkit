@@ -112,7 +112,7 @@ def test_normalization():
     entity = entities[0]
     assert entity.label == "Diabetes"
 
-    norm_attrs = entity.get_norm_attrs()
+    norm_attrs = entity.attrs.get_norms()
     assert len(norm_attrs) == 2
     norm_attr_1 = norm_attrs[0]
     assert type(norm_attr_1) is EntityNormAttribute
@@ -265,7 +265,7 @@ def test_prov():
     assert entity_prov.op_desc == matcher.description
     assert entity_prov.source_data_items == [sentence]
 
-    attr = entity.get_norm_attrs()[0]
+    attr = entity.attrs.get_norms()[0]
     attr_prov = prov_tracer.get_prov(attr.uid)
     assert attr_prov.data_item == attr
     assert attr_prov.op_desc == matcher.description

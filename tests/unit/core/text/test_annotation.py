@@ -30,7 +30,7 @@ def test_normalization():
     norm = EntityNormAttribute(kb_name="ICD", kb_id="9540/0", kb_version="10")
     entity.attrs.add(norm)
 
-    # EntityNormAttribute object should be returned by entity.get_norm_attrs()
-    norms = entity.get_norm_attrs()
+    # EntityNormAttribute object should be returned by entity.attrs.get_norms()
+    norms = entity.attrs.get_norms()
     assert len(norms) == 1
     assert norms[0] == norm

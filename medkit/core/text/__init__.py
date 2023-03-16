@@ -7,6 +7,7 @@ __all__ = [
     "Relation",
     "TextAnnotationContainer",
     "TextDocument",
+    "EntityAttributeContainer",
     "EntityNormAttribute",
     "ContextOperation",
     "NEROperation",
@@ -23,6 +24,7 @@ from . import span_utils
 from .annotation import TextAnnotation, Segment, Entity, Relation
 from .annotation_container import TextAnnotationContainer
 from .document import TextDocument
+from .entity_attribute_container import EntityAttributeContainer
 from .entity_norm_attribute import EntityNormAttribute
 from .operation import (
     ContextOperation,

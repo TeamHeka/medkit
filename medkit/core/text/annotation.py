@@ -10,6 +10,7 @@ from typing import (
     List,
     Optional,
     Set,
+    Type,
     TYPE_CHECKING,
 )
 from typing_extensions import Self
@@ -19,7 +20,7 @@ from medkit.core.attribute import Attribute
 from medkit.core.attribute_container import AttributeContainer
 from medkit.core.id import generate_id
 from medkit.core.store import Store
-from medkit.core.text.entity_norm_attribute import EntityNormAttribute
+from medkit.core.text.entity_attribute_container import EntityAttributeContainer
 from medkit.core.text.span import AnySpan
 import medkit.core.text.span_utils as span_utils
 
@@ -60,6 +61,7 @@ class TextAnnotation(abc.ABC, dict_conv.SubclassMapping):
         attrs: Optional[List[Attribute]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
+        attr_container_class: Type[AttributeContainer] = AttributeContainer,
     ):
         if attrs is None:
             attrs = []
@@ -73,7 +75,7 @@ class TextAnnotation(abc.ABC, dict_conv.SubclassMapping):
         self.metadata = metadata
         self.keys = set()
 
-        self.attrs = AttributeContainer(ann_id=self.uid)
+        self.attrs = attr_container_class(ann_id=self.uid)
         for attr in attrs:
             self.attrs.add(attr)
 
@@ -134,8 +136,15 @@ class Segment(TextAnnotation):
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
         store: Optional[Store] = None,
+        attr_container_class: Type[AttributeContainer] = AttributeContainer,
     ):
-        super().__init__(label=label, attrs=attrs, metadata=metadata, uid=uid)
+        super().__init__(
+            label=label,
+            attrs=attrs,
+            metadata=metadata,
+            uid=uid,
+            attr_container_class=attr_container_class,
+        )
 
         self.text = text
         self.spans = spans
@@ -219,7 +228,7 @@ class Entity(Segment):
         which part of the document's full text.
     attrs:
         Attributes of the entity. Stored in a
-        :class:{~medkit.core.AttributeContainer} but can be passed as a list at
+        :class:{~medkit.core.EntityAttributeContainer} but can be passed as a list at
         init.
     metadata:
         The metadata of the entity
@@ -227,17 +236,20 @@ class Entity(Segment):
         Pipeline output keys to which the entity belongs to.
     """
 
-    def get_norm_attrs(self) -> List[EntityNormAttribute]:
-        """
-        Return all :class:`~medkit.core.text.normalization.EntityNormAttribute`
-        objects attached to the entity.
-
-        Returns
-        -------
-        List[EntityNormAttribute]:
-            All normalization attributes attached to the entity.
-        """
-        return [a for a in self.attrs.get(label=EntityNormAttribute.LABEL)]
+    def __init__(
+        self,
+        label: str,
+        text: str,
+        spans: List[AnySpan],
+        attrs: Optional[List[Attribute]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        uid: Optional[str] = None,
+        store: Optional[Store] = None,
+        attr_container_class: Type[EntityAttributeContainer] = EntityAttributeContainer,
+    ):
+        super().__init__(
+            label, text, spans, attrs, metadata, uid, store, attr_container_class
+        )
 
 
 @dataclasses.dataclass(init=False)
@@ -275,8 +287,15 @@ class Relation(TextAnnotation):
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
         store: Optional[Store] = None,
+        attr_container_class: Type[AttributeContainer] = AttributeContainer,
     ):
-        super().__init__(label=label, attrs=attrs, metadata=metadata, uid=uid)
+        super().__init__(
+            label=label,
+            attrs=attrs,
+            metadata=metadata,
+            uid=uid,
+            attr_container_class=attr_container_class,
+        )
 
         self.source_id = source_id
         self.target_id = target_id
