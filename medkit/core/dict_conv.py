@@ -8,8 +8,6 @@ __all__ = [
     "get_class_name_from_data_dict",
 ]
 
-import warnings
-
 from typing import Any, Dict, Optional, Type
 from typing_extensions import Protocol, Self, runtime_checkable
 
@@ -138,19 +136,20 @@ class SubclassMapping:
         Parameters
         ----------
         data_dict:
-            Data dict returned by the `to_dict()` method of a subclass
+            Data dict returned by the `to_dict()` method of a subclass (or of
+            the base class itself)
 
         Returns
         -------
         subclass
-            Subclass that generated `data_dict`
+            Subclass that generated `data_dict`, or None if `data_dict`
+            correspond to the base class itself.
         """
         class_name = get_class_name_from_data_dict(data_dict)
         subclass = cls.get_subclass(class_name)
-        if subclass is None:
-            warnings.warn(
-                f"{class_name} does not exist. Fallback to base class"
-                f" {get_class_name(cls)}."
+        if subclass is None and class_name != get_class_name(cls):
+            raise ValueError(
+                "Received a data dict with class_name '{class_name}' that does not"
+                " correspond to {cls} or any of its subclasses"
             )
-            return None
         return subclass
