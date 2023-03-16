@@ -84,7 +84,7 @@ class TextAnnotation(abc.ABC, dict_conv.SubclassMapping):
     @classmethod
     def from_dict(cls, ann_dict: Dict[str, Any]) -> Self:
         subclass = cls.get_subclass_for_data_dict(ann_dict)
-        if dict_conv.has_same_from_dict(subclass, TextAnnotation) or subclass is None:
+        if subclass is None:
             raise NotImplementedError(
                 "TextAnnotation is an abstract class. Its class method `from_dict` is"
                 " only used for calling the correct subclass `from_dict`. Subclass is"

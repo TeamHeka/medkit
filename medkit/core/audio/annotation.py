@@ -108,10 +108,9 @@ class Segment(dict_conv.SubclassMapping):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> Segment:
-        if not dict_conv.has_same_from_dict(cls, Segment):
-            subclass = cls.get_subclass_for_data_dict(data)
-            if subclass is not None:
-                return subclass.from_dict(data)
+        subclass = cls.get_subclass_for_data_dict(data)
+        if subclass is not None:
+            return subclass.from_dict(data)
 
         audio = AudioBuffer.from_dict(data["audio"])
         span = Span.from_dict(data["span"])

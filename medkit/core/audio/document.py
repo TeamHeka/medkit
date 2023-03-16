@@ -117,10 +117,9 @@ class AudioDocument(dict_conv.SubclassMapping):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> Self:
-        if not dict_conv.has_same_from_dict(cls, AudioDocument):
-            subclass = cls.get_subclass_for_data_dict(data)
-            if subclass is not None:
-                return subclass.from_dict(data)
+        subclass = cls.get_subclass_for_data_dict(data)
+        if subclass is not None:
+            return subclass.from_dict(data)
 
         audio = AudioBuffer.from_dict(data["audio"])
         anns = [Segment.from_dict(a) for a in data.get("anns", [])]

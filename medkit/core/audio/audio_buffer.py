@@ -115,11 +115,10 @@ class AudioBuffer(abc.ABC, dict_conv.SubclassMapping):
     @classmethod
     def from_dict(cls, data_dict: Dict[str, Any]) -> Self:
         subclass = cls.get_subclass_for_data_dict(data_dict)
-        if dict_conv.has_same_from_dict(subclass, AudioBuffer) or subclass is None:
+        if subclass is None:
             raise NotImplementedError(
                 "AudioBuffer is an abstract class. Its class method `from_dict` is"
-                " only used for calling the correct subclass `from_dict`. Subclass is"
-                f" {subclass}"
+                " only used for calling the correct subclass `from_dict`."
             )
 
         return subclass.from_dict(data_dict)

@@ -6,7 +6,6 @@ __all__ = [
     "get_class_name",
     "add_class_name_to_data_dict",
     "get_class_name_from_data_dict",
-    "has_same_from_dict",
 ]
 
 import warnings
@@ -20,10 +19,6 @@ _CLASS_NAME_KEY: str = "_class_name"
 
 def get_class_name(class_: Type) -> str:
     return class_.__module__ + "." + class_.__qualname__
-
-
-def has_same_from_dict(first_class: Type, other_class: Type) -> bool:
-    return getattr(first_class, "from_dict") == getattr(other_class, "from_dict")
 
 
 def add_class_name_to_data_dict(instance: object, data_dict: Dict[str, Any]):
