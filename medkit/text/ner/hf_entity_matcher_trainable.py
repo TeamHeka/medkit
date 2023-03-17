@@ -1,7 +1,8 @@
 __all__ = ["HFEntityMatcherTrainable"]
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
+from typing_extensions import Literal
 
 import torch
 import transformers

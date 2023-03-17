@@ -4,7 +4,8 @@ __all__ = [
     "convert_labels_to_tags",
 ]
 
-from typing import Dict, List, Literal
+from typing import Dict, List
+from typing_extensions import Literal
 
 from transformers.tokenization_utils_fast import EncodingFast
 
