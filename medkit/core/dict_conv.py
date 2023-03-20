@@ -103,7 +103,7 @@ class SubclassMapping:
     Base class for managing subclasses
     """
 
-    _subclasses: Dict[str, Type[Self]] = {}
+    _subclasses: Dict[str, Type[Self]]
 
     def __init_subclass__(cls):
         # make sure we have a distinct list of subclasses for each class relying on SubclassMapping
