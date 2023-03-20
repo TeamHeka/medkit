@@ -11,9 +11,9 @@ __all__ = [
     "clean_up_gaps_in_normalized_spans",
 ]
 
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
-from medkit.core.text.span import Span, ModifiedSpan, AnySpanType
+from medkit.core.text.span import Span, ModifiedSpan, AnySpan
 
 
 def _spans_have_same_length_as_text(text, spans):
@@ -38,10 +38,10 @@ def _positions_are_within_text(text, positions):
 
 def replace(
     text: str,
-    spans: List[AnySpanType],
+    spans: List[AnySpan],
     ranges: List[Tuple[int, int]],
     replacement_texts: List[str],
-) -> Tuple[str, List[AnySpanType]]:
+) -> Tuple[str, List[AnySpan]]:
     """Replace parts of a text, and update accordingly its associated spans
 
     Parameters
@@ -219,9 +219,9 @@ def _replace_in_spans(spans, ranges, replacement_lengths):
 
 def remove(
     text: str,
-    spans: List[AnySpanType],
+    spans: List[AnySpan],
     ranges: List[Tuple[int, int]],
-) -> Tuple[str, List[AnySpanType]]:
+) -> Tuple[str, List[AnySpan]]:
     """Remove parts of a text, while also removing accordingly its associated spans
 
     Parameters
@@ -268,9 +268,9 @@ def _remove_in_spans(spans, ranges):
 
 def extract(
     text: str,
-    spans: List[AnySpanType],
+    spans: List[AnySpan],
     ranges: List[Tuple[int, int]],
-) -> Tuple[str, List[AnySpanType]]:
+) -> Tuple[str, List[AnySpan]]:
     """Extract parts of a text as well as its associated spans
 
     Parameters
@@ -323,10 +323,10 @@ def _extract_in_spans(spans, ranges):
 
 def insert(
     text: str,
-    spans: List[AnySpanType],
+    spans: List[AnySpan],
     positions: List[int],
     insertion_texts: List[str],
-) -> Tuple[str, List[AnySpanType]]:
+) -> Tuple[str, List[AnySpan]]:
     """Insert strings in text, and update accordingly its associated spans
 
     Parameters
@@ -396,10 +396,10 @@ def _insert_in_spans(spans, positions, insertion_lengths):
 
 def move(
     text: str,
-    spans: List[AnySpanType],
+    spans: List[AnySpan],
     range: Tuple[int, int],
     destination: int,
-) -> Tuple[str, List[AnySpanType]]:
+) -> Tuple[str, List[AnySpan]]:
     """Move part of a text to another position, also moving its associated spans
 
     Parameters
@@ -469,8 +469,8 @@ def _move_in_spans(spans, range, destination):
 
 
 def concatenate(
-    texts: List[str], all_spans: List[List[AnySpanType]]
-) -> Tuple[str, List[AnySpanType]]:
+    texts: List[str], all_spans: List[List[AnySpan]]
+) -> Tuple[str, List[AnySpan]]:
     """Concatenate text and span objects"""
 
     assert _lists_have_same_dimension(
@@ -482,7 +482,7 @@ def concatenate(
     return text, span
 
 
-def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
+def normalize_spans(spans: List[AnySpan]) -> List[Span]:
     """
     Return a transformed of `spans` in which all instances of ModifiedSpan are
     replaced by the spans they refer to, spans are sorted and contiguous spans are merged.
@@ -511,12 +511,13 @@ def normalize_spans(spans: List[Union[Span, ModifiedSpan]]) -> List[Span]:
         if isinstance(span, ModifiedSpan):
             all_spans += span.replaced_spans
         else:
+            assert isinstance(span, Span)
             all_spans.append(span)
 
     if not all_spans:
         return []
 
-    all_spans.sort()
+    all_spans.sort(key=lambda s: s.start)
     # merge contiguous spans
     all_spans_merged = [all_spans[0]]
     for span in all_spans[1:]:

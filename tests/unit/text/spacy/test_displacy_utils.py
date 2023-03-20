@@ -1,14 +1,13 @@
 import pytest
 from spacy import displacy
 
-from medkit.core import Attribute
 from medkit.core.text import (
     Segment,
     Entity,
     Span,
     ModifiedSpan,
     TextDocument,
-    EntityNormalization,
+    EntityNormAttribute,
 )
 from medkit.text.spacy.displacy_utils import (
     medkit_doc_to_displacy,
@@ -22,8 +21,8 @@ def _custom_entity_formatter(entity):
     label = entity.label
     attrs_strings = []
     for attr in entity.attrs:
-        if isinstance(attr.value, EntityNormalization):
-            attrs_strings.append(f"{attr.value.kb_name}={attr.value.kb_id}")
+        if isinstance(attr, EntityNormAttribute):
+            attrs_strings.append(f"{attr.kb_name}={attr.kb_id}")
         else:
             attrs_strings.append(f"{attr.label}={attr.value}")
     label += " (" + ", ".join(attrs_strings) + ")"
@@ -90,11 +89,8 @@ _TEST_DATA = [
                 spans=[Span(27, 47)],
                 text="a diabetes of type 1",
                 attrs=[
-                    Attribute(
-                        label="normalization",
-                        value=EntityNormalization(
-                            kb_name="umls", kb_id="C0011854", kb_version="2021AB"
-                        ),
+                    EntityNormAttribute(
+                        kb_name="umls", kb_id="C0011854", kb_version="2021AB"
                     )
                 ],
             ),

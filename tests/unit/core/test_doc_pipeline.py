@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict, Any
-
 from medkit.core import (
     generate_id,
     AnnotationContainer,
@@ -42,10 +40,6 @@ class _TextAnnotation:
         self.text = text
         self.keys = set()
         self.attrs = AttributeContainer(ann_id=self.uid)
-
-    @classmethod
-    def from_dict(cls, annotation_dict: Dict[str, Any]) -> _TextAnnotation:
-        pass
 
 
 def _get_doc():

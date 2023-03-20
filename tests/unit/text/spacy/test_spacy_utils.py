@@ -3,7 +3,7 @@ import spacy
 from spacy.tokens import Doc, Span as SpacySpan
 
 from medkit.core import Attribute
-from medkit.core.text import Span, Entity, Segment, TextDocument, EntityNormalization
+from medkit.core.text import Span, Entity, Segment, TextDocument, EntityNormAttribute
 from medkit.text.spacy import spacy_utils
 
 
@@ -205,8 +205,8 @@ def test_normalization_attr(nlp_spacy):
     text = "Le patient souffre d'asthme"
     doc = TextDocument(text=text)
     entity = Entity(label="maladie", text="asthme", spans=[Span(21, 27)])
-    entity.add_norm(
-        EntityNormalization(kb_name="umls", kb_id="C0004096", kb_version="2021AB")
+    entity.attrs.add(
+        EntityNormAttribute(kb_name="umls", kb_id="C0004096", kb_version="2021AB")
     )
     doc.anns.add(entity)
 

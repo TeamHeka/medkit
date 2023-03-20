@@ -13,7 +13,7 @@ import yaml
 from medkit.core import Operation
 from medkit.core.text import Entity
 import medkit.core.utils
-from medkit.text.ner.umls_normalization import UMLSNormalization
+from medkit.text.ner.umls_norm_attribute import UMLSNormAttribute
 from medkit.text.ner.umls_utils import (
     load_umls,
     preprocess_term_to_match,
@@ -198,11 +198,7 @@ class UMLSCoderNormalizer(Operation):
         Parameters
         ----------
         entities:
-            List of entities to add normalization attributes to. The value of
-            each normalization attribute is a
-            :class:`~medkit.text.ner.umls_normalization.UMLSNormalization` object
-            that can be retrieved on the entity with the
-            :meth:`~medkit.core.text.annotation.Entity.get_norms` method.
+            List of entities to add normalization attributes to
         """
 
         # find best matches and assocatied score for all entities
@@ -263,13 +259,13 @@ class UMLSCoderNormalizer(Operation):
                 continue
 
             umls_entry = self._umls_entries.iloc[match_index]
-            norm = UMLSNormalization(
+            norm_attr = UMLSNormAttribute(
                 cui=umls_entry.cui,
                 umls_version=self._umls_version,
                 term=umls_entry.term,
                 score=match_score,
             )
-            norm_attr = entity.add_norm(norm)
+            entity.attrs.add(norm_attr)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(

@@ -29,7 +29,6 @@ from medkit.core.text import (
     Segment,
     Span,
     TextDocument,
-    EntityNormalization,
     span_utils,
 )
 
@@ -600,14 +599,6 @@ class BratOutputConverter(OutputConverter):
         assert nb_attribute != 0
         brat_id = f"A{nb_attribute}"
         type = label.replace(" ", "_")
-
-        # convert normalization objects to string
-        if isinstance(value, EntityNormalization):
-            if value.kb_name is not None and value.kb_id is not None:
-                value = f"{value.kb_name}:{value.kb_id}"
-            else:
-                # special case when we use an EntityNormalization containing just a normalized term
-                value = value.term
 
         value: str = brat_utils.ensure_attr_value(value)
         attr_conf = AttributeConf(from_entity=is_from_entity, type=type, value=value)

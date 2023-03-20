@@ -4,22 +4,24 @@ __all__ = ["AudioDocument"]
 
 import dataclasses
 import random
-from typing import Any, ClassVar, Dict, List, Optional
 import uuid
+from typing import Any, ClassVar, Dict, List, Optional
+from typing_extensions import Self
 
+from medkit.core import dict_conv
 from medkit.core.audio.annotation import Segment
 from medkit.core.audio.annotation_container import AudioAnnotationContainer
 from medkit.core.audio.span import Span
 from medkit.core.audio.audio_buffer import (
     AudioBuffer,
-    FileAudioBuffer,
+    MemoryAudioBuffer,
     PlaceholderAudioBuffer,
 )
 from medkit.core.id import generate_id
 
 
 @dataclasses.dataclass(init=False)
-class AudioDocument:
+class AudioDocument(dict_conv.SubclassMapping):
     """
     Document holding audio annotations.
 
@@ -90,25 +92,37 @@ class AudioDocument:
     def audio(self) -> AudioBuffer:
         return self.raw_segment.audio
 
-    def to_dict(self) -> Dict[str, Any]:
-        anns = [ann.to_dict() for ann in self.anns]
-        return dict(
+    def __init_subclass__(cls):
+        AudioDocument.register_subclass(cls)
+        super().__init_subclass__()
+
+    def to_dict(self, with_anns: bool = True) -> Dict[str, Any]:
+        # convert MemoryAudioBuffer to PlaceholderAudioBuffer
+        # because we can't serialize the actual signal
+        if isinstance(self.audio, MemoryAudioBuffer):
+            placeholder = PlaceholderAudioBuffer.from_audio_buffer(self.audio)
+            audio = placeholder.to_dict()
+        else:
+            audio = self.audio.to_dict()
+        doc_dict: Dict[str, Any] = dict(
             uid=self.uid,
-            audio=self.audio.to_dict(),
-            anns=anns,
+            audio=audio,
             metadata=self.metadata,
         )
+        if with_anns:
+            doc_dict["anns"] = [a.to_dict() for a in self.anns]
+
+        dict_conv.add_class_name_to_data_dict(self, doc_dict)
+        return doc_dict
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> AudioDocument:
-        if data["audio"]["class_name"] == "FileAudioBuffer":
-            audio = FileAudioBuffer.from_dict(data["audio"])
-        else:
-            assert data["audio"]["class_name"] == "PlaceholderAudioBuffer"
-            audio = PlaceholderAudioBuffer.from_dict(data["audio"])
+    def from_dict(cls, data: Dict[str, Any]) -> Self:
+        subclass = cls.get_subclass_for_data_dict(data)
+        if subclass is not None:
+            return subclass.from_dict(data)
 
-        anns = [Segment.from_dict(ann_data) for ann_data in data["anns"]]
-
+        audio = AudioBuffer.from_dict(data["audio"])
+        anns = [Segment.from_dict(a) for a in data.get("anns", [])]
         return cls(
             uid=data["uid"],
             audio=audio,

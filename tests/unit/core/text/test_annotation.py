@@ -1,6 +1,6 @@
 from medkit.core.text.annotation import Segment, Entity
 from medkit.core.text.span import Span
-from medkit.core.text.normalization import EntityNormalization
+from medkit.core.text.entity_norm_attribute import EntityNormAttribute
 from tests.data_utils import get_text_document
 
 
@@ -19,7 +19,7 @@ def test_snippet():
 
 
 def test_normalization():
-    """Test normalization helpers"""
+    """Test normalization helper"""
 
     entity = Entity(
         label="disease",
@@ -27,16 +27,10 @@ def test_normalization():
         text="neurofibromatose",
     )
 
-    norm = EntityNormalization(kb_name="ICD", kb_id="9540/0", kb_version="10")
-    entity.add_norm(norm)
+    norm = EntityNormAttribute(kb_name="ICD", kb_id="9540/0", kb_version="10")
+    entity.attrs.add(norm)
 
-    # should create an Attribute with Entity.NORM_LABEL as label
-    # and the EntityNormalization object as value
-    norm_attrs = entity.attrs.get(label=Entity.NORM_LABEL)
-    assert len(norm_attrs) == 1
-    assert norm_attrs[0].value == norm
-
-    # EntityNormalization object should be returned by entity.get_norms()
-    norms = entity.get_norms()
+    # EntityNormAttribute object should be returned by entity.attrs.get_norms()
+    norms = entity.attrs.get_norms()
     assert len(norms) == 1
     assert norms[0] == norm

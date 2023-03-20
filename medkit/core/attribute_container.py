@@ -36,7 +36,7 @@ class AttributeContainer:
         Add support for iterating over an `AttributeContainer` (will yield each
         attribute)
         """
-        return iter(self._get_by_id(uid) for uid in self._attr_ids)
+        return iter(self.get_by_id(uid) for uid in self._attr_ids)
 
     def get(self, *, label: Optional[str] = None) -> List[Attribute]:
         """
@@ -52,7 +52,7 @@ class AttributeContainer:
             return list(iter(self))
         else:
             return [
-                self._get_by_id(uid) for uid in self._attr_ids_by_label.get(label, [])
+                self.get_by_id(uid) for uid in self._attr_ids_by_label.get(label, [])
             ]
 
     def add(self, attr: Attribute):
@@ -84,6 +84,11 @@ class AttributeContainer:
             self._attr_ids_by_label[label] = []
         self._attr_ids_by_label[label].append(uid)
 
-    def _get_by_id(self, uid: str) -> Attribute:
+    def get_by_id(self, uid: str) -> Attribute:
         attr = self._store.get_data_item(uid)
         return typing.cast(Attribute, attr)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return self.get() == other.get()

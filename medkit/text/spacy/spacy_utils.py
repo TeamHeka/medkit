@@ -17,10 +17,9 @@ from medkit.core.text import (
     Entity,
     Segment,
     TextDocument,
-    AnySpanType,
+    AnySpan,
     Span,
     span_utils,
-    EntityNormalization,
 )
 
 
@@ -403,7 +402,7 @@ def _define_attrs_extensions(attrs_to_transfer: List[str]):
         _define_spacy_span_extension(attr)
 
 
-def _get_span_boundaries(spans: List[AnySpanType]) -> Tuple[int, int]:
+def _get_span_boundaries(spans: List[AnySpan]) -> Tuple[int, int]:
     """Return boundaries (start,end) from a list of spans"""
     spans_norm: List[Span] = span_utils.normalize_spans(spans)
     start = spans_norm[0].start
@@ -441,14 +440,6 @@ def _segment_to_spacy_span(
                 # in medkit having an attribute, indicates that the attribute exists
                 # for the given annotation, we force True as value
                 value = True
-            elif isinstance(attr.value, EntityNormalization):
-                # convert normalization objects to string
-                norm = attr.value
-                if norm.kb_name is not None and norm.kb_id is not None:
-                    value = f"{norm.kb_name}:{norm.kb_id}"
-                else:
-                    # special case when we use an EntityNormalization containing just a normalized term
-                    value = norm.term
             else:
                 value = attr.value
             # set attributes as extensions
@@ -461,7 +452,7 @@ def _segment_to_spacy_span(
 
 def _get_text_and_spans_from_span_spacy(
     span_spacy: SpacySpan, medkit_source_ann: Optional[Segment]
-) -> Tuple[str, List[AnySpanType]]:
+) -> Tuple[str, List[AnySpan]]:
     """Return text and spans depending on the origin of the spacy span"""
 
     if medkit_source_ann is None:

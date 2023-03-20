@@ -7,7 +7,8 @@ __all__ = [
     "Relation",
     "TextAnnotationContainer",
     "TextDocument",
-    "EntityNormalization",
+    "EntityAttributeContainer",
+    "EntityNormAttribute",
     "ContextOperation",
     "NEROperation",
     "SegmentationOperation",
@@ -15,7 +16,7 @@ __all__ = [
     "create_text_operation",
     "Span",
     "ModifiedSpan",
-    "AnySpanType",
+    "AnySpan",
 ]
 
 from . import utils
@@ -23,7 +24,8 @@ from . import span_utils
 from .annotation import TextAnnotation, Segment, Entity, Relation
 from .annotation_container import TextAnnotationContainer
 from .document import TextDocument
-from .normalization import EntityNormalization
+from .entity_attribute_container import EntityAttributeContainer
+from .entity_norm_attribute import EntityNormAttribute
 from .operation import (
     ContextOperation,
     NEROperation,
@@ -31,4 +33,4 @@ from .operation import (
     CustomTextOpType,
     create_text_operation,
 )
-from .span import Span, ModifiedSpan, AnySpanType
+from .span import Span, ModifiedSpan, AnySpan
