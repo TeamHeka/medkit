@@ -19,7 +19,7 @@ For more details about public API, refer to
 ### Normalizer
 
 If you need to pre-process your document texts for replacing some sub-texts by
-other ones, medkit provides a {class}`~text.preprocessing.Normalizer`
+other ones, medkit provides a {class}`~.text.preprocessing.Normalizer`
 operation to do that and keep span information.
 
 For example, if you want to replace `n°` by `numéro`:
@@ -44,10 +44,10 @@ Results:
 
 
 If you want to use some rule-based operations (like
-{class}{`~.text.ner.RegexpMatcher` for example), document texts may need to be
+{class}`~.text.ner.RegexpMatcher` for example), document texts may need to be
 pre-processed.
 
-For example, concerning the {class}{`~.text.ner.RegexpMatcher`:
+For example, concerning the {class}`~.text.ner.RegexpMatcher`:
 
     When the rule is not sensitive to unicode, we try to convert unicode chars
     to the closest ascii chars. However, some characters need to be pre-processed

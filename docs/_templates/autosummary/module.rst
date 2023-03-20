@@ -11,8 +11,15 @@
 
 {% block members %}
 {% if members and modules %}
-Public APIs
------------
+APIs
+----
+
+For accessing these APIs, you may use import like this:
+
+.. code-block:: python
+
+    from {{ fullname }} import <api_to_import>
+
 .. automodule:: {{ fullname }}
     :members: {% for item in members %} {{ item }}, {%- endfor %}
     :autosummary:

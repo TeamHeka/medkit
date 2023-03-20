@@ -113,7 +113,7 @@ data structure for a medkit annotation.
 For example, each annotation is linked to an attribute container.
 
 {class}`~.core.AttributeContainer` class provides a set of common interfaces for
-accessing to the annotation {class}`~.core.Attribute`s whatever the modality.
+accessing to the annotation {class}`~.core.Attribute` whatever the modality.
 
 Given an annotation `ann` from any modality:
 
