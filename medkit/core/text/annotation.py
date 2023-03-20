@@ -21,7 +21,6 @@ from medkit.core.id import generate_id
 from medkit.core.store import Store
 from medkit.core.text.entity_attribute_container import EntityAttributeContainer
 from medkit.core.text.span import AnySpan
-import medkit.core.text.span_utils as span_utils
 
 
 @dataclasses.dataclass(init=False)
