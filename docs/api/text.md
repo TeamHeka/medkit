@@ -49,12 +49,12 @@ pre-processed.
 
 For example, concerning the {class}`~.text.ner.RegexpMatcher`:
 
-    When the rule is not sensitive to unicode, we try to convert unicode chars
-    to the closest ascii chars. However, some characters need to be pre-processed
-    before (e.g., `n°` -> `number`). So, if the text lengths are different, we
-    fall back on initial unicode text for detection even if rule is not
-    unicode-sensitive.
-    In this case, a warning is logged for recommending to pre-process data.
+> When the rule is not sensitive to unicode, we try to convert unicode chars
+> to the closest ascii chars. However, some characters need to be pre-processed
+> before (e.g., `n°` -> `number`). So, if the text lengths are different, we
+> fall back on initial unicode text for detection even if rule is not
+> unicode-sensitive.
+> In this case, a warning is logged for recommending to pre-process data.
 
 For this use-case, medkit provides some pre-defined rules that you can import
 (cf. {mod}`medkit.text.preprocessing`).
@@ -131,7 +131,7 @@ For more details about public APIs, refer to
 
 ### Family reference
 
-mmedkit provides a rule-based family detector which attaches a family
+medkit provides a rule-based family detector which attaches a family
 attribute to a text segment.
 
 :::{note}
@@ -292,7 +292,6 @@ be installed with `pip install medkit[hf-translator]`
 This module detects syntactic relations between entities using a parser of
 dependencies.
 
-```{eval-rst}
-.. autoclass:: medkit.text.relations.syntactic_relation_extractor.SyntacticRelationExtractor
-    :noindex:
-```
+:::{note}
+For more info about this module, refer to {mod}`~.text.relations.syntactic_relation_extractor`.
+:::

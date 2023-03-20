@@ -134,7 +134,7 @@ Given an annotation `ann` from any modality:
 
 ### Collection
 
-{class}`~.core.Collection` class allows to manipulate a set of `~.core.Document`s.
+{class}`~.core.Collection` class allows to manipulate a set of {class}`~.core.Document`.
 
 :::{warning}
 This work is still under development. It may be changed in the future.
@@ -226,7 +226,7 @@ If you have not set your own store, the global store will automatically use the
 simple internal dict store.
 
 If you implement your own store, we suggest to call
-{meth}`medkit.core.store.GlobalStore.initstore` before initializing any other
+{meth}`medkit.core.store.GlobalStore.init_store` before initializing any other
 medkit  component.
 
 {class}`~.core.GlobalStore` provides initialization, access and removal methods

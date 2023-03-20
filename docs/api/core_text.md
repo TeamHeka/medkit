@@ -117,8 +117,8 @@ Text annotations can receive attributes, which will be instances of the core
 {class}`~.core.Attribute` class.
 
 Among attributes, {mod}`medkit.core.text` proposes
-{class}`~medkit.core.text.normalization.EntityNormalization`, to be used for
-values of normalization attributes, in order to have a common structure for
+{class}`~medkit.core.text.entity_norm_attribute.EntityNormAttribute`, to be used
+for normalization attributes, in order to have a common structure for
 normalization information, independently of the operation used to create it.
 
 
