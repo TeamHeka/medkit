@@ -249,10 +249,9 @@ class RegexpMatcher(NEROperation):
         pattern = self._patterns[rule_index]
         exclusion_pattern = self._exclusion_patterns[rule_index]
 
-        flags = 0 if rule.case_sensitive else re.IGNORECASE
         text_to_match = segment.text if rule.unicode_sensitive else text_ascii
 
-        for match in pattern.finditer(text_to_match, flags):
+        for match in pattern.finditer(text_to_match):
             # note that we apply exclusion_pattern to the whole segment,
             # so we might have a match in a part of the text unrelated to the current
             # match
@@ -260,7 +259,7 @@ class RegexpMatcher(NEROperation):
             # the current match but that wouldn't work for all cases
             if (
                 exclusion_pattern is not None
-                and exclusion_pattern.search(text_to_match, flags) is not None
+                and exclusion_pattern.search(text_to_match) is not None
             ):
                 continue
 
