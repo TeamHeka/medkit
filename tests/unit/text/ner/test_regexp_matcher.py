@@ -239,7 +239,7 @@ def test_attrs_to_copy():
 
 
 def test_match_at_start_of_segment():
-    """Make sure we are able to match entities starting at begining of a segment"""
+    """Make sure we are able to match entities starting at beginning of a segment"""
 
     text = "Diabetes and asthma"
     sentence = Segment(label="sentence", text=text, spans=[Span(0, len(text))])
