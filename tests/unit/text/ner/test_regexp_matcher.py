@@ -238,6 +238,21 @@ def test_attrs_to_copy():
     assert copied_neg_attr.uid != neg_attr.uid
 
 
+def test_match_at_start_of_segment():
+    """Make sure we are able to match entities starting at beginning of a segment"""
+
+    text = "Diabetes and asthma"
+    sentence = Segment(label="sentence", text=text, spans=[Span(0, len(text))])
+
+    rule = RegexpMatcherRule(label="Diabetes", regexp="diabetes")
+    matcher = RegexpMatcher(rules=[rule])
+    entities = matcher.run([sentence])
+
+    assert len(entities) == 1
+    entity = entities[0]
+    assert entity.label == "Diabetes"
+
+
 def test_default_rules():
     sentence = _get_sentence_segment()
 
