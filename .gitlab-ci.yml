@@ -28,7 +28,7 @@ cache: &default_cache
 
 # Define reusable scripts
 .prepare_poetry_env: &prepare_poetry_env
-  - curl -sSL https://install.python-poetry.org | python3 -
+  - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
   - export PATH=$PATH:$POETRY_HOME/bin
   - poetry --version
   - poetry env use python3.7

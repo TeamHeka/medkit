@@ -41,6 +41,7 @@ sphinx:
     autodoc_typehints: 'both'
     autodoc_typehints_description_target: 'documented'
     autodoc_typehints_format: 'short'
+    autodoc_inherit_docstrings: False
     autodoc_member_order: 'bysource'
     autodoc_mock_imports:
       - resampy
@@ -53,10 +54,20 @@ sphinx:
       - spacy
       - speechbrain
       - pyannote.audio
+    autosummary_ignore_module_all: False
     execution_show_tb: True
+    # napoleon extension config
+    napoleon_use_ivar: True
+    napoleon_use_param: False
+    napoleon_use_rtype: False
+    templates_path: ["_templates"]
+    suppress_warnings: ["etoc.toctree", "myst.domains"]
+    exclude_patterns: ["_build", "_templates"]
   extra_extensions:
   - 'sphinx.ext.autodoc'
+  - 'sphinx.ext.autosummary'
   - 'sphinx.ext.napoleon'
   - 'sphinx.ext.viewcode'
+  - 'sphinx_toolbox.more_autosummary'
   - 'sphinx_toolbox.more_autodoc.typevars'
   - 'sphinxcontrib.mermaid'

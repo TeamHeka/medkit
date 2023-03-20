@@ -3,10 +3,9 @@ from __future__ import annotations
 __all__ = ["TrainerCallback", "DefaultPrinterCallback"]
 
 import logging
-from typing import TYPE_CHECKING, Dict
+from typing import Dict
 
-if TYPE_CHECKING:
-    from medkit.training.trainer import TrainerConfig
+from medkit.training.trainer_config import TrainerConfig
 
 
 class TrainerCallback:
@@ -42,6 +41,8 @@ class TrainerCallback:
 
 
 class DefaultPrinterCallback(TrainerCallback):
+    """Default implementation of :class:`~.training.TrainerCallback`"""
+
     def __init__(self):
         self.logger = logging.getLogger(__class__.__name__)
         self.logger.setLevel(logging.INFO)

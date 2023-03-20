@@ -109,8 +109,9 @@ To get the original spans, we can use {func}`~medkit.core.text.span_utils.normal
 from medkit.core.text.span_utils import normalize_spans, extract
 
 spans_sentence = normalize_spans(sentence.spans)
-extrated_text, spans = extract(raw_segment.text,raw_segment.spans,spans_sentence)
-print(f"- Sentence in the ORIGINAL version:\n \"{extrated_text}\"")
+ranges = [(s.start, s.end) for s in spans_sentence]
+extracted_text, spans = extract(raw_segment.text,raw_segment.spans,ranges)
+print(f"- Sentence in the ORIGINAL version:\n \"{extracted_text}\"")
 ```
 
 That's how an operation transforms text and extracts information without losing the raw text.  
@@ -119,4 +120,4 @@ That's how an operation transforms text and extracts information without losing 
 For further information on the utilities used in this class, see {class}`~medkit.core.text.utils`. 
 To see more examples of span operations [here](../examples/spans)
 
-``` 
+```

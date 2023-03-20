@@ -8,6 +8,8 @@ from medkit.core.data_item import IdentifiableDataItem
 
 @runtime_checkable
 class Store(Protocol):
+    """Store protocol"""
+
     def store_data_item(self, data_item: IdentifiableDataItem, parent_id: str):
         pass
 
@@ -36,6 +38,8 @@ class _DictStore:
 
 
 class GlobalStore:
+    """Global store"""
+
     _store: Union[Store, None] = None
 
     @classmethod

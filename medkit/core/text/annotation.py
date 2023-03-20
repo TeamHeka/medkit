@@ -11,7 +11,6 @@ from typing import (
     Optional,
     Set,
     Type,
-    TYPE_CHECKING,
 )
 from typing_extensions import Self
 
@@ -22,10 +21,6 @@ from medkit.core.id import generate_id
 from medkit.core.store import Store
 from medkit.core.text.entity_attribute_container import EntityAttributeContainer
 from medkit.core.text.span import AnySpan
-import medkit.core.text.span_utils as span_utils
-
-if TYPE_CHECKING:
-    from medkit.core.text.document import TextDocument
 
 
 @dataclasses.dataclass(init=False)
@@ -184,30 +179,6 @@ class Segment(TextAnnotation):
             attrs=attrs,
             metadata=segment_dict["metadata"],
         )
-
-    def get_snippet(self, doc: TextDocument, max_extend_length: int) -> str:
-        """Return a portion of the original text containing the annotation
-
-        Parameters
-        ----------
-        doc:
-            The document to which the annotation is attached
-
-        max_extend_length:
-            Maximum number of characters to use around the annotation
-
-        Returns
-        -------
-        str:
-            A portion of the text around the annotation
-        """
-        spans_normalized = span_utils.normalize_spans(self.spans)
-        start = min(s.start for s in spans_normalized)
-        end = max(s.end for s in spans_normalized)
-        start_extended = max(start - max_extend_length // 2, 0)
-        remaining_max_extend_length = max_extend_length - (start - start_extended)
-        end_extended = min(end + remaining_max_extend_length, len(doc.text))
-        return doc.text[start_extended:end_extended]
 
 
 @dataclasses.dataclass(init=False)

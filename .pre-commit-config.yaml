@@ -5,9 +5,19 @@ repos:
     rev: 22.8.0
     hooks:
       - id: black
+        alias: black-check
+        name: black-check
         language_version: python3.7
         args: [--check, medkit, tests]
         verbose: true
+      - id: black
+        alias: black-format
+        name: black-format
+        language_version: python3.7
+        args: [medkit, tests]
+        verbose: true
+        stages:
+          - manual
   - repo: https://github.com/PyCQA/flake8
     rev: 5.0.4
     hooks:

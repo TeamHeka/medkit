@@ -2,27 +2,27 @@
 
 This page lists all components for converting and loading/saving data.
 
+:::{note}
+For more details about public APIs, refer to
+{mod}`medkit.io`.
+:::
+
 (api:io:brat)=
 ## Brat
 
-```{eval-rst}
-.. automodule:: medkit.io.brat
-    :members:
-```
+For more details, refer to {mod}`medkit.io.brat`.
 
 (api:io:spacy)=
 ## Spacy
 
+:::{important}
 For using spacy converters, you need to install [spacy](https://spacy.io/).
+These dependencies may be installed with `pip install medkit[spacy]`
+:::
 
-```{eval-rst}
-.. automodule:: medkit.io.spacy
-    :members:
-```
+For more details, refer to {mod}`medkit.io.spacy`.
 
 ## RTTM
 
-```{eval-rst}
-.. automodule:: medkit.io.rttm
-    :members:
+For more details, refer to {mod}`medkit.io.rttm`.
 ```

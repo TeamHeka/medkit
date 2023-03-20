@@ -28,6 +28,7 @@ tests/large_data/*
 
 #  Sphinx documentation
 docs/_build/
+docs/api-gen/_autosummary/
 
 # PyBuilder
 target/

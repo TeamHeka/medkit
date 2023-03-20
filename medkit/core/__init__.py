@@ -26,6 +26,9 @@ __all__ = [
     "GlobalStore",
     "ProvStore",
     "create_prov_store",
+    # not imported
+    "audio",
+    "text",
 ]
 
 from . import dict_conv
