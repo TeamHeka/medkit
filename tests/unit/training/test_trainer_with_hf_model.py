@@ -1,12 +1,12 @@
 import shutil
-import pytest
 
+import pytest
 from numpy.testing import assert_almost_equal
 
 from medkit.core.text.annotation import Entity, Segment
 from medkit.core.text.span import Span
-from medkit.text.ner.hf_entity_matcher_trainable import HFEntityMatcherTrainable
-from medkit.training.trainer import Trainer, TrainerConfig
+from medkit.text.ner import HFEntityMatcherTrainable
+from medkit.training import Trainer, TrainerConfig
 
 _TOKENIZER_MAX_LENGTH = 24
 
