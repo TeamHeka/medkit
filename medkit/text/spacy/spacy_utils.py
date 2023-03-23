@@ -4,7 +4,7 @@ __all__ = [
     "build_spacy_doc_from_medkit_segment",
 ]
 import warnings
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 from spacy import Language
 from spacy.tokens import Doc
@@ -32,6 +32,9 @@ def extract_anns_and_attrs_from_spacy_doc(
     entities: Optional[List[str]] = None,
     span_groups: Optional[List[str]] = None,
     attrs: Optional[List[str]] = None,
+    attribute_factories: Optional[
+        Dict[str, Callable[[str, SpacySpan], Attribute]]
+    ] = None,
     rebuild_medkit_anns_and_attrs: bool = False,
 ) -> Tuple[List[Segment], Dict[str, List[Attribute]]]:
     """Given a spacy document, convert selected entities or spans into Segments.
@@ -52,6 +55,11 @@ def extract_anns_and_attrs_from_spacy_doc(
     attrs:
         Name of custom attributes to extract from the annotations that will be included.
         If `None` (default) all the custom attributes will be extracted
+    attribute_factories:
+        Mapping of factories in charge of converting spacy attributes to
+            medkit attributes. Factories will receive an attribute label and a
+            spacy span when called. The key in the mapping is the attribute
+            label.
     rebuild_medkit_anns_and_attrs:
         If True the annotations and attributes with medkit ids will become
         new annotations/attributes with new ids.
@@ -70,6 +78,9 @@ def extract_anns_and_attrs_from_spacy_doc(
     ValueError
         Raises when the given medkit source and the spacy doc do not have the same medkit uid
     """
+
+    if attribute_factories is None:
+        attribute_factories = {}
 
     # extensions to indicate the medkit origin
     _define_default_extensions()
@@ -111,11 +122,17 @@ def extract_anns_and_attrs_from_spacy_doc(
 
         # for each spacy extension having a value other than None,
         # a medkit Attribute is created
-        attributes = [
-            Attribute(label=attr, value=entity_spacy._.get(attr))
-            for attr in spacy_attrs
-            if entity_spacy._.get(attr) is not None
-        ]
+        attributes = []
+        for attr_label in spacy_attrs:
+            value = entity_spacy._.get(attr_label)
+            if value is None:
+                continue
+            factory = attribute_factories.get(attr_label)
+            if factory is not None:
+                attribute = factory(attr_label, entity_spacy)
+            else:
+                attribute = Attribute(attr_label, value)
+            attributes.append(attribute)
 
         if attributes:
             attributes_by_ann[medkit_id] = attributes
@@ -150,11 +167,17 @@ def extract_anns_and_attrs_from_spacy_doc(
 
             # for each spacy extension having a value other than None,
             # a medkit Attribute is created
-            attributes = [
-                Attribute(label=attr, value=span_spacy._.get(attr))
-                for attr in spacy_attrs
-                if span_spacy._.get(attr) is not None
-            ]
+            attributes = []
+            for attr_label in spacy_attrs:
+                value = span_spacy._.get(attr_label)
+                if value is None:
+                    continue
+                factory = attribute_factories.get(attr_label)
+                if factory is not None:
+                    attribute = factory(attr_label, span_spacy)
+                else:
+                    attribute = Attribute(attr_label, value)
+                attributes.append(attribute)
 
             if attributes:
                 attributes_by_ann[medkit_id] = attributes
