@@ -1,14 +1,14 @@
-__all__ = ["medkit_doc_to_displacy", "entities_to_displacy"]
+__all__ = ["medkit_doc_to_displacy", "segments_to_displacy"]
 
 from typing import Any, Callable, Dict, List, Optional
 
-from medkit.core.text import TextDocument, Entity, span_utils
+from medkit.core.text import TextDocument, Segment, span_utils
 
 
 def medkit_doc_to_displacy(
     medkit_doc: TextDocument,
-    entity_labels: Optional[List[str]] = None,
-    entity_formatter: Optional[Callable[[Entity], str]] = None,
+    segment_labels: Optional[List[str]] = None,
+    segment_formatter: Optional[Callable[[Segment], str]] = None,
     max_gap_length: int = 3,
 ) -> Dict[str, Any]:
     """Build data dict that can be passed to `displacy.render()`
@@ -19,13 +19,14 @@ def medkit_doc_to_displacy(
     ----------
     medkit_doc:
         Document to visualize.
-    entity_labels:
-        Labels of entities to display. If `None`, all entities are displayed
-    entity_formatter:
-        Optional function returning the text to display as label for a given entity.
-        If `None`, the entity label will be used.
-        Can be used for instance to display normalization information available
-        in entity attributes.
+    segment_labels:
+        Labels of segments to display. If `None`, all entities are displayed (but
+        not segments).
+    segment_formatter:
+        Optional function returning the text to display as label for a given
+        segment. If `None`, the segment label will be used. Can be used for
+        instance to display normalization information available in entity or
+        segment attributes.
     max_gap_length:
         When cleaning up gaps in spans, spans around gaps smaller than `max_gap_length`
         will be merged.
@@ -37,29 +38,29 @@ def medkit_doc_to_displacy(
         Data to be passed to `displacy.render()` as `docs` argument
         (with `manual=True` and `style="ent"`)
     """
-    if medkit_doc.text is None:
-        raise RuntimeError(
-            "Document cannot be visualized with displacy because it doesn't contain its"
-            " full text"
-        )
-    if entity_labels:
-        entities = [
-            e
-            for label in entity_labels
-            for e in medkit_doc.get_annotations_by_label(label)
-        ]
-    else:
-        entities = medkit_doc.get_entities()
 
-    return entities_to_displacy(
-        entities, medkit_doc.text, entity_formatter, max_gap_length
+    if segment_labels:
+        segments = [
+            e for label in segment_labels for e in medkit_doc.anns.get(label=label)
+        ]
+        if not all(isinstance(s, Segment) for s in segments):
+            raise ValueError(
+                "Cannot display with displacy annotations that are not subclasses of"
+                " Segment, make sure that you have provided labels only referring to"
+                " segments or entities"
+            )
+    else:
+        segments = medkit_doc.anns.get_entities()
+
+    return segments_to_displacy(
+        segments, medkit_doc.text, segment_formatter, max_gap_length
     )
 
 
-def entities_to_displacy(
-    entities: List[Entity],
+def segments_to_displacy(
+    segments: List[Segment],
     raw_text: str,
-    entity_formatter: Optional[Callable[[Entity], str]] = None,
+    segment_formatter: Optional[Callable[[Segment], str]] = None,
     max_gap_length: int = 3,
 ) -> Dict[str, Any]:
     """Build data dict that can be passed to `displacy.render()`
@@ -67,16 +68,16 @@ def entities_to_displacy(
 
     Parameters
     ----------
-    entities:
-        Entities to visualize in text context.
+    segments:
+        Segments (and/or entities) to visualize in text context.
     raw_text:
         Initial document text from which entities where extracted and to which they spans refer
         (typically the `text` attribute of a :class:`~medkit.core.text.document.TextDocument`).
-    entity_formatter:
-        Optional function returning the text to display as label for a given entity.
-        If `None`, the entity label will be used.
-        Can be used for instance to display normalization information available
-        in entity attributes.
+    segment_formatter:
+        Optional function returning the text to display as label for a given
+        segment. If `None`, the segment label will be used. Can be used for
+        instance to display normalization information available in entity or
+        segment attributes.
     max_gap_length:
         When cleaning up gaps in spans, spans around gaps smaller than `max_gap_length`
         will be merged.
@@ -88,10 +89,10 @@ def entities_to_displacy(
         Data to be passed to `displacy.render()` as `docs` argument
         (with `manual=True` and `style="ent"`)
     """
-    entities_data = []
+    ents_data = []
 
-    for entity in entities:
-        normalized_spans = span_utils.normalize_spans(entity.spans)
+    for segment in segments:
+        normalized_spans = span_utils.normalize_spans(segment.spans)
         # normalized spans can be empty if spans contained ModifiedSpan with no replaced_spans
         if not normalized_spans:
             continue
@@ -102,15 +103,15 @@ def entities_to_displacy(
         )
 
         # generate text label
-        if entity_formatter:
-            label = entity_formatter(entity)
+        if segment_formatter:
+            label = segment_formatter(segment)
         else:
-            label = entity.label
+            label = segment.label
 
-        entities_data += [
+        ents_data += [
             {"start": span.start, "end": span.end, "label": label}
             for span in cleaned_spans
         ]
 
-    entities_data = sorted(entities_data, key=lambda d: d["start"])
-    return {"text": raw_text, "ents": entities_data}
+    ents_data = sorted(ents_data, key=lambda d: d["start"])
+    return {"text": raw_text, "ents": ents_data}

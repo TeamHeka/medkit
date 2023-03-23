@@ -1,15 +1,15 @@
 __all__ = ["DocPipeline"]
 
-from typing import Dict, List, Optional, Tuple, Union, cast
+from typing import Dict, Generic, List, Optional, Tuple, cast
 
-from medkit.core.annotation import Annotation
-from medkit.core.document import Collection, Document
+from medkit.core.annotation import AnnotationType
+from medkit.core.document import Document
 from medkit.core.operation import DocOperation
 from medkit.core.pipeline import Pipeline
 from medkit.core.prov_tracer import ProvTracer
 
 
-class DocPipeline(DocOperation):
+class DocPipeline(DocOperation, Generic[AnnotationType]):
     """Wrapper around the `Pipeline` class that runs a pipeline on a list
     (or collection) of documents, retrieving input annotations from each document
     and attaching output annotations back to documents.
@@ -19,7 +19,7 @@ class DocPipeline(DocOperation):
         self,
         pipeline: Pipeline,
         labels_by_input_key: Dict[str, List[str]],
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """Initialize the pipeline
 
@@ -60,7 +60,7 @@ class DocPipeline(DocOperation):
     def set_prov_tracer(self, prov_tracer: ProvTracer):
         self.pipeline.set_prov_tracer(prov_tracer)
 
-    def run(self, docs: Union[List[Document], Collection]) -> None:
+    def run(self, docs: List[Document[AnnotationType]]) -> None:
         """Run the pipeline on a list of documents, adding
         the output annotations to each document
 
@@ -73,19 +73,14 @@ class DocPipeline(DocOperation):
             be added to each corresponding document.
         """
 
-        if isinstance(docs, Collection):
-            docs = [doc for doc in docs.documents]
-
         for doc in docs:
             self._process_doc(doc)
 
-    def _process_doc(self, doc: Document):
+    def _process_doc(self, doc: Document[AnnotationType]):
         all_input_anns = []
         for input_key in self.pipeline.input_keys:
             labels = self.labels_by_input_key[input_key]
-            input_anns = [
-                ann for label in labels for ann in doc.get_annotations_by_label(label)
-            ]
+            input_anns = [ann for label in labels for ann in doc.anns.get(label=label)]
             all_input_anns.append(input_anns)
         all_output_anns = self.pipeline.run(*all_input_anns)
 
@@ -99,10 +94,10 @@ class DocPipeline(DocOperation):
         elif not isinstance(all_output_anns, tuple):
             all_output_anns = (all_output_anns,)
 
-        # operations must return annotations
-        all_output_anns = cast(Tuple[List[Annotation], ...], all_output_anns)
+        # operations must return annotations of expected modality type
+        all_output_anns = cast(Tuple[List[AnnotationType], ...], all_output_anns)
 
         # add output anns to doc
         for output_anns in all_output_anns:
             for output_ann in output_anns:
-                doc.add_annotation(output_ann)
+                doc.anns.add(output_ann)

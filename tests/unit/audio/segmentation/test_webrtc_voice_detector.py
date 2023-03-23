@@ -15,7 +15,7 @@ from medkit.audio.segmentation.webrtc_voice_detector import (  # noqa: E402
 )
 from tests.audio_utils import generate_silence, signals_are_equal  # noqa: E402
 
-_PATH_TO_VOICE_FILE = Path(__file__).parent / ".." / "resources" / "voice.ogg"
+_PATH_TO_VOICE_FILE = Path("tests/data/audio/voice.ogg")
 _OUTPUT_LABEL = "voice"
 _SPAN_OFFSET = 10.0
 _DETECTION_MARGIN = 0.5
@@ -131,9 +131,9 @@ def test_prov():
     voice_segs = detector.run(segs)
     assert len(voice_segs) == 4
 
-    # data item id and operation id are correct
+    # data item uid and operation uid are correct
     voice_seg_1 = voice_segs[0]
-    prov_1 = prov_tracer.get_prov(voice_seg_1.id)
+    prov_1 = prov_tracer.get_prov(voice_seg_1.uid)
     assert prov_1.data_item == voice_seg_1
     assert prov_1.op_desc == detector.description
 
@@ -141,14 +141,14 @@ def test_prov():
     assert prov_1.source_data_items == [seg_1]
 
     voice_seg_2 = voice_segs[1]
-    prov_2 = prov_tracer.get_prov(voice_seg_2.id)
+    prov_2 = prov_tracer.get_prov(voice_seg_2.uid)
     assert prov_2.source_data_items == [seg_1]
 
     # 3d and 4th voices segments have 2d input segment as source
     voice_seg_3 = voice_segs[2]
-    prov_3 = prov_tracer.get_prov(voice_seg_3.id)
+    prov_3 = prov_tracer.get_prov(voice_seg_3.uid)
     assert prov_3.source_data_items == [seg_2]
 
     voice_seg_4 = voice_segs[3]
-    prov_4 = prov_tracer.get_prov(voice_seg_4.id)
+    prov_4 = prov_tracer.get_prov(voice_seg_4.uid)
     assert prov_4.source_data_items == [seg_2]

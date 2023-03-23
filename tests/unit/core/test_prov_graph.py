@@ -237,7 +237,7 @@ def test_multiple_subgraphs_for_same_op():
 def test_flatten():
     """
     Flatten a graph containing subgraphs, without repeating nodes with same operation
-    id as subgraph
+    uid as subgraph
     """
     graph = _gen_simple_graph()
     # flattening a graph with no subgraphs should return identical graph
@@ -252,7 +252,7 @@ def test_flatten():
     # flattened graph has no subgraphs
     assert not flattened_graph_1.get_sub_graphs()
     # flattened graph should have all nodes in main graph and sub graph,
-    # excepted the node with the same operation id as the sub graph
+    # excepted the node with the same operation uid as the sub graph
     # (the node was "expanded" in the sub graph)
     expected_nodes_1 = [
         n for n in graph.get_nodes() if n is not node_1
@@ -325,11 +325,11 @@ def test_sanity_check():
     )
     graph_2 = ProvGraph([node_3])
     with pytest.raises(
-        Exception, match="Node with id .* has source ids but no operation"
+        Exception, match="Node with identifier .* has source ids but no operation"
     ):
         graph_2.check_sanity()
 
-    # node with source id not corresponding to any node
+    # node with source uid not corresponding to any node
     node_4 = ProvNode(
         data_item_id=generate_id(),
         operation_id=generate_id(),
@@ -338,11 +338,14 @@ def test_sanity_check():
     )
     graph_3 = ProvGraph([node_4])
     with pytest.raises(
-        Exception, match="Source id .* in node with id .* has no corresponding node"
+        Exception,
+        match=(
+            "Source identifier .* in node with identifier .* has no corresponding node"
+        ),
     ):
         graph_3.check_sanity()
 
-    # node with derived id not corresponding to any node
+    # node with derived uid not corresponding to any node
     node_4 = ProvNode(
         data_item_id=generate_id(),
         operation_id=None,
@@ -351,13 +354,16 @@ def test_sanity_check():
     )
     graph_4 = ProvGraph([node_4])
     with pytest.raises(
-        Exception, match="Derived id .* in node with id .* has no corresponding node"
+        Exception,
+        match=(
+            "Derived identifier .* in node with identifier .* has no corresponding node"
+        ),
     ):
         graph_4.check_sanity()
 
     source_id = generate_id()
     derived_id = generate_id()
-    # derived node with source id but source node does not have derived id
+    # derived node with source uid but source node does not have derived uid
     node_5 = ProvNode(
         data_item_id=source_id,
         operation_id=None,
@@ -374,13 +380,13 @@ def test_sanity_check():
     with pytest.raises(
         Exception,
         match=(
-            "Node with id .* has source item with id .* but reciprocate derivation link"
-            " does not exists"
+            "Node with identifier .* has source item with identifier .* but reciprocate"
+            " derivation link does not exists"
         ),
     ):
         graph_5.check_sanity()
 
-    # source node with derived id but derived node does not have source id
+    # source node with derived uid but derived node does not have source uid
     node_5 = ProvNode(
         data_item_id=source_id,
         operation_id=None,
@@ -397,8 +403,8 @@ def test_sanity_check():
     with pytest.raises(
         Exception,
         match=(
-            "Node with id .* has derived item with id .* but reciprocate source link"
-            " does not exists"
+            "Node with identifier .* has derived item with identifier .* but"
+            " reciprocate source link does not exists"
         ),
     ):
         graph_5.check_sanity()
@@ -406,5 +412,7 @@ def test_sanity_check():
     # valid graph with invalid sub_graph
     sub_graphs_by_op_id = {generate_id(): graph_3}
     graph_6 = ProvGraph([node_1, node_2], sub_graphs_by_op_id)
-    with pytest.raises(Exception, match="Source id .* has no corresponding node"):
+    with pytest.raises(
+        Exception, match="Source identifier .* has no corresponding node"
+    ):
         graph_6.check_sanity()

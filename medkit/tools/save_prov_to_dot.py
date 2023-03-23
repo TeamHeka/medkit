@@ -97,7 +97,7 @@ class _DotWriter:
             if (
                 not write_sub_prov
                 or prov.op_desc is None
-                or not tracer.has_sub_prov_tracer(prov.op_desc.id)
+                or not tracer.has_sub_prov_tracer(prov.op_desc.uid)
             ):
                 self._write_prov(prov)
 
@@ -112,7 +112,7 @@ class _DotWriter:
         data_item = prov.data_item
         data_item_label = self._format_data_item(data_item)
         data_item_label = self._escape_quotes(data_item_label)
-        self._fp.write(f'"{data_item.id}" [label="{data_item_label}"];\n')
+        self._fp.write(f'"{data_item.uid}" [label="{data_item_label}"];\n')
 
         if prov.op_desc is not None:
             op_label = (
@@ -125,16 +125,16 @@ class _DotWriter:
             op_label = "Unknown"
         for source_data_item in prov.source_data_items:
             self._fp.write(
-                f'"{source_data_item.id}" -> "{data_item.id}" [label="{op_label}"];\n'
+                f'"{source_data_item.uid}" -> "{data_item.uid}" [label="{op_label}"];\n'
             )
         self._fp.write("\n\n")
 
         if self._show_attr_links and isinstance(
             data_item, IdentifiableDataItemWithAttrs
         ):
-            for attr in data_item.get_attrs():
+            for attr in data_item.attrs:
                 self._fp.write(
-                    f'"{data_item.id}" -> "{attr.id}" [style=dashed, color=grey,'
+                    f'"{data_item.uid}" -> "{attr.uid}" [style=dashed, color=grey,'
                     ' label="attr", fontcolor=grey];\n'
                 )
 

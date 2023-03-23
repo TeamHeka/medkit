@@ -5,7 +5,7 @@ jupytext:
     extension: .md
     format_name: myst
     format_version: 0.13
-    jupytext_version: 1.13.8
+    jupytext_version: 1.14.4
 kernelspec:
   display_name: Python 3 (ipykernel)
   language: python
@@ -79,7 +79,6 @@ for entity in entities:
 Let's retrieve and inspect the provenance info concerning this entity:
 
 ```{code-cell} ipython3
-
 def print_prov(prov):
     # data item
     print(f"data_item={prov.data_item.text!r}")
@@ -92,7 +91,7 @@ def print_prov(prov):
     print(f"derived_items={[d.text for d in prov.derived_data_items]}", end="\n\n")
 
 entity = entities[0]
-prov = prov_tracer.get_prov(entity.id)
+prov = prov_tracer.get_prov(entity.uid)
 print_prov(prov)
 ```
 
@@ -104,7 +103,7 @@ a specific object. It has the following attributes:
    instance, it could also be an `Attribute`;
  - `op_desc` holds an {class}`~medkit.core.OperationDescription` object, that
    describes the operation that created the data item, in our case the regexp
-   matcher. The `OperationDescription` will typically contain the class name of
+   matcher. The `OperationDescription` will contain the name of
    the operation and the init parameters that were used;
  - `source_data_items` contains the objects that were used by the operation to
    create the new data item. Here there is only one source, the raw text
@@ -134,7 +133,6 @@ Our provenance info has a graph structure, each `Prov` object representing a
 node. For visualization, medkit provides a
 {func}`~medkit.tools.save_prov_to_dot` helper function that generates
 [graphviz](https://graphviz.org/)-compatible `.dot` files:
-
 
 ```{code-cell} ipython3
 ---
@@ -168,7 +166,6 @@ Let's move on to a slightly more complex example: before using the
 `RegexpMatcher` matcher, we will split our document into sentences with a
 `SentenceTokenizer`. We will also wrap our `SentenceTokenizer` and our
 `RegexpMatcher` in a pipeline:
-
 
 ```{code-cell} ipython3
 from medkit.text.segmentation import SentenceTokenizer
@@ -226,7 +223,7 @@ However, if we are interested in the details about what happened inside the
 that can be retrieved with `get_sub_prov_tracer()`:
 
 ```{code-cell} ipython3
-pipeline_prov_tracer = prov_tracer.get_sub_prov_tracer(pipeline.id)
+pipeline_prov_tracer = prov_tracer.get_sub_prov_tracer(pipeline.uid)
 
 for prov in pipeline_prov_tracer.get_provs():
     print_prov(prov)
@@ -300,20 +297,34 @@ regexp_rules = [
 ]
 regexp_matcher = RegexpMatcher(rules=regexp_rules, attrs_to_copy=["is_negated"])
 
-# sub pipeline handling segmentation and negation detection
+# context sub pipeline handling segmentation and negation detection
 sub_pipeline_steps = [
     PipelineStep(sent_tokenizer, input_keys=["full_text"], output_keys=["sentences"]),
     PipelineStep(neg_detector, input_keys=["sentences"], output_keys=[]),  # no output
 ]
-sub_pipeline = Pipeline(sub_pipeline_steps, input_keys=["full_text"], output_keys=["sentences"])
+sub_pipeline = Pipeline(
+    sub_pipeline_steps,
+    name="ContextPipeline",
+    input_keys=["full_text"],
+    output_keys=["sentences"],
+)
 
 # main pipeline
 pipeline_steps = [
     PipelineStep(sub_pipeline, input_keys=["full_text"], output_keys=["sentences"]),
     PipelineStep(regexp_matcher, input_keys=["sentences"], output_keys=["entities"]),
 ]
-pipeline = Pipeline(pipeline_steps, input_keys=["full_text"], output_keys=["entities"])
+pipeline = Pipeline(
+    pipeline_steps,
+    name="MainPipeline",
+    input_keys=["full_text"],
+    output_keys=["entities"],
+)
 ```
+
+Note that since we have 2 pipelines, we pass an optional `name` parameter to
+each of them that will be used in the operation description and will help us to
+distinguish them.
 
 Running the pipeline gives us 2 entities with negation attributes:
 
@@ -323,7 +334,7 @@ pipeline.set_prov_tracer(prov_tracer)
 entities = pipeline.run([doc.raw_segment])
 
 for entity in entities:
-    is_negated = entity.get_attrs_by_label("is_negated")[0].value
+    is_negated = entity.attrs.get(label="is_negated")[0].value
     print(f"text={entity.text!r}, label={entity.label}, is_negated={is_negated}")
 ```
 
@@ -361,17 +372,14 @@ display_dot(dot_file)
 ```
 
 We now see the details of the operations and data items handled in our main
-pipeline: a sub-pipeline[^sub-pipeline] created sentence segments and negation
+pipeline: a sub-pipeline created sentence segments and negation
 attributes, then the `RegexpMatcher` created entities, using the sentences
 segments. The negation attributes were attached to both the sentences and the
 entities derived from the sentences.
 
-[^sub-pipeline]: The sub-pipeline is displayed with the _Pipeline_ label by
-`save_prov_to_dot()` because the class name is used and there is currently no
-way to give operations a more descriptive name.
 
-To have more details about the processing inside the sub-pipeline, we have to go
-one step deeper:
+To have more details about the processing inside the context sub-pipeline, we
+have to go one step deeper:
 
 ```{code-cell} ipython3
 ---

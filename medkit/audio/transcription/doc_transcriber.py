@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["DocTranscriber", "AudioTranscriber", "AudioTranscriberDescription"]
+__all__ = ["DocTranscriber", "TranscriberFunction", "TranscriberFunctionDescription"]
 
 import dataclasses
 from typing import Any, Dict, List, Optional
@@ -12,14 +12,14 @@ from medkit.core.audio import AudioDocument, AudioBuffer, Segment as AudioSegmen
 from medkit.core.text import Segment as TextSegment, Span as TextSpan
 
 
-class AudioTranscriber(Protocol):
+class TranscriberFunction(Protocol):
     """Protocol for components in charge of the actual speech-to-text transcription
     to use with :class:`~.DocTranscriber`"""
 
     """Description of the transcriber"""
-    description: AudioTranscriberDescription
+    description: TranscriberFunctionDescription
 
-    def run(self, audios: List[AudioBuffer]) -> List[str]:
+    def transcribe(self, audios: List[AudioBuffer]) -> List[str]:
         """Convert audio buffers into strings by performing speech-to-text.
 
         Parameters
@@ -36,14 +36,14 @@ class AudioTranscriber(Protocol):
 
 
 @dataclasses.dataclass
-class AudioTranscriberDescription:
-    """Description of a specific instance of an audio transcriber (similarly to
+class TranscriberFunctionDescription:
+    """Description of a specific instance of a transcriber function (similarly to
     :class:`~medkit.core.operation_desc.OperationDescription`).
 
     Parameters
     ----------
     name:
-        The name of the transcriber (typically the class name).
+        The name of the transcriber function (typically the class name).
     config:
         The specific configuration of the instance.
     """
@@ -66,7 +66,7 @@ class DocTranscriber(Operation):
     Generated text documents are instances of
     :class:`~medkit.audio.transcription.transcribed_document.TranscribedDocument`
     (subclass of :class:`~medkit.core.text.document.TextDocument`) with
-    additional info such as the id of the original audio document and a mapping
+    additional info such as the identifier of the original audio document and a mapping
     between audio spans and text spans.
 
     Methods :func: `create_text_segment()` and :func:
@@ -74,13 +74,7 @@ class DocTranscriber(Operation):
     the text segments are created and how they are concatenated to form the full
     text.
 
-    If an audio document was initiated with a specific
-    :class:`~medkit.core.Store` instance explicitly provided, then the
-    corresponding text document will use the same instance. Otherwise, if the
-    audio document uses its own private store, then the text document will also
-    have its own private store.
-
-    The actual transcription task is delegated to an :class:`~.AudioTranscriber`
+    The actual transcription task is delegated to a :class:`~.TranscriberFunction`
     that must be provided.
     """
 
@@ -88,9 +82,9 @@ class DocTranscriber(Operation):
         self,
         input_label: str,
         output_label: str,
-        transcriber: AudioTranscriber,
+        transcriber_func: TranscriberFunction,
         attrs_to_copy: Optional[List[str]] = None,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
@@ -99,13 +93,13 @@ class DocTranscriber(Operation):
             Label of audio segments that should be transcribed.
         output_label:
             Label of generated text segments.
-        transcriber:
-            Transcription component in charge of actually transforming each audio signal
-            into text.
+        transcriber_func:
+            Transcription component in charge of actually transforming each
+            audio signal into text.
         attrs_to_copy:
             Labels of attributes that should be copied from the original audio segments
             to the transcribed text segments.
-        proc_id:
+        uid:
             Identifier of the transcriber.
         """
 
@@ -119,7 +113,7 @@ class DocTranscriber(Operation):
 
         self.input_label = input_label
         self.output_label = output_label
-        self.transcriber = transcriber
+        self.transcriber_func = transcriber_func
         self.attrs_to_copy = attrs_to_copy
 
     def run(self, audio_docs: List[AudioDocument]) -> List[TranscribedDocument]:
@@ -139,10 +133,10 @@ class DocTranscriber(Operation):
 
     def _transcribe_doc(self, audio_doc: AudioDocument) -> TranscribedDocument:
         # get all audio segments with specified label
-        audio_segs = audio_doc.get_annotations_by_label(self.input_label)
+        audio_segs = audio_doc.anns.get(label=self.input_label)
         # transcribe them to text
         audios = [seg.audio for seg in audio_segs]
-        texts = self.transcriber.run(audios)
+        texts = self.transcriber_func.transcribe(audios)
 
         # rebuild full text and segments from transcribed texts
         full_text = ""
@@ -164,8 +158,14 @@ class DocTranscriber(Operation):
 
             # copy attrs from audio segment
             for label in self.attrs_to_copy:
-                for attr in audio_seg.get_attrs_by_label(label):
-                    text_seg.add_attr(attr)
+                for attr in audio_seg.attrs.get(label=label):
+                    copied_attr = attr.copy()
+                    text_seg.attrs.add(copied_attr)
+                    # handle provenance
+                    if self._prov_tracer is not None:
+                        self._prov_tracer.add_prov(
+                            copied_attr, self.description, [attr]
+                        )
 
             text_segs.append(text_seg)
 
@@ -176,16 +176,13 @@ class DocTranscriber(Operation):
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(text_seg, self.description, [audio_seg])
 
-        # use shared store for new text doc if audio doc had shared store
-        store = audio_doc.store if audio_doc.has_shared_store else None
         text_doc = TranscribedDocument(
             text=full_text,
-            audio_doc_id=audio_doc.id,
+            audio_doc_id=audio_doc.uid,
             text_spans_to_audio_spans=text_spans_to_audio_spans,
-            store=store,
         )
         for text_seg in text_segs:
-            text_doc.add_annotation(text_seg)
+            text_doc.anns.add(text_seg)
         # TODO should this be handled by provenance?
         # if self._prov_tracer is not None:
         #     self._prov_tracer.add_prov(

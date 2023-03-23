@@ -1,7 +1,8 @@
 import logging
 
 from medkit.core import Attribute, ProvTracer
-from medkit.core.text import Segment, Span
+from medkit.core.text import Segment, Span, EntityNormAttribute
+from medkit.text.ner import UMLSNormAttribute
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,
@@ -100,7 +101,10 @@ def test_normalization():
     rule = RegexpMatcherRule(
         label="Diabetes",
         regexp="diabetes",
-        normalizations=[RegexpMatcherNormalization("umls", "2020AB", "C0011849")],
+        normalizations=[
+            RegexpMatcherNormalization("icd", "10", "E10-E14"),
+            RegexpMatcherNormalization("umls", "2020AB", "C0011849"),
+        ],
     )
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
@@ -108,11 +112,20 @@ def test_normalization():
     entity = entities[0]
     assert entity.label == "Diabetes"
 
-    attrs = entity.get_attrs_by_label("umls")
-    assert len(attrs) == 1
-    attr = attrs[0]
-    assert attr.label == "umls"
-    assert attr.value == "C0011849"
+    norm_attrs = entity.attrs.get_norms()
+    assert len(norm_attrs) == 2
+    norm_attr_1 = norm_attrs[0]
+    assert type(norm_attr_1) is EntityNormAttribute
+    assert norm_attr_1.kb_name == "icd"
+    assert norm_attr_1.kb_version == "10"
+    assert norm_attr_1.kb_id == "E10-E14"
+    assert norm_attr_1.term is None
+
+    norm_attr_2 = norm_attrs[1]
+    assert type(norm_attr_2) is UMLSNormAttribute
+    assert norm_attr_2.umls_version == "2020AB"
+    assert norm_attr_2.cui == "C0011849"
+    assert norm_attr_2.term is None
 
 
 def test_exclusion_regex():
@@ -201,9 +214,10 @@ def test_unicode_sensitive_on():
 def test_attrs_to_copy():
     sentence = _get_sentence_segment()
     # copied attribute
-    sentence.add_attr(Attribute(label="negation", value=True))
+    neg_attr = Attribute(label="negation", value=True)
+    sentence.attrs.add(neg_attr)
     # uncopied attribute
-    sentence.add_attr(Attribute(label="hypothesis", value=True))
+    sentence.attrs.add(Attribute(label="hypothesis", value=True))
 
     rule = RegexpMatcherRule(label="Diabetes", regexp="diabetes")
 
@@ -214,9 +228,29 @@ def test_attrs_to_copy():
     entity = matcher.run([sentence])[0]
 
     # only negation attribute was copied
-    neg_attrs = entity.get_attrs_by_label("negation")
-    assert len(neg_attrs) == 1 and neg_attrs[0].value is True
-    assert len(entity.get_attrs_by_label("hypothesis")) == 0
+    neg_attrs = entity.attrs.get(label="negation")
+    assert len(neg_attrs) == 1
+    assert len(entity.attrs.get(label="hypothesis")) == 0
+
+    # copied attribute has same value but new id
+    copied_neg_attr = neg_attrs[0]
+    assert copied_neg_attr.value == neg_attr.value
+    assert copied_neg_attr.uid != neg_attr.uid
+
+
+def test_match_at_start_of_segment():
+    """Make sure we are able to match entities starting at beginning of a segment"""
+
+    text = "Diabetes and asthma"
+    sentence = Segment(label="sentence", text=text, spans=[Span(0, len(text))])
+
+    rule = RegexpMatcherRule(label="Diabetes", regexp="diabetes")
+    matcher = RegexpMatcher(rules=[rule])
+    entities = matcher.run([sentence])
+
+    assert len(entities) == 1
+    entity = entities[0]
+    assert entity.label == "Diabetes"
 
 
 def test_default_rules():
@@ -241,13 +275,13 @@ def test_prov():
     entities = matcher.run([sentence])
 
     entity = entities[0]
-    entity_prov = prov_tracer.get_prov(entity.id)
+    entity_prov = prov_tracer.get_prov(entity.uid)
     assert entity_prov.data_item == entity
     assert entity_prov.op_desc == matcher.description
     assert entity_prov.source_data_items == [sentence]
 
-    attr = entity.get_attrs_by_label("umls")[0]
-    attr_prov = prov_tracer.get_prov(attr.id)
+    attr = entity.attrs.get_norms()[0]
+    attr_prov = prov_tracer.get_prov(attr.uid)
     assert attr_prov.data_item == attr
     assert attr_prov.op_desc == matcher.description
     assert attr_prov.source_data_items == [sentence]

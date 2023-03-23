@@ -18,7 +18,8 @@ class SpacyPipeline(Operation):
         spacy_entities: Optional[List[str]] = None,
         spacy_span_groups: Optional[List[str]] = None,
         spacy_attrs: Optional[List[str]] = None,
-        op_id: Optional[str] = None,
+        name: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """Initialize the segment annotator
 
@@ -36,7 +37,9 @@ class SpacyPipeline(Operation):
             Name of span extensions to convert into medkit attributes.
             If `None` (default) all non-None extensions will be added for each annotation with
             a medkit ID.
-        op_id:
+        name:
+            Name describing the pipeline (defaults to the class name).
+        uid:
             Identifier of the pipeline
         """
         # Pass all arguments to super (remove self)
@@ -108,9 +111,9 @@ class SpacyPipeline(Operation):
                 )
 
             # add attributes
-            if new_segment.id in attrs_by_ann_id.keys():
-                for attr in attrs_by_ann_id[new_segment.id]:
-                    new_segment.add_attr(attr)
+            if new_segment.uid in attrs_by_ann_id.keys():
+                for attr in attrs_by_ann_id[new_segment.uid]:
+                    new_segment.attrs.add(attr)
                     if self._prov_tracer is not None:
                         self._prov_tracer.add_prov(
                             attr,

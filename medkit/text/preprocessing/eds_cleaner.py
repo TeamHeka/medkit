@@ -49,7 +49,7 @@ class EDSCleaner(Operation):
         keep_endlines: bool = DefaultConfig.keep_endlines,
         handle_parentheses_eds: bool = DefaultConfig.handle_parentheses_eds,
         handle_points_eds: bool = DefaultConfig.handle_points_eds,
-        op_id: str = None,
+        uid: str = None,
     ):
         """
         Instantiate the endlines handler.
@@ -70,7 +70,7 @@ class EDSCleaner(Operation):
             Modify points near to predefined keywords for french documents
             If True (default), modify the points near to keywords
             If False, the points near to keywords is not modified
-        op_id
+        uid
             Identifier of the pre-processing module
         """
         # Pass all arguments to super (remove self)
@@ -118,10 +118,11 @@ class EDSCleaner(Operation):
         text, spans = utils.replace_point_in_numbers(text, spans)
 
         # modify newline character
-        text, spans = utils.clean_multiple_whitespaces_in_sentence(text, spans)
         text, spans = utils.clean_newline_character(
             text=text, spans=spans, keep_endlines=self.keep_endlines
         )
+        # modify all whitespaces characters
+        text, spans = utils.clean_multiple_whitespaces_in_sentence(text, spans)
 
         # modify parentheses using predefined rules for french documents
         if self.handle_parentheses_eds:

@@ -3,6 +3,8 @@
 Here is a tutorial for developing your own operation module.
 For more information, you can refer to [API documentation](api:core:operations).
 
+If you want to create a custom text operation from a user-defined function, you can refer to this [example](../examples/custom_text_operation).
+
 ## 1. Creating your class
 
 We have defined several abstract classes you can use as parent class.
@@ -11,7 +13,7 @@ You can find several examples of implemented modules in [medkit.text](../api/tex
 For all operations inheriting from `Operation` abstract class, these 4 lines
 shall be added in `__init__` method:
 ```
-def __init__(self, ..., op_id=None):
+def __init__(self, ..., uid=None):
     ...
     # Pass all arguments to super (remove self)
     init_args = locals()
@@ -27,7 +29,7 @@ class MyTokenizer(SegmentationOperation):
         self,
         output_label,
         ...
-        op_id = None,
+        uid = None,
     ):
         # Pass all arguments to super (remove self)
         init_args = locals()

@@ -10,6 +10,8 @@ logo: img/medkit_logo.png
 # See https://jupyterbook.org/content/execute.html
 execute:
   execute_notebooks: auto
+  stderr_output: error
+  raise_on_error: true
 
 # Define the name of the latex output file for PDF builds
 latex:
@@ -18,7 +20,7 @@ latex:
 
 # Information about where the book exists on the web
 repository:
-  url: https://gitlab.inria.fr/heka/medkit  # Online location of your book
+  url: https://github.com/TeamHeka/medkit  # Online location of your book
   path_to_book: docs  # Optional path to your book, relative to the repository root
   branch: main  # Which branch of the repository should be used when creating links (optional)
 
@@ -28,6 +30,7 @@ html:
   use_issues_button: true
   use_repository_button: true
   extra_navbar: ""
+  extra_footer: 'Contact: <a href="mailto:medkit-maintainers@inria.fr">medkit-maintainers@inria.fr</a>'
 
 # Add sphinx configuration options
 sphinx:
@@ -38,20 +41,33 @@ sphinx:
     autodoc_typehints: 'both'
     autodoc_typehints_description_target: 'documented'
     autodoc_typehints_format: 'short'
+    autodoc_inherit_docstrings: False
     autodoc_member_order: 'bysource'
     autodoc_mock_imports:
       - resampy
       - torch
+      - torchaudio
       - transformers
       - quickumls
       - pandas
       - PyRuSH
       - spacy
-    autodoc_member_order: 'bysource'
-
+      - speechbrain
+      - pyannote.audio
+    autosummary_ignore_module_all: False
+    execution_show_tb: True
+    # napoleon extension config
+    napoleon_use_ivar: True
+    napoleon_use_param: False
+    napoleon_use_rtype: False
+    templates_path: ["_templates"]
+    suppress_warnings: ["etoc.toctree", "myst.domains"]
+    exclude_patterns: ["_build", "_templates"]
   extra_extensions:
   - 'sphinx.ext.autodoc'
+  - 'sphinx.ext.autosummary'
   - 'sphinx.ext.napoleon'
   - 'sphinx.ext.viewcode'
+  - 'sphinx_toolbox.more_autosummary'
   - 'sphinx_toolbox.more_autodoc.typevars'
   - 'sphinxcontrib.mermaid'

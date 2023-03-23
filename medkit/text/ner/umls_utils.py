@@ -14,7 +14,7 @@ import unidecode
 
 @dataclasses.dataclass
 class UMLSEntry:
-    """Entry in MRCONSO.RRF file of a UMLS dictionnary
+    """Entry in MRCONSO.RRF file of a UMLS dictionary
 
     Attributes
     ----------
@@ -39,8 +39,8 @@ def load_umls(
 ) -> Iterator[UMLSEntry]:
     """Load all terms and associated CUIs found in a UMLS MRCONSO.RRF file
 
-    Params
-    ------
+    Parameters
+    ----------
     mrconso_file:
         Path to the UMLS MRCONSO.RRF file
     sources:
@@ -156,6 +156,8 @@ def guess_umls_version(path: Union[str, Path]) -> str:
         "META", "NET" nor "LEX", nor a subfolder of these folders
     """
     path = Path(path).resolve()
+    if path.is_file():
+        path = path.parent
     while any(dir_name in path.parts for dir_name in ("META", "NET", "LEX")):
         path = path.parent
     return path.name

@@ -93,7 +93,7 @@ class FamilyDetector(ContextOperation):
         self,
         output_label: str,
         rules: Optional[List[FamilyDetectorRule]] = None,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
@@ -103,7 +103,7 @@ class FamilyDetector(ContextOperation):
         rules:
             The set of rules to use when detecting family references. If none provided,
             the rules in "family_detector_default_rules.yml" will be used
-        proc_id:
+        uid:
             Identifier of the detector
         """
         # Pass all arguments to super (remove self)
@@ -156,7 +156,7 @@ class FamilyDetector(ContextOperation):
         for segment in segments:
             family_attr = self._detect_family_ref_in_segment(segment)
             if family_attr is not None:
-                segment.add_attr(family_attr)
+                segment.attrs.add(family_attr)
 
     def _detect_family_ref_in_segment(self, segment: Segment) -> Optional[Attribute]:
         rule_id = self._find_matching_rule(segment.text)

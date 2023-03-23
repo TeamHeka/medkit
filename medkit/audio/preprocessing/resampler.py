@@ -15,7 +15,7 @@ class Resampler(PreprocessingOperation):
         output_label: str,
         sample_rate: int,
         fast: bool = False,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
@@ -27,7 +27,7 @@ class Resampler(PreprocessingOperation):
         fast:
             If `True`, prefer speed over quality and use resampy's "kaiser_fast" filter
             instead of "kaiser_best".
-        op_id:
+        uid:
             Identifier of the resampler.
         """
 

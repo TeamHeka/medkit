@@ -3,7 +3,7 @@ import spacy
 from spacy.tokens import Doc, Span as SpacySpan
 
 from medkit.core import Attribute
-from medkit.core.text import Span, Entity, Segment, TextDocument
+from medkit.core.text import Span, Entity, Segment, TextDocument, EntityNormAttribute
 from medkit.text.spacy import spacy_utils
 
 
@@ -48,7 +48,7 @@ def _get_doc():
     )
 
     for ann in [ent_1, ent_2, ent_3, seg_1, seg_2]:
-        medkit_doc.add_annotation(ann)
+        medkit_doc.anns.add(ann)
 
     return medkit_doc
 
@@ -56,7 +56,7 @@ def _get_doc():
 def _assert_spacy_doc(doc, raw_annotation):
     assert isinstance(doc, Doc)
     assert Doc.has_extension("medkit_id")
-    assert doc._.get("medkit_id") == raw_annotation.id
+    assert doc._.get("medkit_id") == raw_annotation.uid
 
 
 # test medkit doc to spacy doc
@@ -106,16 +106,16 @@ def test_medkit_to_spacy_doc_selected_ents_list(nlp_spacy):
     # ents were transfer, 2 for medication, 1 for disease
     assert len(spacy_doc.ents) == 3
 
-    ents = medkit_doc.get_entities()
+    ents = medkit_doc.anns.get_entities()
     # guarantee the same order to compare
     doc_ents = sorted(
         spacy_doc.ents, key=lambda ent_spacy: ent_spacy._.get("medkit_id")
     )
-    ents = sorted(ents, key=lambda sp: sp.id)
+    ents = sorted(ents, key=lambda sp: sp.uid)
 
-    # each entity created has the same id and label as its entity of origin
+    # each entity created has the same uid and label as its entity of origin
     for ent_spacy, ent_medkit in zip(doc_ents, ents):
-        assert ent_spacy._.get("medkit_id") == ent_medkit.id
+        assert ent_spacy._.get("medkit_id") == ent_medkit.uid
         assert ent_spacy.label_ == ent_medkit.label
 
     # check disease spacy span
@@ -178,7 +178,7 @@ def test_medkit_to_spacy_doc_all_anns_family_attr(nlp_spacy):
 def test_medkit_segments_to_spacy_docs(nlp_spacy):
     # test medkit segments to spacy doc
     medkit_doc = _get_doc()
-    segments = medkit_doc.get_annotations_by_label("PEOPLE")
+    segments = medkit_doc.anns.get(label="PEOPLE")
 
     for ann_source in segments:
         doc = spacy_utils.build_spacy_doc_from_medkit_segment(
@@ -186,7 +186,7 @@ def test_medkit_segments_to_spacy_docs(nlp_spacy):
         )
         assert isinstance(doc, Doc)
         assert Doc.has_extension("medkit_id")
-        assert doc._.get("medkit_id") == ann_source.id
+        assert doc._.get("medkit_id") == ann_source.uid
         assert doc.text == ann_source.text
 
     # testing when 'include_medkit_info' is False
@@ -197,3 +197,20 @@ def test_medkit_segments_to_spacy_docs(nlp_spacy):
         assert isinstance(doc, Doc)
         assert doc._.get("medkit_id") is None
         assert doc.text == ann_source.text
+
+
+def test_normalization_attr(nlp_spacy):
+    """Conversion of normalization objects to strings"""
+
+    text = "Le patient souffre d'asthme"
+    doc = TextDocument(text=text)
+    entity = Entity(label="maladie", text="asthme", spans=[Span(21, 27)])
+    entity.attrs.add(
+        EntityNormAttribute(kb_name="umls", kb_id="C0004096", kb_version="2021AB")
+    )
+    doc.anns.add(entity)
+
+    spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(
+        nlp=nlp_spacy, medkit_doc=doc
+    )
+    assert spacy_doc.ents[0]._.get("NORMALIZATION") == "umls:C0004096"

@@ -14,7 +14,7 @@ Thumbs.db
 .venv/
 
 # Poetry
-poetry.lock
+# poetry.lock
 .cache/
 
 # Byte-compiled / optimized / DLL files
@@ -22,8 +22,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Large test files
+tests/large_data/*
+!tests/large_data/README.md
+
 #  Sphinx documentation
 docs/_build/
+docs/api-gen/_autosummary/
 
 # PyBuilder
 target/

@@ -9,6 +9,7 @@ from transformers import TokenClassificationPipeline
 
 from medkit.core import Attribute
 from medkit.core.text import NEROperation, Segment, span_utils, Entity
+from medkit.tools import hf_utils
 
 
 class HFEntityMatcher(NEROperation):
@@ -28,7 +29,9 @@ class HFEntityMatcher(NEROperation):
         attrs_to_copy: Optional[List[str]] = None,
         device: int = -1,
         batch_size: int = 1,
-        op_id: Optional[str] = None,
+        cache_dir: Optional[Union[str, Path]] = None,
+        name: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
@@ -49,7 +52,12 @@ class HFEntityMatcher(NEROperation):
             (-1 for "cpu" and device number for gpu, for instance 0 for "cuda:0").
         batch_size:
             Number of segments in batches processed by the transformer model.
-        op_id:
+        cache_dir:
+            Directory where to store downloaded models. If not set, the default
+            HuggingFace cache dir is used.
+        name:
+            Name describing the matcher (defaults to the class name).
+        uid:
             Identifier of the matcher.
         """
         # Pass all arguments to super (remove self)
@@ -64,8 +72,10 @@ class HFEntityMatcher(NEROperation):
         self.attrs_to_copy = attrs_to_copy
 
         if isinstance(self.model, str):
-            task = transformers.pipelines.get_task(self.model)
-            if task != "token-classification":
+            valid_model = hf_utils.check_model_for_task_HF(
+                self.model, "token-classification"
+            )
+            if not valid_model:
                 raise ValueError(
                     f"Model {self.model} is not associated to a"
                     " token-classification/ner task and cannot be used with"
@@ -73,12 +83,13 @@ class HFEntityMatcher(NEROperation):
                 )
 
         self._pipeline = transformers.pipeline(
-            task=task,
+            task="token-classification",
             model=self.model,
             aggregation_strategy=aggregation_strategy,
             pipeline_class=TokenClassificationPipeline,
             device=device,
             batch_size=batch_size,
+            model_kwargs={"cache_dir": cache_dir},
         )
 
     def run(self, segments: List[Segment]) -> List[Entity]:
@@ -118,15 +129,21 @@ class HFEntityMatcher(NEROperation):
             )
 
             for label in self.attrs_to_copy:
-                for attr in segment.get_attrs_by_label(label):
-                    entity.add_attr(attr)
+                for attr in segment.attrs.get(label=label):
+                    copied_attr = attr.copy()
+                    entity.attrs.add(copied_attr)
+                    # handle provenance
+                    if self._prov_tracer is not None:
+                        self._prov_tracer.add_prov(
+                            copied_attr, self.description, [attr]
+                        )
 
             score_attr = Attribute(
                 label="score",
                 value=float(match["score"]),
                 metadata=dict(model=self.model),
             )
-            entity.add_attr(score_attr)
+            entity.attrs.add(score_attr)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(

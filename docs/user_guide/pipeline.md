@@ -206,7 +206,7 @@ Let's run our pipeline and make sure everything is ok:
 ```{code-cell} ipython3
 entities = pipeline.run([doc.raw_segment])
 for entity in entities:
-    neg_attr = entity.get_attrs_by_label("is_negated")[0]
+    neg_attr = entity.attrs.get(label="is_negated")[0]
     print(f"text='{entity.text}', label={entity.label}, is_negated={neg_attr.value}")
 ```
 
@@ -311,7 +311,7 @@ docs = load_docs()
 for doc in docs:
     entities = pipeline.run([doc.raw_segment])
     for entity in entities:
-        doc.add_annotation(entity)
+        doc.anns.add(entity)
 ```
 
 To handle this common use case, medkit provides a
@@ -338,23 +338,21 @@ to retrieve the corresponding annotations.
 
 So here, `labels_by_input_key={"full_text": [TextDocument.RAW_LABEL]}` is
 basically telling to `DocPipeline` that, for each document, it needs to call
-`get_annotations_by_label(TextDocument.RAW_LABEL)` and pass the results to
-`pipeline.run()`.
+`get(label=TextDocument.RAW_LABEL)` and pass the results to `pipeline.run()`.
 
 ```{note}
 As we already know, the `TextDocument.raw_segment` annotation is a little bit
 special:
  - it is automatically created by `TextDocument`, and its label is always the
    string held by the constant `TextDocument.RAW_LABEL`;
- - it is never part of the annotations returned by
-   `TextDocument.get_annotations()`;
- - but calling `TextDocument.get_annotation_by_label()` with
-   `TextDocument.RAW_LABEL` will return it.
+ - it is not part of the annotations returned by the various methods of
+   `TextDocument.anns`, except when calling
+   `get()` with `TextDocument.RAW_LABEL` as label.
 
 ```python
 assert doc.raw_segment.label == TextDocument.RAW_LABEL
-assert doc.raw_segment not in doc.get_annotations()
-assert doc.get_annotations_by_label(TextDocument.RAW_LABEL) == [doc.raw_segment]
+assert doc.raw_segment not in doc.anns
+assert doc.anns.get(label=TextDocument.RAW_LABEL) == [doc.raw_segment]
 ```
 
 ## Wrapping it up

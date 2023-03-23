@@ -89,13 +89,13 @@ def test_prov():
     sentences = tokenizer.run([clean_text_segment])
 
     sentence_1 = sentences[0]
-    prov_1 = prov_tracer.get_prov(sentence_1.id)
+    prov_1 = prov_tracer.get_prov(sentence_1.uid)
     assert prov_1.data_item == sentence_1
     assert prov_1.op_desc == tokenizer.description
     assert prov_1.source_data_items == [clean_text_segment]
 
     sentence_2 = sentences[1]
-    prov_2 = prov_tracer.get_prov(sentence_2.id)
+    prov_2 = prov_tracer.get_prov(sentence_2.uid)
     assert prov_2.data_item == sentence_2
     assert prov_2.op_desc == tokenizer.description
     assert prov_2.source_data_items == [clean_text_segment]

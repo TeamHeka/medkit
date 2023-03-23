@@ -481,7 +481,7 @@ def test_clean_up_gaps_in_normalized_spans():
 
 def test_concatenate():
     texts = "The first"
-    spans = Span(0, 9)
+    spans = [Span(0, 9)]
 
     with pytest.raises(AssertionError):
         concatenate(texts, spans)

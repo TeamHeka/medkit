@@ -9,7 +9,7 @@ from typing import List, Optional
 from medkit.core.data_item import IdentifiableDataItem
 from medkit.core.operation_desc import OperationDescription
 from medkit.core._prov_graph import ProvGraph, ProvNode
-from medkit.core.store import Store, DictStore
+from medkit.core.prov_store import ProvStore, create_prov_store
 
 
 @dataclasses.dataclass
@@ -67,7 +67,7 @@ class ProvTracer:
     """
 
     def __init__(
-        self, store: Optional[Store] = None, _graph: Optional[ProvGraph] = None
+        self, store: Optional[ProvStore] = None, _graph: Optional[ProvGraph] = None
     ):
         """
         Parameters
@@ -76,11 +76,11 @@ class ProvTracer:
             Store that will contain all traced data items.
         """
         if store is None:
-            store = DictStore()
+            store = create_prov_store()
         if _graph is None:
             _graph = ProvGraph()
 
-        self.store: Store = store
+        self.store: ProvStore = store
         self._graph: ProvGraph = _graph
 
     def add_prov(
@@ -102,8 +102,8 @@ class ProvTracer:
             Data items that were used by the operation to create the data item.
         """
         assert not self._graph.has_node(
-            data_item.id
-        ), f"Provenance of data item with id {data_item.id} was already added"
+            data_item.uid
+        ), f"Provenance of data item with identifier {data_item.uid} was already added"
 
         self.store.store_data_item(data_item)
         self.store.store_op_desc(op_desc)
@@ -112,8 +112,8 @@ class ProvTracer:
             self.store.store_data_item(source_data_item)
 
         # add node to graph
-        source_ids = [s.id for s in source_data_items]
-        self._graph.add_node(data_item.id, op_desc.id, source_ids)
+        source_ids = [s.uid for s in source_data_items]
+        self._graph.add_node(data_item.uid, op_desc.uid, source_ids)
 
     def add_prov_from_sub_tracer(
         self,
@@ -139,23 +139,23 @@ class ProvTracer:
         self.store.store_op_desc(op_desc)
 
         sub_graph = sub_tracer._graph
-        self._graph.add_sub_graph(op_desc.id, sub_graph)
+        self._graph.add_sub_graph(op_desc.uid, sub_graph)
 
         for data_item in data_items:
             # ignore data items already known
             # (can happen with attributes being copied from one annotation to another)
-            if self._graph.has_node(data_item.id):
+            if self._graph.has_node(data_item.uid):
                 # check operation_id is consistent
-                node = self._graph.get_node(data_item.id)
-                if node.operation_id != op_desc.id:
+                node = self._graph.get_node(data_item.uid)
+                if node.operation_id != op_desc.uid:
                     raise RuntimeError(
-                        "Trying to add provenance for sub graph for data item with id"
-                        f" {data_item.id} that already has a node, but with different"
+                        "Trying to add provenance for sub graph for data item with uid"
+                        f" {data_item.uid} that already has a node, but with different"
                         " operation_id"
                     )
                 continue
             self._add_prov_from_sub_tracer_for_data_item(
-                data_item.id, op_desc.id, sub_graph
+                data_item.uid, op_desc.uid, sub_graph
             )
 
     def _add_prov_from_sub_tracer_for_data_item(
@@ -178,7 +178,7 @@ class ProvTracer:
             sub_graph_node = sub_graph.get_node(sub_graph_node_id)
             if sub_graph_node.operation_id is None:
                 source_ids.append(sub_graph_node_id)
-            queue.extend(id for id in sub_graph_node.source_ids if id not in seen)
+            queue.extend(uid for uid in sub_graph_node.source_ids if uid not in seen)
 
         # add new node on main graph representing
         # the data item generation by the composed operation
@@ -298,6 +298,6 @@ class ProvTracer:
             if node.operation_id is not None
             else None
         )
-        source_data_items = [self.store.get_data_item(id) for id in node.source_ids]
-        derived_data_items = [self.store.get_data_item(id) for id in node.derived_ids]
+        source_data_items = [self.store.get_data_item(uid) for uid in node.source_ids]
+        derived_data_items = [self.store.get_data_item(uid) for uid in node.derived_ids]
         return Prov(data_item, op_desc, source_data_items, derived_data_items)

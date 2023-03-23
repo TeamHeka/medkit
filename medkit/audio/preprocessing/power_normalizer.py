@@ -18,7 +18,7 @@ class PowerNormalizer(PreprocessingOperation):
         output_label: str,
         target_value: float = 1.0,
         channel_wise: bool = False,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
@@ -30,7 +30,7 @@ class PowerNormalizer(PreprocessingOperation):
         channel_wise:
             If `True`, the normalization is performed per-channel, thus modifying
             the balance of multichannel signals.
-        op_id:
+        uid:
             Identifier of the normalizer.
         """
 

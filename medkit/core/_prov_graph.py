@@ -48,11 +48,11 @@ class ProvGraph:
         Parameters
         ----------
         data_item_id:
-            Id of the data item that was created.
+            Identifier of the data item that was created.
         operation_id:
-            Id of the operation that created the data item.
+            Identifier of the operation that created the data item.
         source_ids:
-            Id of pre-existing data items from which the data item was derived
+            Identifier of pre-existing data items from which the data item was derived
             (if any). If these source data items don't have corresponding nodes,
             "stub" nodes (nodes with no `operation_id` and no `source_ids`) are
             created. It allows us to know how a data item was used even if we
@@ -85,7 +85,7 @@ class ProvGraph:
             # has been called twice with the same data_item_id
             assert (
                 node.operation_id is None
-            ), f"Node with id {data_item_id} already added to graph"
+            ), f"Node with uid {data_item_id} already added to graph"
             # check consistency of stub node: operation_id should be None, and
             # source_ids should be empty
             assert len(node.source_ids) == 0, (
@@ -161,7 +161,7 @@ class ProvGraph:
     #     self,
     #     data_item_ids: List[str],
     # ) -> ProvGraph:
-    #     assert all(id in self._nodes_by_id for id in data_item_ids)
+    #     assert all(uid in self._nodes_by_id for uid in data_item_ids)
 
     #     ids_to_keep = []
 
@@ -172,13 +172,13 @@ class ProvGraph:
     #         seen.add(data_item_id)
     #         node = self._nodes_by_id[data_item_id]
     #         ids_to_keep.append(data_item_id)
-    #         queue.extend(id for id in node.source_ids if id not in seen)
+    #         queue.extend(uid for uid in node.source_ids if uid not in seen)
 
     #     kept_nodes_by_id = []
     #     for data_item_id in ids_to_keep:
     #         node = self._nodes_by_id[data_item_id]
-    #         source_ids = [id for id in node.source_ids if id in ids_to_keep]
-    #         # derived_ids = [id for id in node.derived_ids if id in ids_to_keep]
+    #         source_ids = [uid for uid in node.source_ids if uid in ids_to_keep]
+    #         # derived_ids = [uid for uid in node.derived_ids if uid in ids_to_keep]
     #         pruned_node = dataclasses.replace(
     #             node, source_ids=source_ids  # derived_ids=derived_ids
     #         )
@@ -192,31 +192,33 @@ class ProvGraph:
         for node_id, node in self._nodes_by_id.items():
             if node.source_ids and node.operation_id is None:
                 raise Exception(
-                    f"Node with id {node_id} has source ids but no operation"
+                    f"Node with identifier {node_id} has source ids but no operation"
                 )
             for source_id in node.source_ids:
                 source_node = self._nodes_by_id.get(source_id)
                 if source_node is None:
                     raise Exception(
-                        f"Source id {source_id} in node with id {node_id} has no"
-                        " corresponding node"
+                        f"Source identifier {source_id} in node with identifier"
+                        f" {node_id} has no corresponding node"
                     )
                 if node_id not in source_node.derived_ids:
                     raise Exception(
-                        f"Node with id {node_id} has source item with id"
-                        f" {source_id} but reciprocate derivation link does not exists"
+                        f"Node with identifier {node_id} has source item with"
+                        f" identifier {source_id} but reciprocate derivation link does"
+                        " not exists"
                     )
             for derived_id in node.derived_ids:
                 derived_node = self._nodes_by_id.get(derived_id)
                 if derived_node is None:
                     raise Exception(
-                        f"Derived id {derived_id} in node with id {node_id} has no"
-                        " corresponding node"
+                        f"Derived identifier {derived_id} in node with identifier"
+                        f" {node_id} has no corresponding node"
                     )
                 if node_id not in derived_node.source_ids:
                     raise Exception(
-                        f"Node with id {node_id} has derived item with id"
-                        f" {derived_id} but reciprocate source link does not exists"
+                        f"Node with identifier {node_id} has derived item with"
+                        f" identifier {derived_id} but reciprocate source link does not"
+                        " exists"
                     )
         for sub_graph in self._sub_graphs_by_op_id.values():
             sub_graph.check_sanity()
@@ -224,6 +226,6 @@ class ProvGraph:
     def to_dict(self) -> Dict[str, Any]:
         nodes = [n.to_dict() for n in self._nodes_by_id.values()]
         sub_graphs_by_op_id = {
-            id: s.to_dict() for id, s in self._sub_graphs_by_op_id.items()
+            uid: s.to_dict() for uid, s in self._sub_graphs_by_op_id.items()
         }
         return dict(nodes=nodes, sub_graphs_by_op_id=sub_graphs_by_op_id)

@@ -26,7 +26,7 @@ class SyntagmaTokenizer(SegmentationOperation):
         separators: Tuple[str, ...],
         output_label: str = DefaultConfig.output_label,
         keep_separator: bool = DefaultConfig.keep_separator,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Instantiate the syntagma tokenizer
@@ -42,7 +42,7 @@ class SyntagmaTokenizer(SegmentationOperation):
             If True, the separators are kept in the detected syntagma
             If False, the syntagma text does not include the separator
             Default: True (cf. DefaultConfig)
-        op_id: str, Optional
+        uid: str, Optional
             Identifier of the tokenizer
         """
         # Pass all arguments to super (remove self)

@@ -1,0 +1,4 @@
+{"version": "0.1", "content_type": "text_annotation_list"}
+{"uid": "s1", "label": "sentence", "text": "I have diabetes and asthma.", "spans": [{"start": 0, "end": 27, "_class_name": "medkit.core.text.span.Span"}], "attrs": [], "metadata": {}, "_class_name": "medkit.core.text.annotation.Segment"}
+{"uid": "e1", "label": "disease", "text": "diabetes", "spans": [{"start": 7, "end": 15, "_class_name": "medkit.core.text.span.Span"}], "attrs": [], "metadata": {}, "_class_name": "medkit.core.text.annotation.Entity"}
+{"uid": "e2", "label": "disease", "text": "asthma", "spans": [{"start": 20, "end": 26, "_class_name": "medkit.core.text.span.Span"}], "attrs": [{"uid": "a1", "label": "is_negated", "value": false, "metadata": {}, "_class_name": "medkit.core.attribute.Attribute"}], "metadata": {}, "_class_name": "medkit.core.text.annotation.Entity"}

@@ -16,24 +16,24 @@ def _get_segment_and_entity(with_attr=False):
     entity = Entity(label="word", spans=[Span(10, 18)], text="sentence")
     if with_attr:
         attr = Attribute(label="negated", value=False)
-        entity.add_attr(attr)
+        entity.attrs.add(attr)
 
     return sentence_segment, syntagma_segment, entity
 
 
 def _build_prov(prov_tracer, sentence_segment, syntagma_segment, entity):
-    tokenizer_desc = OperationDescription(name="SyntagmaTokenizer", id=generate_id())
+    tokenizer_desc = OperationDescription(uid=generate_id(), name="SyntagmaTokenizer")
     prov_tracer.add_prov(
         syntagma_segment, tokenizer_desc, source_data_items=[sentence_segment]
     )
 
-    matcher_desc = OperationDescription(name="EntityMatcher", id=generate_id())
+    matcher_desc = OperationDescription(uid=generate_id(), name="EntityMatcher")
     prov_tracer.add_prov(entity, matcher_desc, source_data_items=[syntagma_segment])
 
-    for attr in entity.get_attrs():
+    for attr in entity.attrs:
         # add attribute to entity
         neg_detector_desc = OperationDescription(
-            name="NegationDetector", id=generate_id()
+            uid=generate_id(), name="NegationDetector"
         )
         prov_tracer.add_prov(
             attr, neg_detector_desc, source_data_items=[syntagma_segment]
@@ -54,18 +54,18 @@ def test_basic(tmp_path):
 
     # check dot entries
     assert (
-        f'"{sentence_segment.id}" [label="sentence: This is a sentence."];\n'
+        f'"{sentence_segment.uid}" [label="sentence: This is a sentence."];\n'
         in dot_text
     )
-    assert f'"{syntagma_segment.id}" [label="syntagma: a sentence"];\n' in dot_text
-    assert f'"{entity.id}" [label="word: sentence"];\n' in dot_text
+    assert f'"{syntagma_segment.uid}" [label="syntagma: a sentence"];\n' in dot_text
+    assert f'"{entity.uid}" [label="word: sentence"];\n' in dot_text
     assert (
-        f'"{sentence_segment.id}" -> "{syntagma_segment.id}"'
+        f'"{sentence_segment.uid}" -> "{syntagma_segment.uid}"'
         ' [label="SyntagmaTokenizer"];\n'
         in dot_text
     )
     assert (
-        f'"{syntagma_segment.id}" -> "{entity.id}" [label="EntityMatcher"];\n'
+        f'"{syntagma_segment.uid}" -> "{entity.uid}" [label="EntityMatcher"];\n'
         in dot_text
     )
 
@@ -89,10 +89,10 @@ def test_custom_format(tmp_path):
 
     # check dot entries
     # segments are formatted differently
-    assert f'"{sentence_segment.id}" [label="This is a sentence."];\n' in dot_text
+    assert f'"{sentence_segment.uid}" [label="This is a sentence."];\n' in dot_text
     # operations are formatted differently
     assert (
-        f'"{sentence_segment.id}" -> "{syntagma_segment.id}"'
+        f'"{sentence_segment.uid}" -> "{syntagma_segment.uid}"'
         ' [label="Operation: SyntagmaTokenizer"];\n'
         in dot_text
     )
@@ -111,9 +111,9 @@ def test_attrs(tmp_path):
     dot_text = dot_file.read_text()
 
     # check attribute link in dot entries
-    attr = entity.get_attrs()[0]
+    attr = entity.attrs.get()[0]
     assert (
-        f'"{entity.id}" -> "{attr.id}" [style=dashed, color=grey,'
+        f'"{entity.uid}" -> "{attr.uid}" [style=dashed, color=grey,'
         ' label="attr", fontcolor=grey];\n'
         in dot_text
     )
@@ -129,7 +129,7 @@ def test_sub_prov(tmp_path):
     _build_prov(sub_prov_tracer, sentence_segment, syntagma_segment, entity)
 
     # wrap it in outer pipeline graph
-    pipeline_desc = OperationDescription(name="Pipeline", id=generate_id())
+    pipeline_desc = OperationDescription(uid=generate_id(), name="Pipeline")
     prov_tracer.add_prov_from_sub_tracer([entity], pipeline_desc, sub_prov_tracer)
 
     # render dot, not expanding sub provenance
@@ -138,7 +138,9 @@ def test_sub_prov(tmp_path):
     dot_text = dot_file.read_text()
 
     # must have a dot entry for outer pipeline operation
-    assert f'"{sentence_segment.id}" -> "{entity.id}" [label="Pipeline"];\n' in dot_text
+    assert (
+        f'"{sentence_segment.uid}" -> "{entity.uid}" [label="Pipeline"];\n' in dot_text
+    )
 
     # render dot, expanding all sub provenance
     dot_file_full = tmp_path / "prov_full.dot"
@@ -147,11 +149,11 @@ def test_sub_prov(tmp_path):
 
     # must have a dot entry for inner operations in sub provenance
     assert (
-        f'"{sentence_segment.id}" -> "{syntagma_segment.id}"'
+        f'"{sentence_segment.uid}" -> "{syntagma_segment.uid}"'
         ' [label="SyntagmaTokenizer"];\n'
         in dot_text_full
     )
     assert (
-        f'"{syntagma_segment.id}" -> "{entity.id}" [label="EntityMatcher"];\n'
+        f'"{syntagma_segment.uid}" -> "{entity.uid}" [label="EntityMatcher"];\n'
         in dot_text_full
     )

@@ -1,10 +1,10 @@
 __all__ = ["SpacyDocPipeline"]
-import warnings
-from typing import List, Optional, Union
+
+from typing import List, Optional
 
 from spacy import Language
 
-from medkit.core import Collection, DocOperation
+from medkit.core import DocOperation
 from medkit.core.text import TextDocument
 from medkit.text.spacy import spacy_utils
 
@@ -20,7 +20,8 @@ class SpacyDocPipeline(DocOperation):
         spacy_entities: Optional[List[str]] = None,
         spacy_span_groups: Optional[List[str]] = None,
         spacy_attrs: Optional[List[str]] = None,
-        op_id: Optional[str] = None,
+        name: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """Initialize the pipeline
 
@@ -47,7 +48,9 @@ class SpacyDocPipeline(DocOperation):
             Name of span extensions to convert into medkit attributes.
             If `None` (default) all non-None extensions will be added for each annotation with
             a medkit ID.
-        op_id:
+        name:
+            Name describing the pipeline (defaults to the class name).
+        uid:
             Identifier of the pipeline
 
         """
@@ -63,7 +66,7 @@ class SpacyDocPipeline(DocOperation):
         self.spacy_span_groups = spacy_span_groups
         self.spacy_attrs = spacy_attrs
 
-    def run(self, medkit_docs: Union[List[TextDocument], Collection]) -> None:
+    def run(self, medkit_docs: List[TextDocument]) -> None:
         """Run a spacy pipeline on a list of medkit documents.
         Each medkit document is converted to spacy document (Doc object),
         with the selected annotations and attributes. Then, the spacy pipeline
@@ -73,23 +76,10 @@ class SpacyDocPipeline(DocOperation):
         Parameters
         ----------
         medkit_docs:
-            List or collection of TextDocuments on which to run the pipeline
+            List of TextDocuments on which to run the pipeline
         """
-        if isinstance(medkit_docs, Collection):
-            medkit_docs = [
-                medkit_doc
-                for medkit_doc in medkit_docs.documents
-                if isinstance(medkit_doc, TextDocument)
-            ]
 
         for medkit_doc in medkit_docs:
-            if medkit_doc.text is None:
-                warnings.warn(
-                    f"The document with id {medkit_doc.id} has no text, it is not"
-                    " converted"
-                )
-                continue
-
             # build spacy doc
             spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(
                 nlp=self.nlp,
@@ -115,7 +105,7 @@ class SpacyDocPipeline(DocOperation):
             # annotate
             # add new annotations
             for ann in anns:
-                medkit_doc.add_annotation(ann)
+                medkit_doc.anns.add(ann)
                 if self._prov_tracer is not None:
                     self._prov_tracer.add_prov(
                         ann,
@@ -125,9 +115,9 @@ class SpacyDocPipeline(DocOperation):
 
             # add new attributes in each annotation
             for ann_id, attrs in attrs_by_ann_id.items():
-                ann = medkit_doc.get_annotation_by_id(ann_id)
+                ann = medkit_doc.anns.get_by_id(ann_id)
                 for attr in attrs:
-                    ann.add_attr(attr)
+                    ann.attrs.add(attr)
                     if self._prov_tracer is not None:
                         # if ann is an existing annotation, in terms
                         # of provenance, the annotation was used to

@@ -73,7 +73,7 @@ class HypothesisRuleMetadata(TypedDict):
         between rule/verb metadata dict)
     rule_id:
         Identifier of the rule used to detect an hypothesis.
-        If the rule has no id, then the index of the rule in
+        If the rule has no uid, then the index of the rule in
         the list of rules is used instead
     """
 
@@ -118,7 +118,7 @@ class HypothesisDetector(ContextOperation):
         verbs: Optional[Dict[str, Dict[str, Dict[str, List[str]]]]] = None,
         modes_and_tenses: Optional[List[Tuple[str, str]]] = None,
         max_length: int = 150,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """Instantiate the hypothesis detector
 
@@ -143,7 +143,7 @@ class HypothesisDetector(ContextOperation):
         max_length:
             Maximum number of characters in an hypothesis segment. Segments longer than
             this will never be considered as hypothesis
-        op_id:
+        uid:
             Identifier of the detector
         """
         # Pass all arguments to super (remove self)
@@ -220,7 +220,7 @@ class HypothesisDetector(ContextOperation):
         for segment in segments:
             hyp_attr = self._detect_hypothesis_in_segment(segment)
             if hyp_attr is not None:
-                segment.add_attr(hyp_attr)
+                segment.attrs.add(hyp_attr)
 
     def _detect_hypothesis_in_segment(self, segment: Segment) -> Optional[Attribute]:
         matched_verb = None
@@ -297,7 +297,7 @@ class HypothesisDetector(ContextOperation):
             text = text_unicode if rule.unicode_sensitive else text_ascii
             if pattern.search(text) is not None:
                 if exclusion_pattern is None or exclusion_pattern.search(text) is None:
-                    # return the rule id or the rule index if no id has been set
+                    # return the rule uid or the rule index if no uid has been set
                     rule_id = rule.id if rule.id is not None else rule_index
                     return rule_id
 
@@ -374,5 +374,5 @@ class HypothesisDetector(ContextOperation):
                 )
             if len(set(r.id for r in rules)) != len(rules):
                 raise ValueError(
-                    "Some rules have the same id, each rule must have a unique id"
+                    "Some rules have the same uid, each rule must have a unique uid"
                 )

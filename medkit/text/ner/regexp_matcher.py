@@ -17,9 +17,14 @@ from typing_extensions import TypedDict
 import unidecode
 import yaml
 
-
-from medkit.core import Attribute
-from medkit.core.text import Entity, NEROperation, Segment, span_utils
+from medkit.core.text import (
+    Entity,
+    NEROperation,
+    Segment,
+    EntityNormAttribute,
+    span_utils,
+)
+from medkit.text.ner.umls_norm_attribute import UMLSNormAttribute
 
 
 logger = logging.getLogger(__name__)
@@ -139,7 +144,8 @@ class RegexpMatcher(NEROperation):
         self,
         rules: Optional[List[RegexpMatcherRule]] = None,
         attrs_to_copy: Optional[List[str]] = None,
-        op_id: Optional[str] = None,
+        name: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Instantiate the regexp matcher
@@ -153,8 +159,10 @@ class RegexpMatcher(NEROperation):
             Labels of the attributes that should be copied from the source segment
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
-        op_id:
-            Identifier of the tokenizer
+        name:
+            Name describing the matcher (defaults to the class name)
+        uid:
+            Identifier of the matcher
         """
         # Pass all arguments to super (remove self)
         init_args = locals()
@@ -241,10 +249,9 @@ class RegexpMatcher(NEROperation):
         pattern = self._patterns[rule_index]
         exclusion_pattern = self._exclusion_patterns[rule_index]
 
-        flags = 0 if rule.case_sensitive else re.IGNORECASE
         text_to_match = segment.text if rule.unicode_sensitive else text_ascii
 
-        for match in pattern.finditer(text_to_match, flags):
+        for match in pattern.finditer(text_to_match):
             # note that we apply exclusion_pattern to the whole segment,
             # so we might have a match in a part of the text unrelated to the current
             # match
@@ -252,7 +259,7 @@ class RegexpMatcher(NEROperation):
             # the current match but that wouldn't work for all cases
             if (
                 exclusion_pattern is not None
-                and exclusion_pattern.search(text_to_match, flags) is not None
+                and exclusion_pattern.search(text_to_match) is not None
             ):
                 continue
 
@@ -272,24 +279,20 @@ class RegexpMatcher(NEROperation):
             )
 
             for label in self.attrs_to_copy:
-                for attr in segment.get_attrs_by_label(label):
-                    entity.add_attr(attr)
+                for attr in segment.attrs.get(label=label):
+                    copied_attr = attr.copy()
+                    entity.attrs.add(copied_attr)
+                    # handle provenance
+                    if self._prov_tracer is not None:
+                        self._prov_tracer.add_prov(
+                            copied_attr, self.description, [attr]
+                        )
 
             # create normalization attributes for each normalization descriptor
             # of the rule
-            # TODO should we have a NormalizationAttribute class
-            # with specific fields (name, id, version) ?
-
-            norm_attrs = [
-                Attribute(
-                    label=norm.kb_name,
-                    value=norm.id,
-                    metadata=dict(version=norm.kb_version),
-                )
-                for norm in rule.normalizations
-            ]
+            norm_attrs = [self._create_norm_attr(norm) for norm in rule.normalizations]
             for norm_attr in norm_attrs:
-                entity.add_attr(norm_attr)
+                entity.attrs.add(norm_attr)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
@@ -301,6 +304,16 @@ class RegexpMatcher(NEROperation):
                     )
 
             yield entity
+
+    @staticmethod
+    def _create_norm_attr(norm: RegexpMatcherNormalization) -> EntityNormAttribute:
+        if norm.kb_name == "umls":
+            norm_attr = UMLSNormAttribute(cui=norm.id, umls_version=norm.kb_version)
+        else:
+            norm_attr = EntityNormAttribute(
+                kb_name=norm.kb_name, kb_id=norm.id, kb_version=norm.kb_version
+            )
+        return norm_attr
 
     @staticmethod
     def load_rules(path_to_rules) -> List[RegexpMatcherRule]:

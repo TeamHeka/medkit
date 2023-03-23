@@ -7,22 +7,16 @@ class _Segment:
     """Mock text segment"""
 
     def __init__(self, text):
-        self.id = generate_id()
+        self.uid = generate_id()
         self.text = text
-        self._attrs = []
-
-    def get_attrs(self):
-        return self._attrs
-
-    def add_attr(self, attr):
-        self._attrs.append(attr)
+        self.attrs = []
 
 
 class _Attribute:
     """Mock attribute"""
 
     def __init__(self, label, value):
-        self.id = generate_id()
+        self.uid = generate_id()
         self.label = label
         self.value = value
 
@@ -42,12 +36,12 @@ class _Uppercaser:
     """Mock processing operation uppercasing segments"""
 
     def __init__(self):
-        self.id = generate_id()
+        self.uid = generate_id()
         self._prov_tracer = None
 
     @property
     def description(self):
-        return OperationDescription(id=self.id, name="Uppercaser")
+        return OperationDescription(uid=self.uid, name="Uppercaser")
 
     def set_prov_tracer(self, prov_tracer):
         self._prov_tracer = prov_tracer
@@ -68,12 +62,12 @@ class _Prefixer:
     """Mock processing operation prefixing segments"""
 
     def __init__(self, prefix):
-        self.id = generate_id()
+        self.uid = generate_id()
         self.prefix = prefix
 
     @property
     def description(self):
-        return OperationDescription(id=self.id, name="Prefixer")
+        return OperationDescription(uid=self.uid, name="Prefixer")
 
     def set_prov_tracer(self, prov_tracer):
         self._prov_tracer = prov_tracer
@@ -94,12 +88,12 @@ class _AttributeAdder:
     """Mock processing operation adding attributes to existing segments"""
 
     def __init__(self, label):
-        self.id = generate_id()
+        self.uid = generate_id()
         self.label = label
 
     @property
     def description(self):
-        return OperationDescription(id=self.id, name="AttributeAdder")
+        return OperationDescription(uid=self.uid, name="AttributeAdder")
 
     def set_prov_tracer(self, prov_tracer):
         self._prov_tracer = prov_tracer
@@ -107,7 +101,7 @@ class _AttributeAdder:
     def run(self, segments):
         for segment in segments:
             attr = _Attribute(label=self.label, value=True)
-            segment.add_attr(attr)
+            segment.attrs.append(attr)
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     attr, self.description, source_data_items=[segment]
@@ -135,29 +129,29 @@ def test_single_step():
 
     # check outer main provenance
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
-        uppercased_seg_prov = prov_tracer.get_prov(uppercased_seg.id)
+        uppercased_seg_prov = prov_tracer.get_prov(uppercased_seg.uid)
         # operation is outer pipeline operation
         assert uppercased_seg_prov.op_desc == pipeline.description
         # uppercased segment has corresponding sentence segment as source
         assert uppercased_seg_prov.source_data_items == [sentence_seg]
 
         # sentence seg has stub provenance (no operation, no source)
-        sentence_seg_prov = prov_tracer.get_prov(sentence_seg.id)
+        sentence_seg_prov = prov_tracer.get_prov(sentence_seg.uid)
         assert sentence_seg_prov.op_desc is None
         assert len(sentence_seg_prov.source_data_items) == 0
 
     # check inner sub provenance
-    sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.id)
+    sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.uid)
 
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
-        uppercased_seg_prov = sub_tracer.get_prov(uppercased_seg.id)
+        uppercased_seg_prov = sub_tracer.get_prov(uppercased_seg.uid)
         # operation is inner uppercaser operation
         assert uppercased_seg_prov.op_desc == uppercaser.description
         # uppercased segment has corresponding sentence segment as source
         assert uppercased_seg_prov.source_data_items == [sentence_seg]
 
         # sentence segment has stub provenance (no operation, no source)
-        sentence_seg_prov = sub_tracer.get_prov(sentence_seg.id)
+        sentence_seg_prov = sub_tracer.get_prov(sentence_seg.uid)
         assert sentence_seg_prov.op_desc is None
         assert len(sentence_seg_prov.source_data_items) == 0
 
@@ -188,24 +182,24 @@ def test_multiple_steps():
 
     # check outer main provenance
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
-        uppercased_seg_prov = prov_tracer.get_prov(uppercased_seg.id)
+        uppercased_seg_prov = prov_tracer.get_prov(uppercased_seg.uid)
         # operation is pipeline operation
         assert uppercased_seg_prov.op_desc == pipeline.description
         # uppercased segment has corresponding sentence as source
         assert uppercased_seg_prov.source_data_items == [sentence_seg]
 
     # check inner sub provenance
-    sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.id)
+    sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.uid)
 
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
-        uppercased_seg_prov = sub_tracer.get_prov(uppercased_seg.id)
+        uppercased_seg_prov = sub_tracer.get_prov(uppercased_seg.uid)
         # operation is inner uppercaser operation
         assert uppercased_seg_prov.op_desc == uppercaser.description
         # uppercased segment has corresponding prefixed segment as source
         assert len(uppercased_seg_prov.source_data_items) == 1
         prefixed_seg = uppercased_seg_prov.source_data_items[0]
 
-        prefixed_seg_prov = sub_tracer.get_prov(prefixed_seg.id)
+        prefixed_seg_prov = sub_tracer.get_prov(prefixed_seg.uid)
         # operation is inner prefixer operation
         assert prefixed_seg_prov.op_desc == prefixer.description
         # prefixed segment has corresponding sentence as source
@@ -248,10 +242,9 @@ def test_step_with_attributes():
 
     # check outer main provenance
     for uppercased_seg, sentence_seg in zip(uppercased_segs, sentence_segs):
-        attrs = uppercased_seg.get_attrs()
-        assert len(attrs) == 1
-        attr = attrs[0]
-        attr_prov = prov_tracer.get_prov(attr.id)
+        assert len(uppercased_seg.attrs) == 1
+        attr = uppercased_seg.attrs[0]
+        attr_prov = prov_tracer.get_prov(attr.uid)
         # operation is outer pipeline operation
         assert attr_prov.op_desc == pipeline.description
         # attribute has corresponding sentence segment as source
@@ -259,13 +252,12 @@ def test_step_with_attributes():
         assert attr_prov.source_data_items == [sentence_seg]
 
     # check inner sub provenance
-    sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.id)
+    sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.uid)
 
     for uppercased_seg in uppercased_segs:
-        attrs = uppercased_seg.get_attrs()
-        assert len(attrs) == 1
-        attr = attrs[0]
-        attr_prov = sub_tracer.get_prov(attr.id)
+        assert len(uppercased_seg.attrs) == 1
+        attr = uppercased_seg.attrs[0]
+        attr_prov = sub_tracer.get_prov(attr.uid)
         # operation is inner attribute adder operation
         assert attr_prov.op_desc == attribute_adder.description
         # attribute has corresponding uppercased segment as source
@@ -325,44 +317,44 @@ def test_nested_pipeline():
 
     # check outer main provenance
     for output_seg, sentence_seg in zip(output_segs, sentence_segs):
-        output_seg_prov = prov_tracer.get_prov(output_seg.id)
+        output_seg_prov = prov_tracer.get_prov(output_seg.uid)
         # operation is main pipeline operation
         assert output_seg_prov.op_desc == pipeline.description
         # uppercased segment has corresponding sentence as source
         assert output_seg_prov.source_data_items == [sentence_seg]
 
     # check inner sub provenance
-    sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.id)
+    sub_tracer = prov_tracer.get_sub_prov_tracer(pipeline.uid)
     for output_seg, sentence_seg in zip(output_segs, sentence_segs):
         # prov for result of sub pipeline
-        prov = sub_tracer.get_prov(output_seg.id)
+        prov = sub_tracer.get_prov(output_seg.uid)
         assert prov.op_desc == sub_pipeline.description
 
         # prov for result of prefixer before sub pipeline
-        prov = sub_tracer.get_prov(prov.source_data_items[0].id)
+        prov = sub_tracer.get_prov(prov.source_data_items[0].uid)
         assert prov.op_desc == prefixer_2.description
         assert len(prov.source_data_items) == 1
 
         # stub prov for input sentence segment
-        prov = sub_tracer.get_prov(prov.source_data_items[0].id)
+        prov = sub_tracer.get_prov(prov.source_data_items[0].uid)
         assert prov.data_item == sentence_seg
         assert prov.op_desc is None
         assert len(prov.source_data_items) == 0
 
     # check innermost sub provenance
-    sub_tracer = sub_tracer.get_sub_prov_tracer(sub_pipeline.id)
+    sub_tracer = sub_tracer.get_sub_prov_tracer(sub_pipeline.uid)
     for output_seg, sentence_seg in zip(output_segs, sentence_segs):
         # prov for result of prefixer inside sub pipeline
-        prov = sub_tracer.get_prov(output_seg.id)
+        prov = sub_tracer.get_prov(output_seg.uid)
         assert prov.op_desc == prefixer_1.description
         assert len(prov.source_data_items) == 1
 
         # prov for result of uppercaser inside sub pipeline
-        prov = sub_tracer.get_prov(prov.source_data_items[0].id)
+        prov = sub_tracer.get_prov(prov.source_data_items[0].uid)
         assert prov.op_desc == uppercaser.description
         assert len(prov.source_data_items) == 1
 
         # stub prov for result of prefixer before sub pipeline
-        prov = sub_tracer.get_prov(prov.source_data_items[0].id)
+        prov = sub_tracer.get_prov(prov.source_data_items[0].uid)
         assert prov.op_desc is None
         assert len(prov.source_data_items) == 0

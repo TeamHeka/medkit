@@ -1,7 +1,7 @@
 __all__ = ["SectionTokenizer", "SentenceTokenizer", "SyntagmaTokenizer"]
 
 
-import importlib.util
+from medkit.core.utils import modules_are_available
 
 from .section_tokenizer import SectionTokenizer
 from .sentence_tokenizer import SentenceTokenizer
@@ -12,8 +12,7 @@ from .syntagma_tokenizer import SyntagmaTokenizer
 # -----------------------------------------------------
 
 # Rush sentence tokenizer module
-_pyrush_is_available = importlib.util.find_spec("PyRuSH") is not None
-if _pyrush_is_available:
+if modules_are_available(["PyRuSH"]):
     # fmt: off
     from .rush_sentence_tokenizer import RushSentenceTokenizer  # noqa: F401
     __all__.append("RushSentenceTokenizer")

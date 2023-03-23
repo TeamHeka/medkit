@@ -1,0 +1,15 @@
+{
+    "version": "0.1",
+    "content_type": "audio_document",
+    "content": {
+        "uid": "d1",
+        "audio": {
+            "path": "tests/data/audio/dialog_long.ogg",
+            "trim_start": 0,
+            "trim_end": 134099,
+            "_class_name": "medkit.core.audio.audio_buffer.FileAudioBuffer"
+        },
+        "metadata": {},
+        "_class_name": "medkit.core.audio.document.AudioDocument"
+    }
+}

@@ -2,125 +2,130 @@ from __future__ import annotations
 
 __all__ = ["AudioDocument"]
 
+import dataclasses
 import random
-from typing import Any, Dict, List, Optional
 import uuid
+from typing import Any, ClassVar, Dict, List, Optional
+from typing_extensions import Self
 
-from medkit.core.document import Document
-from medkit.core.store import Store
-from medkit.core.audio.annotation import AudioAnnotation, Segment
+from medkit.core import dict_conv
+from medkit.core.audio.annotation import Segment
+from medkit.core.audio.annotation_container import AudioAnnotationContainer
 from medkit.core.audio.span import Span
 from medkit.core.audio.audio_buffer import (
     AudioBuffer,
-    FileAudioBuffer,
+    MemoryAudioBuffer,
     PlaceholderAudioBuffer,
 )
+from medkit.core.id import generate_id
 
 
-class AudioDocument(Document[AudioAnnotation]):
-    """Document holding audio annotations."""
+@dataclasses.dataclass(init=False)
+class AudioDocument(dict_conv.SubclassMapping):
+    """
+    Document holding audio annotations.
 
-    RAW_LABEL = "RAW_AUDIO"
+    Attributes
+    ----------
+    uid:
+        Unique identifier of the document.
+    audio:
+        Audio buffer containing the entire signal of the document.
+    anns: :class:`~.audio.AudioAnnotationContainer`
+        Annotations of the document. Stored in an
+        :class:`~.audio.AudioAnnotationContainer` but can be passed as a list at init.
+    metadata:
+        Document metadata.
+    raw_segment: :class:`~.audio.Segment`
+        Auto-generated segment containing the full unprocessed document audio.
+    """
+
+    RAW_LABEL: ClassVar[str] = "RAW_AUDIO"
+    """Label to be used for raw segment"""
+
+    uid: str
+    anns: AudioAnnotationContainer
+    metadata: Dict[str, Any]
+    raw_segment: Segment
 
     def __init__(
         self,
-        doc_id: Optional[str] = None,
-        audio: Optional[AudioBuffer] = None,
+        audio: AudioBuffer,
+        anns: Optional[List[Segment]] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        store: Optional[Store] = None,
+        uid: Optional[str] = None,
     ):
-        """
-        Parameters
-        ----------
-        doc_id:
-            Document identifier, if pre-existing.
-        audio:
-            Audio buffer containing the whole signal for the document.
-        metadata:
-            Document metadata.
-        store:
-            Store to use for annotations.
-        """
-        super().__init__(doc_id=doc_id, metadata=metadata, store=store)
-        self.audio: Optional[AudioBuffer] = audio
+        if anns is None:
+            anns = []
+        if metadata is None:
+            metadata = {}
+        if uid is None:
+            uid = generate_id()
 
-        # auto-generated RAW_AUDIO segment
-        # not stored with other annotations but injected in calls to get_annotations_by_label()
-        # and get_annotation_by_id()
-        self.raw_segment: Optional[Segment] = self._generate_raw_segment()
+        self.uid = uid
+        self.metadata = metadata
 
-    def _generate_raw_segment(self) -> Optional[Segment]:
-        if self.audio is None:
-            return None
+        # auto-generated raw segment to hold the audio buffer
+        self.raw_segment = self._generate_raw_segment(audio, uid)
 
-        # generate deterministic uuid based on document id
-        # so that the annotation id is the same if the doc id is the same
-        rng = random.Random(self.id)
-        id = str(uuid.UUID(int=rng.getrandbits(128)))
-
-        return Segment(
-            label=self.RAW_LABEL,
-            span=Span(0.0, self.audio.duration),
-            audio=self.audio,
-            ann_id=id,
+        self.anns = AudioAnnotationContainer(
+            doc_id=self.uid, raw_segment=self.raw_segment
         )
-
-    def add_annotation(self, annotation: AudioAnnotation):
-        """
-        Add an annotation to the document.
-
-        Parameters
-        ----------
-        annotation:
-            Audio annotation to add.
-
-        Raises
-        ------
-        RuntimeError
-            Raised when an annotation with the same id is already attached to
-            the document.
-        """
-        if annotation.label == self.RAW_LABEL:
-            raise RuntimeError(
-                f"Cannot add annotation with reserved label {self.RAW_LABEL}"
-            )
-
-        super().add_annotation(annotation)
-
-    def get_annotations_by_label(self, label) -> List[AudioAnnotation]:
-        # inject RAW_AUDIO segment
-        if self.raw_segment is not None and label == self.RAW_LABEL:
-            return [self.raw_segment]
-        return super().get_annotations_by_label(label)
-
-    def get_annotation_by_id(self, annotation_id) -> Optional[AudioAnnotation]:
-        # inject RAW_AUDIO segment
-        if self.raw_segment is not None and annotation_id == self.raw_segment.id:
-            return self.raw_segment
-        return super().get_annotation_by_id(annotation_id)
-
-    def to_dict(self) -> Dict[str, Any]:
-        data = super().to_dict()
-        data.update(audio=self.audio.to_dict())
-        return data
+        for ann in anns:
+            self.anns.add(ann)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> AudioDocument:
-        if data["audio"]["class_name"] == "FileAudioBuffer":
-            audio = FileAudioBuffer.from_dict(data["audio"])
-        else:
-            assert data["audio"]["class_name"] == "PlaceholderAudioBuffer"
-            audio = PlaceholderAudioBuffer.from_dict(data["audio"])
+    def _generate_raw_segment(cls, audio: AudioBuffer, doc_id: str) -> Segment:
+        # generate deterministic uuid based on document identifier
+        # so that the annotation identifier is the same if the doc identifier is the same
+        rng = random.Random(doc_id)
+        uid = str(uuid.UUID(int=rng.getrandbits(128)))
 
-        annotations = [Segment.from_dict(ann_data) for ann_data in data["annotations"]]
-
-        doc = cls(
-            doc_id=data["id"],
+        return Segment(
+            label=cls.RAW_LABEL,
+            span=Span(0.0, audio.duration),
             audio=audio,
-            metadata=data["metadata"],
+            uid=uid,
         )
 
-        for annotation in annotations:
-            doc.add_annotation(annotation)
+    @property
+    def audio(self) -> AudioBuffer:
+        return self.raw_segment.audio
 
-        return doc
+    def __init_subclass__(cls):
+        AudioDocument.register_subclass(cls)
+        super().__init_subclass__()
+
+    def to_dict(self, with_anns: bool = True) -> Dict[str, Any]:
+        # convert MemoryAudioBuffer to PlaceholderAudioBuffer
+        # because we can't serialize the actual signal
+        if isinstance(self.audio, MemoryAudioBuffer):
+            placeholder = PlaceholderAudioBuffer.from_audio_buffer(self.audio)
+            audio = placeholder.to_dict()
+        else:
+            audio = self.audio.to_dict()
+        doc_dict: Dict[str, Any] = dict(
+            uid=self.uid,
+            audio=audio,
+            metadata=self.metadata,
+        )
+        if with_anns:
+            doc_dict["anns"] = [a.to_dict() for a in self.anns]
+
+        dict_conv.add_class_name_to_data_dict(self, doc_dict)
+        return doc_dict
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> Self:
+        subclass = cls.get_subclass_for_data_dict(data)
+        if subclass is not None:
+            return subclass.from_dict(data)
+
+        audio = AudioBuffer.from_dict(data["audio"])
+        anns = [Segment.from_dict(a) for a in data.get("anns", [])]
+        return cls(
+            uid=data["uid"],
+            audio=audio,
+            anns=anns,
+            metadata=data["metadata"],
+        )

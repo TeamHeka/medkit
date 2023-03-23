@@ -1,0 +1,10 @@
+{
+    "version": "0.1",
+    "content_type": "text_document",
+    "content": {
+        "uid": "d1",
+        "text": "I have diabetes and asthma.",
+        "metadata": {},
+        "_class_name": "medkit.core.text.document.TextDocument"
+    }
+}

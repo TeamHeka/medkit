@@ -4,62 +4,65 @@ from medkit.core import Attribute, generate_id
 from medkit.core.text.document import TextDocument
 from medkit.core.text.annotation import Entity, Relation, Segment
 from medkit.core.text.span import Span
+from tests.data_utils import get_text_document
+
+# TODO remove tests redundant with test_annotation_container
 
 
 @pytest.fixture()
 def init_data():
-    doc = TextDocument()
+    doc = TextDocument(text="")
     attribute = Attribute(label="Negation")
     ent1 = Entity(label="ent1", spans=[Span(0, 0)], text="", attrs=[attribute])
     ent2 = Entity(label="ent2", spans=[Span(0, 0)], text="")
     segment = Segment(label="seg1", spans=[Span(0, 0)], text="")
-    relation = Relation(label="toto", source_id=ent1.id, target_id=ent2.id)
+    relation = Relation(label="toto", source_id=ent1.uid, target_id=ent2.uid)
     return doc, ent1, ent2, segment, relation, attribute
 
 
 def test_add_annotation(init_data):
     doc, ent1, ent2, segment, relation, attribute = init_data
     # Test entity addition in entity list
-    doc.add_annotation(ent1)
-    assert ent1 in doc.get_entities()
+    doc.anns.add(ent1)
+    assert ent1 in doc.anns.get_entities()
     # Test exception when adding the same annotation
     with pytest.raises(ValueError):
-        doc.add_annotation(ent1)
+        doc.anns.add(ent1)
     # Test segment addition
-    doc.add_annotation(segment)
-    assert segment in doc.get_segments()
+    doc.anns.add(segment)
+    assert segment in doc.anns.get_segments()
     # Test relation addition in annotations list
-    doc.add_annotation(ent2)
-    doc.add_annotation(relation)
-    assert doc.get_annotation_by_id(relation.id) == relation
+    doc.anns.add(ent2)
+    doc.anns.add(relation)
+    assert doc.anns.get_by_id(relation.uid) == relation
 
 
 def test_get_annotations_by_key(init_data):
     doc, ent1, ent2, segment, relation, attribute = init_data
-    ent1.add_key(key="superkey")
-    doc.add_annotation(ent1)
-    assert doc.get_annotations_by_key(key="superkey") == [ent1]
-    assert doc.get_annotations_by_key(key="hello") == []
+    ent1.keys.add("superkey")
+    doc.anns.add(ent1)
+    assert doc.anns.get(key="superkey") == [ent1]
+    assert doc.anns.get(key="ello") == []
 
 
 def test_get_annotations_by_label(init_data):
     doc, ent1, ent2, segment, relation, attribute = init_data
-    doc.add_annotation(ent1)
-    doc.add_annotation(ent2)
+    doc.anns.add(ent1)
+    doc.anns.add(ent2)
 
-    assert doc.get_annotations_by_label(ent1.label) == [ent1]
-    assert doc.get_annotations_by_label(ent1.label)[0].get_attrs() == [attribute]
-    assert doc.get_annotations_by_label(ent2.label) == [ent2]
+    assert doc.anns.get(label=ent1.label) == [ent1]
+    assert doc.anns.get(label=ent1.label)[0].attrs.get() == [attribute]
+    assert doc.anns.get(label=ent2.label) == [ent2]
 
     # add 2d annotation for same label and make sure we find all annotations
     # for that label
     ent3 = Entity(label=ent1.label, spans=[Span(0, 0)], text="")
-    doc.add_annotation(ent3)
-    assert doc.get_annotations_by_label(ent1.label) == [ent1, ent3]
+    doc.anns.add(ent3)
+    assert doc.anns.get(label=ent1.label) == [ent1, ent3]
 
 
 def test_raw_segment():
-    # raw text segment automatically generated when text is provided
+    # raw text segment automatically generated
     text = "This is the raw text."
     doc = TextDocument(text=text)
     seg = doc.raw_segment
@@ -68,29 +71,38 @@ def test_raw_segment():
     assert seg.text == text
     assert seg.spans == [Span(0, len(text))]
 
-    # also reachable through label and id
-    assert doc.get_annotations_by_label(TextDocument.RAW_LABEL) == [seg]
-    assert doc.get_annotation_by_id(seg.id) is seg
+    # also reachable through label and uid
+    assert doc.anns.get(label=TextDocument.RAW_LABEL) == [seg]
+    assert doc.anns.get_by_id(seg.uid) is seg
     # but not included in full annotation list
-    assert seg not in doc.get_annotations()
+    assert seg not in doc.anns
 
-    # no raw text segment generated if no text provided
-    doc = TextDocument()
-    assert doc.raw_segment is None
-    assert not doc.get_annotations_by_label(TextDocument.RAW_LABEL)
-
-    # docs with same ids should have raw text segments with same id
-    doc_id = generate_id()
-    doc_1 = TextDocument(doc_id=doc_id, text=text)
-    ann_1 = doc_1.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
-    doc_2 = TextDocument(doc_id=doc_id, text=text)
-    ann_2 = doc_2.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
-    assert ann_1.id == ann_2.id
+    # docs with same ids should have raw text segments with same uid
+    uid = generate_id()
+    doc_1 = TextDocument(uid=uid, text=text)
+    ann_1 = doc_1.anns.get(label=TextDocument.RAW_LABEL)[0]
+    doc_2 = TextDocument(uid=uid, text=text)
+    ann_2 = doc_2.anns.get(label=TextDocument.RAW_LABEL)[0]
+    assert ann_1.uid == ann_2.uid
 
     # manually adding annotation with reserved label RAW_LABEL is forbidden
-    doc = TextDocument()
-    seg = Segment(label=TextDocument.RAW_LABEL, spans=Span(0, len(text)), text=text)
+    doc = TextDocument(text=text)
+    seg = Segment(label=TextDocument.RAW_LABEL, spans=[Span(0, len(text))], text=text)
     with pytest.raises(
         RuntimeError, match=r"Cannot add annotation with reserved label .*"
     ):
-        doc.add_annotation(seg)
+        doc.anns.add(seg)
+
+
+def test_snippet():
+    doc = get_text_document("doc1")
+    entity = Segment(
+        label="disease",
+        spans=[Span(739, 755)],
+        text="neurofibromatose",
+    )
+    doc.anns.add(entity)
+
+    snippet = doc.get_snippet(entity, max_extend_length=49)
+    expected = "tats de la suspicion de neurofibromatose, je proposerai ou pas un"
+    assert snippet == expected

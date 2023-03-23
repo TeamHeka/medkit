@@ -29,7 +29,7 @@ class WebRTCVoiceDetector(SegmentationOperation):
         frame_duration: Literal[10, 20, 30] = 30,
         nb_frames_in_window: int = 10,
         switch_ratio: float = 0.9,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
@@ -47,7 +47,7 @@ class WebRTCVoiceDetector(SegmentationOperation):
         switch_ratio:
             Percentage of speech/non-speech frames required to switch the window speech
             state when aggregating per-frame VAD results.
-        op_id:
+        uid:
             Identifier of the detector.
         """
 
@@ -87,12 +87,12 @@ class WebRTCVoiceDetector(SegmentationOperation):
         audio = segment.audio
         if audio.nb_channels > 1:
             raise RuntimeError(
-                f"Segment with id {segment.id} has multi-channel audio, which is not"
-                " supported"
+                f"Segment with identifier {segment.uid} has multi-channel audio, which"
+                " is not supported"
             )
         if audio.sample_rate not in _SUPPORTED_SAMPLE_RATES:
             raise RuntimeError(
-                f"Segment with id {segment.id} has non-supported sample rate"
+                f"Segment with identifier {segment.uid} has non-supported sample rate"
                 f" {audio.sample_rate}"
             )
 

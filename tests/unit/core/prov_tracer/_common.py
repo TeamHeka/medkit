@@ -5,9 +5,9 @@ from medkit.core import generate_id, OperationDescription
 
 class TextItem:
     def __init__(self, text):
-        """Mock text item with id"""
+        """Mock text item with uid"""
 
-        self.id = generate_id()
+        self.uid = generate_id()
         self.text = text
 
 
@@ -19,9 +19,9 @@ class Generator:
     def __init__(self, prov_tracer=None):
         """Mock operation generating text items"""
 
-        self.id = generate_id()
+        self.uid = generate_id()
         self.prov_tracer = prov_tracer
-        self.description = OperationDescription(id=self.id, name="Generator")
+        self.description = OperationDescription(uid=self.uid, name="Generator")
 
     def generate(self, nb_items):
         items = get_text_items(nb_items)
@@ -36,9 +36,9 @@ class Prefixer:
     def __init__(self, prov_tracer=None):
         """Mock operation prefixing items"""
 
-        self.id = generate_id()
+        self.uid = generate_id()
         self.prov_tracer = prov_tracer
-        self.description = OperationDescription(id=self.id, name="Prefixer")
+        self.description = OperationDescription(uid=self.uid, name="Prefixer")
 
     def prefix(self, items):
         prefixed_items = []
@@ -56,9 +56,9 @@ class Splitter:
     def __init__(self, prov_tracer=None):
         """Mock operation splitting items"""
 
-        self.id = generate_id()
+        self.uid = generate_id()
         self.prov_tracer = prov_tracer
-        self.description = OperationDescription(id=self.id, name="Splitter")
+        self.description = OperationDescription(uid=self.uid, name="Splitter")
 
     def split(self, items):
         split_items = []
@@ -83,9 +83,9 @@ class Merger:
     """Mock operation merging items"""
 
     def __init__(self, prov_tracer=None):
-        self.id = generate_id()
+        self.uid = generate_id()
         self.prov_tracer = prov_tracer
-        self.description = OperationDescription(id=self.id, name="Merger")
+        self.description = OperationDescription(uid=self.uid, name="Merger")
 
     def merge(self, items):
         text = "".join(s.text for s in items)

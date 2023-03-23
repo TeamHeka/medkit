@@ -1,4 +1,5 @@
 __all__ = ["BratInputConverter", "BratOutputConverter"]
+import re
 import logging
 from pathlib import Path
 from typing import List, Optional, Tuple, Union, ValuesView, Dict
@@ -15,16 +16,21 @@ from medkit.io._brat_utils import (
 )
 from medkit.core import (
     Attribute,
-    Collection,
     InputConverter,
     OutputConverter,
-    Store,
     ProvTracer,
     generate_id,
     OperationDescription,
 )
-from medkit.core.text import Entity, Relation, Segment, Span, TextDocument
-from medkit.core.text.span_utils import normalize_spans
+from medkit.core.text import (
+    TextAnnotation,
+    Entity,
+    Relation,
+    Segment,
+    Span,
+    TextDocument,
+    span_utils,
+)
 
 
 TEXT_EXT = ".txt"
@@ -37,17 +43,20 @@ logger = logging.getLogger(__name__)
 class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
 
-    def __init__(self, store: Optional[Store] = None, op_id: Optional[str] = None):
-        if op_id is None:
-            op_id = generate_id()
+    def __init__(self, uid: Optional[str] = None):
+        if uid is None:
+            uid = generate_id()
 
-        self.id = op_id
-        self.store: Optional[Store] = store
+        self.uid = uid
         self._prov_tracer: Optional[ProvTracer] = None
 
     @property
     def description(self) -> OperationDescription:
-        return OperationDescription(id=self.id, name=self.__class__.__name__)
+        return OperationDescription(
+            uid=self.uid,
+            name=self.__class__.__name__,
+            class_name=self.__class__.__name__,
+        )
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
         self._prov_tracer = prov_tracer
@@ -57,9 +66,9 @@ class BratInputConverter(InputConverter):
         dir_path: Union[str, Path],
         ann_ext: str = ANN_EXT,
         text_ext: str = TEXT_EXT,
-    ) -> Collection:
+    ) -> List[TextDocument]:
         """
-        Create a Collection of TextDocuments from a folder containting text files
+        Create a list of TextDocuments from a folder containing text files
         and associated brat annotations files.
 
         Parameters
@@ -74,8 +83,8 @@ class BratInputConverter(InputConverter):
 
         Returns
         -------
-        Collection
-            The collection of TextDocuments
+        List[TextDocument]
+            The list of TextDocuments
         """
         documents = list()
         dir_path = Path(dir_path)
@@ -90,24 +99,36 @@ class BratInputConverter(InputConverter):
         # load doc for each base_path
         for base_path in sorted(base_paths):
             text_path = base_path.with_suffix(text_ext)
-            if not text_path.exists():
-                text_path = None
             ann_path = base_path.with_suffix(ann_ext)
+
+            if not text_path.exists():
+                # ignore .ann without .txt
+                logging.warning(
+                    f"Didn't find corresponding .txt for '{ann_path}', ignoring"
+                    " document"
+                )
+                continue
+
             if not ann_path.exists():
-                ann_path = None
-            doc = self._load_doc(ann_path=ann_path, text_path=text_path)
+                # directly load .txt without .ann
+                text = text_path.read_text(encoding="utf-8")
+                metadata = dict(path_to_text=str(text_path))
+                doc = TextDocument(text=text, metadata=metadata)
+            else:
+                # load both .txt and .ann
+                doc = self.load_doc(ann_path=ann_path, text_path=text_path)
             documents.append(doc)
 
         if not documents:
             logger.warning(f"Didn't load any document from dir {dir_path}")
 
-        return Collection(documents)
+        return documents
 
-    def _load_doc(
-        self, ann_path: Optional[Path] = None, text_path: Optional[Path] = None
+    def load_doc(
+        self, ann_path: Union[str, Path], text_path: Union[str, Path]
     ) -> TextDocument:
         """
-        Create a TextDocument from text file and its associated annotation file (.ann)
+        Create a TextDocument from a .ann file and its associated .txt file
 
         Parameters
         ----------
@@ -121,44 +142,49 @@ class BratInputConverter(InputConverter):
         TextDocument
             The document containing the text and the annotations
         """
-        assert ann_path is not None or text_path is not None
 
-        metadata = dict()
-        if text_path is not None:
-            metadata.update(path_to_text=text_path)
-            with open(text_path, encoding="utf-8") as text_file:
-                text = text_file.read()
-        else:
-            text = None
+        ann_path = Path(ann_path)
+        text_path = Path(text_path)
 
-        if ann_path is not None:
-            metadata.update(path_to_ann=ann_path)
-            anns = self._load_anns(ann_path)
-        else:
-            anns = []
+        with open(text_path, encoding="utf-8") as fp:
+            text = fp.read()
 
-        doc = TextDocument(text=text, metadata=metadata, store=self.store)
+        anns = self.load_annotations(ann_path)
+
+        metadata = dict(path_to_text=str(text_path), path_to_ann=str(ann_path))
+
+        doc = TextDocument(text=text, metadata=metadata)
         for ann in anns:
-            doc.add_annotation(ann)
+            doc.anns.add(ann)
 
         return doc
 
-    def _load_anns(
-        self, ann_path: Path
-    ) -> ValuesView[Union[Entity, Relation, Attribute]]:
-        brat_doc = brat_utils.parse_file(ann_path)
+    def load_annotations(self, ann_file: Union[str, Path]) -> List[TextAnnotation]:
+        """
+        Load a .ann file and return a list of
+        :class:`~medkit.core.text.annotation.Annotation` objects.
+
+        Parameters
+        ----------
+        ann_file:
+            Path to the .ann file.
+        """
+
+        ann_file = Path(ann_file)
+
+        brat_doc = brat_utils.parse_file(ann_file)
         anns_by_brat_id = dict()
 
         # First convert entities, then relations, finally attributes
-        # because new annotation id is needed
+        # because new annotation identifier is needed
         for brat_entity in brat_doc.entities.values():
             entity = Entity(
                 label=brat_entity.type,
                 spans=[Span(*brat_span) for brat_span in brat_entity.span],
                 text=brat_entity.text,
-                metadata=dict(brat_id=brat_entity.id),
+                metadata=dict(brat_id=brat_entity.uid),
             )
-            anns_by_brat_id[brat_entity.id] = entity
+            anns_by_brat_id[brat_entity.uid] = entity
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     entity, self.description, source_data_items=[]
@@ -167,11 +193,11 @@ class BratInputConverter(InputConverter):
         for brat_relation in brat_doc.relations.values():
             relation = Relation(
                 label=brat_relation.type,
-                source_id=anns_by_brat_id[brat_relation.subj].id,
-                target_id=anns_by_brat_id[brat_relation.obj].id,
-                metadata=dict(brat_id=brat_relation.id),
+                source_id=anns_by_brat_id[brat_relation.subj].uid,
+                target_id=anns_by_brat_id[brat_relation.obj].uid,
+                metadata=dict(brat_id=brat_relation.uid),
             )
-            anns_by_brat_id[brat_relation.id] = relation
+            anns_by_brat_id[brat_relation.uid] = relation
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     relation, self.description, source_data_items=[]
@@ -181,19 +207,19 @@ class BratInputConverter(InputConverter):
             attribute = Attribute(
                 label=brat_attribute.type,
                 value=brat_attribute.value,
-                metadata=dict(brat_id=brat_attribute.id),
+                metadata=dict(brat_id=brat_attribute.uid),
             )
-            anns_by_brat_id[brat_attribute.target].add_attr(attribute)
+            anns_by_brat_id[brat_attribute.target].attrs.add(attribute)
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     attribute, self.description, source_data_items=[]
                 )
 
-        return anns_by_brat_id.values()
+        return list(anns_by_brat_id.values())
 
 
 class BratOutputConverter(OutputConverter):
-    """Class in charge of converting a list/Collection of TextDocuments into a
+    """Class in charge of converting a list of TextDocuments into a
     brat collection file"""
 
     def __init__(
@@ -203,7 +229,7 @@ class BratOutputConverter(OutputConverter):
         ignore_segments: bool = True,
         create_config: bool = True,
         top_values_by_attr: int = 50,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """
         Initialize the Brat output converter
@@ -229,13 +255,13 @@ class BratOutputConverter(OutputConverter):
             Defines the number of most common values by attribute to show in the configuration.
             This is useful when an attribute has a large number of values, only the 'top' ones
             will be in the config. By default, the top 50 of values by attr will be in the config.
-        op_id:
+        uid:
             Identifier of the converter
         """
-        if op_id is None:
-            op_id = generate_id()
+        if uid is None:
+            uid = generate_id()
 
-        self.id = op_id
+        self.uid = uid
         self.anns_labels = anns_labels
         self.attrs = attrs
         self.ignore_segments = ignore_segments
@@ -252,12 +278,12 @@ class BratOutputConverter(OutputConverter):
             top_values_by_attr=self.top_values_by_attr,
         )
         return OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=config
+            uid=self.uid, class_name=self.__class__.__name__, config=config
         )
 
     def save(
         self,
-        docs: Union[List[TextDocument], Collection],
+        docs: List[TextDocument],
         dir_path: Union[str, Path],
         doc_names: Optional[List[str]] = None,
     ):
@@ -268,21 +294,14 @@ class BratOutputConverter(OutputConverter):
         Parameters
         ----------
         docs:
-            List or Collection of medkit doc objects to convert
+            List of medkit doc objects to convert
         dir_path:
             String or path object to save the generated files
         doc_names:
-            Optional list with the names for the generated files. If 'None', 'doc_id' will
-            be used as the name. Where 'doc_id.txt' has the raw text of the document and
-            'doc_id.ann' the Brat annotation file.
+            Optional list with the names for the generated files. If 'None', 'uid' will
+            be used as the name. Where 'uid.txt' has the raw text of the document and
+            'uid.ann' the Brat annotation file.
         """
-
-        if isinstance(docs, Collection):
-            docs = [
-                medkit_doc
-                for medkit_doc in docs.documents
-                if isinstance(medkit_doc, TextDocument)
-            ]
 
         if doc_names is not None:
             assert len(doc_names) == len(docs)
@@ -292,23 +311,25 @@ class BratOutputConverter(OutputConverter):
         config = BratAnnConfiguration(self.top_values_by_attr)
 
         for i, medkit_doc in enumerate(docs):
-            doc_id = medkit_doc.id if doc_names is None else doc_names[i]
             text = medkit_doc.text
+            doc_id = medkit_doc.uid if doc_names is None else doc_names[i]
 
-            if text is not None:
-                text_path = dir_path / f"{doc_id}{TEXT_EXT}"
-                text_path.write_text(text, encoding="utf-8")
-
+            # convert medkit anns to brat format
             segments, relations = self._get_anns_from_medkit_doc(medkit_doc)
-            brat_anns = self._convert_medkit_anns_to_brat(segments, relations, config)
+            brat_anns = self._convert_medkit_anns_to_brat(
+                segments, relations, config, text
+            )
 
+            # save text file
+            text_path = dir_path / f"{doc_id}{TEXT_EXT}"
+            text_path.write_text(text, encoding="utf-8")
             # save ann file
             ann_path = dir_path / f"{doc_id}{ANN_EXT}"
             brat_str = "".join(f"{brat_ann.to_str()}" for brat_ann in brat_anns)
             ann_path.write_text(brat_str, encoding="utf-8")
 
         if self.create_config:
-            # save configuration file
+            # save configuration file by collection or list of documents
             conf_path = dir_path / ANN_CONF_FILE
             conf_path.write_text(config.to_str(), encoding="utf-8")
 
@@ -316,11 +337,15 @@ class BratOutputConverter(OutputConverter):
         self, medkit_doc: TextDocument
     ) -> Tuple[List[Segment], List[Relation]]:
         """Return selected annotations from a medkit document"""
-        annotations = medkit_doc.get_annotations()
-
         if self.anns_labels is not None:
             # filter annotations by label
-            annotations = [ann for ann in annotations if ann.label in self.anns_labels]
+            annotations = [
+                ann
+                for label in self.anns_labels
+                for ann in medkit_doc.anns.get(label=label)
+            ]
+        else:
+            annotations = medkit_doc.anns.get()
 
         if self.anns_labels and annotations == []:
             # labels_anns were a list but none of the annotations
@@ -343,7 +368,6 @@ class BratOutputConverter(OutputConverter):
                 segments.append(ann)
             elif isinstance(ann, Relation):
                 relations.append(ann)
-
         return segments, relations
 
     def _convert_medkit_anns_to_brat(
@@ -351,6 +375,7 @@ class BratOutputConverter(OutputConverter):
         segments: List[Segment],
         relations: List[Relation],
         config: BratAnnConfiguration,
+        raw_text: str,
     ) -> Tuple[ValuesView[Union[BratEntity, BratAttribute, BratRelation]]]:
         """
         Convert Segments, Relations and Attributes into brat data structures
@@ -364,6 +389,8 @@ class BratOutputConverter(OutputConverter):
         config:
             Optional `BratAnnConfiguration` structure, this object is updated
             with the types of the generated Brat annotations.
+        raw_text:
+            Text of reference to get the original text of the annotations
         Returns
         -------
         BratAnnotations
@@ -374,19 +401,21 @@ class BratOutputConverter(OutputConverter):
 
         # First convert segments then relations including its attributes
         for medkit_segment in segments:
-            brat_entity = self._convert_segment_to_brat(medkit_segment, nb_segment)
-            anns_by_medkit_id[medkit_segment.id] = brat_entity
+            brat_entity = self._convert_segment_to_brat(
+                medkit_segment, nb_segment, raw_text
+            )
+            anns_by_medkit_id[medkit_segment.uid] = brat_entity
             config.add_entity_type(brat_entity.type)
             nb_segment += 1
 
             # include selected attributes
             if self.attrs is None:
-                attrs = medkit_segment.get_attrs()
+                attrs = medkit_segment.attrs.get()
             else:
                 attrs = [
                     a
                     for label in self.attrs
-                    for a in medkit_segment.get_attrs_by_label(label)
+                    for a in medkit_segment.attrs.get(label=label)
                 ]
             for attr in attrs:
                 value = attr.value
@@ -400,37 +429,37 @@ class BratOutputConverter(OutputConverter):
                         label=attr.label,
                         value=value,
                         nb_attribute=nb_attribute,
-                        target_brat_id=brat_entity.id,
+                        target_brat_id=brat_entity.uid,
                         is_from_entity=True,
                     )
-                    anns_by_medkit_id[attr.id] = brat_attr
+                    anns_by_medkit_id[attr.uid] = brat_attr
                     config.add_attribute_type(attr_config)
                     nb_attribute += 1
 
                 except TypeError as err:
-                    logger.warning(f"Ignore attribute {attr.id}. {err}")
+                    logger.warning(f"Ignore attribute {attr.uid}. {err}")
 
         for medkit_relation in relations:
             try:
                 brat_relation, relation_config = self._convert_relation_to_brat(
                     medkit_relation, nb_relation, anns_by_medkit_id
                 )
-                anns_by_medkit_id[medkit_relation.id] = brat_relation
+                anns_by_medkit_id[medkit_relation.uid] = brat_relation
                 config.add_relation_type(relation_config)
                 nb_relation += 1
             except ValueError as err:
-                logger.warning(f"Ignore relation {medkit_relation.id}. {err}")
+                logger.warning(f"Ignore relation {medkit_relation.uid}. {err}")
                 continue
 
             # Note: it seems that brat does not support attributes for relations
             # include selected attributes
             if self.attrs is None:
-                attrs = medkit_relation.get_attrs()
+                attrs = medkit_relation.attrs.get()
             else:
                 attrs = [
                     a
                     for label in self.attrs
-                    for a in medkit_relation.get_attrs_by_label(label)
+                    for a in medkit_relation.attrs.get(label=label)
                 ]
             for attr in attrs:
                 value = attr.value
@@ -443,19 +472,34 @@ class BratOutputConverter(OutputConverter):
                         label=attr.label,
                         value=value,
                         nb_attribute=nb_attribute,
-                        target_brat_id=brat_relation.id,
+                        target_brat_id=brat_relation.uid,
                         is_from_entity=False,
                     )
-                    anns_by_medkit_id[attr.id] = brat_attr
+                    anns_by_medkit_id[attr.uid] = brat_attr
                     config.add_attribute_type(attr_config)
                     nb_attribute += 1
                 except TypeError as err:
-                    logger.warning(f"Ignore attribute {attr.id}. {err}")
+                    logger.warning(f"Ignore attribute {attr.uid}. {err}")
 
         return anns_by_medkit_id.values()
 
     @staticmethod
-    def _convert_segment_to_brat(segment: Segment, nb_segment: int) -> BratEntity:
+    def _ensure_text_and_spans(
+        segment: Segment, raw_text: str
+    ) -> Tuple[str, List[Span]]:
+        """Ensure consistency between `raw_text` and `segment.text`"""
+        # normalize and extract from raw_text
+        segment_spans = span_utils.normalize_spans(segment.spans)
+        text = "".join(raw_text[sp.start : sp.end] for sp in segment_spans)
+        # remove multiple whitespaces because they are not supported by Brat
+        pattern = r"[ \t](?P<blanks>\s{2,})"
+        ranges = [(match.span("blanks")) for match in re.finditer(pattern, text)]
+        text, spans = span_utils.remove(text, segment_spans, ranges)
+        return text, spans
+
+    def _convert_segment_to_brat(
+        self, segment: Segment, nb_segment: int, raw_text: str
+    ) -> BratEntity:
         """
         Get a brat entity from a medkit segment
 
@@ -465,7 +509,8 @@ class BratOutputConverter(OutputConverter):
             A medkit segment to convert into brat format
         nb_segment:
             The current counter of brat segments
-
+        raw_text:
+            Text of reference to get the original text of the segment
         Returns
         -------
         BratEntity
@@ -475,8 +520,8 @@ class BratOutputConverter(OutputConverter):
         brat_id = f"T{nb_segment}"
         # brat does not support spaces in labels
         type = segment.label.replace(" ", "_")
-        text = segment.text
-        spans = tuple((span.start, span.end) for span in normalize_spans(segment.spans))
+        text, _spans = self._ensure_text_and_spans(segment, raw_text)
+        spans = tuple((span.start, span.end) for span in _spans)
         return BratEntity(brat_id, type, spans, text)
 
     @staticmethod
@@ -520,7 +565,7 @@ class BratOutputConverter(OutputConverter):
             raise ValueError("Entity target/source was not found.")
 
         relation_conf = RelationConf(type, arg1=subj.type, arg2=obj.type)
-        return BratRelation(brat_id, type, subj.id, obj.id), relation_conf
+        return BratRelation(brat_id, type, subj.uid, obj.uid), relation_conf
 
     @staticmethod
     def _convert_attribute_to_brat(
@@ -554,6 +599,7 @@ class BratOutputConverter(OutputConverter):
         assert nb_attribute != 0
         brat_id = f"A{nb_attribute}"
         type = label.replace(" ", "_")
+
         value: str = brat_utils.ensure_attr_value(value)
         attr_conf = AttributeConf(from_entity=is_from_entity, type=type, value=value)
         return BratAttribute(brat_id, type, target_brat_id, value), attr_conf

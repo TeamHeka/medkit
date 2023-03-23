@@ -2,172 +2,158 @@ from __future__ import annotations
 
 __all__ = ["TextDocument"]
 
+import dataclasses
 import random
-from typing import Any, Dict, List, Optional
 import uuid
+from typing import Any, ClassVar, Dict, List, Optional
+from typing_extensions import Self
 
-from medkit.core.document import Document
-from medkit.core.store import Store
-from medkit.core.text.annotation import TextAnnotation, Segment, Entity, Relation
+from medkit.core import dict_conv
+from medkit.core.id import generate_id
+from medkit.core.text.annotation import TextAnnotation, Segment
+from medkit.core.text.annotation_container import TextAnnotationContainer
 from medkit.core.text.span import Span
+from medkit.core.text import span_utils
 
 
-class TextDocument(Document[TextAnnotation]):
-    """Document holding text annotations
+@dataclasses.dataclass(init=False)
+class TextDocument(dict_conv.SubclassMapping):
+    """
+    Document holding text annotations
 
     Annotations must be subclasses of `TextAnnotation`.
 
+    Attributes
+    ----------
+    uid:
+        Unique identifier of the document.
+    text:
+        Full document text.
+    anns:
+        Annotations of the document. Stored in an
+        :class:`~.text.TextAnnotationContainer` but can be passed as a list at init.
+    metadata:
+        Document metadata.
+    raw_segment:
+        Auto-generated segment containing the full unprocessed document text. To
+        get the raw text as an annotation to pass to processing operations:
+
+        >>> doc = TextDocument(text="hello")
+        >>> raw_text = doc.anns.get(label=TextDocument.RAW_LABEL)[0]
     """
 
-    RAW_LABEL = "RAW_TEXT"
-    """Label to be used for raw text
-    """
+    RAW_LABEL: ClassVar[str] = "RAW_TEXT"
+
+    uid: str
+    anns: TextAnnotationContainer
+    metadata: Dict[str, Any]
+    raw_segment: Segment
 
     def __init__(
         self,
-        text: Optional[str] = None,
+        text: str,
+        anns: Optional[List[TextAnnotation]] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        store: Optional[Store] = None,
-        doc_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
-        """
-        Initializes the text document
+        if anns is None:
+            anns = []
+        if metadata is None:
+            metadata = {}
+        if uid is None:
+            uid = generate_id()
 
-        The method uses the abstract class Document to initialize a part
-        and creates dictionary views for accessing entities and relations.
+        self.uid = uid
+        self.metadata = metadata
 
-        Parameters
-        ----------
-        text: str, Optional
-            Document text
-        metadata: dict  # TODO
-            Document metadata
-        store:
-            Store to use for annotations
-        doc_id: str, Optional
-            Document identifier. If None, an uuid is generated.
+        # auto-generated raw segment to hold the text
+        self.raw_segment = self._generate_raw_segment(text, uid)
 
-        Examples
-        --------
-        To get the raw text as an annotation to pass to processing operations:
+        self.anns = TextAnnotationContainer(
+            doc_id=self.uid, raw_segment=self.raw_segment
+        )
+        for ann in anns:
+            self.anns.add(ann)
 
-        >>> doc = TextDocument(text="hello")
-        >>> raw_text = doc.get_annotations_by_label(TextDocument.RAW_LABEL)[0]
-        """
-        super().__init__(doc_id=doc_id, metadata=metadata, store=store)
-        self.text: Optional[str] = text
-        self._segment_ids: List[str] = []
-        self._entity_ids: List[str] = []
-        self.relations_by_source: Dict[str, List[str]] = dict()  # Key: source_id
-
-        # auto-generated raw segment
-        # not stored with other annotations but injected in calls to get_annotations_by_label()
-        # and get_annotation_by_id()
-        self.raw_segment: Optional[Segment] = self._generate_raw_segment()
-
-    def _generate_raw_segment(self) -> Optional[Segment]:
-        if self.text is None:
-            return None
-
-        # generate deterministic uuid based on document id
-        # so that the annotation id is the same if the doc id is the same
-        rng = random.Random(self.id)
-        id = str(uuid.UUID(int=rng.getrandbits(128)))
+    @classmethod
+    def _generate_raw_segment(cls, text: str, doc_id: str) -> Segment:
+        # generate deterministic uuid based on document uid
+        # so that the annotation uid is the same if the doc uid is the same
+        rng = random.Random(doc_id)
+        uid = str(uuid.UUID(int=rng.getrandbits(128)))
 
         return Segment(
-            label=self.RAW_LABEL,
-            spans=[Span(0, len(self.text))],
-            text=self.text,
-            ann_id=id,
+            label=cls.RAW_LABEL,
+            spans=[Span(0, len(text))],
+            text=text,
+            uid=uid,
         )
 
-    def add_annotation(self, annotation: TextAnnotation):
-        """
-        Add the annotation to this document
+    @property
+    def text(self) -> str:
+        return self.raw_segment.text
 
-        The method uses the abstract class method to add the annotation
-        in the Document.
-        It also adds the annotation id to the corresponding dictionary view (segments,
-        entities, relations)
-        according to the annotation category (Segment, Entity, Relation).
+    def __init_subclass__(cls):
+        TextDocument.register_subclass(cls)
+        super().__init_subclass__()
+
+    def to_dict(self, with_anns: bool = True) -> Dict[str, Any]:
+        doc_dict = dict(
+            uid=self.uid,
+            text=self.text,
+            metadata=self.metadata,
+        )
+        if with_anns:
+            doc_dict["anns"] = [a.to_dict() for a in self.anns]
+
+        dict_conv.add_class_name_to_data_dict(self, doc_dict)
+        return doc_dict
+
+    @classmethod
+    def from_dict(cls, doc_dict: Dict[str, Any]) -> Self:
+        """
+        Creates a TextDocument from a dict
 
         Parameters
         ----------
-        annotation:
-            Annotation to add.
-
-        Raises
-        ------
-        ValueError
-            If `annotation.id` is already in Document.annotations.
-
-
+        doc_dict: dict
+            A dictionary from a serialized TextDocument as generated by to_dict()
         """
-        if annotation.label == self.RAW_LABEL:
-            raise RuntimeError(
-                f"Cannot add annotation with reserved label {self.RAW_LABEL}"
-            )
 
-        try:
-            super().add_annotation(annotation)
-        except ValueError as err:
-            raise err
+        # if class method is not the same as the TextDocument one
+        # (e.g., when subclassing with an overriding method)
+        subclass = cls.get_subclass_for_data_dict(doc_dict)
+        if subclass is not None:
+            return subclass.from_dict(doc_dict)
 
-        if isinstance(annotation, Entity):
-            self._entity_ids.append(annotation.id)
-        elif isinstance(annotation, Segment):
-            self._segment_ids.append(annotation.id)
-        elif isinstance(annotation, Relation):
-            if annotation.source_id not in self.relations_by_source:
-                self.relations_by_source[annotation.source_id] = []
-            self.relations_by_source[annotation.source_id].append(annotation.id)
+        anns = [TextAnnotation.from_dict(a) for a in doc_dict.get("anns", [])]
+        return cls(
+            uid=doc_dict["uid"],
+            text=doc_dict["text"],
+            anns=anns,
+            metadata=doc_dict["metadata"],
+        )
 
-    def get_annotations_by_label(self, label) -> List[TextAnnotation]:
-        # inject raw segment
-        if self.raw_segment is not None and label == self.RAW_LABEL:
-            return [self.raw_segment]
-        return super().get_annotations_by_label(label)
+    def get_snippet(self, segment: Segment, max_extend_length: int) -> str:
+        """Return a portion of the original text containing the annotation
 
-    def get_annotation_by_id(self, annotation_id) -> Optional[TextAnnotation]:
-        # inject raw segment
-        if self.raw_segment is not None and annotation_id == self.raw_segment.id:
-            return self.raw_segment
-        return super().get_annotation_by_id(annotation_id)
+        Parameters
+        ----------
+        segment:
+            The annotation
 
-    def to_dict(self) -> Dict[str, Any]:
-        data = super().to_dict()
-        data.update(text=self.text)
-        return data
-
-    def get_entities(self) -> List[Entity]:
-        """Return all entities attached to document
+        max_extend_length:
+            Maximum number of characters to use around the annotation
 
         Returns
         -------
-        List[Entity]:
-            Entities in document
+        str:
+            A portion of the text around the annotation
         """
-        return [self.get_annotation_by_id(id) for id in self._entity_ids]
-
-    def get_segments(self) -> List[Segment]:
-        """Return all segments attached to document (not including entities)
-
-        Returns
-        -------
-        List[~medkit.core.text.Segment]:
-            Segments in document
-        """
-        return [self.get_annotation_by_id(id) for id in self._segment_ids]
-
-    def get_relations_by_source_id(self, source_ann_id) -> List[Relation]:
-        relation_ids = self.relations_by_source.get(source_ann_id, [])
-        relations = [self.store.get_data_item(id) for id in relation_ids]
-        return relations
-
-    def get_relations(self) -> List[Relation]:
-        relations = [
-            self.store.get_data_item(ann_id)
-            for ids in self.relations_by_source.values()
-            for ann_id in ids
-        ]
-        return relations
+        spans_normalized = span_utils.normalize_spans(segment.spans)
+        start = min(s.start for s in spans_normalized)
+        end = max(s.end for s in spans_normalized)
+        start_extended = max(start - max_extend_length // 2, 0)
+        remaining_max_extend_length = max_extend_length - (start - start_extended)
+        end_extended = min(end + remaining_max_extend_length, len(self.text))
+        return self.text[start_extended:end_extended]

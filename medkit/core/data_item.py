@@ -1,11 +1,12 @@
 __all__ = ["IdentifiableDataItem", "IdentifiableDataItemWithAttrs"]
 
-from typing import Generic, List, TypeVar
+from typing import Iterable, TypeVar
 from typing_extensions import Protocol, runtime_checkable
 
 
+@runtime_checkable
 class IdentifiableDataItem(Protocol):
-    id: str
+    uid: str
 
 
 IdentifiableDataItemType = TypeVar(
@@ -14,6 +15,5 @@ IdentifiableDataItemType = TypeVar(
 
 
 @runtime_checkable
-class IdentifiableDataItemWithAttrs(Protocol, Generic[IdentifiableDataItemType]):
-    def get_attrs(self) -> List[IdentifiableDataItemType]:
-        ...
+class IdentifiableDataItemWithAttrs(Protocol[IdentifiableDataItemType]):
+    attrs: Iterable[IdentifiableDataItemType]

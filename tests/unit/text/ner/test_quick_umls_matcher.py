@@ -13,6 +13,7 @@ import spacy.cli  # noqa: E402
 
 from medkit.core import Attribute, ProvTracer  # noqa: E402
 from medkit.core.text import Segment, Span  # noqa: E402
+from medkit.text.ner import UMLSNormAttribute  # noqa: E402
 from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher  # noqa: E402
 
 # QuickUMLSMatcher is a wrapper around 3d-party quickumls.core.QuickUMLS,
@@ -95,16 +96,18 @@ def test_single_match():
     assert entity is not None
     assert entity.text == "asthma"
     assert entity.spans == [Span(16, 22)]
+    assert entity.label == "disorder"
 
     # normalization attribute
-    attrs = entity.get_attrs_by_label("umls")
-    assert len(attrs) == 1
-    attr = attrs[0]
-    assert attr.label == "umls"
-    assert attr.value == _ASTHMA_CUI
-    assert attr.metadata["version"] == "2021AB"
-    assert attr.metadata["score"] == 1.0
-    assert attr.metadata["sem_types"] == ["T047"]
+    norm_attrs = entity.attrs.get_norms()
+    assert len(norm_attrs) == 1
+    norm_attr = norm_attrs[0]
+    assert isinstance(norm_attr, UMLSNormAttribute)
+    assert norm_attr.cui == _ASTHMA_CUI
+    assert norm_attr.umls_version == "2021AB"
+    assert norm_attr.term == "asthma"
+    assert norm_attr.score == 1.0
+    assert norm_attr.sem_types == ["T047"]
 
 
 def test_multiple_matches():
@@ -117,21 +120,23 @@ def test_multiple_matches():
 
     # 1st entity (diabetes)
     entity_1 = entities[0]
-    assert entity_1.label == "type 1 diabetes"
+    assert entity_1.label == "disorder"
     assert entity_1.text == "type 1 diabetes"
     assert entity_1.spans == [Span(27, 42)]
 
-    attr_1 = entity_1.get_attrs_by_label("umls")[0]
-    assert attr_1.value == _DIABETES_CUI
+    norm_attr_1 = entity_1.attrs.get_norms()[0]
+    assert norm_attr_1.cui == _DIABETES_CUI
+    assert norm_attr_1.term == "type 1 diabetes"
 
     # 2d entity (asthma)
     entity_2 = entities[1]
-    assert entity_2.label == "asthma"
+    assert entity_2.label == "disorder"
     assert entity_2.text == "asthma"
     assert entity_2.spans == [Span(16, 22)]
 
-    attr_2 = entity_2.get_attrs_by_label("umls")[0]
-    assert attr_2.value == _ASTHMA_CUI
+    norm_attr_2 = entity_2.attrs.get_norms()[0]
+    assert norm_attr_2.cui == _ASTHMA_CUI
+    assert norm_attr_2.term == "asthma"
 
 
 def test_language():
@@ -142,12 +147,13 @@ def test_language():
 
     # entity
     entity = entities[0]
-    assert entity.label == "Asthme"
+    assert entity.label == "disorder"
     assert entity.text == "Asthme"
 
     # normalization attribute, same CUI as in english
-    attr = entity.get_attrs_by_label("umls")[0]
-    assert attr.value == _ASTHMA_CUI
+    norm_attr = entity.attrs.get_norms()[0]
+    assert norm_attr.cui == _ASTHMA_CUI
+    assert norm_attr.term == "Asthme"
 
 
 def test_lowercase():
@@ -166,8 +172,12 @@ def test_lowercase():
     entities = umls_matcher_lowercase.run([sentence])
     assert len(entities) == 1
     entity = entities[0]
-    assert entity.label == "asthme"
+    assert entity.label == "disorder"
     assert entity.text == "asthme"
+
+    norm_attr = entity.attrs.get_norms()[0]
+    assert norm_attr.cui == _ASTHMA_CUI
+    assert norm_attr.term == "asthme"
 
 
 def test_ambiguous_match():
@@ -180,16 +190,17 @@ def test_ambiguous_match():
     # 1 normalization attribute is created
     assert len(entities) == 1
     entity = entities[0]
-    attrs = entity.get_attrs_by_label("umls")
-    assert len(attrs) == 1
+    norm_attrs = entity.attrs.get_norms()
+    assert len(norm_attrs) == 1
 
 
 def test_attrs_to_copy():
     sentence = _get_sentence_segment("The patient has asthma.")
     # copied attribute
-    sentence.add_attr(Attribute(label="negation", value=True))
+    neg_attr = Attribute(label="negation", value=True)
+    sentence.attrs.add(neg_attr)
     # uncopied attribute
-    sentence.add_attr(Attribute(label="hypothesis", value=True))
+    sentence.attrs.add(Attribute(label="hypothesis", value=True))
 
     umls_matcher = QuickUMLSMatcher(
         version="2021AB",
@@ -198,11 +209,17 @@ def test_attrs_to_copy():
     )
     entity = umls_matcher.run([sentence])[0]
 
-    assert len(entity.get_attrs_by_label("umls")) == 1
+    norm_attrs = entity.attrs.get_norms()
+    assert len(norm_attrs) == 1
     # only negation attribute was copied
-    neg_attrs = entity.get_attrs_by_label("negation")
-    assert len(neg_attrs) == 1 and neg_attrs[0].value is True
-    assert len(entity.get_attrs_by_label("hypothesis")) == 0
+    neg_attrs = entity.attrs.get(label="negation")
+    assert len(neg_attrs) == 1
+    assert len(entity.attrs.get(label="hypothesis")) == 0
+
+    # copied attribute has same value but new id
+    copied_neg_attr = neg_attrs[0]
+    assert copied_neg_attr.value == neg_attr.value
+    assert copied_neg_attr.uid != neg_attr.uid
 
 
 def test_prov():
@@ -215,13 +232,39 @@ def test_prov():
     entities = umls_matcher.run([sentence])
 
     entity = entities[0]
-    entity_prov = prov_tracer.get_prov(entity.id)
+    entity_prov = prov_tracer.get_prov(entity.uid)
     assert entity_prov.data_item == entity
     assert entity_prov.op_desc == umls_matcher.description
     assert entity_prov.source_data_items == [sentence]
 
-    attr = entity.get_attrs_by_label("umls")[0]
-    attr_prov = prov_tracer.get_prov(attr.id)
+    attr = entity.attrs.get_norms()[0]
+    attr_prov = prov_tracer.get_prov(attr.uid)
     assert attr_prov.data_item == attr
     assert attr_prov.op_desc == umls_matcher.description
     assert attr_prov.source_data_items == [sentence]
+
+
+TEST_OUTPUT_LABEL = [
+    (None, "disorder"),
+    ("disease", "disease"),
+    ({"DISO": "problem"}, "problem"),
+]
+
+
+@pytest.mark.parametrize(
+    "output_label,expected_label",
+    TEST_OUTPUT_LABEL,
+    ids=["default_label", "label_str", "label_dict"],
+)
+def test_output_label(output_label, expected_label):
+    sentence = _get_sentence_segment("The patient has asthma and type 1 diabetes.")
+
+    umls_matcher = QuickUMLSMatcher(
+        version="2021AB",
+        language="ENG",
+        output_label=output_label,
+    )
+    entities = umls_matcher.run([sentence])
+
+    assert len(entities) == 2
+    assert all(ent.label == expected_label for ent in entities)

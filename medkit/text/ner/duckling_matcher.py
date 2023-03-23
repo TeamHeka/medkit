@@ -9,7 +9,7 @@ from medkit.core.text import Entity, NEROperation, Segment, span_utils
 
 
 class DucklingMatcher(NEROperation):
-    """Entity annotator using Ducking (https://github.com/facebook/duckling).
+    """Entity annotator using Duckling (https://github.com/facebook/duckling).
 
     This annotator can parse several types of information in multiple languages:
         amount of money, credit card numbers, distance, duration, email, numeral,
@@ -32,7 +32,7 @@ class DucklingMatcher(NEROperation):
         locale: str = "fr_FR",
         dims: Optional[List[str]] = None,
         attrs_to_copy: Optional[List[str]] = None,
-        op_id: Optional[str] = None,
+        uid: Optional[str] = None,
     ):
         """Instantiate the Duckling matcher
 
@@ -123,8 +123,14 @@ class DucklingMatcher(NEROperation):
             )
 
             for label in self.attrs_to_copy:
-                for attr in segment.get_attrs_by_label(label):
-                    entity.add_attr(attr)
+                for attr in segment.attrs.get(label=label):
+                    copied_attr = attr.copy()
+                    entity.attrs.add(copied_attr)
+                    # handle provenance
+                    if self._prov_tracer is not None:
+                        self._prov_tracer.add_prov(
+                            copied_attr, self.description, [attr]
+                        )
 
             norm_attr = Attribute(
                 label=self.output_label,
@@ -133,7 +139,7 @@ class DucklingMatcher(NEROperation):
                     version=self.version,
                 ),
             )
-            entity.add_attr(norm_attr)
+            entity.attrs.add(norm_attr)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(

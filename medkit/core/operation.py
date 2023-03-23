@@ -4,36 +4,36 @@ __all__ = ["Operation", "DocOperation"]
 
 import abc
 
-from typing import List, Type, TypeVar, Union
+from typing import List
 
-from medkit.core.document import Collection, Document
+from medkit.core.document import Document
 from medkit.core.id import generate_id
 from medkit.core.operation_desc import OperationDescription
 from medkit.core.prov_tracer import ProvTracer
-
-C = TypeVar("C", bound="Operation")
 
 
 class Operation(abc.ABC):
     """Abstract class for all annotator modules"""
 
-    id: str
+    uid: str
     _description: OperationDescription = None
     _prov_tracer: ProvTracer = None
 
     @abc.abstractmethod
-    def __init__(self, op_id=None, **kwargs):
+    def __init__(self, uid=None, name=None, **kwargs):
         """
         Common initialization for all annotators:
-          * assigning id to operation
-          * storing config in description
+          * assigning identifier to operation
+          * storing class name, name and config in description
 
         Parameters
         ----------
-        op_id:
-            Operation id
+        uid:
+            Operation identifier
+        name:
+            Operation name (defaults to class name)
         kwargs:
-            All other arguments of the child init
+            All other arguments of the child init useful to describe the operation
 
         Examples
         --------
@@ -43,11 +43,17 @@ class Operation(abc.ABC):
         >>> init_args.pop('self')
         >>> super().__init__(**init_args)
         """
-        if op_id is None:
-            op_id = generate_id()
-        self.id = op_id
+        if uid is None:
+            uid = generate_id()
+        if name is None:
+            name = self.__class__.__name__
+
+        self.uid = uid
         self._description = OperationDescription(
-            id=self.id, name=self.__class__.__name__, config=kwargs
+            uid=self.uid,
+            class_name=self.__class__.__name__,
+            name=name,
+            config=kwargs,
         )
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
@@ -66,34 +72,6 @@ class Operation(abc.ABC):
         """Contains all the operation init parameters."""
         return self._description
 
-    @classmethod
-    def from_description(cls: Type[C], description: OperationDescription) -> C:
-        """
-        Allows to re-instantiate an existing operation from a description.
-
-        Parameters
-        ----------
-        description:
-            Operation description saved from a previous medkit usage.
-
-        Returns
-        -------
-        Operation:
-            The corresponding operation class instance generated from the description.
-
-        Raises
-        ------
-        ValueError:
-            when description is not correct or not adapted to the operation.
-        """
-        if cls.__class__.__name__ == description.name:
-            return cls(op_id=description.id, **description.config)
-        else:
-            raise ValueError(
-                "Provided description does not match"
-                f" {cls.__class__.__name__} constructor"
-            )
-
     def check_sanity(self) -> bool:
         # TODO: add some checks
         pass
@@ -107,5 +85,5 @@ class DocOperation(Operation):
     """
 
     @abc.abstractmethod
-    def run(self, docs: Union[List[Document], Collection]) -> None:
+    def run(self, docs: List[Document]) -> None:
         raise NotImplementedError

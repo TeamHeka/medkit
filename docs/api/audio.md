@@ -2,78 +2,101 @@
 
 This page lists all components related to audio processing.
 
+:::{note}
+For more details about all sub-packages, refer to
+{mod}`medkit.audio`.
+:::
+
 ## Pre-processing operations
 
-This section lists audio preprocessing operations. They are part
-of the `medkit.audio.preprocessing` module.
+This section provides some information about how to use preprocessing modules
+for audio.
+
+:::{note}
+For more details about public APIs, refer to {mod}`medkit.audio.preprocessing`.
+:::
 
 ### Downmixer
 
-```{eval-rst}
-.. automodule:: medkit.audio.preprocessing.downmixer
-    :members:
-```
+For more details, refer to {mod}`medkit.audio.preprocessing.downmixer`.
 
 ### Power normalizer
 
-```{eval-rst}
-.. automodule:: medkit.audio.preprocessing.power_normalizer
-    :members:
-```
+For more details, refer to {mod}`medkit.audio.preprocessing.power_normalizer`.
 
 ### Resampler
 
-```{important}
-`Resampler` needs additional dependencies that can be installed with `pip install medkit[resampler]`
-```
+:::{important}
+{class}`~.audio.preprocessing.Resampler` needs additional dependencies that can
+be installed with `pip install medkit[resampler]`
+:::
 
-```{eval-rst}
-.. automodule:: medkit.audio.preprocessing.resampler
-    :members:
-```
+For more details, refer to {mod}`medkit.audio.preprocessing.resampler`.
 
 ## Segmentation operations
 
 This section lists audio segmentation operations. They are part of the
-`medkit.audio.segmentation` module.
+{mod}`medkit.audio.segmentation` module.
 
 
 ### WebRTC voice detector
 
-```{eval-rst}
-.. automodule:: medkit.audio.segmentation.webrtc_voice_detector
-    :members:
-```
+For more details, refer to
+{mod}`medkit.audio.segmentation.webrtc_voice_detector`.
+
+### Pyannote speaker detector
+
+:::{important}
+{class}`~.audio.segmentation.PASpeakerDetector` needs additional dependencies
+that can be installed with `pip install medkit[pa-speaker-detector]`
+:::
+
+For more details, refer to {mod}`medkit.audio.segmentation.pa_speaker_detector`.
 
 ## Audio Transcription
 
-This section lists operations and other components to use to perform audio transcription.
-They are part of the `medkit.audio.transcription` module.
+This section lists operations and other components to use to perform audio
+transcription.
+They are part of the {mod}`medkit.audio.transcription` module.
 
-`DocTranscriber` is the operation handling the transformation of `AudioDocument` instances
-into `TranscribedDocument` instances (subclas of `TextDocument`). The actual conversion from text to audio is delegated to components complying with the `AudioTranscriber` protocol. `HFTranscriber` is such an implementation of `AudioTranscriber`, using a HuggingFace transformer model.
+{class}`~.audio.transcription.DocTranscriber` is the operation handling the
+transformation of {class}`~.core.audio.AudioDocument` instances into
+{class}`~.audio.transcription.TranscribedDocument` instances (subclass of
+{class}`~.core.text.TextDocument`).
+
+The actual conversion from text to audio is delegated to components complying
+with the {class}`~.audio.transcription.TranscriberFunction` protocol.
+{class}`~.audio.transcription.HFTranscriberFunction` and
+{class}`~.audio.transcription.SBTranscriberFunction` are implementations of
+{class}`~.audio.transcription.TranscriberFunction`, allowing to use HuggingFace
+transformer models and speechbrain models respectively.
 
 ### DocTranscriber
 
-```{eval-rst}
-.. automodule:: medkit.audio.transcription.doc_transcriber
-    :members:
-```
+For more details, refer to {mod}`medkit.audio.transcription.doc_transcriber`.
 
 ### TranscribedDocument
 
-```{eval-rst}
-.. automodule:: medkit.audio.transcription.transcribed_document
-    :members:
-```
+For more details, refer to {mod}`medkit.audio.transcription.transcribed_document`.
 
-### HFTranscriber
+### HFTranscriberFunction
 
-```{important}
-`HFTranscriber` needs additional dependencies that can be installed with `pip install medkit[hf-transcriber]`
-```
+:::{important}
+{class}`~.audio.transcription.HFTranscriberFunction` needs additional
+dependencies that can be installed with 
+`pip install medkit[hf-transcriber-function]`
+:::
 
-```{eval-rst}
-.. automodule:: medkit.audio.transcription.hf_transcriber
-    :members:
-```
+For more details, refer to
+{mod}`medkit.audio.transcription.hf_transcriber_function`.
+
+### SBTranscriberFunction
+
+:::{important}
+{class}`~.audio.transcription.SBTranscriberFunction` needs additional
+dependencies that can be installed with
+`pip install medkit[sb-transcriber-function]`
+:::
+
+For more details, refer to
+{mod}`medkit.audio.transcription.sb_transcriber_function`.

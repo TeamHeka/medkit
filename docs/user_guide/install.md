@@ -4,20 +4,23 @@ The medkit package supports a version of python >= 3.7.
 
 ## Install an official version
 
-Releases are published on <https://gitlab.inria.fr/heka/medkit/-/releases>.
+:::{important}
+From 0.4 version, medkit package will be available on PyPi.
+:::
 
-To install medkit, download the package in release assets and install the package.
+Releases are published on <https://github.com/TeamHeka/medkit/releases>.
+
+To install medkit, you may download the package in release assets and install
+the package.
+
 For example:
 
 ```
 # Install medkit with required dependencies
-python -m pip install 'MedKit-0.2.0.tar.gz'
-
-# Install medkit with extra dev dependencies
-python -m pip install 'MedKit-0.2.0.tar.gz[dev]'
+python -m pip install 'medkit-0.3.1.tar.gz
 
 # Install medkit with extra optional dependencies
-python -m pip install 'MedKit-0.2.0.tar.gz[optional]'
+python -m pip install 'medkit-0.3.1.tar.gz[optional]'
 ```
 
 ```{note}
@@ -27,12 +30,9 @@ We recommend to install the medkit package in a virtual or conda environment.
 ## Install a development version
 
 If you want to contribute, clone the `medkit` repository locally:
-  - SSH: `git clone git@gitlab.inria.fr:heka/medkit.git`
-  - HTTPS: `git clone https://gitlab.inria.fr/heka/medkit`
+  - SSH: `git clone  git@github.com:TeamHeka/medkit.git`
+  - HTTPS: `git clone https://github.com/TeamHeka/medkit.git`
 
-```{note}
-If you do not have rights to see the project, please contact HeKA team.
-```
 [Poetry](https://python-poetry.org) is used for managing dependencies and
 packaging medkit.
 
@@ -49,6 +49,8 @@ poetry install --all-extras
 For documentation:
 ```shell
 poetry install --with docs
+
+make docs # for generating documentation
 ```
 
 Then, a `.venv` folder is created at the root of the project. To activate the
@@ -62,7 +64,13 @@ To make sure everything is set up properly, you may run the tests :
 ```
 # For unit/small tests
 pytest -v tests/unit
-
-# For large tests
-pytest -v tests/large
 ```
+
+## Troubleshooting
+
+Sometimes, for documentation and/or testing, you may need some additional packages:
+
+```
+sudo apt-get install -y gcc g++ libsndfile1 graphviz
+```
+You may also refer to CI file (e.g., .gitlab-ci.yml) for up-to-date information.

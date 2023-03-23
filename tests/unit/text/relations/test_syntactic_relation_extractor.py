@@ -31,51 +31,50 @@ def _get_medkit_doc():
         Entity(spans=[Span(81, 87)], label="level", text="sévère"),
     ]
     for ent in entities:
-        doc.add_annotation(ent)
+        doc.anns.add(ent)
     return doc
 
 
 TEST_CONFIG = (
-    (None, None, None, [["maladie", "grade"], ["level", "maladie"]]),
-    (["maladie"], ["maladie"], None, []),
-    (["maladie", "level"], ["maladie"], ["level"], [["maladie", "level"]]),
-    (["maladie", "level"], ["maladie"], None, [["maladie", "level"]]),
-    (["maladie", "level"], ["level"], None, [["level", "maladie"]]),
+    (None, None, [["maladie", "grade"], ["level", "maladie"]]),
+    (["maladie"], ["maladie"], []),
+    (["maladie"], ["level"], [["maladie", "level"]]),
+    (["maladie"], None, [["maladie", "grade"], ["maladie", "level"]]),
+    (["level"], None, [["level", "maladie"]]),
+    (None, ["grade"], [["maladie", "grade"]]),
 )
 
 
 @pytest.mark.parametrize(
-    "entities_labels,entities_source,entities_target,exp_source_target",
+    "entities_source,entities_target,exp_source_target",
     TEST_CONFIG,
     ids=[
         "between_all_entities",
-        "between_maladie",
-        "between_maladie_level_source_target_not_none",
-        "between_maladie_level_source_not_none",
-        "between_level_maladie_source_not_none",
+        "between_maladie_maladie",
+        "between_maladie_level_source_target_defined",
+        "between_maladie_as_source",
+        "between_level_as_source",
+        "only_grade_relations",
     ],
 )
-def test_relation_extractor(
-    entities_labels, entities_source, entities_target, exp_source_target
-):
+def test_relation_extractor(entities_source, entities_target, exp_source_target):
     medkit_doc = _get_medkit_doc()
     relation_extractor = SyntacticRelationExtractor(
         name_spacy_model="fr_core_news_sm",
-        entities_labels=entities_labels,
         entities_source=entities_source,
         entities_target=entities_target,
         relation_label="syntactic_dep",
     )
     relation_extractor.run([medkit_doc])
 
-    relations = medkit_doc.get_relations()
+    relations = medkit_doc.anns.get_relations()
     assert len(relations) == len(exp_source_target)
 
     for relation, exp_source_targets in zip(relations, exp_source_target):
         assert isinstance(relation, Relation)
         assert relation.label == "syntactic_dep"
-        source_ann = medkit_doc.get_annotation_by_id(relation.source_id)
-        target_ann = medkit_doc.get_annotation_by_id(relation.target_id)
+        source_ann = medkit_doc.anns.get_by_id(relation.source_id)
+        target_ann = medkit_doc.anns.get_by_id(relation.target_id)
         assert [source_ann.label, target_ann.label] == exp_source_targets
 
 
@@ -86,11 +85,6 @@ def test_exceptions_init():
     ):
         SyntacticRelationExtractor(
             name_spacy_model="xx_sent_ud_sm",
-        )
-
-    with pytest.raises(ValueError, match="source/target must be in `entities_labels`"):
-        SyntacticRelationExtractor(
-            entities_labels=[], entities_source=["label1"], entities_target=["label2"]
         )
 
 
@@ -114,7 +108,6 @@ def test_entities_without_medkit_id(caplog, tmp_path):
     medkit_doc = _get_medkit_doc()
     relation_extractor = SyntacticRelationExtractor(
         name_spacy_model=model_path,
-        entities_labels=None,
         entities_source=["maladie"],
         entities_target=None,
         relation_label="has_level",
@@ -126,28 +119,28 @@ def test_entities_without_medkit_id(caplog, tmp_path):
         assert record.levelname == "WARNING"
     assert "Can't create a medkit Relation between" in caplog.text
 
-    relations = medkit_doc.get_relations()
+    relations = medkit_doc.anns.get_relations()
     # it should only add relation between medkit entities
     assert len(relations) == 2
-    maladie_ents = medkit_doc.get_annotations_by_label("maladie")
-    assert relations[0].source_id == maladie_ents[0].id
-    assert relations[1].source_id == maladie_ents[1].id
+    maladie_ents = medkit_doc.anns.get(label="maladie")
+    assert relations[0].source_id == maladie_ents[0].uid
+    assert relations[1].source_id == maladie_ents[1].uid
 
 
 def test_prov():
     medkit_doc = _get_medkit_doc()
     relation_extractor = SyntacticRelationExtractor(
         name_spacy_model="fr_core_news_sm",
-        entities_labels=["maladie", "level"],
         entities_source=["maladie"],
+        entities_target=["level"],
         relation_label="has_level",
     )
     prov_tracer = ProvTracer()
     relation_extractor.set_prov_tracer(prov_tracer)
     relation_extractor.run([medkit_doc])
-    relation = medkit_doc.get_relations()[0]
+    relation = medkit_doc.anns.get_relations()[0]
 
-    relation_prov = prov_tracer.get_prov(relation.id)
+    relation_prov = prov_tracer.get_prov(relation.uid)
     assert relation_prov.data_item == relation
     assert relation_prov.op_desc == relation_extractor.description
     assert relation_prov.source_data_items == [medkit_doc.raw_segment]

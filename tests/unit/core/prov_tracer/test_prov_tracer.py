@@ -12,7 +12,7 @@ def test_single_item_with_no_source():
     tracer._graph.check_sanity()
 
     # tracer must have prov for generated item
-    prov = tracer.get_prov(item.id)
+    prov = tracer.get_prov(item.uid)
     assert prov.data_item == item
     assert prov.op_desc == generator.description
     assert len(prov.source_data_items) == 0
@@ -33,7 +33,7 @@ def test_multiple_items():
     assert len(tracer.get_provs()) == len(items)
 
     for item in items:
-        prov = tracer.get_prov(item.id)
+        prov = tracer.get_prov(item.uid)
         assert prov.data_item == item
         assert prov.op_desc == generator.description
 
@@ -52,13 +52,13 @@ def test_multiple_items_with_sources():
     assert len(tracer.get_provs()) == len(input_items) + len(prefixed_items)
 
     for input_item, prefixed_item in zip(input_items, prefixed_items):
-        input_prov = tracer.get_prov(input_item.id)
+        input_prov = tracer.get_prov(input_item.uid)
         assert input_prov.op_desc == generator.description
         assert len(input_prov.source_data_items) == 0
         # input item was used to derive prefixed item
         assert input_prov.derived_data_items == [prefixed_item]
 
-        prefixed_prov = tracer.get_prov(prefixed_item.id)
+        prefixed_prov = tracer.get_prov(prefixed_item.uid)
         assert prefixed_prov.op_desc == prefixer.description
         # prefixed item was derived from input item
         assert prefixed_prov.source_data_items == [input_item]
@@ -85,20 +85,20 @@ def test_intermediate_operation():
     for input_item, prefixed_item_1, prefixed_item_2 in zip(
         input_items, prefixed_items_1, prefixed_items_2
     ):
-        input_prov = tracer.get_prov(input_item.id)
+        input_prov = tracer.get_prov(input_item.uid)
         assert input_prov.op_desc == generator.description
         assert len(input_prov.source_data_items) == 0
         # input item was used to derive 1st prefixed item
         assert input_prov.derived_data_items == [prefixed_item_1]
 
-        prefixed_prov_1 = tracer.get_prov(prefixed_item_1.id)
+        prefixed_prov_1 = tracer.get_prov(prefixed_item_1.uid)
         assert prefixed_prov_1.op_desc == prefixer_1.description
         # 1st prefixed item was derived from input item
         assert prefixed_prov_1.source_data_items == [input_item]
         # 1st prefixed item was used to derive 2st prefixed item
         assert prefixed_prov_1.derived_data_items == [prefixed_item_2]
 
-        prefixed_prov_2 = tracer.get_prov(prefixed_item_2.id)
+        prefixed_prov_2 = tracer.get_prov(prefixed_item_2.uid)
         assert prefixed_prov_2.op_desc == prefixer_2.description
         # 2d prefixed item was derived from 1st prefixed item
         assert prefixed_prov_2.source_data_items == [prefixed_item_1]
@@ -118,14 +118,14 @@ def test_multiple_derived():
     tracer._graph.check_sanity()
     assert len(tracer.get_provs()) == len(input_items) + len(split_items)
 
-    prov = tracer.get_prov(input_item.id)
+    prov = tracer.get_prov(input_item.uid)
     assert prov.op_desc == generator.description
     assert len(prov.source_data_items) == 0
     # input item was used to derive 2 split items
     assert prov.derived_data_items == split_items
 
     for split_item in split_items:
-        prov = tracer.get_prov(split_item.id)
+        prov = tracer.get_prov(split_item.uid)
         assert prov.op_desc == splitter.description
         # each split item was derived from the input item
         assert prov.source_data_items == [input_item]
@@ -146,14 +146,14 @@ def test_multiple_source():
         len(tracer.get_provs()) == len(input_items) + 1
     )  # 2 input items + 1 merged item
 
-    prov = tracer.get_prov(merged_item.id)
+    prov = tracer.get_prov(merged_item.uid)
     assert prov.op_desc == merger.description
     # merged item was derived from all input items
     assert prov.source_data_items == input_items
 
     # all input items were used to derive merged item
     for input_item in input_items:
-        prov = tracer.get_prov(input_item.id)
+        prov = tracer.get_prov(input_item.uid)
         assert prov.derived_data_items == [merged_item]
 
 
@@ -174,16 +174,16 @@ def test_partial_provenance():
     assert len(tracer.get_provs()) == len(split_items) + 1
 
     # operation and source data items are available for merged item
-    merged_prov = tracer.get_prov(merged_item.id)
+    merged_prov = tracer.get_prov(merged_item.uid)
     assert merged_prov.op_desc == merger.description
     assert merged_prov.source_data_items == split_items
 
     # split items have "stub provenance" with no info about how they were generated,
     # but info about how they were used to derive merged item
-    split_prov = tracer.get_prov(split_items[0].id)
+    split_prov = tracer.get_prov(split_items[0].uid)
     assert split_prov.op_desc is None
     assert len(split_prov.source_data_items) == 0
     assert split_prov.derived_data_items == [merged_item]
 
     # no prov is available for the input items
-    assert tracer.has_prov(input_items[0].id) is False
+    assert tracer.has_prov(input_items[0].uid) is False

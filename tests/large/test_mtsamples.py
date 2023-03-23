@@ -83,9 +83,9 @@ def test_mt_samples_without_pipeline(caplog):
             assert len(caplog.messages) == 0
 
         for ann in anns:
-            doc.add_annotation(ann)
+            doc.anns.add(ann)
 
-        nb_tot_anns += len(doc.get_annotations())
+        nb_tot_anns += len(doc.anns)
 
     assert nb_tot_anns == 13631
 
@@ -151,6 +151,6 @@ def test_mt_samples_with_doc_pipeline():
     doc_pipeline.run(docs)
 
     for doc in docs:
-        nb_tot_anns += len(doc.get_annotations())
+        nb_tot_anns += len(doc.anns)
 
     assert nb_tot_anns == 13631
