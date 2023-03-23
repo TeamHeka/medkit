@@ -92,3 +92,7 @@ class AttributeContainer:
         if not isinstance(other, self.__class__):
             return False
         return self.get() == other.get()
+
+    def __repr__(self) -> str:
+        attrs = self.get()
+        return f"{self.__class__.__name__}(ann_id={self._ann_id!r}, attrs={attrs!r})"
