@@ -7286,4 +7286,4 @@ webrtc-voice-detector = ["webrtcvad"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7.1, <4.0"
-content-hash = "5528f880be25913474d7a371fdcb87f2c81dc68beff0102253ce169b81e697c7"
+content-hash = "fea44a8a54a06430e599c4490df24e4c727542f4546f9e273606c4a7b18ad5aa"
