@@ -4,7 +4,7 @@ import torch
 import logging
 import transformers
 from medkit.core.text import Entity, Segment, Span
-from medkit.text.ner import HFEntityMatcherTrainable
+from medkit.text.ner.hf_entity_matcher_trainable import HFEntityMatcherTrainable
 from medkit.training.utils import BatchData
 
 _PATH_TO_VOCAB_FILE = Path(__file__).parent / "dummy_hf_vocab" / "vocab.txt"
@@ -52,7 +52,7 @@ def input_data():
 
 
 def test_preprocessing(matcher: HFEntityMatcherTrainable, input_data):
-    features = matcher.preprocess(data_item=input_data, inference_mode=False)
+    features = matcher.preprocess(data_item=input_data)
     assert "input_ids" in features
     assert "attention_masks" in features
     assert "labels" in features
@@ -60,7 +60,7 @@ def test_preprocessing(matcher: HFEntityMatcherTrainable, input_data):
 
 
 def test_collate_and_forward(matcher: HFEntityMatcherTrainable, input_data):
-    batch = [matcher.preprocess(input_data, False) for i in range(4)]
+    batch = [matcher.preprocess(input_data) for i in range(4)]
     collated_data = matcher.collate(batch)
     assert isinstance(collated_data, BatchData)
     assert isinstance(collated_data["input_ids"], torch.Tensor)

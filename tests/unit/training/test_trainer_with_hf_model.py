@@ -5,7 +5,7 @@ import transformers
 
 from medkit.core.text.annotation import Entity, Segment
 from medkit.core.text.span import Span
-from medkit.text.ner.hf_entity_matcher_trainable import HFEntityMatcherTrainable
+from medkit.text.ner import HFEntityMatcher
 from medkit.training import Trainer, TrainerConfig
 
 _TOKENIZER_MAX_LENGTH = 24
@@ -71,7 +71,7 @@ def eval_data():
 
 
 def test_trainer_default(train_data, eval_data, tmp_path):
-    matcher = HFEntityMatcherTrainable(
+    matcher = HFEntityMatcher.make_trainable(
         model_name_or_path=tmp_path / "tiny_bert",
         labels=["problem", "treatment", "test"],
         tagging_scheme="iob2",

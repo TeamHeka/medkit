@@ -31,8 +31,6 @@ class HFEntityMatcherTrainable:
         tag_subtokens: bool = False,
         tokenizer_max_length: Optional[int] = None,
         device: int = -1,
-        name: Optional[str] = None,
-        uid: Optional[str] = None,
     ):
         """
         Parameters
@@ -55,10 +53,6 @@ class HFEntityMatcherTrainable:
         device:
             Device to use for the transformer model. Follows the HuggingFace convention
             (-1 for "cpu" and device number for gpu, for instance 0 for "cuda:0").
-        name:
-            Name describing the matcher (defaults to the class name).
-        uid:
-            Identifier of the matcher.
         """
 
         valid_model = hf_utils.check_model_for_task_HF(
@@ -92,28 +86,24 @@ class HFEntityMatcherTrainable:
         optimizer = torch.optim.AdamW(optimizer_parameters, lr=lr)
         return optimizer
 
-    def preprocess(
-        self, data_item: IdentifiableDataItem, inference_mode: bool
-    ) -> Dict[str, Any]:
+    def preprocess(self, data_item: IdentifiableDataItem) -> Dict[str, Any]:
         segment: Segment = data_item[0]
         entities: List[Entity] = data_item[1]
 
         text_encoding = self._encode_text(segment.text)
-        tags_ids = []
 
-        if not inference_mode:
-            tags = hf_tokenization_utils.transform_entities_to_tags(
-                segment=segment,
-                entities=entities,
-                text_encoding=text_encoding,
-                tagging_scheme=self.tagging_scheme,
-            )
-            tags_ids = hf_tokenization_utils.align_and_map_tokens_with_tags(
-                text_encoding=text_encoding,
-                tags=tags,
-                tag_to_id=self.label_to_id,
-                map_sub_tokens=self.tag_subtokens,
-            )
+        tags = hf_tokenization_utils.transform_entities_to_tags(
+            segment=segment,
+            entities=entities,
+            text_encoding=text_encoding,
+            tagging_scheme=self.tagging_scheme,
+        )
+        tags_ids = hf_tokenization_utils.align_and_map_tokens_with_tags(
+            text_encoding=text_encoding,
+            tags=tags,
+            tag_to_id=self.label_to_id,
+            map_sub_tokens=self.tag_subtokens,
+        )
 
         model_input = {}
         model_input["input_ids"] = text_encoding.ids
