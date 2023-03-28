@@ -3,7 +3,6 @@ from typing import Optional
 
 import torch
 
-from medkit.core import Attribute
 from medkit.training import BatchData
 
 from .dummy_model import DummyTextCat, DummyTextCatConfig, DummyTokenizer
@@ -11,7 +10,7 @@ from .dummy_model import DummyTextCat, DummyTextCatConfig, DummyTokenizer
 PYTORCH_MODEL_NAME = "pytorch_model.bin"
 
 
-class MockTrainableOperation:
+class MockTrainableComponent:
     def __init__(
         self,
         model_path: Optional[str] = None,
@@ -40,20 +39,17 @@ class MockTrainableOperation:
         optimizer = torch.optim.SGD(parameters, lr=lr)
         return optimizer
 
-    def preprocess(self, data_item, inference_mode):
+    def preprocess(self, data_item):
         model_inputs = {}
 
         model_inputs["inputs_ids"] = torch.tensor(
             self.tokenizer(data_item.text), dtype=torch.int64
         )
         attribute = data_item.attrs.get(label=self.output_label)
-        if not inference_mode:
-            if not attribute:
-                raise ValueError(
-                    f"Attr '{self.output_label}' was not found in the corpus"
-                )
-            value = self.label2id[attribute[0].value]
-            model_inputs["labels"] = torch.tensor(value, dtype=torch.int64)
+        if not attribute:
+            raise ValueError(f"Attr '{self.output_label}' was not found in the corpus")
+        value = self.label2id[attribute[0].value]
+        model_inputs["labels"] = torch.tensor(value, dtype=torch.int64)
         model_inputs["offsets"] = torch.tensor([0])
         return model_inputs
 
@@ -63,8 +59,7 @@ class MockTrainableOperation:
         for input in batch:
             inputs_ids.append(input["inputs_ids"])
             offsets.append(input["inputs_ids"].size(0))
-            if "labels" in input:
-                labels.append(input["labels"])
+            labels.append(input["labels"])
 
         labels = torch.tensor(labels, dtype=torch.int64)
         offsets = torch.tensor(offsets[:-1]).cumsum(dim=0)
@@ -85,12 +80,6 @@ class MockTrainableOperation:
         else:
             loss = None
         return BatchData(logits=logits), loss
-
-    def postprocess(self, model_output):
-        output = model_output["logits"][0].cpu().detach()
-        value = output.argmax().item()
-        attribute = Attribute(label=self.output_label, value=str(self.id2label[value]))
-        return attribute
 
     def save(self, path):
         output_path = os.path.join(path, PYTORCH_MODEL_NAME)

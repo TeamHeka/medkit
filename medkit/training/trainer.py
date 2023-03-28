@@ -17,7 +17,7 @@ from medkit.training.trainer_config import TrainerConfig
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader, Dataset
 
-from medkit.training.trainable_operation import TrainableOperation
+from medkit.training.trainable_component import TrainableComponent
 from medkit.training.callbacks import DefaultPrinterCallback, TrainerCallback
 from medkit.training.utils import BatchData, MetricsComputer
 
@@ -39,7 +39,7 @@ class _TrainerDataset(Dataset):
     This class is inspired from the ``PipelineDataset`` class from hugginface transformers library.
     """
 
-    def __init__(self, dataset, operation: TrainableOperation):
+    def __init__(self, dataset, operation: TrainableComponent):
         self.dataset = dataset
         self.operation = operation
 
@@ -48,7 +48,7 @@ class _TrainerDataset(Dataset):
 
     def __getitem__(self, i):
         item = self.dataset[i]
-        processed = self.operation.preprocess(item, inference_mode=False)
+        processed = self.operation.preprocess(item)
         return processed
 
 
@@ -59,7 +59,7 @@ class Trainer:
 
     def __init__(
         self,
-        operation: TrainableOperation,
+        operation: TrainableComponent,
         config: TrainerConfig,
         train_data: Any,
         eval_data: Any,

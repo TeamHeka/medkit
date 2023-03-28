@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["TrainableOperation"]
+__all__ = ["TrainableComponent"]
 
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -14,8 +14,8 @@ from medkit.training.utils import BatchData
 
 
 @runtime_checkable
-class TrainableOperation(Protocol):
-    """A TrainableOperation is the base protocol for an operation to be trainable"""
+class TrainableComponent(Protocol):
+    """TrainableComponent is the base protocol to be trainable in medkit"""
 
     @property
     def device(self) -> torch.device:
@@ -26,9 +26,7 @@ class TrainableOperation(Protocol):
         pass
 
     def preprocess(
-        self,
-        data_item: Union[IdentifiableDataItem, List[IdentifiableDataItem]],
-        inference_mode: bool,
+        self, data_item: Union[IdentifiableDataItem, List[IdentifiableDataItem]]
     ) -> Dict[str, Any]:
         """
         Preprocess the input data item and return a dictionary with
@@ -36,11 +34,7 @@ class TrainableOperation(Protocol):
 
         This method is intended to preprocess an input, `self.collate` must be
         used to generate batches for `self.forward` to run properly.
-
-        `inference_mode` indicates the phase of the call. If `inference_mode` is False,
-        the call is made in a training context, so preprocess must generate labels to
-        compute a loss. If `inference_mode` is True, the call is made in an inference context,
-        the input has no label to preprocess.
+        Preprocess should include `labels` to compute a loss.
         """
         pass
 
@@ -61,12 +55,6 @@ class TrainableOperation(Protocol):
         or evaluation mode depending on `eval_mode`. In PyTorch models there are
         two methods to set the mode `model.train()` and `model.eval()`
         """
-        pass
-
-    def postprocess(
-        self, model_output: BatchData
-    ) -> Union[IdentifiableDataItem, List[IdentifiableDataItem]]:
-        """Create a medkit annotation for model output"""
         pass
 
     def save(self, path: Union[str, Path]):

@@ -5,8 +5,8 @@ torch = pytest.importorskip(modname="torch", reason="torch is not installed")
 from medkit.training import TrainerConfig, Trainer
 from medkit.training.trainer import OPTIMIZER_NAME, CONFIG_NAME, SCHEDULER_NAME
 
-from .dummy_context_operation.dummy_corpus import DUMMY_DATASETS
-from .dummy_context_operation.dummy_operation import MockTrainableOperation
+from .dummy_context_component.dummy_corpus import DUMMY_DATASETS
+from .dummy_context_component.dummy_component import MockTrainableComponent
 
 
 class DummyMetricsComputer:
@@ -43,7 +43,7 @@ def test_trainer_with_metrics(
     expected_train_metrics,
     expected_eval_metrics,
 ):
-    mock_operation = MockTrainableOperation()
+    mock_operation = MockTrainableComponent()
     output_dir = tmp_path / "dummy-operation"
     config = TrainerConfig(
         output_dir=output_dir,
@@ -97,7 +97,7 @@ TEST_SCHEDULER = [
     ],
 )
 def test_trainer_with_lr_scheduler(tmp_path, lr_scheduler_builder, metric_to_track_lr):
-    mock_operation = MockTrainableOperation()
+    mock_operation = MockTrainableComponent()
     output_dir = tmp_path / "dummy-operation"
     config = TrainerConfig(
         output_dir=output_dir,
@@ -135,7 +135,7 @@ def test_trainer_with_lr_scheduler(tmp_path, lr_scheduler_builder, metric_to_tra
     ids=["default_no_lr_scheduler", "with_lr_scheduler"],
 )
 def test_trainer_checkpoint(tmp_path, lr_scheduler_builder):
-    mock_operation = MockTrainableOperation()
+    mock_operation = MockTrainableComponent()
     output_dir = tmp_path / "full_model"
     config = TrainerConfig(
         output_dir=output_dir,
@@ -165,4 +165,4 @@ def test_trainer_checkpoint(tmp_path, lr_scheduler_builder):
 
     # testing model checkpoint
     # this is related to trainable operation
-    MockTrainableOperation(model_path=path_checkpoint)
+    MockTrainableComponent(model_path=path_checkpoint)
