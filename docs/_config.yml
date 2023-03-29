@@ -44,6 +44,7 @@ sphinx:
     autodoc_inherit_docstrings: False
     autodoc_member_order: 'bysource'
     autodoc_mock_imports:
+      - edsnlp
       - resampy
       - torch
       - torchaudio
