@@ -123,6 +123,12 @@ def extract_anns_and_attrs_from_spacy_doc(
     # convert spacy span groups
     for label, spans in spacy_spans.items():
         for span_spacy in spans:
+            # ignore spans that have a corresponding entity
+            # (some matchers, for instance in EDS-NLP create both an entity and
+            # a span for each match)
+            if span_spacy in spacy_entities:
+                continue
+
             medkit_id = span_spacy._.get(_ATTR_MEDKIT_ID)
 
             if medkit_id is None or rebuild_medkit_anns_and_attrs:
