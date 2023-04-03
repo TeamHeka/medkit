@@ -107,12 +107,13 @@ class SentenceTokenizer(SegmentationOperation):
 
     @staticmethod
     def _split_text(
-        text: str, pattern: re.Match, keep_separator: bool
+        text: str, pattern: re.Pattern, keep_separator: bool
     ) -> Iterator[Tuple[int, int]]:
         for match in pattern.finditer(text):
             start = match.start("content")
             end = match.end("separator") if keep_separator else match.end("content")
-            if end > start:
+            has_letters = re.search(r"\w", text[start:end])
+            if end > start and has_letters:
                 yield start, end
 
     def _build_sentence(
