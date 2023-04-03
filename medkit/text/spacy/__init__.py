@@ -20,3 +20,6 @@ if not modules_are_available(["spacy"]):
 
 from .doc_pipeline import SpacyDocPipeline  # noqa: E402, F401
 from .pipeline import SpacyPipeline  # noqa: E402, F401
+
+if modules_are_available(["edsnlp"]):
+    __all__.append("edsnlp")
