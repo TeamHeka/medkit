@@ -1,3 +1,8 @@
+"""
+This module needs extra-dependencies not installed as core dependencies of medkit.
+To install them, use `pip install medkit[resampler]`.
+"""
+
 __all__ = ["Resampler"]
 
 from typing import List, Optional

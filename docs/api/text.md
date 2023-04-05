@@ -156,6 +156,24 @@ For an example of {class}`~.text.ner.RegexpMatcher` usage, you can follow this
 For more details about public APIs, refer to {mod}`~.text.ner.regexp_matcher`.
 :::
 
+### IAM system Matcher
+
+The [iamsystem library](https://iamsystem-python.readthedocs.io/en/latest/) is
+available under the following medkit operation.
+
+:::{note}
+For more details about public APIs, refer to {mod}`~.text.ner.iamsystem_matcher`.
+:::
+
+---
+
+medkit also provides a custom implementation ({class}`~.text.ner.MedkitKeyword`) of
+[IAM system IEntity](https://iamsystem-python.readthedocs.io/en/latest/getstarted.html#with-a-custom-of-keyword-subclass)
+which allows user:
+* to associate `kb_name` to `kb_id`
+* to provide a medkit entity label (e.g., category) associated to the IAM system entity label (i.e., text to search).
+
+
 ### Quick UMLS Matcher
 
 :::{important}

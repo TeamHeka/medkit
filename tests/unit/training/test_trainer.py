@@ -1,5 +1,6 @@
-import torch
 import pytest
+
+torch = pytest.importorskip(modname="torch", reason="torch is not installed")
 
 from medkit.training import TrainerConfig, Trainer
 from medkit.training.trainer import OPTIMIZER_NAME, CONFIG_NAME, SCHEDULER_NAME

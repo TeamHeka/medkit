@@ -1,3 +1,9 @@
+"""
+This module needs extra-dependencies not installed as core dependencies of medkit.
+To install them, use `pip install medkit[syntactic-relation-extractor]`.
+"""
+
+
 __all__ = ["SyntacticRelationExtractor"]
 import logging
 from dataclasses import dataclass

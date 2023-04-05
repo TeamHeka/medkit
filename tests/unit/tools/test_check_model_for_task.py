@@ -2,6 +2,8 @@ import json
 
 import pytest
 
+pytest.importorskip(modname="transformers", reason="transformers is not installed")
+
 from medkit.tools.hf_utils import check_model_for_task_HF
 
 

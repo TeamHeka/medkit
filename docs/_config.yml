@@ -58,8 +58,9 @@ sphinx:
     execution_show_tb: True
     # napoleon extension config
     napoleon_use_ivar: True
-    napoleon_use_param: False
+    napoleon_use_param: True
     napoleon_use_rtype: False
+    napoleon_attr_annotations: True
     templates_path: ["_templates"]
     suppress_warnings: ["etoc.toctree", "myst.domains"]
     exclude_patterns: ["_build", "_templates"]
@@ -69,5 +70,5 @@ sphinx:
   - 'sphinx.ext.napoleon'
   - 'sphinx.ext.viewcode'
   - 'sphinx_toolbox.more_autosummary'
-  - 'sphinx_toolbox.more_autodoc.typevars'
+  - 'sphinx_toolbox.more_autodoc.typehints'
   - 'sphinxcontrib.mermaid'

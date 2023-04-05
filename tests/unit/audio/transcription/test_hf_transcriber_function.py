@@ -6,7 +6,9 @@ pytest.importorskip(modname="transformers", reason="transformers is not installe
 import numpy as np  # noqa: E402
 
 from medkit.core.audio import MemoryAudioBuffer  # noqa: E402
-from medkit.audio.transcription import HFTranscriberFunction  # noqa: E402
+from medkit.audio.transcription.hf_transcriber_function import (
+    HFTranscriberFunction,
+)  # noqa: E402
 
 
 _SAMPLE_RATE = 16000

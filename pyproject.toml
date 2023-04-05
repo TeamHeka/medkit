@@ -36,6 +36,7 @@ typing-extensions = "*"
 Unidecode = "*"
 intervaltree = "*"
 wheel = "*"
+iamsystem = ">=0.3"
 
 # optional
 feather-format = {version = "^0.4", optional = true}
@@ -76,6 +77,8 @@ sphinx-toolbox = "*"
 
 [tool.poetry.extras]
 
+# Dependencies related to optional medkit modules
+
 hf-entity-matcher = [
     "torch",
     "transformers",
@@ -90,7 +93,8 @@ hf-translator = [
     "torch",
     "transformers"
 ]
-pa-speaker-translator = [
+hf-utils = ["transformers"]
+pa-speaker-detector = [
     "torch",
     "pyannote-audio",
 ]
@@ -106,6 +110,7 @@ sb-transcriber-function = [
     "transformers",
 ]
 spacy = ["spacy"]
+syntactic-relation-extractor = ["spacy"]
 training = ["torch"]
 umls-coder-normalizer = [
     "feather-format",

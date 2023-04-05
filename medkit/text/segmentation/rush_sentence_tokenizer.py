@@ -1,3 +1,8 @@
+"""
+This module needs extra-dependencies not installed as core dependencies of medkit.
+To install them, use `pip install medkit[rush-sentence-tokenizer]`.
+"""
+
 from __future__ import annotations
 
 __all__ = ["RushSentenceTokenizer"]

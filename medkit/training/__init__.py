@@ -1,3 +1,8 @@
+"""
+This package needs extra-dependencies not installed as core dependencies of medkit.
+To install them, use `pip install medkit[training]`.
+"""
+
 __all__ = [
     "TrainerCallback",
     "DefaultPrinterCallback",
