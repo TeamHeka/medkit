@@ -25,6 +25,7 @@ parts:
   - file: examples/brat_io
   - file: examples/spacy_io
   - file: examples/custom_text_operation
+  - file: examples/edsnlp
 - caption: API reference
   maxdepth: 2
   chapters:
