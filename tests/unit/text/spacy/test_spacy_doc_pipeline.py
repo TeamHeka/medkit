@@ -1,6 +1,7 @@
 import pytest
 
-import spacy
+spacy = pytest.importorskip(modname="spacy", reason="spacy is not installed")
+
 from spacy.tokens import Doc
 from spacy.tokens import Span as SpacySpan
 

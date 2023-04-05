@@ -1737,6 +1737,28 @@ pyyaml = ">=5.1"
 "ruamel.yaml" = ">=0.17.8"
 
 [[package]]
+name = "iamsystem"
+version = "0.5.0"
+description = "A python implementation of IAMsystem algorithm"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "iamsystem-0.5.0-py3-none-any.whl", hash = "sha256:92dcc1feedae568e119cf4b0e51391f3fe2ff3e1ed55c392e9f92127994e4f1e"},
+    {file = "iamsystem-0.5.0.tar.gz", hash = "sha256:c613ac3c790dedfa1c136a13189e1f05b53d43c92793596838b175a1f2decbfc"},
+]
+
+[package.dependencies]
+pysimstring = ">=1.2.1,<1.3.0"
+spellwise = ">=0.8.0"
+typing-extensions = ">=4.4.0,<4.5.0"
+unidecode = ">=1.1.1"
+
+[package.extras]
+doc = ["sphinx"]
+tests = ["nltk (>=3.8.0)", "spacy (>=3.2.0)"]
+
+[[package]]
 name = "identify"
 version = "2.5.18"
 description = "File identification library for Python"
@@ -4577,6 +4599,64 @@ setuptools = "*"
 spacy = ">=3.0.0"
 
 [[package]]
+name = "pysimstring"
+version = "1.2.1"
+description = "Easy to install clone of simstring"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pysimstring-1.2.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:74e91f05f4b7ea206fa4a7028930f5295c2e4e7632317baacf408997209585eb"},
+    {file = "pysimstring-1.2.1-cp310-cp310-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:693d1383cb04b8a72e4008e216fbbf5737f0d45b5d0098c7fa87c1f6eca48c60"},
+    {file = "pysimstring-1.2.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4195c2e386efee2d299b4a0479f3440d8c535162ce15dbb9e0966c5e94f4c693"},
+    {file = "pysimstring-1.2.1-cp310-cp310-musllinux_1_1_i686.whl", hash = "sha256:2846adfdca493ce13204758cb356c92be1267e8c75d484db6066796c3efff110"},
+    {file = "pysimstring-1.2.1-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:1c43c4ec17479aabb4b4a0c27f7363ce3a6389bd21befb3abfef87764a2c2162"},
+    {file = "pysimstring-1.2.1-cp310-cp310-win32.whl", hash = "sha256:9273175fd3a41db83208810ec01f0b814408fdd55bda8429e95e60fbf9111fd6"},
+    {file = "pysimstring-1.2.1-cp310-cp310-win_amd64.whl", hash = "sha256:762f6fdfa38e3d965074a22a4755ac7d1b060cb03db2cabdb97732242d0baa65"},
+    {file = "pysimstring-1.2.1-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:b6871b7bc2b225cfe378a33b40cbb3c3248ab10d3beb17dc70012cf1fdc6def1"},
+    {file = "pysimstring-1.2.1-cp36-cp36m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:e32fb5381e190157a8e6509ae9ed6e9a2b380dd9f449a16e41dfe483ba0faba1"},
+    {file = "pysimstring-1.2.1-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9a222fcefa212ac46ff75eda69a129bd9d33a072bec1df2aaa90620b8277b052"},
+    {file = "pysimstring-1.2.1-cp36-cp36m-musllinux_1_1_i686.whl", hash = "sha256:b47037f50dc43b9a9bdd8965047cf8e41da372e4451466e674b942757797b06e"},
+    {file = "pysimstring-1.2.1-cp36-cp36m-musllinux_1_1_x86_64.whl", hash = "sha256:a43d30dc437fe9a08f96f17d77bdf20a2a5f6e446a1b233b0246eaa37caafde4"},
+    {file = "pysimstring-1.2.1-cp36-cp36m-win32.whl", hash = "sha256:d91647f99f153a6804694cd0534a808f1461673f7a4305bd56cfcb9293b2e35b"},
+    {file = "pysimstring-1.2.1-cp36-cp36m-win_amd64.whl", hash = "sha256:700940d2efde6372df7d43e71aa2cf42c9d8db7e94c2ad8e1bf38407417a13bb"},
+    {file = "pysimstring-1.2.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:7bfcd9abece29fe502f8756e4d0ca593de85ac6a51f7c09ee7e682f160c6a209"},
+    {file = "pysimstring-1.2.1-cp37-cp37m-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:eef74d9949600707056abf5d162903a28c51b1c785f50ddb063745acdce1b9cf"},
+    {file = "pysimstring-1.2.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7e3efe432bdc02fe830a177a2c2e4809870ac7ebd8797b6e7d32f2ae59d42dd0"},
+    {file = "pysimstring-1.2.1-cp37-cp37m-musllinux_1_1_i686.whl", hash = "sha256:0507bc41b7e17bdf65e2049c32af34bcc6dcc68e2e8c6d19b58fd82a96e8d59f"},
+    {file = "pysimstring-1.2.1-cp37-cp37m-musllinux_1_1_x86_64.whl", hash = "sha256:4b10aa489d8dbfbd4f2e85cece4c029e667e22f29459b8afe17dc345bafe7a6b"},
+    {file = "pysimstring-1.2.1-cp37-cp37m-win32.whl", hash = "sha256:9b1f407c3071f0a75668beb8837306b948cd7c1558e4be62483fc2e20f7db564"},
+    {file = "pysimstring-1.2.1-cp37-cp37m-win_amd64.whl", hash = "sha256:e3b490687ad13a957f87f04d2f8e1270c8526ac61877be96197848736ece9be6"},
+    {file = "pysimstring-1.2.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:e8b66d770bd975e3a4745104174fe742c35ded1811c28ae55043b5fae4becb6a"},
+    {file = "pysimstring-1.2.1-cp38-cp38-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:04e9f72842a047408a2677a6b04470cc9f78727619f412a96b6ba51c65654866"},
+    {file = "pysimstring-1.2.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:360245c2afe232f927ff7d6e2c204b0e433503d451000a81a0e23c579ce3e868"},
+    {file = "pysimstring-1.2.1-cp38-cp38-musllinux_1_1_i686.whl", hash = "sha256:6ee2c133bf84b509814e4398b44ced73058ccc617caf6b29dab06efd97acb78e"},
+    {file = "pysimstring-1.2.1-cp38-cp38-musllinux_1_1_x86_64.whl", hash = "sha256:9150eb1e08595c6950caf1f72f9aace35083fc99d72b2dbe46e60c013d1d8d1f"},
+    {file = "pysimstring-1.2.1-cp38-cp38-win32.whl", hash = "sha256:b76ddf240e8e9dba4508ac4966533742c7d3e5bf4c52d94a701ff91903c9b693"},
+    {file = "pysimstring-1.2.1-cp38-cp38-win_amd64.whl", hash = "sha256:9089cf8c59197ec4aa16f8b413429a266c339ac3e71666a342316efef10b9120"},
+    {file = "pysimstring-1.2.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:f32b1438605f54f5d1601707e74b4d0873c691c65e4b30dab7835d54845e4404"},
+    {file = "pysimstring-1.2.1-cp39-cp39-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:d24c0628553bd0e6e363f982c6db8c292a15bda4b6fb5030c71d7da985492a8b"},
+    {file = "pysimstring-1.2.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:dacadfa723c7c07243c73def4996499f324d57a28d58a9ad7a59827c70a7ad4d"},
+    {file = "pysimstring-1.2.1-cp39-cp39-musllinux_1_1_i686.whl", hash = "sha256:a5c2e4c4178f05bbea86375e2bcd69f0d8a451a88f6b2ff29d43525efab51ecb"},
+    {file = "pysimstring-1.2.1-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:450561f8f0c0d6c46978f4a9ecbde5fae3cf7bb36b5ea14d429e3d91bb224e23"},
+    {file = "pysimstring-1.2.1-cp39-cp39-win32.whl", hash = "sha256:3373c99c019db850e34524ed5410f5e5078d623a4f16c0a2397b7816f61e155e"},
+    {file = "pysimstring-1.2.1-cp39-cp39-win_amd64.whl", hash = "sha256:907c8e2d4acbf6304908936b3b683767b1c0f2ec91b08f2e4703c1b634ce4c14"},
+    {file = "pysimstring-1.2.1-pp37-pypy37_pp73-macosx_10_9_x86_64.whl", hash = "sha256:3318d1d6e7d486de1814ed98358c84bd936049a6388168b953a58e18b504c97e"},
+    {file = "pysimstring-1.2.1-pp37-pypy37_pp73-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:400daa508eb1aa309b0e6aa6441167ba95b9b046ff9b63b82512e1b7e558b2f2"},
+    {file = "pysimstring-1.2.1-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a8a8f8683a7c20cd7b79f5b2c4b04aaa005bc8cda7b37e4e213c1508f620635d"},
+    {file = "pysimstring-1.2.1-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:6f898d73319d358f3ef1d49f174d31cd0c6b47e998578ad631f54f0081e53abb"},
+    {file = "pysimstring-1.2.1-pp38-pypy38_pp73-macosx_10_9_x86_64.whl", hash = "sha256:6dc135aa2312b18ab40569592844b94166a75edb7d8c1c12cfba158ca61d3476"},
+    {file = "pysimstring-1.2.1-pp38-pypy38_pp73-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:a3859a309920814123ed78bd917818973200769e9811f2c5c208458592a8b817"},
+    {file = "pysimstring-1.2.1-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1dac85a352857f007b702258b728a40e59c5061d49d7026cd1b29273ae133348"},
+    {file = "pysimstring-1.2.1-pp38-pypy38_pp73-win_amd64.whl", hash = "sha256:4515af78e74717140f9a918a3cfe140b4b4bf6dcef4ee908fcedb18198929b0b"},
+    {file = "pysimstring-1.2.1-pp39-pypy39_pp73-macosx_10_9_x86_64.whl", hash = "sha256:571202845127a02b18458b83f8b2ddc41a29253749da3482cb2200b8eb5041c0"},
+    {file = "pysimstring-1.2.1-pp39-pypy39_pp73-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:d30ad59a994c4a2cb8490e38d970d5f96e34a439bd577cba36e05608bdf2be2d"},
+    {file = "pysimstring-1.2.1-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9dd63bd5dbbba42b96d3166418c949a208963fefe278b962a74f0ac2003f53d2"},
+    {file = "pysimstring-1.2.1-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:9906dce049b1abefc35a0f2a4b3417466e6de0ecc26495486a104d03b1064b18"},
+    {file = "pysimstring-1.2.1.tar.gz", hash = "sha256:d2805d9e0b8e887442f9d9b672f5cf912c1eed91b2ca6bbe8250b86df27dd360"},
+]
+
+[[package]]
 name = "pytest"
 version = "7.2.1"
 description = "pytest: simple powerful testing with Python"
@@ -5802,6 +5882,18 @@ sentencepiece = "*"
 torch = ">=1.9"
 torchaudio = "*"
 tqdm = "*"
+
+[[package]]
+name = "spellwise"
+version = "0.8.1"
+description = "🚀 Extremely fast spelling checker and suggester in Python!"
+category = "main"
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "spellwise-0.8.1-py3-none-any.whl", hash = "sha256:7ca1d29e996cedb3e9103118f4894bdd26487a3785948789784416c9e3a62117"},
+    {file = "spellwise-0.8.1.tar.gz", hash = "sha256:b3dc5cf55fb3e7971c27038a530ea950cf83e209e3d3f55ffb392e254fbbfa51"},
+]
 
 [[package]]
 name = "sphinx"
@@ -7272,13 +7364,15 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 hf-entity-matcher = ["torch", "transformers"]
 hf-transcriber-function = ["torchaudio", "transformers"]
 hf-translator = ["sacremoses", "sentencepiece", "torch", "transformers"]
+hf-utils = ["transformers"]
 optional = ["PyRuSH", "feather-format", "packaging", "pandas", "pandas", "quickumls", "resampy", "sacremoses", "sentencepiece", "spacy", "torch", "torchaudio", "transformers", "webrtcvad"]
-pa-speaker-translator = ["pyannote-audio", "torch"]
+pa-speaker-detector = ["pyannote-audio", "torch"]
 quick-umls = ["packaging", "quickumls"]
 resampler = ["resampy"]
 rush-sentence-tokenizer = ["PyRuSH"]
 sb-transcriber-function = ["speechbrain", "torch", "transformers"]
 spacy = ["spacy"]
+syntactic-relation-extractor = ["spacy"]
 training = ["torch"]
 umls-coder-normalizer = ["feather-format", "pandas", "pandas", "torch", "transformers"]
 webrtc-voice-detector = ["webrtcvad"]
@@ -7286,4 +7380,4 @@ webrtc-voice-detector = ["webrtcvad"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7.1, <4.0"
-content-hash = "fea44a8a54a06430e599c4490df24e4c727542f4546f9e273606c4a7b18ad5aa"
+content-hash = "4d67a28c6acd38eaab97bed070f3ca9ee451c89a9f0278651d3ca2a68111d1c1"

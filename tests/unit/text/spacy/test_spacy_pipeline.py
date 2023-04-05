@@ -1,5 +1,7 @@
 import pytest
-import spacy
+
+spacy = pytest.importorskip(modname="spacy", reason="spacy is not installed")
+
 from spacy.tokens import Span as SpacySpan, Doc
 from medkit.core import ProvTracer
 from medkit.core.text import Span, Entity, Segment

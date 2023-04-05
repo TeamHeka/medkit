@@ -11,7 +11,9 @@ from typing import NamedTuple  # noqa: E402
 
 from medkit.core import ProvTracer  # noqa: E402
 from medkit.core.audio import MemoryAudioBuffer, Segment, Span  # noqa: E402
-from medkit.audio.segmentation import PASpeakerDetector  # noqa: E402
+from medkit.audio.segmentation.pa_speaker_detector import (
+    PASpeakerDetector,
+)  # noqa: E402
 
 from tests.audio_utils import generate_sin_signal, signals_are_equal  # noqa: E402
 

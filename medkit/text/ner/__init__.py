@@ -5,6 +5,8 @@ __all__ = [
     "RegexpMatcherRule",
     "RegexpMatcherNormalization",
     "RegexpMetadata",
+    "IAMSystemMatcher",
+    "MedkitKeyword",
 ]
 
 from medkit.core.utils import modules_are_available
@@ -17,27 +19,15 @@ from .regexp_matcher import (
     RegexpMatcherNormalization,
     RegexpMetadata,
 )
-
-# -----------------------------------------------------
-# Import optional modules if dependencies are installed
-# -----------------------------------------------------
+from .iamsystem_matcher import IAMSystemMatcher, MedkitKeyword
 
 # quick_umls module
 if modules_are_available(["packaging", "quickumls"]):
-    # fmt: off
-    from .quick_umls_matcher import QuickUMLSMatcher  # noqa: F401
-    __all__.append("QuickUMLSMatcher")
-    # fmt: on
+    __all__.append("quick_umls_matcher")
 
 # HF entity matcher
 if modules_are_available(["torch", "transformers"]):
-    # fmt: off
-    from .hf_entity_matcher import HFEntityMatcher  # noqa: F401
-    __all__.append("HFEntityMatcher")
-    # fmt: on
+    __all__.append("hf_entity_matcher")
 
 if modules_are_available(["pandas", "torch", "transformers"]):
-    # fmt: off
-    from .umls_coder_normalizer import UMLSCoderNormalizer  # noqa: F401
-    __all__ += ["UMLSCoderNormalizer"]
-    # fmt: on
+    __all__ += ["umls_coder_normalizer"]

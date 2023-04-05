@@ -1,4 +1,7 @@
 import pytest
+
+pytest.importorskip(modname="spacy", reason="spacy is not installed")
+
 from spacy import displacy
 
 from medkit.core.text import (

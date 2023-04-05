@@ -6,7 +6,4 @@ from .downmixer import Downmixer
 from .power_normalizer import PowerNormalizer
 
 if modules_are_available(["resampy"]):
-    # fmt: off
-    from .resampler import Resampler  # noqa: F401
-    __all__.append("Resampler")
-    # fmt: on
+    __all__.append("resampler")
