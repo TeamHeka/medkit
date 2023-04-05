@@ -86,7 +86,7 @@ def test_trainer_default(train_data, eval_data, tmp_path):
     )
 
     trainer = Trainer(
-        operation=matcher, config=config, train_data=train_data, eval_data=eval_data
+        component=matcher, config=config, train_data=train_data, eval_data=eval_data
     )
 
     log_history = trainer.train()

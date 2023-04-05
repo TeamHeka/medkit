@@ -43,7 +43,7 @@ def test_trainer_with_metrics(
     expected_train_metrics,
     expected_eval_metrics,
 ):
-    mock_operation = MockTrainableComponent()
+    mock_component = MockTrainableComponent()
     output_dir = tmp_path / "dummy-operation"
     config = TrainerConfig(
         output_dir=output_dir,
@@ -52,7 +52,7 @@ def test_trainer_with_metrics(
         seed=0,
     )
     trainer = Trainer(
-        mock_operation,
+        mock_component,
         config=config,
         train_data=DUMMY_DATASETS["train"],
         eval_data=DUMMY_DATASETS["eval"],
@@ -97,7 +97,7 @@ TEST_SCHEDULER = [
     ],
 )
 def test_trainer_with_lr_scheduler(tmp_path, lr_scheduler_builder, metric_to_track_lr):
-    mock_operation = MockTrainableComponent()
+    mock_component = MockTrainableComponent()
     output_dir = tmp_path / "dummy-operation"
     config = TrainerConfig(
         output_dir=output_dir,
@@ -106,7 +106,7 @@ def test_trainer_with_lr_scheduler(tmp_path, lr_scheduler_builder, metric_to_tra
         seed=0,
     )
     trainer = Trainer(
-        mock_operation,
+        mock_component,
         config=config,
         train_data=DUMMY_DATASETS["train"],
         eval_data=DUMMY_DATASETS["eval"],
@@ -135,7 +135,7 @@ def test_trainer_with_lr_scheduler(tmp_path, lr_scheduler_builder, metric_to_tra
     ids=["default_no_lr_scheduler", "with_lr_scheduler"],
 )
 def test_trainer_checkpoint(tmp_path, lr_scheduler_builder):
-    mock_operation = MockTrainableComponent()
+    mock_component = MockTrainableComponent()
     output_dir = tmp_path / "full_model"
     config = TrainerConfig(
         output_dir=output_dir,
@@ -143,7 +143,7 @@ def test_trainer_checkpoint(tmp_path, lr_scheduler_builder):
         seed=0,
     )
     trainer = Trainer(
-        mock_operation,
+        mock_component,
         config=config,
         train_data=DUMMY_DATASETS["train"],
         eval_data=DUMMY_DATASETS["eval"],
@@ -164,5 +164,5 @@ def test_trainer_checkpoint(tmp_path, lr_scheduler_builder):
         assert not expected_scheduler_file.exists()
 
     # testing model checkpoint
-    # this is related to trainable operation
+    # this is related to trainable component
     MockTrainableComponent(model_path=path_checkpoint)

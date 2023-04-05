@@ -12,23 +12,24 @@ You may install additional dependencies using
 For more details about all sub-packages, refer to {mod}`medkit.training`.
 :::
 
-## Trainable Operations
+## Trainable Components
 
-The medkit {class}`~.training.TrainableOperation` protocol describes all the
-necessary methods to make an operation trainable in medkit.
+The medkit {class}`~.training.TrainableComponent` protocol describes all the
+necessary methods to make a trainable component in medkit. An operation can contains 
+a trainable component and expose it using the `make_trainable()` method. 
 
 :::{important}
-Currently, medkit only supports the training of operations using **PyTorch**
-models.
+Currently, medkit only supports the training of components using **PyTorch**
+components.
 :::
 
 :::{note}
-For more details, refer to {mod}`medkit.training.trainable_operation` module.
+For more details, refer to {mod}`medkit.training.trainable_component` module.
 :::
 
 ## Trainer
 
-The {class}`~.training.Trainer` aims to train any {class}`~.training.TrainableOperation`.
+The {class}`~.training.Trainer` aims to train any {class}`~.training.TrainableComponent`.
 Therefore, it is possible to customise it using the {class}`~.training.TrainerConfig`.
 
 The {class}`~.training.Trainer` contains two optional parameters `metrics_computer`

@@ -8,8 +8,6 @@ from typing_extensions import Protocol, runtime_checkable
 
 import torch
 
-from medkit.core import IdentifiableDataItem
-
 from medkit.training.utils import BatchData
 
 
@@ -25,9 +23,7 @@ class TrainableComponent(Protocol):
         """Create optimizer using the learning rate"""
         pass
 
-    def preprocess(
-        self, data_item: Union[IdentifiableDataItem, List[IdentifiableDataItem]]
-    ) -> Dict[str, Any]:
+    def preprocess(self, data_item: Any) -> Dict[str, Any]:
         """
         Preprocess the input data item and return a dictionary with
         everything needed for the forward pass.

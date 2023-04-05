@@ -35,31 +35,31 @@ def set_seed(seed: int = 0):
 
 
 class _TrainerDataset(Dataset):
-    """A Dataset that preprocesses data using the 'preprocess' defined in a trainable operation.
+    """A Dataset that preprocesses data using the 'preprocess' defined in a trainable component.
     This class is inspired from the ``PipelineDataset`` class from hugginface transformers library.
     """
 
-    def __init__(self, dataset, operation: TrainableComponent):
+    def __init__(self, dataset, component: TrainableComponent):
         self.dataset = dataset
-        self.operation = operation
+        self.component = component
 
     def __len__(self):
         return len(self.dataset)
 
     def __getitem__(self, i):
         item = self.dataset[i]
-        processed = self.operation.preprocess(item)
+        processed = self.component.preprocess(item)
         return processed
 
 
 class Trainer:
-    """A trainer is a base training/eval loop for a TrainableOperation that uses PyTorch models
+    """A trainer is a base training/eval loop for a TrainableComponent that uses PyTorch models
     to create medkit annotations
     """
 
     def __init__(
         self,
-        operation: TrainableComponent,
+        component: TrainableComponent,
         config: TrainerConfig,
         train_data: Any,
         eval_data: Any,
@@ -70,8 +70,8 @@ class Trainer:
         """
         Parameters
         ----------
-        operation:
-            The operation to train, the operation must implement the `TrainableOperation` protocol.
+        component:
+            The component to train, the component must implement the `TrainableComponent` protocol.
         config:
             A `TrainerConfig` with the parameters for training, the parameter `output_dir` define the
             path of the checkpoints
@@ -98,13 +98,13 @@ class Trainer:
         self.output_dir = Path(config.output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
 
-        self.operation = operation
+        self.component = component
         self.batch_size = config.batch_size
         self.dataloader_drop_last = False
         self.dataloader_nb_workers = config.dataloader_nb_workers
         self.dataloader_pin_memory = False
 
-        self.device = self.operation.device
+        self.device = self.component.device
 
         self.train_dataloader = self.get_dataloader(train_data, shuffle=True)
         self.eval_dataloader = self.get_dataloader(eval_data, shuffle=False)
@@ -112,7 +112,7 @@ class Trainer:
 
         self.config = config
 
-        self.optimizer = operation.configure_optimizer(self.config.learning_rate)
+        self.optimizer = component.configure_optimizer(self.config.learning_rate)
         self.lr_scheduler = (
             None
             if lr_scheduler_builder is None
@@ -126,9 +126,9 @@ class Trainer:
 
     def get_dataloader(self, data: any, shuffle: bool) -> DataLoader:
         """Return a DataLoader with transformations defined
-        in the operation to train"""
-        dataset = _TrainerDataset(data, self.operation)
-        collate_fn = self.operation.collate
+        in the component to train"""
+        dataset = _TrainerDataset(data, self.component)
+        collate_fn = self.component.collate
         return DataLoader(
             dataset,
             batch_size=self.batch_size,
@@ -228,14 +228,14 @@ class Trainer:
     def make_forward_pass(
         self, inputs: BatchData, eval_mode: bool
     ) -> Tuple[BatchData, torch.Tensor]:
-        """Run forward safely, same device as the operation"""
+        """Run forward safely, same device as the component"""
         inputs = inputs.to_device(self.device)
-        model_output, loss = self.operation.forward(
+        model_output, loss = self.component.forward(
             inputs, return_loss=True, eval_mode=eval_mode
         )
 
         if loss is None:
-            raise ValueError("The operation did not return a 'loss' from the input.")
+            raise ValueError("The component did not return a 'loss' from the input.")
 
         return model_output, loss
 
@@ -321,4 +321,4 @@ class Trainer:
                 os.path.join(checkpoint_dir, SCHEDULER_NAME),
             )
 
-        self.operation.save(checkpoint_dir)
+        self.component.save(checkpoint_dir)

@@ -7,7 +7,6 @@ from typing_extensions import Literal
 import torch
 import transformers
 
-from medkit.core import IdentifiableDataItem
 from medkit.core.text.annotation import Entity, Segment
 from medkit.text.ner import hf_tokenization_utils
 from medkit.tools import hf_utils
@@ -86,7 +85,7 @@ class HFEntityMatcherTrainable:
         optimizer = torch.optim.AdamW(optimizer_parameters, lr=lr)
         return optimizer
 
-    def preprocess(self, data_item: IdentifiableDataItem) -> Dict[str, Any]:
+    def preprocess(self, data_item: Tuple[Segment, List[Entity]]) -> Dict[str, Any]:
         segment: Segment = data_item[0]
         entities: List[Entity] = data_item[1]
 
