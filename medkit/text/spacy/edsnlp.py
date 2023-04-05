@@ -1,3 +1,9 @@
+"""
+This package needs extra-dependencies not installed as core dependencies of medkit.
+To install them, use :
+>>> pip install medkit[edsnlp].
+"""
+
 __all__ = ["EDSNLPPipeline", "EDSNLPDocPipeline"]
 
 from typing import Callable, Dict, Optional, List

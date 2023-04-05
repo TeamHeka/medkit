@@ -21,7 +21,7 @@ EDS-NLP within medkit is supported, as we will see.
 To follow this tutorial, you will need to install medkit spaCy support and
 EDS-NLP with
 ```
-pip install medkit[spacy] edsnlp
+pip install medkit[edsnlp]
 ```
 ## Running an EDL-NLP spaCy pipeline on entire documents
 

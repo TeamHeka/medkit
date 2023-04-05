@@ -39,6 +39,7 @@ wheel = "*"
 iamsystem = ">=0.3"
 
 # optional
+edsnlp = {version = "^0.7", optional = true}
 feather-format = {version = "^0.4", optional = true}
 packaging = {version = "*", optional = true}
 pandas = [
@@ -78,7 +79,7 @@ sphinx-toolbox = "*"
 [tool.poetry.extras]
 
 # Dependencies related to optional medkit modules
-
+edsnlp = ["edsnlp"]
 hf-entity-matcher = [
     "torch",
     "transformers",
