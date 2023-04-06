@@ -3,9 +3,15 @@ import pytest
 import torch
 import logging
 import transformers
-from medkit.core.text import Entity, Segment, Span
-from medkit.text.ner.hf_entity_matcher_trainable import HFEntityMatcherTrainable
-from medkit.training.utils import BatchData
+
+pytest.importorskip(modname="torch", reason="torch is not installed")
+pytest.importorskip(modname="transformers", reason="transformers is not installed")
+
+from medkit.core.text import Entity, Segment, Span  # noqa: E402
+from medkit.text.ner.hf_entity_matcher_trainable import (
+    HFEntityMatcherTrainable,
+)  # noqa: E402
+from medkit.training.utils import BatchData  # noqa: E402
 
 _PATH_TO_VOCAB_FILE = Path(__file__).parent / "dummy_hf_vocab" / "vocab.txt"
 

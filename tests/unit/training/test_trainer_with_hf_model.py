@@ -1,12 +1,16 @@
 import shutil
 
 import pytest
-import transformers
 
-from medkit.core.text.annotation import Entity, Segment
-from medkit.core.text.span import Span
-from medkit.text.ner import HFEntityMatcher
-from medkit.training import Trainer, TrainerConfig
+pytest.importorskip(modname="transformers", reason="transformers is not installed")
+pytest.importorskip(modname="torch", reason="torch is not installed")
+
+import transformers  # noqa: E402
+
+from medkit.core.text.annotation import Entity, Segment  # noqa: E402
+from medkit.core.text.span import Span  # noqa: E402
+from medkit.text.ner.hf_entity_matcher import HFEntityMatcher  # noqa: E402
+from medkit.training import Trainer, TrainerConfig  # noqa: E402
 
 _TOKENIZER_MAX_LENGTH = 24
 _MODEL_NER_CLINICAL = "samrawal/bert-base-uncased_clinical-ner"

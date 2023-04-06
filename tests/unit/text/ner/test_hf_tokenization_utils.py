@@ -1,18 +1,16 @@
 from pathlib import Path
 import pytest
 
+pytest.importorskip(modname="transformers", reason="transformers is not installed")
+
+from transformers import BertTokenizerFast  # noqa: E402
+from medkit.core.text import Segment, Entity, Span  # noqa: E402
 from medkit.text.ner.hf_tokenization_utils import (
     transform_entities_to_tags,
     align_and_map_tokens_with_tags,
     convert_labels_to_tags,
     SPECIAL_TAG_ID_HF,
-)
-
-pytest.importorskip(modname="torch", reason="torch is not installed")
-pytest.importorskip(modname="transformers", reason="transformers is not installed")
-
-from transformers import BertTokenizerFast  # noqa: E402
-from medkit.core.text import Segment, Entity, Span  # noqa: E402
+)  # noqa: E402
 
 _PATH_TO_VOCAB_FILE = Path(__file__).parent / "dummy_hf_vocab" / "vocab.txt"
 
