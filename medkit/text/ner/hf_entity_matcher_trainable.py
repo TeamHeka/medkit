@@ -165,8 +165,7 @@ class HFEntityMatcherTrainable:
     def save(self, path: Union[str, Path]):
         state_dict = self._model.state_dict()
         self._model.save_pretrained(path, state_dict=state_dict)
-        if self._tokenizer is not None:
-            self._tokenizer.save_pretrained(path)
+        self._tokenizer.save_pretrained(path)
 
     def load(self, path: Union[str, Path]):
         tokenizer = transformers.AutoTokenizer.from_pretrained(path, use_fast=True)
@@ -202,11 +201,9 @@ class HFEntityMatcherTrainable:
         # If the model has the same labels, we kept the original mapping
         # Easier finetunning
         if sorted(config.label2id.keys()) != sorted(label_to_id.keys()):
-            logger.warning(
-                f"""The operation model seems to have different labels.
+            logger.warning(f"""The operation model seems to have different labels.
             PreTrained with labels: {sorted(config.label2id.keys())}, new labels
-            {sorted(label_to_id.keys())}. Ignoring the model labels as result."""
-            )
+            {sorted(label_to_id.keys())}. Ignoring the model labels as result.""")
             config.label2id = {label: idx for idx, label in label_to_id.items()}
             config.id2label = {idx: label for idx, label in label_to_id.items()}
 
