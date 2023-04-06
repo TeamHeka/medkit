@@ -64,9 +64,9 @@ entities and spans, and `eds.negation` and `eds.hypothesis` attach some context
 attributes to these entities and spans.
 
 To be used within medkit, the pipeline could be wrapped into a generic
-{class}`~.SpacyDocPipeline` operation. But medkit also provides a dedicated
-{class}`~.EDSNLPDocPipeline` operation, with some additional support for
-specific EDS-NLP components:
+{class}`~medkit.text.spacy.SpacyDocPipeline` operation. But medkit also provides
+a dedicated {class}`~.EDSNLPDocPipeline` operation, with some additional support
+for specific EDS-NLP components:
 
 
 ```{code-cell} ipython3
@@ -123,10 +123,11 @@ date_seg = doc.anns.get_segments(label="dates")[0]
 date_attr = date_seg.attrs.get(label="date")[0]
 date_attr
 ```
-This attribute is an instance of {class}`~.DateAttribute`, a subclass of the
-{class}`~.Attribute`. One of the benefits of using `EDSNLPDocPipeline` instead
-of `SpacyDocPipeline` is that some special EDS-NLP attributes are automatically
-converted to a corresponding {class}`~.Attribute` subclass.
+
+This attribute is an instance of {class}`~medkit.text.ner.DateAttribute`, a
+subclass of the {class}`~medkit.core.Attribute`. One of the benefits of using
+`EDSNLPDocPipeline` instead of `SpacyDocPipeline` is that some special EDS-NLP
+attributes are automatically converted to a corresponding `Attribute` subclass.
 
 Here are the supported EDS-NLP attributes values and the corresponding medkit classes:
 - `AdicapCode` (created by `eds.adicap`): {class}`medkit.text.ner.ADICAPNormAttribute`
