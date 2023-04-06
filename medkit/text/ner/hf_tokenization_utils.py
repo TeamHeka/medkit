@@ -9,7 +9,7 @@ from typing_extensions import Literal
 
 from transformers.tokenization_utils_fast import EncodingFast
 
-from medkit.core.text import Entity, Segment
+from medkit.core.text import Entity, Segment, span_utils
 
 SPECIAL_TAG_ID_HF: int = -100
 
@@ -34,8 +34,7 @@ def convert_labels_to_tags(
 
     Examples
     --------
-    >>> label_to_id = convert_labels_to_tags(labels=["test","problem"],tagging_scheme="iob2")
-    >>> print(labels.keys())
+    >>> convert_labels_to_tags(labels=["test","problem"],tagging_scheme="iob2")
     {'O': 0, 'B-test': 1, 'I-test': 2, 'B-problem': 3, 'I-problem': 4}
 
     """
@@ -111,8 +110,9 @@ def transform_entities_to_tags(
 
     for ent in entities:
         label = ent.label
-        start_char = ent.spans[0].start - offset_segment
-        end_char = ent.spans[-1].end - offset_segment
+        ent_spans = span_utils.normalize_spans(ent.spans)
+        start_char = ent_spans[0].start - offset_segment
+        end_char = ent_spans[-1].end - offset_segment
         tokens_entity = set()
 
         if start_char < 0:
