@@ -23,7 +23,7 @@ EDS-NLP with
 ```
 pip install medkit[edsnlp]
 ```
-## Running an EDL-NLP spaCy pipeline on entire documents
+## Running an EDS-NLP spaCy pipeline on entire documents
 
 We will need a sample text document to annotate:
 
