@@ -85,8 +85,9 @@ def test_trainer_default(train_data, eval_data, tmp_path):
     config = TrainerConfig(
         output_dir=output_dir,
         batch_size=1,
-        learning_rate=5e-6,
-        nb_training_epochs=1,
+        learning_rate=5e-4,
+        nb_training_epochs=3,
+        seed=0,
     )
 
     trainer = Trainer(
@@ -95,7 +96,8 @@ def test_trainer_default(train_data, eval_data, tmp_path):
 
     log_history = trainer.train()
     assert len(log_history) == config.nb_training_epochs
-
+    assert log_history[0]["train"]["loss"] > log_history[-1]["train"]["loss"]
+    assert log_history[0]["eval"]["loss"] > log_history[-1]["eval"]["loss"]
     eval_item = next(iter(trainer.eval_dataloader))
     assert list(eval_item["input_ids"].size()) == [1, _TOKENIZER_MAX_LENGTH]
 
