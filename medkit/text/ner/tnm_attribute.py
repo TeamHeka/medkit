@@ -1,7 +1,6 @@
 """
 This package needs extra-dependencies not installed as core dependencies of medkit.
-To install them, use :
->>> pip install medkit[edsnlp].
+To install them, use `pip install medkit[edsnlp]`.
 """
 
 __all__ = ["TNMAttribute"]
