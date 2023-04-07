@@ -113,8 +113,8 @@ slightly transformed. For instance, `eds.hypothesis` creates identical
 `"hypothesis_cues"` attribute. When transforming these back to medkit, the
 redundant `"hypothesis_"` attribute is dropped, and `"hypothesis_cues"` is
 integrated as additional metadata of the `"hypothesis"` attribute (if present).
-`EDSNLPDocPipeline` will perform this sort of transformation for many other
-EDS-NLP components.
+{class}`~.EDSNLPDocPipeline` will perform this sort of transformation for many
+other EDS-NLP components.
 
 Let's now examine more closely the `"date"` attribute:
 
@@ -126,8 +126,10 @@ date_attr
 
 This attribute is an instance of {class}`~medkit.text.ner.DateAttribute`, a
 subclass of the {class}`~medkit.core.Attribute`. One of the benefits of using
-`EDSNLPDocPipeline` instead of `SpacyDocPipeline` is that some special EDS-NLP
-attributes are automatically converted to a corresponding `Attribute` subclass.
+{class}`~.EDSNLPDocPipeline` instead of
+{class}`~medkit.text.spacy.SpacyDocPipeline` is that some special EDS-NLP
+attributes are automatically converted to a corresponding
+{class}`~medkit.core.Attribute` subclass.
 
 Here are the supported EDS-NLP attributes values and the corresponding medkit classes:
 - `AdicapCode` (created by `eds.adicap`): {class}`medkit.text.ner.ADICAPNormAttribute`
@@ -139,11 +141,11 @@ Here are the supported EDS-NLP attributes values and the corresponding medkit cl
 ## Running an EDL-NLP spaCy pipeline at the annotation level
 
 So far, we have wrapped a spaCy pipeline and executed it on an entire document
-with `EDSNLPDocPipeline`. But it is also possible to run the spaCy pipeline on
-text annotations instead of a document with {class}`~.EDSNLPPipeline`. To
-illustrate this, let's create a medkit pipeline using pure medkit operations for
-sentence tokenization and entity matching, and EDS-NLP spaCy components for
-covid entity matching:
+with {class}`~.EDSNLPDocPipeline`. But it is also possible to run the spaCy
+pipeline on text annotations instead of a document with
+{class}`~.EDSNLPPipeline`. To illustrate this, let's create a medkit pipeline
+using pure medkit operations for sentence tokenization and entity matching, and
+EDS-NLP spaCy components for covid entity matching:
 
 ```{code-cell} ipython3
 :tags: [remove-output]
@@ -177,6 +179,6 @@ for entity in entities:
     print(f"{entity.label}: {entity.text!r}")
 ```
 
-For more information about advanced usage of `EDSNLPDocPipeline` and
-`EDSNLPipeline`, you may refer to the API doc of
+For more information about advanced usage of {class}`~.EDSNLPDocPipeline` and
+{class}`~.EDSNLPPipeline`, you may refer to the API doc of
 {mod}`medkit.text.spacy.edsnlp`.
