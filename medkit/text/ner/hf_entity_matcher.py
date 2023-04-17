@@ -13,9 +13,8 @@ from transformers import TokenClassificationPipeline
 
 from medkit.core import Attribute
 from medkit.core.text import NEROperation, Segment, span_utils, Entity
+from medkit.text.ner.hf_entity_matcher_trainable import HFEntityMatcherTrainable
 from medkit.tools import hf_utils
-
-from .hf_entity_matcher_trainable import HFEntityMatcherTrainable
 
 
 class HFEntityMatcher(NEROperation):
