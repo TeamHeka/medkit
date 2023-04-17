@@ -7,7 +7,7 @@ import transformers
 pytest.importorskip(modname="torch", reason="torch is not installed")
 pytest.importorskip(modname="transformers", reason="transformers is not installed")
 
-from medkit.core.text import Entity, Segment, Span  # noqa: E402
+from medkit.core.text import Entity, Span, TextDocument  # noqa: E402
 from medkit.text.ner.hf_entity_matcher_trainable import (
     HFEntityMatcherTrainable,
 )  # noqa: E402
@@ -51,10 +51,11 @@ def matcher(tmp_path):
 
 @pytest.fixture()
 def input_data():
-    return [
-        Segment(text="a test medkit", label="sentence", spans=[Span(0, 13)]),
-        [Entity(text="medkit", label="corporation", spans=[Span(7, 13)])],
-    ]
+    doc = TextDocument(
+        text="a test medkit",
+        anns=[Entity(text="medkit", label="corporation", spans=[Span(7, 13)])],
+    )
+    return doc
 
 
 def test_preprocessing(matcher: HFEntityMatcherTrainable, input_data):
@@ -93,8 +94,8 @@ def test_collate_and_forward(matcher: HFEntityMatcherTrainable, input_data):
 
 def test_initialization_warnings(tmp_path, caplog):
     # Finetunning with bilou will be show a warning
-    # The model has 3 labels, trying to finetunning with 5
-    # with is ok if we do training
+    # The model has 3 labels and we want finetunning with 5 labels
+    # this is ok because we'll do training
     with caplog.at_level(logging.WARNING):
         HFEntityMatcherTrainable(
             model_name_or_path=tmp_path / "dummy-bert",

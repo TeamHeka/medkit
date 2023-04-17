@@ -2,13 +2,13 @@ import shutil
 
 import pytest
 
+
 pytest.importorskip(modname="transformers", reason="transformers is not installed")
 pytest.importorskip(modname="torch", reason="torch is not installed")
 
 import transformers  # noqa: E402
 
-from medkit.core.text.annotation import Entity, Segment  # noqa: E402
-from medkit.core.text.span import Span  # noqa: E402
+from medkit.core.text import Entity, TextDocument, Span  # noqa: E402
 from medkit.text.ner.hf_entity_matcher import HFEntityMatcher  # noqa: E402
 from medkit.training import Trainer, TrainerConfig  # noqa: E402
 
@@ -41,15 +41,14 @@ def create_model_and_tokenizer(tmp_path):
 
 
 def _create_tiny_data(pairs_text_entities):
-    data = []
+    docs = []
     for text, ents in pairs_text_entities:
-        segment = Segment(text=text, spans=[Span(0, len(text))], label="sentence")
         entities = [
             Entity(label=e[0], text=text[e[1] : e[2]], spans=[Span(e[1], e[2])])
             for e in ents
         ]
-        data += [[segment, entities]]
-    return data
+        docs.append(TextDocument(text=text, anns=entities))
+    return docs
 
 
 @pytest.fixture()

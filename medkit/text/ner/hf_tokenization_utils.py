@@ -9,7 +9,7 @@ from typing_extensions import Literal
 
 from transformers.tokenization_utils_fast import EncodingFast
 
-from medkit.core.text import Entity, Segment, span_utils
+from medkit.core.text import Entity, span_utils
 
 SPECIAL_TAG_ID_HF: int = -100
 
@@ -54,29 +54,27 @@ def convert_labels_to_tags(
 
 
 def transform_entities_to_tags(
-    segment: Segment,
-    entities: List[Entity],
     text_encoding: EncodingFast,
+    entities: List[Entity],
     tagging_scheme: Literal["bilou", "iob2"] = "bilou",
 ) -> List[str]:
     """
-    Transform a segment with entities into a list of BILOU/IOB2 tags.
+    Transform entities from a encoded document to a list of BILOU/IOB2 tags.
 
     Parameters
     ----------
-    segment:
-        The reference segment
-    entities:
-        The list of entities in the `segment`
     text_encoding:
-        Text encoding of the segment after tokenization with a HuggingFace fast tokenizer
+        Encoding of the document of reference, this is created by a HuggingFace fast tokenizer.
+        It contains a tokenized version of the document to tag.
+    entities:
+        The list of entities to transform
     tagging_scheme:
         Scheme to tag the tokens, it can be `bilou` or `iob2`
 
     Returns
     -------
     List[str]:
-        A list describing the segment with tags. By default the tags
+        A list describing the document with tags. By default the tags
         could be "B", "I", "L", "O","U", if `tagging_scheme` is `iob2`
         the tags could be "B", "I","O".
 
@@ -86,38 +84,33 @@ def transform_entities_to_tags(
     >>> from transformers import AutoTokenizer
     >>> tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased", use_fast=True)
 
-    >>> segment = Segment(text="medkit",spans=[Span(start=0, end=6)],label="SENTENCE")
+    >>> document = TextDocument(text="medkit")
     >>> entities = [Entity(label="corporation", spans=[Span(start=0, end=6)], text='medkit')]
-    >>> # Get text encoding of the segment using the tokenizer
-    >>> text_encoding = tokenizer(segment.text).encodings[0]
+    >>> # Get text encoding of the document using the tokenizer
+    >>> text_encoding = tokenizer(document.text).encodings[0]
     >>> print(text_encoding.tokens)
     ['[CLS]', 'med',##kit', '[SEP]']
 
     Transform to BILOU tags
 
-    >>> tags = transform_entities_to_tags(segment, entities,text_encoding)
+    >>> tags = transform_entities_to_tags(text_encoding,entities)
     >>> assert tags == ['O', 'B-corporation', 'L-corporation', 'O']
 
     Transform to IOB2 tags
 
-    >>> tags = transform_entities_to_tags(segment, entities,text_encoding,"iob2")
+    >>> tags = transform_entities_to_tags(text_encoding,entities,"iob2")
     >>> assert tags == ['O', 'B-corporation', 'I-corporation', 'O']
 
 
     """
-    offset_segment = segment.spans[0].start
     tags = ["O"] * len(text_encoding)
 
     for ent in entities:
         label = ent.label
         ent_spans = span_utils.normalize_spans(ent.spans)
-        start_char = ent_spans[0].start - offset_segment
-        end_char = ent_spans[-1].end - offset_segment
+        start_char = ent_spans[0].start
+        end_char = ent_spans[-1].end
         tokens_entity = set()
-
-        if start_char < 0:
-            # 'ent' is not in the segment
-            continue
 
         for idx in range(start_char, end_char):
             token_id = text_encoding.char_to_token(idx)

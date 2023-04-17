@@ -4,7 +4,7 @@ import pytest
 pytest.importorskip(modname="transformers", reason="transformers is not installed")
 
 from transformers import BertTokenizerFast  # noqa: E402
-from medkit.core.text import Segment, Entity, Span  # noqa: E402
+from medkit.core.text import Entity, Span, TextDocument  # noqa: E402
 from medkit.text.ner.hf_tokenization_utils import (
     transform_entities_to_tags,
     align_and_map_tokens_with_tags,
@@ -15,25 +15,23 @@ from medkit.text.ner.hf_tokenization_utils import (
 _PATH_TO_VOCAB_FILE = Path(__file__).parent / "dummy_hf_vocab" / "vocab.txt"
 
 
-def _get_segment_entities(offset_span):
-    segment = Segment(
+def _get_document():
+    document = TextDocument(
         text="medkit is a python library",
-        spans=[Span(start=0 + offset_span, end=26 + offset_span)],
-        label="SENTENCE",
+        anns=[
+            Entity(
+                label="corporation",
+                spans=[Span(start=0, end=6)],
+                text="medkit",
+            ),
+            Entity(
+                label="language",
+                spans=[Span(start=12, end=18)],
+                text="python",
+            ),
+        ],
     )
-    entities = [
-        Entity(
-            label="corporation",
-            spans=[Span(start=0 + offset_span, end=6 + offset_span)],
-            text="medkit",
-        ),
-        Entity(
-            label="language",
-            spans=[Span(start=12 + offset_span, end=18 + offset_span)],
-            text="python",
-        ),
-    ]
-    return [segment, entities]
+    return document
 
 
 @pytest.fixture()
@@ -44,22 +42,10 @@ def tokenizer():
 
 TEST_CONFIG = (
     (
-        0,
         "bilou",
         ["O", "B-corporation", "L-corporation", "O", "O", "U-language", "O", "O"],
     ),
     (
-        10,
-        "bilou",
-        ["O", "B-corporation", "L-corporation", "O", "O", "U-language", "O", "O"],
-    ),
-    (
-        0,
-        "iob2",
-        ["O", "B-corporation", "I-corporation", "O", "O", "B-language", "O", "O"],
-    ),
-    (
-        10,
         "iob2",
         ["O", "B-corporation", "I-corporation", "O", "O", "B-language", "O", "O"],
     ),
@@ -67,48 +53,23 @@ TEST_CONFIG = (
 
 
 @pytest.mark.parametrize(
-    "offset_span,tagging_scheme,expected_tags",
+    "tagging_scheme,expected_tags",
     TEST_CONFIG,
     ids=[
-        "span_no_offset_bilou",
-        "span_offset_bilou",
-        "span_no_offset_no_bilou",
-        "span_offset_no_bilou",
+        "transform_bilou",
+        "transform_iob2",
     ],
 )
-def test_transform_entities_offset(
-    tokenizer, offset_span, tagging_scheme, expected_tags
-):
-    # Testing transformation with span starting at 0 and starting in other position
-    segment, entities = _get_segment_entities(offset_span=offset_span)
-    text_encoding = tokenizer(segment.text).encodings[0]
+def test_transform_entities_offset(tokenizer, tagging_scheme, expected_tags):
+    # Testing transformation changing tagging scheme
+    document = _get_document()
+    text_encoding = tokenizer(document.text).encodings[0]
     tags = transform_entities_to_tags(
-        segment=segment,
-        entities=entities,
         text_encoding=text_encoding,
+        entities=document.anns.entities,
         tagging_scheme=tagging_scheme,
     )
     assert tags == expected_tags
-
-
-def test_transform_entities_no_aligned(tokenizer):
-    # Testing aligned between span and entities
-    segment, entities = _get_segment_entities(offset_span=10)
-    text_encoding = tokenizer(segment.text).encodings[0]
-
-    # entity language starts before span start, ignore entity
-    entities[1].spans = [Span(start=5, end=11)]
-    tags = transform_entities_to_tags(
-        segment=segment, entities=entities, text_encoding=text_encoding
-    )
-    assert tags == ["O", "B-corporation", "L-corporation", "O", "O", "O", "O", "O"]
-
-    # entity language is offside, ignore entity
-    entities[1].spans = [Span(start=40, end=46)]
-    tags = transform_entities_to_tags(
-        segment=segment, entities=entities, text_encoding=text_encoding
-    )
-    assert tags == ["O", "B-corporation", "L-corporation", "O", "O", "O", "O", "O"]
 
 
 def test_aligned_tokens_with_tags(tokenizer):
