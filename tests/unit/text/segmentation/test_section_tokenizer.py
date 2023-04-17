@@ -5,6 +5,7 @@ from medkit.core.text import Span, Segment
 from medkit.text.segmentation.section_tokenizer import (
     SectionTokenizer,
     SectionModificationRule,
+    _DEFAULT_SECTION_DEFINITION_RULES,
 )
 import tests.data_utils as data_utils
 
@@ -118,3 +119,10 @@ def test_prov():
     assert prov_2.data_item == section_2
     assert prov_2.op_desc == tokenizer.description
     assert prov_2.source_data_items == [clean_text_segment]
+
+
+def test_section_def_file_encoding_error():
+    with pytest.raises(UnicodeError):
+        SectionTokenizer.load_section_definition(
+            filepath=_DEFAULT_SECTION_DEFINITION_RULES, encoding="utf-16"
+        )

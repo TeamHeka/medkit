@@ -11,6 +11,10 @@ import yaml
 
 from medkit.core.text import Segment, SegmentationOperation, span_utils
 
+_DEFAULT_SYNTAGMA_DEFINITION_RULES = (
+    pathlib.Path(__file__).parent / "default_syntagma_definition.yml"
+)
+
 
 @dataclasses.dataclass
 class DefaultConfig:
@@ -122,14 +126,14 @@ class SyntagmaTokenizer(SegmentationOperation):
 
     @classmethod
     def get_example(cls, keep_separator=True):
-        config_path = pathlib.Path(__file__).parent / "default_syntagma_definition.yml"
-        separators = cls.load_syntagma_definition(config_path)
+        config_path = _DEFAULT_SYNTAGMA_DEFINITION_RULES
+        separators = cls.load_syntagma_definition(config_path, encoding="utf-8")
         syntagma_tokenizer = cls(separators=separators, keep_separator=keep_separator)
         return syntagma_tokenizer
 
     @staticmethod
     def load_syntagma_definition(
-        filepath,
+        filepath: pathlib.Path, encoding: Optional[str] = None
     ) -> Tuple[str, ...]:
         """
         Load the syntagma definition stored in yml file
@@ -138,6 +142,8 @@ class SyntagmaTokenizer(SegmentationOperation):
         ----------
         filepath:
             Path to a yml file containing the syntagma separators
+        encoding
+            Encoding of the file to open
 
         Returns
         -------
@@ -145,7 +151,7 @@ class SyntagmaTokenizer(SegmentationOperation):
             Tuple containing the separators
         """
 
-        with open(filepath, mode="r") as f:
+        with open(filepath, mode="r", encoding=encoding) as f:
             config = yaml.safe_load(f)
 
         syntagma_seps = tuple(str(sep) for sep in config["syntagmas"]["separators"])

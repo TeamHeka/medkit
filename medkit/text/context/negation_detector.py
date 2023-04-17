@@ -113,7 +113,7 @@ class NegationDetector(ContextOperation):
         super().__init__(**init_args)
 
         if rules is None:
-            rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
+            rules = self.load_rules(_PATH_TO_DEFAULT_RULES, encoding="utf-8")
 
         self.check_rules_sanity(rules)
 
@@ -215,15 +215,19 @@ class NegationDetector(ContextOperation):
         return None
 
     @staticmethod
-    def load_rules(path_to_rules) -> List[NegationDetectorRule]:
+    def load_rules(
+        path_to_rules: Path, encoding: Optional[str] = None
+    ) -> List[NegationDetectorRule]:
         """
         Load all rules stored in a yml file
 
         Parameters
         ----------
-        path_to_rules:
+        path_to_rules
             Path to a yml file containing a list of mappings
             with the same structure as `NegationDetectorRule`
+        encoding
+            Encoding of the file to open
 
         Returns
         -------
@@ -232,7 +236,7 @@ class NegationDetector(ContextOperation):
             can be used to init a `NegationDetector`
         """
 
-        with open(path_to_rules, mode="r") as f:
+        with open(path_to_rules, mode="r", encoding=encoding) as f:
             rules_data = yaml.safe_load(f)
         rules = [NegationDetectorRule(**d) for d in rules_data]
         return rules

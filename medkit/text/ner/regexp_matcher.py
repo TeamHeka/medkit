@@ -170,7 +170,7 @@ class RegexpMatcher(NEROperation):
         super().__init__(**init_args)
 
         if rules is None:
-            rules = self.load_rules(_PATH_TO_DEFAULT_RULES)
+            rules = self.load_rules(_PATH_TO_DEFAULT_RULES, encoding="utf-8")
         if attrs_to_copy is None:
             attrs_to_copy = []
 
@@ -316,15 +316,19 @@ class RegexpMatcher(NEROperation):
         return norm_attr
 
     @staticmethod
-    def load_rules(path_to_rules) -> List[RegexpMatcherRule]:
+    def load_rules(
+        path_to_rules: Path, encoding: Optional[str] = None
+    ) -> List[RegexpMatcherRule]:
         """
         Load all rules stored in a yml file
 
         Parameters
         ----------
-        path_to_rules:
+        path_to_rules
             Path to a yml file containing a list of mappings
             with the same structure as `RegexpMatcherRule`
+        encoding
+            Encoding of the file to open
 
         Returns
         -------
@@ -347,7 +351,7 @@ class RegexpMatcher(NEROperation):
             yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping
         )
 
-        with open(path_to_rules, mode="r") as f:
+        with open(path_to_rules, mode="r", encoding=encoding) as f:
             rules = yaml.load(f, Loader=Loader)
         return rules
 

@@ -13,6 +13,11 @@ from flashtext import KeywordProcessor
 from medkit.core.text import Segment, SegmentationOperation, span_utils
 
 
+_DEFAULT_SECTION_DEFINITION_RULES = (
+    pathlib.Path(__file__).parent / "default_section_definition.yml"
+)
+
+
 @dataclasses.dataclass(frozen=True)
 class DefaultConfig:
     output_label: str = "SECTION"
@@ -152,8 +157,10 @@ class SectionTokenizer(SegmentationOperation):
 
     @classmethod
     def get_example(cls):
-        config_path = pathlib.Path(__file__).parent / "default_section_definition.yml"
-        section_dict, section_rules = cls.load_section_definition(config_path)
+        config_path = _DEFAULT_SECTION_DEFINITION_RULES
+        section_dict, section_rules = cls.load_section_definition(
+            config_path, encoding="utf-8"
+        )
         section_tokenizer = cls(
             section_dict=section_dict,
             section_rules=section_rules,
@@ -162,7 +169,7 @@ class SectionTokenizer(SegmentationOperation):
 
     @staticmethod
     def load_section_definition(
-        filepath,
+        filepath: pathlib.Path, encoding: Optional[str] = None
     ) -> Tuple[Dict[str, List[str]], Tuple[SectionModificationRule]]:
         """
         Load the sections definition stored in a yml file
@@ -171,6 +178,8 @@ class SectionTokenizer(SegmentationOperation):
         ----------
         filepath:
             Path to a yml file containing the sections(name + mappings) and rules
+        encoding:
+            Encoding of the file to open
 
         Returns
         -------
@@ -182,7 +191,7 @@ class SectionTokenizer(SegmentationOperation):
             These rules allow to rename some sections according their order
         """
 
-        with open(filepath, mode="r") as f:
+        with open(filepath, mode="r", encoding=encoding) as f:
             config = yaml.safe_load(f)
 
         section_dict = config["sections"]
