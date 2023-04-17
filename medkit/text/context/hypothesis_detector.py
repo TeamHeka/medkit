@@ -304,7 +304,9 @@ class HypothesisDetector(ContextOperation):
         return None
 
     @staticmethod
-    def load_verbs(path_to_verbs) -> Dict[str, Dict[str, Dict[str, List[str]]]]:
+    def load_verbs(
+        path_to_verbs: Path, encoding: Optional[str] = None
+    ) -> Dict[str, Dict[str, Dict[str, List[str]]]]:
         """
         Load all conjugated verb forms stored in a yml file.
         Conjugated verb forms at a specific mode and tense must be stored in nested mappings
@@ -312,9 +314,11 @@ class HypothesisDetector(ContextOperation):
 
         Parameters
         ----------
-        path_to_verbs:
+        path_to_verbs
             Path to a yml file containing a list of verbs form,
             arranged by mode and tense.
+        encoding:
+            Encoding on the file to open
 
         Returns
         -------
@@ -322,12 +326,14 @@ class HypothesisDetector(ContextOperation):
             List of verb forms in `path_to_verbs`,
             can be used to init an `HypothesisDetector`
         """
-        with open(path_to_verbs) as f:
+        with open(path_to_verbs, mode="r", encoding=encoding) as f:
             verbs = yaml.safe_load(f)
         return verbs
 
     @staticmethod
-    def load_rules(path_to_rules) -> List[HypothesisDetectorRule]:
+    def load_rules(
+        path_to_rules: Path, encoding: Optional[str] = None
+    ) -> List[HypothesisDetectorRule]:
         """
         Load all rules stored in a yml file
 
@@ -336,6 +342,8 @@ class HypothesisDetector(ContextOperation):
         path_to_rules:
             Path to a yml file containing a list of mappings
             with the same structure as `HypothesisDetectorRule`
+        encoding
+            Encoding of the file to open
 
         Returns
         -------
@@ -344,7 +352,7 @@ class HypothesisDetector(ContextOperation):
             can be used to init an `HypothesisDetector`
         """
 
-        with open(path_to_rules, mode="r") as f:
+        with open(path_to_rules, mode="r", encoding=encoding) as f:
             rules_data = yaml.safe_load(f)
         rules = [HypothesisDetectorRule(**d) for d in rules_data]
         return rules
@@ -354,8 +362,8 @@ class HypothesisDetector(ContextOperation):
         """Instantiate an HypothesisDetector with example rules and verbs,
         designed for usage with EDS documents
         """
-        rules = cls.load_rules(_PATH_TO_EXAMPLE_RULES)
-        verbs = cls.load_verbs(_PATH_TO_EXAMPLE_VERBS)
+        rules = cls.load_rules(_PATH_TO_EXAMPLE_RULES, encoding="utf-8")
+        verbs = cls.load_verbs(_PATH_TO_EXAMPLE_VERBS, encoding="utf-8")
         modes_and_tenses = [
             ("conditionnel", "présent"),
             ("indicatif", "futur simple"),

@@ -1,3 +1,5 @@
+import pytest
+
 from pathlib import Path
 
 from medkit.core import ProvTracer
@@ -5,6 +7,8 @@ from medkit.core.text import Segment, Span
 from medkit.text.context.hypothesis_detector import (
     HypothesisDetector,
     HypothesisDetectorRule,
+    _PATH_TO_EXAMPLE_RULES,
+    _PATH_TO_EXAMPLE_VERBS,
 )
 
 
@@ -251,3 +255,15 @@ def test_example_rules_and_verbs():
                 attr.value is False
             ), f"Syntagma '{syntagma.text}' shouldn't have been detected as hypothesis"
             assert not attr.metadata
+
+
+def test_rules_and_verbs_file_encoding_error():
+    with pytest.raises(UnicodeError):
+        HypothesisDetector.load_rules(
+            path_to_rules=_PATH_TO_EXAMPLE_RULES, encoding="utf-16"
+        )
+
+    with pytest.raises(UnicodeError):
+        HypothesisDetector.load_verbs(
+            path_to_verbs=_PATH_TO_EXAMPLE_VERBS, encoding="utf-32"
+        )

@@ -2,7 +2,10 @@ import pytest
 
 from medkit.core import ProvTracer
 from medkit.core.text import Segment, Span
-from medkit.text.segmentation import SyntagmaTokenizer
+from medkit.text.segmentation.syntagma_tokenizer import (
+    SyntagmaTokenizer,
+    _DEFAULT_SYNTAGMA_DEFINITION_RULES,
+)
 
 _TEXT = (
     " Elle avait été améliorée par l'intervention pratiquée par le chirurgien mais"
@@ -109,3 +112,10 @@ def test_prov():
     assert prov_2.data_item == syntagma_2
     assert prov_2.op_desc == tokenizer.description
     assert prov_2.source_data_items == [segment]
+
+
+def test_syntagma_def_file_encoding_error():
+    with pytest.raises(UnicodeError):
+        SyntagmaTokenizer.load_syntagma_definition(
+            filepath=_DEFAULT_SYNTAGMA_DEFINITION_RULES, encoding="utf-16"
+        )
