@@ -272,7 +272,7 @@ class EDSNLPPipeline(SpacyPipeline):
             }
 
         if spacy_attrs is None:
-            # default to all span attributes expected blacklisted ones
+            # default to all span attributes except blacklisted ones
             spacy_attrs = [
                 attr
                 for attr in Underscore.span_extensions
@@ -354,7 +354,7 @@ class EDSNLPDocPipeline(SpacyDocPipeline):
             }
 
         if spacy_attrs is None:
-            # default to all span attributes expected blacklisted ones
+            # default to all span attributes except blacklisted ones
             spacy_attrs = [
                 attr
                 for attr in Underscore.span_extensions
