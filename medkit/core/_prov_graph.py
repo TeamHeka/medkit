@@ -144,50 +144,6 @@ class ProvGraph:
         }
         return merged_prov_graph
 
-    def flatten(self) -> ProvGraph:
-        flattened_graph = ProvGraph()
-
-        for node in self._nodes_by_id.values():
-            if node.operation_id not in self._sub_graphs_by_op_id:
-                flattened_graph._nodes_by_id[node.data_item_id] = node
-
-        for sub_graph in self._sub_graphs_by_op_id.values():
-            flattened_sub_graph = sub_graph.flatten()
-            flattened_graph._nodes_by_id.update(flattened_sub_graph._nodes_by_id)
-
-        return flattened_graph
-
-    # def prune(
-    #     self,
-    #     data_item_ids: List[str],
-    # ) -> ProvGraph:
-    #     assert all(uid in self._nodes_by_id for uid in data_item_ids)
-
-    #     ids_to_keep = []
-
-    #     queue = collections.deque(data_item_ids)
-    #     seen = set()
-    #     while queue:
-    #         data_item_id = queue.popleft()
-    #         seen.add(data_item_id)
-    #         node = self._nodes_by_id[data_item_id]
-    #         ids_to_keep.append(data_item_id)
-    #         queue.extend(uid for uid in node.source_ids if uid not in seen)
-
-    #     kept_nodes_by_id = []
-    #     for data_item_id in ids_to_keep:
-    #         node = self._nodes_by_id[data_item_id]
-    #         source_ids = [uid for uid in node.source_ids if uid in ids_to_keep]
-    #         # derived_ids = [uid for uid in node.derived_ids if uid in ids_to_keep]
-    #         pruned_node = dataclasses.replace(
-    #             node, source_ids=source_ids  # derived_ids=derived_ids
-    #         )
-    #         kept_nodes_by_id[data_item_id] = pruned_node
-
-    #     # TODO what about subgraphs?
-
-    #     return ProvGraph(kept_nodes_by_id)
-
     def check_sanity(self):
         for node_id, node in self._nodes_by_id.items():
             if node.source_ids and node.operation_id is None:
