@@ -147,7 +147,6 @@ def test_all_dims():
         output_label=_OUTPUT_LABEL,
         version="MOCK",
         locale="en",
-        dims=["time", "duration"],
     )
     entities = matcher.run([sentence])
     assert len(entities) == 2
