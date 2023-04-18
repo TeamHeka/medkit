@@ -108,7 +108,7 @@ class DucklingMatcher(NEROperation):
 
         matches = api_result.json()
         for match in matches:
-            if match["dim"] not in self.dims:
+            if self.dims is not None and match["dim"] not in self.dims:
                 warnings.warn("Dims are not properly filtered by duckling API call")
                 continue
 
