@@ -3,7 +3,16 @@ This package needs extra-dependencies not installed as core dependencies of medk
 To install them, use `pip install medkit[edsnlp]`.
 """
 
-__all__ = ["EDSNLPPipeline", "EDSNLPDocPipeline"]
+__all__ = [
+    "EDSNLPPipeline",
+    "EDSNLPDocPipeline",
+    "build_date_attribute",
+    "build_value_attribute",
+    "build_score_attribute",
+    "build_context_attribute",
+    "build_history_attribute",
+    "DEFAULT_ATTRIBUTE_FACTORIES",
+]
 
 from typing import Callable, Dict, Optional, List
 
@@ -34,9 +43,24 @@ from medkit.text.ner.tnm_attribute import TNMAttribute
 from medkit.text.spacy import SpacyPipeline, SpacyDocPipeline
 
 
-def _build_date_attr(spacy_span: SpacySpan, spacy_label: str):
+def build_date_attribute(spacy_span: SpacySpan, spacy_label: str) -> Attribute:
     """
-    Build a medkit date attribute from an EDS-NLP attribute with a date object as value
+    Build a medkit date attribute from an EDS-NLP attribute with a date object as value.
+
+    Parameters
+    ----------
+    spacy_span
+        Spacy span having an ESD-NLP date attribute
+    spacy_label
+        Label of the date attribute on `spacy_spacy`. Ex: "date", "consultation_date"
+
+    Returns
+    -------
+    Attribute
+        :class:`~medkit.text.ner.DateAttribute`,
+        :class:`~medkit.text.ner.RelativeDateAttribute` or
+        :class:`~medkit.text.ner.DurationAttribute` instance, depending on the
+        EDS-NLP attribute
     """
 
     value = spacy_span._.get(spacy_label)
@@ -82,9 +106,31 @@ def _build_date_attr(spacy_span: SpacySpan, spacy_label: str):
         raise ValueError(f"Unexpected value type: {type(value)}")
 
 
-def _build_value_attr(spacy_span: SpacySpan, spacy_label: str):
+def build_value_attribute(spacy_span: SpacySpan, spacy_label: str) -> Attribute:
     """
-    Build a medkit date attribute from an EDS-NLP "value" attribute with a custom object as value
+    Build a medkit attribute from an EDS-NLP "value" attribute with a custom object as value:
+
+    - if the value is an EDS-NLP `Adipcap` object, a
+      :class:`~medkit.text.ner.ADICAPNormAttribute` instance is returned;
+    - if the value is an EDS-NLP `TNN` object, a
+      :class:`~medkit.text.ner.TNMAttribute` instance is returned;
+    - if the value is an EDS-NLP `SimpleMeasurement` object, a
+      :class:`~medkit.core.Attribute` instance is returned.
+
+
+    Otherwise an error is raised.
+
+    Parameters
+    ----------
+    spacy_span
+        Spacy span having an attribute custom object as value
+    spacy_label
+        Label of the attribute on `spacy_spacy`. Ex: "value"
+
+    Returns
+    -------
+    Attribute
+        Medkit attribute corresponding to the spacy attribute value
     """
 
     value = spacy_span._.get(spacy_label)
@@ -119,9 +165,23 @@ def _build_value_attr(spacy_span: SpacySpan, spacy_label: str):
         raise ValueError(f"Unexpected value type: {type(value)}")
 
 
-def _build_score_attr(spacy_span: SpacySpan, spacy_label: str):
+def build_score_attribute(spacy_span: SpacySpan, spacy_label: str) -> Attribute:
     """
-    Build a medkit attribute from EDS-NLP score_name/score_value attributes
+    Build a medkit attribute from an EDS-NLP "score_name" and corresponding
+    "score_value" attribute.
+
+    Parameters
+    ----------
+    spacy_span
+        Spacy span having "score_name" and "score_value" attributes
+    spacy_label
+        Must be "score_name"
+
+    Returns
+    -------
+    Attribute
+        Medkit attribute with "score_name" value as label and "score_value" value as
+        value
     """
 
     assert spacy_label == "score_name"
@@ -132,9 +192,22 @@ def _build_score_attr(spacy_span: SpacySpan, spacy_label: str):
     return Attribute(label=label, value=value, metadata=metadata)
 
 
-def _build_context_attr(spacy_span: SpacySpan, spacy_label: str):
+def build_context_attribute(spacy_span: SpacySpan, spacy_label: str) -> Attribute:
     """
-    Build a medkit attribute from a context/qualifying attribute (negation, hypothesis, etc)
+    Build a medkit attribute from an EDS-NLP context/qualifying attribute, adding the
+    cues as metadata
+
+    Parameters
+    ----------
+    spacy_span
+        Spacy span having a context/qualifying attribute
+    spacy_label
+        Label of the attribute on `spacy_spacy`. Ex: "negation", "hypothesis", etc
+
+    Returns
+    -------
+    Attribute
+        Medkit attribute corresponding to the spacy attribute
     """
 
     value = spacy_span._.get(spacy_label)
@@ -143,9 +216,22 @@ def _build_context_attr(spacy_span: SpacySpan, spacy_label: str):
     return Attribute(label=spacy_label, value=value, metadata=metadata)
 
 
-def _build_history_attr(spacy_span: SpacySpan, spacy_label: str):
+def build_history_attribute(spacy_span: SpacySpan, spacy_label: str) -> Attribute:
     """
-    Build a medkit attribute from a history attribute
+    Build a medkit attribute from an EDS-NLP "history" attribute, adding the cues as
+    metadata
+
+    Parameters
+    ----------
+    spacy_span
+        Spacy span having a "history" attribute
+    spacy_label
+        Must be "history"
+
+    Returns
+    -------
+    Attribute
+        Medkit attribute corresponding to the spacy attribute
     """
 
     assert spacy_label == "history"
@@ -160,26 +246,27 @@ def _build_history_attr(spacy_span: SpacySpan, spacy_label: str):
     return Attribute(label="history", value=value, metadata=metadata)
 
 
-_DEFAULT_ATTRIBUTE_FACTORIES = {
+DEFAULT_ATTRIBUTE_FACTORIES = {
     # created by several components
-    "value": _build_value_attr,
+    "value": build_value_attribute,
     # from eds.dates
-    "date": _build_date_attr,
+    "date": build_date_attribute,
     # from eds.consultation_dates
-    "consultation_date": _build_date_attr,
+    "consultation_date": build_date_attribute,
     # from eds.score and some subclasses
-    "score_name": _build_score_attr,
+    "score_name": build_score_attribute,
     # from eds.family
-    "family": _build_context_attr,
+    "family": build_context_attribute,
     # from eds.hypothesis
-    "hypothesis": _build_context_attr,
+    "hypothesis": build_context_attribute,
     # from eds.negation
-    "negation": _build_context_attr,
+    "negation": build_context_attribute,
     # from eds.reported_speech
-    "reported_speech": _build_context_attr,
+    "reported_speech": build_context_attribute,
     # from eds.history
-    "history": _build_history_attr,
+    "history": build_history_attribute,
 }
+"""Pre-defined attribute factories to handle EDS-NLP attributes"""
 
 _ATTR_LABELS_TO_IGNORE = {
     # text after spaCy pre-preprocessing
@@ -257,6 +344,8 @@ class EDSNLPPipeline(SpacyPipeline):
             medkit attributes. Factories will receive a and an an attribute
             label spacy span when called. The key in the mapping is the
             attribute label.
+            Pre-defined default factories are listed in
+            :const:`~DEFAULT_ATTRIBUTE_FACTORIES`
         name:
             Name describing the pipeline (defaults to the class name).
         uid:
@@ -264,10 +353,10 @@ class EDSNLPPipeline(SpacyPipeline):
         """
 
         if medkit_attribute_factories is None:
-            medkit_attribute_factories = _DEFAULT_ATTRIBUTE_FACTORIES
+            medkit_attribute_factories = DEFAULT_ATTRIBUTE_FACTORIES
         else:
             medkit_attribute_factories = {
-                **_DEFAULT_ATTRIBUTE_FACTORIES,
+                **DEFAULT_ATTRIBUTE_FACTORIES,
                 **medkit_attribute_factories,
             }
 
@@ -338,6 +427,8 @@ class EDSNLPDocPipeline(SpacyDocPipeline):
             medkit attributes. Factories will receive a and an an attribute
             label spacy span when called. The key in the mapping is the
             attribute label.
+            Pre-defined default factories are listed in
+            :const:`~DEFAULT_ATTRIBUTE_FACTORIES`
         name:
             Name describing the pipeline (defaults to the class name).
         uid:
@@ -346,10 +437,10 @@ class EDSNLPDocPipeline(SpacyDocPipeline):
 
         # use pre-defined attribute factory
         if medkit_attribute_factories is None:
-            medkit_attribute_factories = _DEFAULT_ATTRIBUTE_FACTORIES
+            medkit_attribute_factories = DEFAULT_ATTRIBUTE_FACTORIES
         else:
             medkit_attribute_factories = {
-                **_DEFAULT_ATTRIBUTE_FACTORIES,
+                **DEFAULT_ATTRIBUTE_FACTORIES,
                 **medkit_attribute_factories,
             }
 
