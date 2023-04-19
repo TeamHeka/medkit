@@ -133,8 +133,15 @@ date_attr
 ```
 
 This attribute is an instance of {class}`~medkit.text.ner.DateAttribute`, a
-subclass of the {class}`~medkit.core.Attribute`. One of the benefits of using
-{class}`~.EDSNLPDocPipeline` instead of
+subclass of {class}`~medkit.core.Attribute`. While its `value` field is `None`,
+it has `year`, `month`, `day` (etc) fields containing the different parts of the
+date that was detected. A string representation can be obtained by calling its
+`format()` method:
+```{code-cell} ipython3
+date_attr.format()
+```
+
+One of the benefits of using {class}`~.EDSNLPDocPipeline` instead of
 {class}`~medkit.text.spacy.SpacyDocPipeline` is that some special EDS-NLP
 attributes are automatically converted to a corresponding
 {class}`~medkit.core.Attribute` subclass.
