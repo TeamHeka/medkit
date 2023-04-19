@@ -4,7 +4,6 @@ To install them, use `pip install medkit[hf-entity-matcher]`.
 """
 
 __all__ = ["HFEntityMatcher"]
-
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Union
 from typing_extensions import Literal
@@ -14,6 +13,7 @@ from transformers import TokenClassificationPipeline
 
 from medkit.core import Attribute
 from medkit.core.text import NEROperation, Segment, span_utils, Entity
+from medkit.text.ner.hf_entity_matcher_trainable import HFEntityMatcherTrainable
 from medkit.tools import hf_utils
 
 
@@ -76,16 +76,16 @@ class HFEntityMatcher(NEROperation):
         self.model = model
         self.attrs_to_copy = attrs_to_copy
 
-        if isinstance(self.model, str):
-            valid_model = hf_utils.check_model_for_task_HF(
-                self.model, "token-classification"
+        valid_model = hf_utils.check_model_for_task_HF(
+            self.model, "token-classification"
+        )
+
+        if not valid_model:
+            raise ValueError(
+                f"Model {self.model} is not associated to a"
+                " token-classification/ner task and cannot be used with"
+                " HFEntityMatcher"
             )
-            if not valid_model:
-                raise ValueError(
-                    f"Model {self.model} is not associated to a"
-                    " token-classification/ner task and cannot be used with"
-                    " HFEntityMatcher"
-                )
 
         self._pipeline = transformers.pipeline(
             task="token-classification",
@@ -159,3 +159,26 @@ class HFEntityMatcher(NEROperation):
                 )
 
             yield entity
+
+    @staticmethod
+    def make_trainable(
+        model_name_or_path: Union[str, Path],
+        labels: List[str],
+        tagging_scheme: Literal["bilou", "iob2"],
+        tag_subtokens: bool = False,
+        tokenizer_max_length: Optional[int] = None,
+        device: int = -1,
+    ):
+        """
+        Return the trainable component of the operation.
+        This component can be trained using :class:`~medkit.training.Trainer`, and then
+        used in a new `HFEntityMatcher` operation.
+        """
+        return HFEntityMatcherTrainable(
+            model_name_or_path=model_name_or_path,
+            labels=labels,
+            tagging_scheme=tagging_scheme,
+            tokenizer_max_length=tokenizer_max_length,
+            tag_subtokens=tag_subtokens,
+            device=device,
+        )

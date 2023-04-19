@@ -28,6 +28,7 @@ if modules_are_available(["packaging", "quickumls"]):
 # HF entity matcher
 if modules_are_available(["torch", "transformers"]):
     __all__.append("hf_entity_matcher")
+    __all__.append("hf_entity_matcher_trainable")
 
 if modules_are_available(["pandas", "torch", "transformers"]):
     __all__ += ["umls_coder_normalizer"]
