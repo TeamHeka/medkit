@@ -74,18 +74,53 @@ class DateAttribute(Attribute):
         self.minute = minute
         self.second = second
 
-    def to_brat(self):
-        return _format_abs_date_value(
-            self.year,
-            self.month,
-            self.day,
-            self.hour,
-            self.minute,
-            self.second,
-        )
+    def to_brat(self) -> str:
+        return self.format()
 
-    def to_spacy(self):
-        return self.to_brat()
+    def to_spacy(self) -> str:
+        return self.format()
+
+    def format(self) -> str:
+        """
+        Return a string representation of the date with
+        format YYYY-MM-DD for the date part and HH:MM:SS for the time part, if
+        present. Missing components are replaced with question marks
+        """
+
+        formatted = ""
+        if self.year is not None or self.month is not None or self.day is not None:
+            if self.year is not None:
+                formatted += f"{self.year:04}"
+            else:
+                formatted += "????"
+
+            if self.month is not None:
+                formatted += f"-{self.month:02}"
+            else:
+                formatted += "-??"
+
+            if self.day is not None:
+                formatted += f"-{self.day:02}"
+            else:
+                formatted += "-??"
+
+        if self.hour is not None or self.minute is not None or self.second is not None:
+            if formatted:
+                formatted += " "
+            if self.hour is not None:
+                formatted += f"{self.hour:02}"
+            else:
+                formatted += "??"
+            if self.minute is not None:
+                formatted += f":{self.minute:02}"
+            else:
+                formatted += ":??"
+            if self.second is not None:
+                formatted += f"{self.second:02}"
+            else:
+                formatted += ":??"
+
+        return formatted
 
     def to_dict(self) -> Dict[str, Any]:
         date_dict = dict(
@@ -182,19 +217,40 @@ class DurationAttribute(Attribute):
         self.minutes = minutes
         self.seconds = seconds
 
-    def to_brat(self):
-        return _format_duration_value(
-            self.years,
-            self.months,
-            self.weeks,
-            self.days,
-            self.hours,
-            self.minutes,
-            self.seconds,
-        )
+    def to_brat(self) -> str:
+        return self.format()
 
-    def to_spacy(self):
-        return self.to_brat()
+    def to_spacy(self) -> str:
+        return self.format()
+
+    def format(self) -> str:
+        """
+        Return a string representation of the date/time offset.
+
+        Ex: "1 year 10 months 2 days"
+        """
+
+        parts = []
+        if self.years:
+            parts.append(str(self.years) + " year" if self.years == 1 else " years")
+        if self.months:
+            parts.append(str(self.months) + " month" if self.months == 1 else " months")
+        if self.weeks:
+            parts.append(str(self.weeks) + " week" if self.weeks == 1 else " weeks")
+        if self.days:
+            parts.append(str(self.days) + " day" if self.days == 1 else " days")
+        if self.hours:
+            parts.append(str(self.hours) + " hour" if self.hours == 1 else " hours")
+        if self.minutes:
+            parts.append(
+                str(self.minutes) + " minute" if self.minutes == 1 else " minutes"
+            )
+        if self.seconds:
+            parts.append(
+                str(self.seconds) + " second" if self.seconds == 1 else " seconds"
+            )
+
+        return " ".join(parts)
 
     def to_dict(self) -> Dict[str, Any]:
         duration_dict = dict(
@@ -236,7 +292,7 @@ class RelativeDateDirection(Enum):
 
 
 @dataclasses.dataclass
-class RelativeDateAttribute(Attribute):
+class RelativeDateAttribute(DurationAttribute):
     """
     Attribute representing a relative date or time associated to a segment or
     entity, ie a date/time offset from an (unknown) reference date/time, with a
@@ -294,31 +350,35 @@ class RelativeDateAttribute(Attribute):
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
     ):
-        super().__init__(label=label, metadata=metadata, uid=uid)
-
-        self.direction = direction
-        self.years = years
-        self.months = months
-        self.weeks = weeks
-        self.days = days
-        self.hours = hours
-        self.minutes = minutes
-        self.seconds = seconds
-
-    def to_brat(self):
-        return _format_rel_date_value(
-            self.direction,
-            self.years,
-            self.months,
-            self.weeks,
-            self.days,
-            self.hours,
-            self.minutes,
-            self.seconds,
+        super().__init__(
+            label=label,
+            years=years,
+            months=months,
+            weeks=weeks,
+            days=days,
+            hours=hours,
+            minutes=minutes,
+            seconds=seconds,
+            metadata=metadata,
+            uid=uid,
         )
 
+        self.direction = direction
+
+    def format(self) -> str:
+        """
+        Return a string representation of the date/time offset
+        Ex: "+ 1 year 10 months 2 days"
+        """
+
+        prefix = "+ " if self.direction is RelativeDateDirection.FUTURE else "- "
+        return prefix + super().format()
+
+    def to_brat(self):
+        return self.format()
+
     def to_spacy(self):
-        return self.to_brat()
+        return self.format()
 
     def to_dict(self) -> Dict[str, Any]:
         date_dict = dict(
@@ -352,98 +412,3 @@ class RelativeDateAttribute(Attribute):
             seconds=date_dict["seconds"],
             metadata=date_dict["metadata"],
         )
-
-
-def _format_abs_date_value(
-    year: Optional[int],
-    month: Optional[int],
-    day: Optional[int],
-    hour: Optional[int],
-    minute: Optional[int],
-    second: Optional[int],
-) -> str:
-    formatted = ""
-    if year is not None or month is not None or day is not None:
-        if year is not None:
-            formatted += f"{year:04}"
-        else:
-            formatted += "????"
-
-        if month is not None:
-            formatted += f"-{month:02}"
-        else:
-            formatted += "-??"
-
-        if day is not None:
-            formatted += f"-{day:02}"
-        else:
-            formatted += "-??"
-
-    if hour is not None or minute is not None or second is not None:
-        if formatted:
-            formatted += " "
-        if hour is not None:
-            formatted += f"{hour:02}"
-        else:
-            formatted += "??"
-        if minute is not None:
-            formatted += f":{minute:02}"
-        else:
-            formatted += ":??"
-        if second is not None:
-            formatted += f"{second:02}"
-        else:
-            formatted += ":??"
-
-    return formatted
-
-
-def _format_duration_value(
-    years: int,
-    months: int,
-    weeks: int,
-    days: int,
-    hours: int,
-    minutes: int,
-    seconds: int,
-) -> str:
-    parts = []
-    if years:
-        parts.append(str(years) + " year" if years == 1 else " years")
-    if months:
-        parts.append(str(months) + " month" if months == 1 else " months")
-    if weeks:
-        parts.append(str(weeks) + " week" if weeks == 1 else " weeks")
-    if days:
-        parts.append(str(days) + " day" if days == 1 else " days")
-    if hours:
-        parts.append(str(hours) + " hour" if hours == 1 else " hours")
-    if minutes:
-        parts.append(str(minutes) + " minute" if minutes == 1 else " minutes")
-    if seconds:
-        parts.append(str(seconds) + " second" if seconds == 1 else " seconds")
-
-    return " ".join(parts)
-
-
-def _format_rel_date_value(
-    direction: RelativeDateDirection,
-    years: int,
-    months: int,
-    weeks: int,
-    days: int,
-    hours: int,
-    minutes: int,
-    seconds: int,
-) -> str:
-    prefix = "+ " if direction is RelativeDateDirection.FUTURE else "- "
-    value = _format_duration_value(
-        years=years,
-        months=months,
-        weeks=weeks,
-        days=days,
-        hours=hours,
-        minutes=minutes,
-        seconds=seconds,
-    )
-    return prefix + value
