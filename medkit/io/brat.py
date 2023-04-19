@@ -418,7 +418,7 @@ class BratOutputConverter(OutputConverter):
                     for a in medkit_segment.attrs.get(label=label)
                 ]
             for attr in attrs:
-                value = attr.value
+                value = attr.to_brat()
 
                 if isinstance(value, bool) and not value:
                     # in brat 'False' means the attributes does not exist
@@ -462,7 +462,7 @@ class BratOutputConverter(OutputConverter):
                     for a in medkit_relation.attrs.get(label=label)
                 ]
             for attr in attrs:
-                value = attr.value
+                value = attr.to_brat()
 
                 if isinstance(value, bool) and not value:
                     continue

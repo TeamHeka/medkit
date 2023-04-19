@@ -21,9 +21,6 @@ class EntityNormAttribute(Attribute):
         Identifier of the attribute
     label:
         The attribute label, always set to :attr:`EntityNormAttribute.LABEL`
-    value:
-        Value of the attribute. Built by concatenating `kb_name` with `kb_id` when
-        available, otherwise `term` is used.
     kb_name:
         Name of the knowledge base (ex: "icd"). Should always be provided except
         in special cases when we just want to store a normalized term.
@@ -65,21 +62,25 @@ class EntityNormAttribute(Attribute):
         if kb_id is None and term is None:
             raise ValueError("Must provide at least kb_id or term")
 
-        if kb_id is not None:
-            if kb_name is not None:
-                value = f"{kb_name}:{kb_id}"
-            else:
-                value = kb_id
-        else:
-            value = str(term)
-
-        super().__init__(label=self.LABEL, value=value, metadata=metadata, uid=uid)
+        super().__init__(label=self.LABEL, metadata=metadata, uid=uid)
 
         self.kb_name = kb_name
         self.kb_id = kb_id
         self.kb_version = kb_version
         self.term = term
         self.score = score
+
+    def to_brat(self) -> Any:
+        if self.kb_id is not None:
+            if self.kb_name is not None:
+                return f"{self.kb_name}:{self.kb_id}"
+            else:
+                return self.kb_id
+        else:
+            return self.term
+
+    def to_spacy(self) -> Any:
+        return self.to_brat()
 
     def to_dict(self) -> Dict[str, Any]:
         norm_dict = dict(

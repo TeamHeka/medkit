@@ -30,10 +30,6 @@ class DateAttribute(Attribute):
         Identifier of the attribute
     label:
         Label of the attribute
-    value:
-        Value of the attribute, set to a string representation of the date with
-        format YYYY-MM-DD for the date part and HH:MM:SS for the time part, if
-        present. Missing components are replaced with question marks
     year:
         Year component of the date
     month:
@@ -69,8 +65,7 @@ class DateAttribute(Attribute):
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
     ):
-        value = _format_abs_date_value(year, month, day, hour, minute, second)
-        super().__init__(label=label, value=value, metadata=metadata, uid=uid)
+        super().__init__(label=label, metadata=metadata, uid=uid)
 
         self.year = year
         self.month = month
@@ -78,6 +73,19 @@ class DateAttribute(Attribute):
         self.hour = hour
         self.minute = minute
         self.second = second
+
+    def to_brat(self):
+        return _format_abs_date_value(
+            self.year,
+            self.month,
+            self.day,
+            self.hour,
+            self.minute,
+            self.second,
+        )
+
+    def to_spacy(self):
+        return self.to_brat()
 
     def to_dict(self) -> Dict[str, Any]:
         date_dict = dict(
@@ -122,9 +130,6 @@ class DurationAttribute(Attribute):
         Identifier of the attribute
     label:
         Label of the attribute
-    value:
-        Value of the attribute, set to a human-readable representation of the
-        date/time offset. Ex: "1 year 10 months 2 days"
     direction:
         Direction the relative date. Ex: "2 years ago" correspond to the `PAST`
         direction and "in 2 weeks" to the `FUTURE` direction.
@@ -167,10 +172,7 @@ class DurationAttribute(Attribute):
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
     ):
-        value = _format_duration_value(
-            years, months, weeks, days, hours, minutes, seconds
-        )
-        super().__init__(label=label, value=value, metadata=metadata, uid=uid)
+        super().__init__(label=label, metadata=metadata, uid=uid)
 
         self.years = years
         self.months = months
@@ -179,6 +181,20 @@ class DurationAttribute(Attribute):
         self.hours = hours
         self.minutes = minutes
         self.seconds = seconds
+
+    def to_brat(self):
+        return _format_duration_value(
+            self.years,
+            self.months,
+            self.weeks,
+            self.days,
+            self.hours,
+            self.minutes,
+            self.seconds,
+        )
+
+    def to_spacy(self):
+        return self.to_brat()
 
     def to_dict(self) -> Dict[str, Any]:
         duration_dict = dict(
@@ -234,9 +250,6 @@ class RelativeDateAttribute(Attribute):
         Identifier of the attribute
     label:
         Label of the attribute
-    value:
-        Value of the attribute, set to a human-readable representation of the
-        date/time offset. Ex: "+ 1 year 10 months 2 days"
     direction:
         Direction the relative date. Ex: "2 years ago" corresponds to the `PAST`
         direction and "in 2 weeks" to the `FUTURE` direction.
@@ -281,10 +294,7 @@ class RelativeDateAttribute(Attribute):
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
     ):
-        value = _format_rel_date_value(
-            direction, years, months, weeks, days, hours, minutes, seconds
-        )
-        super().__init__(label=label, value=value, metadata=metadata, uid=uid)
+        super().__init__(label=label, metadata=metadata, uid=uid)
 
         self.direction = direction
         self.years = years
@@ -294,6 +304,21 @@ class RelativeDateAttribute(Attribute):
         self.hours = hours
         self.minutes = minutes
         self.seconds = seconds
+
+    def to_brat(self):
+        return _format_rel_date_value(
+            self.direction,
+            self.years,
+            self.months,
+            self.weeks,
+            self.days,
+            self.hours,
+            self.minutes,
+            self.seconds,
+        )
+
+    def to_spacy(self):
+        return self.to_brat()
 
     def to_dict(self) -> Dict[str, Any]:
         date_dict = dict(

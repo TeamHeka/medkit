@@ -34,8 +34,6 @@ class ADICAPNormAttribute(EntityNormAttribute):
         ADICAP code as a string (ex: "BHGS0040")
     kb_id:
         Same as `code`
-    value:
-        Value of the attribute, built by prefixing `code` with "adicap:"
     sampling_mode:
         Sampling mode (ex: "BIOPSIE CHIRURGICALE")
     technic:

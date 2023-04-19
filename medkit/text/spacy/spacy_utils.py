@@ -465,12 +465,11 @@ def _segment_to_spacy_span(
 
     for label in attrs:
         for attr in medkit_segment.attrs.get(label=label):
-            if attr.value is None:
+            value = attr.to_spacy()
+            if value is None:
                 # in medkit having an attribute, indicates that the attribute exists
                 # for the given annotation, we force True as value
                 value = True
-            else:
-                value = attr.value
             # set attributes as extensions
             span._.set(attr.label, value)
             if include_medkit_info:

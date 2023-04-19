@@ -65,6 +65,20 @@ class Attribute(dict_conv.SubclassMapping):
         dict_conv.add_class_name_to_data_dict(self, attribute_dict)
         return attribute_dict
 
+    def to_brat(self) -> Optional[Any]:
+        """
+        Return a value compatible with the brat format
+        """
+
+        return self.value
+
+    def to_spacy(self) -> Optional[Any]:
+        """
+        Return a value compatible with spaCy
+        """
+
+        return self.value
+
     def copy(self) -> Attribute:
         """
         Create a new attribute that is a copy of the current instance, but
