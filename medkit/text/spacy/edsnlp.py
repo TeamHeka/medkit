@@ -34,7 +34,7 @@ from medkit.text.ner.tnm_attribute import TNMAttribute
 from medkit.text.spacy import SpacyPipeline, SpacyDocPipeline
 
 
-def _build_date_attr(spacy_label: str, spacy_span: SpacySpan):
+def _build_date_attr(spacy_span: SpacySpan, spacy_label: str):
     """
     Build a medkit date attribute from an EDS-NLP attribute with a date object as value
     """
@@ -82,7 +82,7 @@ def _build_date_attr(spacy_label: str, spacy_span: SpacySpan):
         raise ValueError(f"Unexpected value type: {type(value)}")
 
 
-def _build_value_attr(spacy_label: str, spacy_span: SpacySpan):
+def _build_value_attr(spacy_span: SpacySpan, spacy_label: str):
     """
     Build a medkit date attribute from an EDS-NLP "value" attribute with a custom object as value
     """
@@ -119,7 +119,7 @@ def _build_value_attr(spacy_label: str, spacy_span: SpacySpan):
         raise ValueError(f"Unexpected value type: {type(value)}")
 
 
-def _build_score_attr(spacy_label: str, spacy_span: SpacySpan):
+def _build_score_attr(spacy_span: SpacySpan, spacy_label: str):
     """
     Build a medkit attribute from EDS-NLP score_name/score_value attributes
     """
@@ -132,7 +132,7 @@ def _build_score_attr(spacy_label: str, spacy_span: SpacySpan):
     return Attribute(label=label, value=value, metadata=metadata)
 
 
-def _build_context_attr(spacy_label: str, spacy_span: SpacySpan):
+def _build_context_attr(spacy_span: SpacySpan, spacy_label: str):
     """
     Build a medkit attribute from a context/qualifying attribute (negation, hypothesis, etc)
     """
@@ -143,7 +143,7 @@ def _build_context_attr(spacy_label: str, spacy_span: SpacySpan):
     return Attribute(label=spacy_label, value=value, metadata=metadata)
 
 
-def _build_history_attr(spacy_label: str, spacy_span: SpacySpan):
+def _build_history_attr(spacy_span: SpacySpan, spacy_label: str):
     """
     Build a medkit attribute from a history attribute
     """
@@ -232,7 +232,7 @@ class EDSNLPPipeline(SpacyPipeline):
         spacy_span_groups: Optional[List[str]] = None,
         spacy_attrs: Optional[List[str]] = None,
         medkit_attribute_factories: Optional[
-            Dict[str, Callable[[str, SpacySpan], Attribute]]
+            Dict[str, Callable[[SpacySpan, str], Attribute]]
         ] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
@@ -254,9 +254,9 @@ class EDSNLPPipeline(SpacyPipeline):
             `None`, all non-redundant EDS-NLP attributes will be handled.
         medkit_attribute_factories:
             Mapping of factories in charge of converting spacy attributes to
-            medkit attributes. Factories will receive an attribute label and a
-            spacy span when called. The key in the mapping is the attribute
-            label.
+            medkit attributes. Factories will receive a and an an attribute
+            label spacy span when called. The key in the mapping is the
+            attribute label.
         name:
             Name describing the pipeline (defaults to the class name).
         uid:
@@ -304,7 +304,7 @@ class EDSNLPDocPipeline(SpacyDocPipeline):
         spacy_span_groups: Optional[List[str]] = None,
         spacy_attrs: Optional[List[str]] = None,
         medkit_attribute_factories: Optional[
-            Dict[str, Callable[[str, SpacySpan], Attribute]]
+            Dict[str, Callable[[SpacySpan, str], Attribute]]
         ] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
@@ -335,9 +335,9 @@ class EDSNLPDocPipeline(SpacyDocPipeline):
             `None`, all non-redundant EDS-NLP attributes will be handled.
         medkit_attribute_factories:
             Mapping of factories in charge of converting spacy attributes to
-            medkit attributes. Factories will receive an attribute label and a
-            spacy span when called. The key in the mapping is the attribute
-            label.
+            medkit attributes. Factories will receive a and an an attribute
+            label spacy span when called. The key in the mapping is the
+            attribute label.
         name:
             Name describing the pipeline (defaults to the class name).
         uid:

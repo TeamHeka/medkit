@@ -22,7 +22,7 @@ class SpacyDocPipeline(DocOperation):
         spacy_span_groups: Optional[List[str]] = None,
         spacy_attrs: Optional[List[str]] = None,
         medkit_attribute_factories: Optional[
-            Dict[str, Callable[[str, SpacySpan], Attribute]]
+            Dict[str, Callable[[SpacySpan, str], Attribute]]
         ] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
@@ -54,9 +54,9 @@ class SpacyDocPipeline(DocOperation):
             a medkit ID.
         medkit_attribute_factories:
             Mapping of factories in charge of converting spacy attributes to
-            medkit attributes. Factories will receive an attribute label and a
-            spacy span when called. The key in the mapping is the attribute
-            label.
+            medkit attributes. Factories will receive a and an an attribute
+            label spacy span when called. The key in the mapping is the
+            attribute label.
         name:
             Name describing the pipeline (defaults to the class name).
         uid:

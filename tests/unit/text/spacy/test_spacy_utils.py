@@ -240,7 +240,7 @@ class _DateAttribute(Attribute):
         super().__init__(label=label, value=f"{year}-{month}-{day}")
 
 
-def _build_date_attr(spacy_label: str, spacy_span: SpacySpan):
+def _build_date_attr(spacy_span: SpacySpan, spacy_label: str):
     value = spacy_span._.get(spacy_label)
     return _DateAttribute(
         label=spacy_label, year=value.year, month=value.month, day=value.day

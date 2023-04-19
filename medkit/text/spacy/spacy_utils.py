@@ -33,7 +33,7 @@ def extract_anns_and_attrs_from_spacy_doc(
     span_groups: Optional[List[str]] = None,
     attrs: Optional[List[str]] = None,
     attribute_factories: Optional[
-        Dict[str, Callable[[str, SpacySpan], Attribute]]
+        Dict[str, Callable[[SpacySpan, str], Attribute]]
     ] = None,
     rebuild_medkit_anns_and_attrs: bool = False,
 ) -> Tuple[List[Segment], Dict[str, List[Attribute]]]:
@@ -56,10 +56,9 @@ def extract_anns_and_attrs_from_spacy_doc(
         Name of custom attributes to extract from the annotations that will be included.
         If `None` (default) all the custom attributes will be extracted
     attribute_factories:
-        Mapping of factories in charge of converting spacy attributes to
-            medkit attributes. Factories will receive an attribute label and a
-            spacy span when called. The key in the mapping is the attribute
-            label.
+        Mapping of factories in charge of converting spacy attributes to medkit
+        attributes. Factories will receive a spacy span and an attribute label
+        when called. The key in the mapping is the attribute label.
     rebuild_medkit_anns_and_attrs:
         If True the annotations and attributes with medkit ids will become
         new annotations/attributes with new ids.
@@ -129,7 +128,7 @@ def extract_anns_and_attrs_from_spacy_doc(
                 continue
             factory = attribute_factories.get(attr_label)
             if factory is not None:
-                attribute = factory(attr_label, entity_spacy)
+                attribute = factory(entity_spacy, attr_label)
             else:
                 attribute = Attribute(attr_label, value)
             attributes.append(attribute)
@@ -174,7 +173,7 @@ def extract_anns_and_attrs_from_spacy_doc(
                     continue
                 factory = attribute_factories.get(attr_label)
                 if factory is not None:
-                    attribute = factory(attr_label, span_spacy)
+                    attribute = factory(span_spacy, attr_label)
                 else:
                     attribute = Attribute(attr_label, value)
                 attributes.append(attribute)
