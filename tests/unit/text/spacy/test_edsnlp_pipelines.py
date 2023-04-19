@@ -6,7 +6,13 @@ _ = pytest.importorskip(modname="edsnlp", reason="edsnlp is not installed")
 from spacy.tokens.underscore import Underscore
 
 from medkit.core.text import TextDocument, Entity, Segment, Span
-from medkit.text.ner import DateAttribute, ADICAPNormAttribute
+from medkit.text.ner import (
+    DateAttribute,
+    RelativeDateAttribute,
+    RelativeDateDirection,
+    DurationAttribute,
+    ADICAPNormAttribute,
+)
 from medkit.text.ner.tnm_attribute import TNMAttribute
 from medkit.text.spacy.edsnlp import EDSNLPPipeline, EDSNLPDocPipeline
 
@@ -24,11 +30,12 @@ def reset_spacy_extensions():
 
 
 def test_dates_pipeline():
-    seg = _get_segment("Hospitalisé le 25/10/2012")
-
     nlp = spacy.blank("eds")
     nlp.add_pipe("eds.dates")
     edsnlp_pipeline = EDSNLPPipeline(nlp)
+
+    # absolute date
+    seg = _get_segment("Hospitalisé le 25/10/2012")
     anns = edsnlp_pipeline.run([seg])
 
     assert len(anns) == 1
@@ -41,6 +48,35 @@ def test_dates_pipeline():
     date_attr = date_attrs[0]
     assert isinstance(date_attr, DateAttribute)
     assert date_attr.year == 2012 and date_attr.month == 10 and date_attr.day == 25
+
+    # relative date
+    seg = _get_segment("Hospitalisé il y a 2 mois")
+    anns = edsnlp_pipeline.run([seg])
+
+    assert len(anns) == 1
+    date_seg = anns[0]
+    assert date_seg.text == "il y a 2 mois"
+
+    date_attrs = date_seg.attrs.get(label="date")
+    assert len(date_attrs) == 1
+    date_attr = date_attrs[0]
+    assert isinstance(date_attr, RelativeDateAttribute)
+    assert date_attr.direction == RelativeDateDirection.PAST
+    assert date_attr.months == 2
+
+    # duration
+    seg = _get_segment("Hospitalisé pendant 2 mois")
+    anns = edsnlp_pipeline.run([seg])
+
+    assert len(anns) == 1
+    date_seg = anns[0]
+    assert date_seg.text == "pendant 2 mois"
+
+    date_attrs = date_seg.attrs.get(label="date")
+    assert len(date_attrs) == 1
+    date_attr = date_attrs[0]
+    assert isinstance(date_attr, DurationAttribute)
+    assert date_attr.months == 2
 
 
 def test_adicap_pipeline():
