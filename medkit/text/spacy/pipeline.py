@@ -43,9 +43,9 @@ class SpacyPipeline(Operation):
             a medkit ID.
         medkit_attribute_factories:
             Mapping of factories in charge of converting spacy attributes to
-            medkit attributes. Factories will receive a and an an attribute
-            label spacy span when called. The key in the mapping is the
-            attribute label.
+            medkit attributes. Factories will receive a spacy span and an an
+            attribute label when called. The key in the mapping is the attribute
+            label.
         name:
             Name describing the pipeline (defaults to the class name).
         uid:

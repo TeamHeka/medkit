@@ -341,9 +341,9 @@ class EDSNLPPipeline(SpacyPipeline):
             `None`, all non-redundant EDS-NLP attributes will be handled.
         medkit_attribute_factories:
             Mapping of factories in charge of converting spacy attributes to
-            medkit attributes. Factories will receive a and an an attribute
-            label spacy span when called. The key in the mapping is the
-            attribute label.
+            medkit attributes. Factories will receive a spacy span and an an
+            attribute label when called. The key in the mapping is the attribute
+            label.
             Pre-defined default factories are listed in
             :const:`~DEFAULT_ATTRIBUTE_FACTORIES`
         name:
@@ -424,9 +424,9 @@ class EDSNLPDocPipeline(SpacyDocPipeline):
             `None`, all non-redundant EDS-NLP attributes will be handled.
         medkit_attribute_factories:
             Mapping of factories in charge of converting spacy attributes to
-            medkit attributes. Factories will receive a and an an attribute
-            label spacy span when called. The key in the mapping is the
-            attribute label.
+            medkit attributes. Factories will receive a spacy span and an an
+            attribute label when called. The key in the mapping is the attribute
+            label.
             Pre-defined default factories are listed in
             :const:`~DEFAULT_ATTRIBUTE_FACTORIES`
         name:
