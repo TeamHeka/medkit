@@ -113,7 +113,7 @@ def build_value_attribute(spacy_span: SpacySpan, spacy_label: str) -> Attribute:
     - if the value is an EDS-NLP `Adipcap` object, a
       :class:`~medkit.text.ner.ADICAPNormAttribute` instance is returned;
     - if the value is an EDS-NLP `TNN` object, a
-      :class:`~medkit.text.ner.TNMAttribute` instance is returned;
+      :class:`~medkit.text.ner.tnm_attribute.TNMAttribute` instance is returned;
     - if the value is an EDS-NLP `SimpleMeasurement` object, a
       :class:`~medkit.core.Attribute` instance is returned.
 
