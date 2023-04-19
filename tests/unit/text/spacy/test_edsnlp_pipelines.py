@@ -3,8 +3,12 @@ import pytest
 spacy = pytest.importorskip(modname="spacy", reason="spacy is not installed")
 _ = pytest.importorskip(modname="edsnlp", reason="edsnlp is not installed")
 
+
+import datetime
+
 from spacy.tokens.underscore import Underscore
 
+from medkit.core import Attribute
 from medkit.core.text import TextDocument, Entity, Segment, Span
 from medkit.text.ner import (
     DateAttribute,
@@ -141,6 +145,28 @@ def test_family_pipeline():
     assert entity_2.text == "cancer"
     family_attrs_2 = entity_2.attrs.get(label="family")
     assert len(family_attrs_2) == 1 and family_attrs_2[0].value is True
+
+
+def test_custom_attribute_factory():
+    """Use a custom attribute factory overriding one of the default attribute factories
+    """
+
+    def build_date_attribute(span, label):
+        return Attribute(label="date", value=span._.get(label).to_datetime())
+
+    nlp = spacy.blank("eds")
+    nlp.add_pipe("eds.dates")
+    edsnlp_pipeline = EDSNLPPipeline(
+        nlp, medkit_attribute_factories={"date": build_date_attribute}
+    )
+
+    seg = _get_segment("Hospitalisé le 25/10/2012")
+    anns = edsnlp_pipeline.run([seg])
+    date_seg = anns[0]
+    date_attr = date_seg.attrs.get(label="date")[0]
+    assert isinstance(date_attr, Attribute) and isinstance(
+        date_attr.value, datetime.datetime
+    )
 
 
 def test_doc_pipeline():
