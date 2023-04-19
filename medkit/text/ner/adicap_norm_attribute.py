@@ -29,7 +29,7 @@ class ADICAPNormAttribute(EntityNormAttribute):
     uid:
         Identifier of the attribute
     label:
-        The attribute label, always set to :attr:`EntityNormAttribute.LABEL`
+        The attribute label, always set to :attr:`.EntityNormAttribute.LABEL`
     code:
         ADICAP code as a string (ex: "BHGS0040")
     kb_id:

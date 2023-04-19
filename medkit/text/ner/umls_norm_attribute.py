@@ -20,7 +20,7 @@ class UMLSNormAttribute(EntityNormAttribute):
     uid:
         Identifier of the attribute
     label:
-        The attribute label, always set to :attr:`EntityNormAttribute.LABEL`
+        The attribute label, always set to :attr:`.EntityNormAttribute.LABEL`
     value:
         Value of the attribute, built by prefixing the cui with "umls:"
     kb_name:

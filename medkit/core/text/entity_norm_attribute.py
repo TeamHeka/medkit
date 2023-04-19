@@ -20,7 +20,7 @@ class EntityNormAttribute(Attribute):
     uid:
         Identifier of the attribute
     label:
-        The attribute label, always set to :attr:`EntityNormAttribute.LABEL`
+        The attribute label, always set to :attr:`.EntityNormAttribute.LABEL`
     kb_name:
         Name of the knowledge base (ex: "icd"). Should always be provided except
         in special cases when we just want to store a normalized term.
