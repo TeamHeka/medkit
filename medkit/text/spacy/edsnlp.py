@@ -94,13 +94,13 @@ def build_date_attribute(spacy_span: SpacySpan, spacy_label: str) -> Attribute:
     elif isinstance(value, EDSNLP_Duration):
         return DurationAttribute(
             label=spacy_label,
-            year=value.year,
-            month=value.month,
+            years=value.year,
+            months=value.month,
             weeks=value.week,
-            day=value.day,
-            hour=value.hour,
-            minute=value.minute,
-            second=value.second,
+            days=value.day,
+            hours=value.hour,
+            minutes=value.minute,
+            seconds=value.second,
         )
     else:
         raise ValueError(f"Unexpected value type: {type(value)}")
