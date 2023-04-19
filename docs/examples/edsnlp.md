@@ -116,6 +116,14 @@ integrated as additional metadata of the `"hypothesis"` attribute (if present).
 {class}`~.EDSNLPDocPipeline` will perform this sort of transformation for many
 other EDS-NLP components.
 
+```{note}
+The transformations performed by {class}`~.EDSNLPDocPipeline` can be overriden
+or extended with the `medkit_attribute_factories` init parameter. For a list of
+all the default transformations, see
+{const}`~medkit.text.spacy.edsnlp.DEFAULT_ATTRIBUTE_FACTORIES` and corresponding
+functions in {mod}`medkit.text.spacy.edsnlp`.
+```
+
 Let's now examine more closely the `"date"` attribute:
 
 ```{code-cell} ipython3
