@@ -148,11 +148,13 @@ def test_family_pipeline():
 
 
 def test_custom_attribute_factory():
-    """Use a custom attribute factory overriding one of the default attribute factories
+    """
+    Use a custom attribute factory overriding one of the default attribute
+    factories
     """
 
     def build_date_attribute(span, label):
-        return Attribute(label="date", value=span._.get(label).to_datetime())
+        return Attribute(label="date", value=span._.get(label).norm())
 
     nlp = spacy.blank("eds")
     nlp.add_pipe("eds.dates")
@@ -164,9 +166,7 @@ def test_custom_attribute_factory():
     anns = edsnlp_pipeline.run([seg])
     date_seg = anns[0]
     date_attr = date_seg.attrs.get(label="date")[0]
-    assert isinstance(date_attr, Attribute) and isinstance(
-        date_attr.value, datetime.datetime
-    )
+    assert type(date_attr) is Attribute and date_attr.value == "2012-10-25"
 
 
 def test_doc_pipeline():
