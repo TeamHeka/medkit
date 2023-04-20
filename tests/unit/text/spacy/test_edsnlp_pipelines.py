@@ -4,8 +4,6 @@ spacy = pytest.importorskip(modname="spacy", reason="spacy is not installed")
 _ = pytest.importorskip(modname="edsnlp", reason="edsnlp is not installed")
 
 
-import datetime
-
 from spacy.tokens.underscore import Underscore
 
 from medkit.core import Attribute
