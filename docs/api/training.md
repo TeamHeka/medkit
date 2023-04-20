@@ -5,7 +5,7 @@ This page describes all components related to the medkit training.
 :::{important}
 For using this module, you need to install [PyTorch](https://pytorch.org/).
 You may install additional dependencies using
-`pip install medkit[training]`.
+`pip install medkit-lib[training]`.
 :::
 
 :::{note}

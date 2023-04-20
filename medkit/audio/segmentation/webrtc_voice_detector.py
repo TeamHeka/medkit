@@ -1,6 +1,6 @@
 """
 This module needs extra-dependencies not installed as core dependencies of medkit.
-To install them, use `pip install medkit[webrtc-voice-detector]`.
+To install them, use `pip install medkit-lib[webrtc-voice-detector]`.
 """
 
 __all__ = ["WebRTCVoiceDetector"]

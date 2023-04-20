@@ -1,6 +1,6 @@
 """
 This module needs extra-dependencies not installed as core dependencies of medkit.
-To install them, use `pip install medkit[hf-utils]`.
+To install them, use `pip install medkit-lib[hf-utils]`.
 """
 
 __all__ = ["check_model_for_task_HF"]

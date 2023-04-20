@@ -1,6 +1,6 @@
 """
 This package needs extra-dependencies not installed as core dependencies of medkit.
-To install them, use `pip install medkit[training]`.
+To install them, use `pip install medkit-lib[training]`.
 """
 
 __all__ = [

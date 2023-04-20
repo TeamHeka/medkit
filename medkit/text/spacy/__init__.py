@@ -1,6 +1,6 @@
 """
 This package needs extra-dependencies not installed as core dependencies of medkit.
-To install them, use `pip install medkit[spacy]`.
+To install them, use `pip install medkit-lib[spacy]`.
 """
 
 __all__ = [

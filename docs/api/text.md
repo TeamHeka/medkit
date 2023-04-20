@@ -234,7 +234,7 @@ medkit provides an entity matcher based on Hugging Face models.
 
 :::{important}
 {class}`~.text.ner.HFEntityMatcher` needs additional dependencies that can be
-installed with `pip install medkit[hf-entity-matcher]`
+installed with `pip install medkit-lib[hf-entity-matcher]`
 :::
 
 :::{note}
@@ -249,7 +249,7 @@ add normalization attributes to pre-existing entities.
 
 :::{important}
 {class}`~.text.ner.UMLSCoderNormalizer` needs additional dependencies that can
-be installed with `pip install medkit[umls-coder-normalizer]`
+be installed with `pip install medkit-lib[umls-coder-normalizer]`
 :::
 
 :::{note}
@@ -275,7 +275,7 @@ medkit. They are part of
 
 :::{important}
 For using this python module, you need to install [spacy](https://spacy.io/).
-These dependencies may be installed with `pip install medkit[spacy]`
+These dependencies may be installed with `pip install medkit-lib[spacy]`
 :::
 
 ## Spacy pipelines
@@ -303,7 +303,7 @@ For translation api, refer to {mod}`~.text.translation`.
 
 :::{important}
 {class}`.text.translation.HFTranslator` needs additional dependencies that can
-be installed with `pip install medkit[hf-translator]`
+be installed with `pip install medkit-lib[hf-translator]`
 :::
 
 ## Extraction of syntactic relations

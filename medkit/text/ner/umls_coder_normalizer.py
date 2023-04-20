@@ -1,6 +1,6 @@
 """
 This module needs extra-dependencies not installed as core dependencies of medkit.
-To install them, use `pip install medkit[umls-coder-normalizer]`.
+To install them, use `pip install medkit-lib[umls-coder-normalizer]`.
 """
 
 __all__ = ["UMLSCoderNormalizer"]

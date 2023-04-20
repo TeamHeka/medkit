@@ -1,6 +1,6 @@
 """
 This module needs extra-dependencies not installed as core dependencies of medkit.
-To install them, use `pip install medkit[hf-translator]`.
+To install them, use `pip install medkit-lib[hf-translator]`.
 """
 from __future__ import annotations
 

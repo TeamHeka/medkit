@@ -28,7 +28,7 @@ For more details, refer to {mod}`medkit.audio.preprocessing.power_normalizer`.
 
 :::{important}
 {class}`~.audio.preprocessing.Resampler` needs additional dependencies that can
-be installed with `pip install medkit[resampler]`
+be installed with `pip install medkit-lib[resampler]`
 :::
 
 For more details, refer to {mod}`medkit.audio.preprocessing.resampler`.
@@ -48,7 +48,7 @@ For more details, refer to
 
 :::{important}
 {class}`~.audio.segmentation.PASpeakerDetector` needs additional dependencies
-that can be installed with `pip install medkit[pa-speaker-detector]`
+that can be installed with `pip install medkit-lib[pa-speaker-detector]`
 :::
 
 For more details, refer to {mod}`medkit.audio.segmentation.pa_speaker_detector`.
@@ -84,7 +84,7 @@ For more details, refer to {mod}`medkit.audio.transcription.transcribed_document
 :::{important}
 {class}`~.audio.transcription.HFTranscriberFunction` needs additional
 dependencies that can be installed with 
-`pip install medkit[hf-transcriber-function]`
+`pip install medkit-lib[hf-transcriber-function]`
 :::
 
 For more details, refer to
@@ -95,7 +95,7 @@ For more details, refer to
 :::{important}
 {class}`~.audio.transcription.SBTranscriberFunction` needs additional
 dependencies that can be installed with
-`pip install medkit[sb-transcriber-function]`
+`pip install medkit-lib[sb-transcriber-function]`
 :::
 
 For more details, refer to
