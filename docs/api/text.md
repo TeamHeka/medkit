@@ -189,6 +189,18 @@ python -m quickumls.install <umls_installation_path> <destination_path>
 ```
 where <umls_installation_path> is the path to the UMLS folder containing
 the MRCONSO.RRF and MRSTY.RRF files.
+
+You will also need to download spacy models used by QuickUMLS.
+A clear message error will be displayed to show you how to install it.
+Otherwise, you may also install it programmatically.
+
+Here are examples of downloads for English and French models:
+```
+if not spacy.util.is_package("en_core_web_sm"):
+    spacy.cli.download("en_core_web_sm")
+if not spacy.util.is_package("fr_core_news_sm"):
+    spacy.cli.download("fr_core_news_sm")
+```
 :::
 
 Given a medkit text document named `doc` with text `The patient has asthma`
