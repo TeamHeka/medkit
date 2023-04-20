@@ -24,11 +24,14 @@ In this example, we will use a predefined {class}`~medkit.text.preprocessing.eds
 Consider the following document:
 
 ```{code-cell} ipython3
+# You can download the file available in source code
+# !wget https://raw.githubusercontent.com/TeamHeka/medkit/develop/docs/examples/input/text/text_to_clean.txt
+
 from pathlib import Path
 from medkit.core.text import TextDocument
 
 file = Path("./input/text/text_to_clean.txt")
-doc = TextDocument(text=file.read_text())
+doc = TextDocument(text=file.read_text(encoding="utf-8"))
 ```
 ```{code-cell} ipython3
 print(doc.text)

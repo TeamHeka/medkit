@@ -29,9 +29,12 @@ Consider this text file:
 
 +++
 ```{code-cell} ipython3
+# You can download the file available in source code
+# !wget https://raw.githubusercontent.com/TeamHeka/medkit/develop/docs/examples/input/brat/doc_01.txt
+
 from pathlib import Path
 
-print(Path("./input/brat/doc_01.txt").read_text())
+print(Path("./input/brat/doc_01.txt").read_text(encoding="utf-8"))
 ```
 
 +++
@@ -39,7 +42,10 @@ print(Path("./input/brat/doc_01.txt").read_text())
 It has the following brat annotation file:
 
 ```{code-cell} ipython3
-print(Path("./input/brat/doc_01.ann").read_text())
+# You can download the file available in source code
+# !wget https://raw.githubusercontent.com/TeamHeka/medkit/develop/docs/examples/input/brat/doc_01.ann
+
+print(Path("./input/brat/doc_01.ann").read_text(encoding="utf-8"))
 ```
 
 ## Load brat into a list of TextDocuments
