@@ -1,14 +1,13 @@
 __all__ = ["SeqEvalMetricsComputer", "SeqEvalEvaluator"]
 
 import itertools
-from typing import Dict, List, Union
+from typing import Dict, List, Literal
 
 from seqeval.metrics import accuracy_score, classification_report
 from seqeval.scheme import BILOU, IOB2
 
-from medkit.core.data_item import IdentifiableDataItem
-from medkit.core.text.annotation import Entity, Segment
-from medkit.text.ner.hf_tokenization_utils import transform_entities_to_tags
+from medkit.core.text import TextDocument, Entity
+from medkit.text.ner import hf_tokenization_utils
 
 from medkit.training.utils import BatchData
 
@@ -67,13 +66,13 @@ class SeqEvalMetricsComputer:
     def __init__(
         self,
         id_to_label: Dict[int, str],
-        use_bilou_scheme: bool,
-        return_entity_metrics: bool,
+        tagging_scheme: Literal["bilou", "iob2"] = "bilou",
+        return_entity_metrics: bool = True,
     ):
         self.id_to_label = id_to_label
-        self.scheme = BILOU if use_bilou_scheme else IOB2
+        self.scheme = BILOU if tagging_scheme == "bilou" else IOB2
         # bilou only works in strict mode
-        self._mode = "strict" if use_bilou_scheme else None
+        self._mode = "strict" if tagging_scheme == "bilou" else None
         self.return_entity_metrics = return_entity_metrics
 
     def prepare_batch(
@@ -113,30 +112,42 @@ class SeqEvalEvaluator:
     def __init__(
         self,
         tokenizer,
-        use_bilou_scheme: bool,
-        return_entity_metrics: bool,
+        tagging_scheme: Literal["bilou", "iob2"] = "bilou",
+        return_entity_metrics: bool = True,
     ):
         self.tokenizer = tokenizer
-        self.use_bilou_scheme = use_bilou_scheme
-        self.scheme = BILOU if self.use_bilou_scheme else IOB2
+        self.tagging_scheme = tagging_scheme
+        self.scheme = BILOU if self.tagging_scheme == "bilou" else IOB2
         # bilou only works in strict mode
-        self._mode = "strict" if self.use_bilou_scheme else None
+        self._mode = "strict" if self.tagging_scheme == "bilou" else None
         self.return_entity_metrics = return_entity_metrics
 
-    def prepare_batch(
-        self,
-        reference_anns: List[List[IdentifiableDataItem]],
-        predicted_anns: List[List[IdentifiableDataItem]],
-    ) -> Dict[str, List[List[str]]]:
-        batch_true_tags = [
-            self._preprocess(data_items) for data_items in reference_anns
-        ]
-        batch_pred_tags = [
-            self._preprocess(data_items) for data_items in predicted_anns
-        ]
-        return {"y_true": batch_true_tags, "y_pred": batch_pred_tags}
+    def compute(
+        self, documents: List[TextDocument], predicted_entities: List[List[Entity]]
+    ) -> Dict[str, float]:
+        true_tags_all, pred_tags_all = [], []
 
-    def compute(self, all_data: Dict[str, List[any]]) -> Dict[str, float]:
+        for document, pred_entities in zip(documents, predicted_entities):
+            text_encoding = self._encode_text(document.text)
+            true_entities = document.anns.entities
+
+            true_tags_all.append(
+                hf_tokenization_utils.transform_entities_to_tags(
+                    text_encoding=text_encoding,
+                    entities=true_entities,
+                    tagging_scheme=self.tagging_scheme,
+                )
+            )
+            pred_tags_all.append(
+                hf_tokenization_utils.transform_entities_to_tags(
+                    text_encoding=text_encoding,
+                    entities=pred_entities,
+                    tagging_scheme=self.tagging_scheme,
+                )
+            )
+
+        all_data = {"y_true": true_tags_all, "y_pred": pred_tags_all}
+
         scores = _SeqEvalInternalComputer.compute(
             all_data=all_data,
             mode=self._mode,
@@ -144,21 +155,6 @@ class SeqEvalEvaluator:
             return_entity_metrics=self.return_entity_metrics,
         )
         return scores
-
-    def _preprocess(
-        self, data_items: Union[IdentifiableDataItem, List[IdentifiableDataItem]]
-    ) -> List[str]:
-        segment: Segment = data_items[0]
-        entities: List[Entity] = data_items[1]
-        text_encoding = self._encode_text(segment.text)
-
-        tags = transform_entities_to_tags(
-            segment=segment,
-            entities=entities,
-            text_encoding=text_encoding,
-            use_bilou_scheme=self.use_bilou_scheme,
-        )
-        return tags
 
     def _encode_text(self, text):
         """Return a EncodingFast instance"""
