@@ -1,9 +1,10 @@
 __all__ = ["SpacyPipeline"]
-from typing import List, Optional
+from typing import Dict, Callable, List, Optional
 
 from spacy import Language
-from spacy.tokens import Doc
+from spacy.tokens import Doc, Span as SpacySpan
 
+from medkit.core import Attribute
 from medkit.core.operation import Operation
 from medkit.core.text import Segment
 from medkit.text.spacy import spacy_utils
@@ -18,6 +19,9 @@ class SpacyPipeline(Operation):
         spacy_entities: Optional[List[str]] = None,
         spacy_span_groups: Optional[List[str]] = None,
         spacy_attrs: Optional[List[str]] = None,
+        medkit_attribute_factories: Optional[
+            Dict[str, Callable[[SpacySpan, str], Attribute]]
+        ] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
     ):
@@ -37,6 +41,11 @@ class SpacyPipeline(Operation):
             Name of span extensions to convert into medkit attributes.
             If `None` (default) all non-None extensions will be added for each annotation with
             a medkit ID.
+        medkit_attribute_factories:
+            Mapping of factories in charge of converting spacy attributes to
+            medkit attributes. Factories will receive a spacy span and an an
+            attribute label when called. The key in the mapping is the attribute
+            label.
         name:
             Name describing the pipeline (defaults to the class name).
         uid:
@@ -51,6 +60,7 @@ class SpacyPipeline(Operation):
         self.spacy_entities = spacy_entities
         self.spacy_span_groups = spacy_span_groups
         self.spacy_attrs = spacy_attrs
+        self.medkit_attribute_factories = medkit_attribute_factories
 
     def run(self, segments: List[Segment]) -> List[Segment]:
         """Run a spacy pipeline on a list of segments provided as input
@@ -99,6 +109,7 @@ class SpacyPipeline(Operation):
             entities=self.spacy_entities,
             span_groups=self.spacy_span_groups,
             attrs=self.spacy_attrs,
+            attribute_factories=self.medkit_attribute_factories,
             rebuild_medkit_anns_and_attrs=False,
         )
         for new_segment in segments:
