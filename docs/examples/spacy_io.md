@@ -53,7 +53,7 @@ nlp = spacy.load("fr_core_news_sm")
 
 # Create a spacy document 
 text = """Parcours patient:
-Anna Euler habite à Brest. Elle a été transférée."""
+Marie habite à Brest. Elle a été transférée."""
 spacy_doc = nlp(text)
 
 #  Spacy adds entities, here we add a span 'SECTION' as an example

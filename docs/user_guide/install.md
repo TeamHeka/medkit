@@ -5,26 +5,31 @@ The medkit package supports a version of python >= 3.7.
 ## Install an official version
 
 :::{important}
-From 0.4 version, medkit package will be available on PyPi.
+From 0.4.1 version, medkit package (named **medkit-lib**) is available on
+[PyPi](https://pypi.org/project/medkit-lib/).
 :::
 
 Releases are published on <https://github.com/TeamHeka/medkit/releases>.
 
-To install medkit, you may download the package in release assets and install
-the package.
-
-For example:
+To install medkit :
 
 ```
 # Install medkit with required dependencies
-python -m pip install 'medkit-0.3.1.tar.gz
+python -m pip install 'medkit-lib'
 
 # Install medkit with extra optional dependencies
-python -m pip install 'medkit-0.3.1.tar.gz[optional]'
+python -m pip install 'medkit-lib[optional]'
 ```
 
-```{note}
+:::{note}
 We recommend to install the medkit package in a virtual or conda environment.
+:::
+
+Here is an example with conda:
+```
+conda create -n medkit-tuto python=3.8
+conda activate medkit-tuto
+pip install 'medkit-lib[optional]'
 ```
 
 ## Install a development version

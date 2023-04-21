@@ -1,6 +1,6 @@
 """
 This module needs extra-dependencies not installed as core dependencies of medkit.
-To install them, use `pip install medkit[hf-entity-matcher]`.
+To install them, use `pip install medkit-lib[hf-entity-matcher]`.
 """
 
 __all__ = ["HFEntityMatcher"]

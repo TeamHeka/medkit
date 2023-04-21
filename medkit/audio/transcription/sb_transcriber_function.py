@@ -1,6 +1,6 @@
 """
 This module needs extra-dependencies not installed as core dependencies of medkit.
-To install them, use `pip install medkit[sb-transcriber_function]`.
+To install them, use `pip install medkit-lib[sb-transcriber_function]`.
 """
 
 __all__ = ["SBTranscriberFunction"]
