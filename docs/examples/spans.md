@@ -34,9 +34,14 @@ spans = [Span(0, len(raw_text))]
 import re
 
 # replace "M." by "M
+# `spans` keeps the modifications 
 match = re.search(r"M.", text, re.M)
 text, spans = replace(text, spans, [match.span()], ["M"])
+print(text)
+print(spans)
+```
 
+```{code-cell} ipython3
 # remove final endline
 match = re.search(r"\n\Z", text, re.M)
 text, spans = remove(text, spans, [match.span()])
