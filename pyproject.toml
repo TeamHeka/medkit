@@ -58,6 +58,7 @@ torch = {version ="^1.0", optional = true}
 torchaudio = {version ="^0.12", optional = true}
 transformers = {version = "^4.21", optional = true}
 webrtcvad = {version = "^2.0", optional = true}
+seqeval = {version = "^1.2.2", optional = true}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
@@ -95,6 +96,7 @@ hf-translator = [
     "transformers"
 ]
 hf-utils = ["transformers"]
+metrics = ["seqeval"]
 pa-speaker-detector = [
     "torch",
     "pyannote-audio",
@@ -134,6 +136,7 @@ optional = [
     "sacremoses",
     "sentencepiece",
     "spacy",
+    "seqeval",
     "torch",
     "torchaudio",
     "transformers",
