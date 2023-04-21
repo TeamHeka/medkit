@@ -125,6 +125,6 @@ entities_data = [
     for span in spans
 ]
 entities_data = sorted(entities_data, key=lambda e: e["start"])
-data = {"text": text, "ents": entities_data, "uuid": 0}
+data = {"text": raw_text, "ents": entities_data, "uuid": 0}
 displacy.render(data, manual=True, style="ent", jupyter=True, minify=True)
 ```
