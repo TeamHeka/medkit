@@ -177,7 +177,7 @@ which allows user:
 ### Quick UMLS Matcher
 
 :::{important}
-{class}`~.text.ner.QuickUMLSMatcher` needs additional dependencies that can be installed with `pip
+{class}`~.quick_umls_matcher.QuickUMLSMatcher` needs additional dependencies that can be installed with `pip
 install medkit[quick-umls-matcher]`
 
 
@@ -216,7 +216,7 @@ The entity (`entities[0]`) will have the following description:
 * entity.label = "disorder"
 
 Its normalization attribute (`norm = entity.get_norms()[0]`) will be:
-* norm is an instance of {class}`~.text.UMLSNormalization`
+* norm is an instance of {class}`~.umls_norm_attribute.UMLSNormAttribute`
 * norm.cui = _ASTHMA_CUI
 * norm.umls_version = "2021AB"
 * norm.term = "asthma"
@@ -232,7 +232,7 @@ For more details about public APIs, refer to
 
 medkit provides an entity annotator that uses [Duckling](https://github.com/facebook/duckling).
 
-Refer to {class}`~.text.ner.DucklingMatcher` for more details about requirements
+Refer to {class}`~.duckling_matcher.DucklingMatcher` for more details about requirements
 for using this operation.
 
 :::{note}
@@ -245,7 +245,7 @@ For more details about public APIs, refer to
 medkit provides an entity matcher based on Hugging Face models.
 
 :::{important}
-{class}`~.text.ner.HFEntityMatcher` needs additional dependencies that can be
+{class}`~.hf_entity_matcher.HFEntityMatcher` needs additional dependencies that can be
 installed with `pip install medkit-lib[hf-entity-matcher]`
 :::
 
@@ -260,7 +260,7 @@ This operation is not an entity matcher per-say but a normalizer that will
 add normalization attributes to pre-existing entities.
 
 :::{important}
-{class}`~.text.ner.UMLSCoderNormalizer` needs additional dependencies that can
+{class}`~.umls_coder_normalizer.UMLSCoderNormalizer` needs additional dependencies that can
 be installed with `pip install medkit-lib[umls-coder-normalizer]`
 :::
 
@@ -271,11 +271,11 @@ For more details about public APIs, refer to
 ### UMLS Normalization
 
 This modules provides a subclass of
-{class}`~medkit.core.text.normalization.EntityNormalization` to facilitate
+{class}`~.core.text.entity_norm_attribute.EntityNormAttribute` to facilitate
 the handling of UMLS information.
 
 :::{note}
-For more details, refer to {mod}`~.text.ner.umls_normalization`.
+For more details, refer to {mod}`~.text.ner.umls_norm_attribute`.
 :::
 
 (api:text:spacy)=
@@ -314,7 +314,7 @@ For translation api, refer to {mod}`~.text.translation`.
 ### HuggingFace Translator
 
 :::{important}
-{class}`.text.translation.HFTranslator` needs additional dependencies that can
+{class}`~.translation.hf_translator.HFTranslator` needs additional dependencies that can
 be installed with `pip install medkit-lib[hf-translator]`
 :::
 
