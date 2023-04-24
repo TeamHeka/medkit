@@ -1,9 +1,9 @@
+"""
+This package needs extra-dependencies not installed as core dependencies of medkit.
+To install them, use `pip install medkit-lib[metrics]`.
+"""
 __all__ = []
 from medkit.core.utils import modules_are_available
 
 if modules_are_available(["seqeval"]):
-    # fmt: off
-    from .ner import SeqEvalEvaluator, SeqEvalMetricsComputer  # noqa: F401
-    __all__.append("SeqEvalEvaluator")
-    __all__.append("SeqEvalMetricsComputer")
-    # fmt: on
+    __all__.append("ner")
