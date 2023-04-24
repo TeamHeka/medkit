@@ -2,7 +2,7 @@ import pytest
 import torch
 from numpy.testing import assert_almost_equal
 
-from medkit.metrics import SeqEvalMetricsComputer
+from medkit.text.metrics.ner import SeqEvalMetricsComputer
 from medkit.training import BatchData
 
 
@@ -106,12 +106,12 @@ def test_seqeval_metrics_computer_bio(
         predicted_labels_ids=mock_pred_labels_ids,
     )
 
-    # define the metrics computer with BIO scheme, no entities metrics
-    use_bilou_scheme = False
+    # define the metrics computer with IOB2 scheme, no entities metrics
+    tagging_scheme = "iob2"
     metrics_computer = SeqEvalMetricsComputer(
         id_to_label=id_to_label_bio,
-        use_bilou_scheme=use_bilou_scheme,
-        return_entity_metrics=False,
+        tagging_scheme=tagging_scheme,
+        return_metrics_by_label=False,
     )
 
     # prepare batch for the metric
@@ -141,12 +141,12 @@ def test_seqeval_metrics_with_entities(input_batch, id_to_label_bio):
         predicted_labels_ids=[0, 1, 0, 0, 2, 3, 0, 0],
     )
 
-    # define the metrics computer with BIO scheme with entities metrics
-    use_bilou_scheme = False
+    # define the metrics computer with IOB2 scheme with entities metrics
+    tagging_scheme = "iob2"
     metrics_computer = SeqEvalMetricsComputer(
         id_to_label=id_to_label_bio,
-        use_bilou_scheme=use_bilou_scheme,
-        return_entity_metrics=True,
+        tagging_scheme=tagging_scheme,
+        return_metrics_by_label=True,
     )
 
     # prepare batch for the metric
@@ -210,11 +210,11 @@ def test_seqeval_metrics_bilou():
     nb_labels = len(id_to_label_bilou)
 
     # define the metrics computer using bilou tags
-    use_bilou_scheme = True
+    tagging_scheme = "bilou"
     metrics_computer = SeqEvalMetricsComputer(
         id_to_label=id_to_label_bilou,
-        use_bilou_scheme=use_bilou_scheme,
-        return_entity_metrics=True,
+        tagging_scheme=tagging_scheme,
+        return_metrics_by_label=True,
     )
 
     # testing perfect match
