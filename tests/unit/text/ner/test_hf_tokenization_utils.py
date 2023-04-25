@@ -1,4 +1,3 @@
-from pathlib import Path
 import pytest
 
 pytest.importorskip(modname="transformers", reason="transformers is not installed")
@@ -12,7 +11,7 @@ from medkit.text.ner.hf_tokenization_utils import (
     SPECIAL_TAG_ID_HF,
 )  # noqa: E402
 
-_PATH_TO_VOCAB_FILE = Path(__file__).parent / "dummy_hf_vocab" / "vocab.txt"
+from tests.data_utils import get_path_hf_dummy_vocab  # noqa: E402
 
 
 def _get_document():
@@ -36,7 +35,7 @@ def _get_document():
 
 @pytest.fixture()
 def tokenizer():
-    tokenizer = BertTokenizerFast(_PATH_TO_VOCAB_FILE)
+    tokenizer = BertTokenizerFast(get_path_hf_dummy_vocab())
     return tokenizer
 
 
