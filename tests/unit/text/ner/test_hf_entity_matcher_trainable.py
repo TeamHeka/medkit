@@ -12,7 +12,7 @@ from medkit.text.ner.hf_entity_matcher_trainable import (
     HFEntityMatcherTrainable,
 )  # noqa: E402
 from medkit.training.utils import BatchData  # noqa: E402
-from tests.data_utils import get_path_hf_dummy_vocab
+from tests.data_utils import get_path_hf_dummy_vocab  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
