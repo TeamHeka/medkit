@@ -70,9 +70,6 @@ class SeqEvalEvaluator:
 
     For more information about IOB schemes, refer to the `Wikipedia page <https://en.wikipedia.org/wiki/Inside%E2%80%93outside%E2%80%93beginning_(tagging)>`_
 
-    (TODO: cite in documentation, add example here or in `compute`)
-    Hiroki Nakayama. (2018). seqeval: A Python framework for sequence labeling evaluation.
-
     .. hint::
         If **tokenizer** is not defined, the evaluator tokenizes the text by character.
         This may generate a lot of tokens with large documents and may affect execution time.
