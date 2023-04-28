@@ -16,7 +16,7 @@ SPECIAL_TAG_ID_HF: int = -100
 
 
 def _compute_seqeval_from_dict(
-    all_data: Dict[str, List[any]],
+    all_data: Dict[str, List[Any]],
     scheme: Literal["bilou", "iob2"],
     mode,
     return_metrics_by_label,
@@ -30,9 +30,9 @@ def _compute_seqeval_from_dict(
     if not len(y_true_all) or not len(y_pred_all):
         raise ValueError("'all_data' has no required data to compute the metric")
 
-    size_last_dim = len(y_pred_all[0][0][0])
-    if size_last_dim > 1:
-        # dim of all_data is (nb_batches,n,m), metric requires (nb_batches*n,nb_batches*m)
+    # check if data was collected by batches,
+    # the metrics need a list[list[str]] instead of list[list[list[str]]]
+    if isinstance(y_true_all[0][0], list):
         y_true_all = list(itertools.chain(*y_true_all))
         y_pred_all = list(itertools.chain(*y_pred_all))
 
@@ -247,7 +247,6 @@ class SeqEvalMetricsComputer:
             model_output["logits"].argmax(dim=-1).detach().to("cpu").numpy()
         )
         references_ids = input_batch["labels"].detach().to("cpu").numpy()
-
         # ignore special tokens
         mask_special_tokens = references_ids != SPECIAL_TAG_ID_HF
 
@@ -261,7 +260,7 @@ class SeqEvalMetricsComputer:
         ]
         return {"y_true": batch_true_tags, "y_pred": batch_pred_tags}
 
-    def compute(self, all_data: Dict[str, List[any]]) -> Dict[str, float]:
+    def compute(self, all_data: Dict[str, List[Any]]) -> Dict[str, float]:
         """Compute metrics using the tag representation collected by batches
         during the training/evaluation loop.
 
