@@ -1,5 +1,7 @@
 import pytest
-import torch
+
+torch = pytest.importorskip(modname="torch", reason="torch is not installed")
+
 from medkit.training.utils import BatchData
 
 TEST_CUDA = torch.cuda.is_available()

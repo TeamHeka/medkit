@@ -23,11 +23,14 @@ For starters, let's load a text file using the
 {class}`~medkit.core.text.TextDocument` class:
 
 ```{code-cell} ipython3
+# You can download the file available in source code
+# !wget https://raw.githubusercontent.com/TeamHeka/medkit/develop/docs/user_guide/data/text/1.txt
+
 from pathlib import Path
 from medkit.core.text import TextDocument
 
 file = Path("data/text/1.txt")
-doc = TextDocument(text=file.read_text())
+doc = TextDocument(text=file.read_text(encoding='utf-8'))
 ```
 
 The full raw text can be accessed through the `text` attribute:

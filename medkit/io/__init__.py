@@ -13,8 +13,4 @@ from . import medkit_json
 from .rttm import RTTMInputConverter, RTTMOutputConverter
 
 if modules_are_available(["spacy"]):
-    # fmt: off
-    from .spacy import SpacyInputConverter, SpacyOutputConverter  # noqa: F401
-    __all__.append("SpacyInputConverter")
-    __all__.append("SpacyOutputConverter")
-    # fmt: on
+    __all__.append("spacy")

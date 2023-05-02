@@ -2,6 +2,10 @@ from pathlib import Path
 
 import pytest
 
+pytest.importorskip(modname="pandas", reason="pandas is not installed")
+pytest.importorskip(modname="torch", reason="torch is not installed")
+pytest.importorskip(modname="transformers", reason="transformers is not installed")
+
 from medkit.core import ProvTracer
 from medkit.core.text import Entity, Span
 from medkit.text.ner import UMLSNormAttribute

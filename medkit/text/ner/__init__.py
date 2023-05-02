@@ -1,14 +1,22 @@
 __all__ = [
+    "ADICAPNormAttribute",
     "UMLSNormAttribute",
     "DucklingMatcher",
     "RegexpMatcher",
     "RegexpMatcherRule",
     "RegexpMatcherNormalization",
     "RegexpMetadata",
+    "IAMSystemMatcher",
+    "MedkitKeyword",
+    "DateAttribute",
+    "DurationAttribute",
+    "RelativeDateAttribute",
+    "RelativeDateDirection",
 ]
 
 from medkit.core.utils import modules_are_available
 
+from .adicap_norm_attribute import ADICAPNormAttribute
 from .duckling_matcher import DucklingMatcher
 from .umls_norm_attribute import UMLSNormAttribute
 from .regexp_matcher import (
@@ -17,27 +25,25 @@ from .regexp_matcher import (
     RegexpMatcherNormalization,
     RegexpMetadata,
 )
-
-# -----------------------------------------------------
-# Import optional modules if dependencies are installed
-# -----------------------------------------------------
+from .iamsystem_matcher import IAMSystemMatcher, MedkitKeyword
+from .date_attribute import (
+    DateAttribute,
+    DurationAttribute,
+    RelativeDateAttribute,
+    RelativeDateDirection,
+)
 
 # quick_umls module
 if modules_are_available(["packaging", "quickumls"]):
-    # fmt: off
-    from .quick_umls_matcher import QuickUMLSMatcher  # noqa: F401
-    __all__.append("QuickUMLSMatcher")
-    # fmt: on
+    __all__.append("quick_umls_matcher")
 
 # HF entity matcher
 if modules_are_available(["torch", "transformers"]):
-    # fmt: off
-    from .hf_entity_matcher import HFEntityMatcher  # noqa: F401
-    __all__.append("HFEntityMatcher")
-    # fmt: on
+    __all__.append("hf_entity_matcher")
+    __all__.append("hf_entity_matcher_trainable")
 
 if modules_are_available(["pandas", "torch", "transformers"]):
-    # fmt: off
-    from .umls_coder_normalizer import UMLSCoderNormalizer  # noqa: F401
-    __all__ += ["UMLSCoderNormalizer"]
-    # fmt: on
+    __all__ += ["umls_coder_normalizer"]
+
+if modules_are_available(["edsnlp"]):
+    __all__ += ["tnm_attribute"]

@@ -149,3 +149,7 @@ class AnnotationContainer(Generic[AnnotationType]):
         if not isinstance(other, self.__class__):
             return False
         return self.get() == other.get()
+
+    def __repr__(self) -> str:
+        anns = self.get()
+        return f"{self.__class__.__name__}(doc_id={self._doc_id!r}, anns={anns!r})"

@@ -234,68 +234,6 @@ def test_multiple_subgraphs_for_same_op():
     )
 
 
-def test_flatten():
-    """
-    Flatten a graph containing subgraphs, without repeating nodes with same operation
-    uid as subgraph
-    """
-    graph = _gen_simple_graph()
-    # flattening a graph with no subgraphs should return identical graph
-    assert graph.flatten().get_nodes() == graph.get_nodes()
-
-    # add a sub graph corresponding to an operation in the main graph
-    node_1 = graph.get_nodes()[0]
-    sub_graph_1 = _gen_simple_graph()
-    graph.add_sub_graph(node_1.operation_id, sub_graph_1)
-
-    flattened_graph_1 = graph.flatten()
-    # flattened graph has no subgraphs
-    assert not flattened_graph_1.get_sub_graphs()
-    # flattened graph should have all nodes in main graph and sub graph,
-    # excepted the node with the same operation uid as the sub graph
-    # (the node was "expanded" in the sub graph)
-    expected_nodes_1 = [
-        n for n in graph.get_nodes() if n is not node_1
-    ] + sub_graph_1.get_nodes()
-    assert flattened_graph_1.get_nodes() == expected_nodes_1
-
-    # add another sub graph for another operation in the main graph
-    node_2 = graph.get_nodes()[1]
-    sub_graph_2 = _gen_simple_graph()
-    graph.add_sub_graph(node_2.operation_id, sub_graph_2)
-    # flattened graph should have all nodes in main graph and all sub graphs,
-    # excepted  nodes with same operation ids as a sub graph
-    flattened_graph_2 = graph.flatten()
-    expected_nodes_2 = (
-        [n for n in graph.get_nodes() if n not in (node_1, node_2)]
-        + sub_graph_1.get_nodes()
-        + sub_graph_2.get_nodes()
-    )
-    assert flattened_graph_2.get_nodes() == expected_nodes_2
-
-
-def test_flatten_recursive():
-    """Flatten a graph containing subgraphs recursively"""
-    graph = _gen_simple_graph()
-
-    # add a sub graph corresponding to an operation in the main graph
-    node = graph.get_nodes()[0]
-    sub_graph = _gen_simple_graph()
-    graph.add_sub_graph(node.operation_id, sub_graph)
-
-    # add a sub graph in the sub graph (test recursion)
-    sub_node = sub_graph.get_nodes()[0]
-    sub_sub_graph = _gen_simple_graph()
-    sub_graph.add_sub_graph(sub_node.operation_id, sub_sub_graph)
-    flattened_graph = graph.flatten()
-    expected_nodes = (
-        [n for n in graph.get_nodes() if n is not node]
-        + [n for n in sub_graph.get_nodes() if n is not sub_node]
-        + sub_sub_graph.get_nodes()
-    )
-    assert flattened_graph.get_nodes() == expected_nodes
-
-
 def test_sanity_check():
     """Sanity check of graphs"""
     node_1 = ProvNode(

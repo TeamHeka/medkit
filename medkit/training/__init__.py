@@ -1,3 +1,8 @@
+"""
+This package needs extra-dependencies not installed as core dependencies of medkit.
+To install them, use `pip install medkit-lib[training]`.
+"""
+
 __all__ = [
     "TrainerCallback",
     "DefaultPrinterCallback",
@@ -5,7 +10,7 @@ __all__ = [
     "TrainerConfig",
     "BatchData",
     "MetricsComputer",
-    "TrainableOperation",
+    "TrainableComponent",
 ]
 
 # Verify that torch is installed
@@ -18,4 +23,4 @@ from .callbacks import TrainerCallback, DefaultPrinterCallback
 from .trainer import Trainer
 from .trainer_config import TrainerConfig
 from .utils import BatchData, MetricsComputer
-from .trainable_operation import TrainableOperation
+from .trainable_component import TrainableComponent

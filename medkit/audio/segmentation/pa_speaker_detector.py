@@ -1,3 +1,8 @@
+"""
+This module needs extra-dependencies not installed as core dependencies of medkit.
+To install them, use `pip install medkit-lib[pa-speaker-detector]`.
+"""
+
 __all__ = ["PASpeakerDetector"]
 
 from pathlib import Path

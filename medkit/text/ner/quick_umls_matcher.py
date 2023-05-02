@@ -1,3 +1,8 @@
+"""
+This module needs extra-dependencies not installed as core dependencies of medkit.
+To install them, use `pip install medkit-lib[quick-umls-matcher]`.
+"""
+
 __all__ = ["QuickUMLSMatcher"]
 
 from pathlib import Path

@@ -1,8 +1,13 @@
 import logging
+import pytest
 
 from medkit.core import ProvTracer
 from medkit.core.text import Segment, Span
-from medkit.text.context.negation_detector import NegationDetector, NegationDetectorRule
+from medkit.text.context.negation_detector import (
+    NegationDetector,
+    NegationDetectorRule,
+    _PATH_TO_DEFAULT_RULES,
+)
 
 
 _OUTPUT_LABEL = "negation"
@@ -323,3 +328,10 @@ def test_default_rules():
                 f"Syntagma '{syntagma.text}' was matched by "
                 f"'{attr.metadata['rule_id']}' but shouldn't have been"
             )
+
+
+def test_rules_file_encoding_error():
+    with pytest.raises(UnicodeError):
+        NegationDetector.load_rules(
+            path_to_rules=_PATH_TO_DEFAULT_RULES, encoding="utf-16"
+        )

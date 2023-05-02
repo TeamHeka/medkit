@@ -88,13 +88,43 @@ TEST_CONFIG = [
             ("This is another sentence.", [Span(start=50, end=75)]),
         ],
     ),
+    # empty sentence shall not be returned
+    (
+        SentenceTokenizer(),
+        "This is a sentence.    ",
+        [
+            (
+                "This is a sentence",
+                [Span(start=0, end=18)],
+            ),
+        ],
+    ),
+    # empty sentence shall not be returned (keep_punct:true)
+    (
+        SentenceTokenizer(keep_punct=True),
+        "This is a sentence.  !  ",
+        [
+            (
+                "This is a sentence.",
+                [Span(start=0, end=19)],
+            ),
+        ],
+    ),
 ]
 
 
 @pytest.mark.parametrize(
     "sentence_tokenizer,text,expected_sentences",
     TEST_CONFIG,
-    ids=["default", "keep_punct", "multiline", "trailing", "punct_and_newline"],
+    ids=[
+        "default",
+        "keep_punct",
+        "multiline",
+        "trailing",
+        "punct_and_newline",
+        "empty_sentence",
+        "empty_sentence_with_punct",
+    ],
 )
 def test_run(sentence_tokenizer, text, expected_sentences):
     clean_text_segment = _get_clean_text_segment(text)

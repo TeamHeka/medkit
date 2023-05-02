@@ -8,7 +8,9 @@ import numpy as np  # noqa: E402
 import torch  # noqa: E402
 
 from medkit.core.audio import MemoryAudioBuffer  # noqa: E402
-from medkit.audio.transcription import SBTranscriberFunction  # noqa: E402
+from medkit.audio.transcription.sb_transcriber_function import (
+    SBTranscriberFunction,
+)  # noqa: E402
 
 _MOCK_MODEL_NAME = "mock-model"
 _SAMPLE_RATE = 16000

@@ -1,5 +1,10 @@
+import dataclasses
+import datetime
+
 import pytest
-import spacy
+
+spacy = pytest.importorskip(modname="spacy", reason="spacy is not installed")
+
 from spacy.tokens import Doc, Span as SpacySpan
 
 from medkit.core import Attribute
@@ -214,3 +219,54 @@ def test_normalization_attr(nlp_spacy):
         nlp=nlp_spacy, medkit_doc=doc
     )
     assert spacy_doc.ents[0]._.get("NORMALIZATION") == "umls:C0004096"
+
+
+@dataclasses.dataclass
+class _DateAttribute(Attribute):
+    year: int
+    month: int
+    day: int
+
+    def __init__(
+        self,
+        label: str,
+        year: int,
+        month: int,
+        day: int,
+    ):
+        self.year = year
+        self.month = month
+        self.day = day
+        super().__init__(label=label, value=f"{year}-{month}-{day}")
+
+
+def _build_date_attr(spacy_span: SpacySpan, spacy_label: str):
+    value = spacy_span._.get(spacy_label)
+    return _DateAttribute(
+        label=spacy_label, year=value.year, month=value.month, day=value.day
+    )
+
+
+def test_spacy_to_medkit_with_custom_attr_value(nlp_spacy):
+    # prepare document having an entity with "date" label, itself having an
+    # attribute with "value" label an a datetime.date object as value
+    spacy.tokens.Span.set_extension("value", default=None)
+    ruler = nlp_spacy.add_pipe("entity_ruler")
+    pattern = [{"TEXT": {"REGEX": r"\d{2}/\d{2}/\d{4}"}}]
+    ruler.add_patterns([{"label": "date", "pattern": pattern}])
+    doc = nlp_spacy("Seen on 18/11/2001")
+    doc.ents[0]._.value = datetime.date(2001, 11, 18)
+
+    # extract medkit anns and attributes, using attribute factory to convert
+    # datetime.date attribute value to _DateAttribute
+    anns, attrs = spacy_utils.extract_anns_and_attrs_from_spacy_doc(
+        doc, attribute_factories={"value": _build_date_attr}
+    )
+
+    attr = attrs[anns[0].uid][0]
+    assert isinstance(attr, _DateAttribute)
+    assert attr.year == 2001 and attr.month == 11 and attr.day == 18
+
+    # teardown
+    nlp_spacy.remove_pipe("entity_ruler")
+    spacy.tokens.Span.remove_extension("value")

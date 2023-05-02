@@ -1,3 +1,8 @@
+"""
+This module needs extra-dependencies not installed as core dependencies of medkit.
+To install them, use `pip install medkit-lib[umls-coder-normalizer]`.
+"""
+
 __all__ = ["UMLSCoderNormalizer"]
 
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union

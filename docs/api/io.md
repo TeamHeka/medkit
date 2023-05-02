@@ -17,7 +17,7 @@ For more details, refer to {mod}`medkit.io.brat`.
 
 :::{important}
 For using spacy converters, you need to install [spacy](https://spacy.io/).
-These dependencies may be installed with `pip install medkit[spacy]`
+These dependencies may be installed with `pip install medkit-lib[spacy]`
 :::
 
 For more details, refer to {mod}`medkit.io.spacy`.

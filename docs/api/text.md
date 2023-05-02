@@ -156,10 +156,28 @@ For an example of {class}`~.text.ner.RegexpMatcher` usage, you can follow this
 For more details about public APIs, refer to {mod}`~.text.ner.regexp_matcher`.
 :::
 
+### IAM system Matcher
+
+The [iamsystem library](https://iamsystem-python.readthedocs.io/en/latest/) is
+available under the following medkit operation.
+
+:::{note}
+For more details about public APIs, refer to {mod}`~.text.ner.iamsystem_matcher`.
+:::
+
+---
+
+medkit also provides a custom implementation ({class}`~.text.ner.MedkitKeyword`) of
+[IAM system IEntity](https://iamsystem-python.readthedocs.io/en/latest/getstarted.html#with-a-custom-of-keyword-subclass)
+which allows user:
+* to associate `kb_name` to `kb_id`
+* to provide a medkit entity label (e.g., category) associated to the IAM system entity label (i.e., text to search).
+
+
 ### Quick UMLS Matcher
 
 :::{important}
-{class}`~.text.ner.QuickUMLSMatcher` needs additional dependencies that can be installed with `pip
+{class}`~.quick_umls_matcher.QuickUMLSMatcher` needs additional dependencies that can be installed with `pip
 install medkit[quick-umls-matcher]`
 
 
@@ -171,6 +189,18 @@ python -m quickumls.install <umls_installation_path> <destination_path>
 ```
 where <umls_installation_path> is the path to the UMLS folder containing
 the MRCONSO.RRF and MRSTY.RRF files.
+
+You will also need to download spacy models used by QuickUMLS.
+A clear message error will be displayed to show you how to install it.
+Otherwise, you may also install it programmatically.
+
+Here are examples of downloads for English and French models:
+```
+if not spacy.util.is_package("en_core_web_sm"):
+    spacy.cli.download("en_core_web_sm")
+if not spacy.util.is_package("fr_core_news_sm"):
+    spacy.cli.download("fr_core_news_sm")
+```
 :::
 
 Given a medkit text document named `doc` with text `The patient has asthma`
@@ -186,7 +216,7 @@ The entity (`entities[0]`) will have the following description:
 * entity.label = "disorder"
 
 Its normalization attribute (`norm = entity.get_norms()[0]`) will be:
-* norm is an instance of {class}`~.text.UMLSNormalization`
+* norm is an instance of {class}`~.umls_norm_attribute.UMLSNormAttribute`
 * norm.cui = _ASTHMA_CUI
 * norm.umls_version = "2021AB"
 * norm.term = "asthma"
@@ -202,7 +232,7 @@ For more details about public APIs, refer to
 
 medkit provides an entity annotator that uses [Duckling](https://github.com/facebook/duckling).
 
-Refer to {class}`~.text.ner.DucklingMatcher` for more details about requirements
+Refer to {class}`~.duckling_matcher.DucklingMatcher` for more details about requirements
 for using this operation.
 
 :::{note}
@@ -215,8 +245,8 @@ For more details about public APIs, refer to
 medkit provides an entity matcher based on Hugging Face models.
 
 :::{important}
-{class}`~.text.ner.HFEntityMatcher` needs additional dependencies that can be
-installed with `pip install medkit[hf-entity-matcher]`
+{class}`~.hf_entity_matcher.HFEntityMatcher` needs additional dependencies that can be
+installed with `pip install medkit-lib[hf-entity-matcher]`
 :::
 
 :::{note}
@@ -230,8 +260,8 @@ This operation is not an entity matcher per-say but a normalizer that will
 add normalization attributes to pre-existing entities.
 
 :::{important}
-{class}`~.text.ner.UMLSCoderNormalizer` needs additional dependencies that can
-be installed with `pip install medkit[umls-coder-normalizer]`
+{class}`~.umls_coder_normalizer.UMLSCoderNormalizer` needs additional dependencies that can
+be installed with `pip install medkit-lib[umls-coder-normalizer]`
 :::
 
 :::{note}
@@ -241,11 +271,11 @@ For more details about public APIs, refer to
 ### UMLS Normalization
 
 This modules provides a subclass of
-{class}`~medkit.core.text.normalization.EntityNormalization` to facilitate
+{class}`~.core.text.entity_norm_attribute.EntityNormAttribute` to facilitate
 the handling of UMLS information.
 
 :::{note}
-For more details, refer to {mod}`~.text.ner.umls_normalization`.
+For more details, refer to {mod}`~.text.ner.umls_norm_attribute`.
 :::
 
 (api:text:spacy)=
@@ -257,7 +287,7 @@ medkit. They are part of
 
 :::{important}
 For using this python module, you need to install [spacy](https://spacy.io/).
-These dependencies may be installed with `pip install medkit[spacy]`
+These dependencies may be installed with `pip install medkit-lib[spacy]`
 :::
 
 ## Spacy pipelines
@@ -284,8 +314,8 @@ For translation api, refer to {mod}`~.text.translation`.
 ### HuggingFace Translator
 
 :::{important}
-{class}`.text.translation.HFTranslator` needs additional dependencies that can
-be installed with `pip install medkit[hf-translator]`
+{class}`~.translation.hf_translator.HFTranslator` needs additional dependencies that can
+be installed with `pip install medkit-lib[hf-translator]`
 :::
 
 ## Extraction of syntactic relations

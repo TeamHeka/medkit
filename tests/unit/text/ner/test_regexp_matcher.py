@@ -1,4 +1,5 @@
 import logging
+import pytest
 
 from medkit.core import Attribute, ProvTracer
 from medkit.core.text import Segment, Span, EntityNormAttribute
@@ -7,6 +8,7 @@ from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,
     RegexpMatcherNormalization,
+    _PATH_TO_DEFAULT_RULES,
 )
 
 _TEXT = "The patient has asthma and type 1 diabetes."
@@ -285,3 +287,8 @@ def test_prov():
     assert attr_prov.data_item == attr
     assert attr_prov.op_desc == matcher.description
     assert attr_prov.source_data_items == [sentence]
+
+
+def test_rules_file_encoding_error():
+    with pytest.raises(UnicodeError):
+        RegexpMatcher.load_rules(path_to_rules=_PATH_TO_DEFAULT_RULES, encoding="ascii")

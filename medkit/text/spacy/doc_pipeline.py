@@ -1,10 +1,11 @@
 __all__ = ["SpacyDocPipeline"]
 
-from typing import List, Optional
+from typing import Callable, Dict, List, Optional
 
 from spacy import Language
+from spacy.tokens import Span as SpacySpan
 
-from medkit.core import DocOperation
+from medkit.core import DocOperation, Attribute
 from medkit.core.text import TextDocument
 from medkit.text.spacy import spacy_utils
 
@@ -20,6 +21,9 @@ class SpacyDocPipeline(DocOperation):
         spacy_entities: Optional[List[str]] = None,
         spacy_span_groups: Optional[List[str]] = None,
         spacy_attrs: Optional[List[str]] = None,
+        medkit_attribute_factories: Optional[
+            Dict[str, Callable[[SpacySpan, str], Attribute]]
+        ] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
     ):
@@ -48,6 +52,11 @@ class SpacyDocPipeline(DocOperation):
             Name of span extensions to convert into medkit attributes.
             If `None` (default) all non-None extensions will be added for each annotation with
             a medkit ID.
+        medkit_attribute_factories:
+            Mapping of factories in charge of converting spacy attributes to
+            medkit attributes. Factories will receive a spacy span and an an
+            attribute label when called. The key in the mapping is the attribute
+            label.
         name:
             Name describing the pipeline (defaults to the class name).
         uid:
@@ -65,6 +74,7 @@ class SpacyDocPipeline(DocOperation):
         self.spacy_entities = spacy_entities
         self.spacy_span_groups = spacy_span_groups
         self.spacy_attrs = spacy_attrs
+        self.medkit_attribute_factories = medkit_attribute_factories
 
     def run(self, medkit_docs: List[TextDocument]) -> None:
         """Run a spacy pipeline on a list of medkit documents.
@@ -100,6 +110,7 @@ class SpacyDocPipeline(DocOperation):
                 entities=self.spacy_entities,
                 span_groups=self.spacy_span_groups,
                 attrs=self.spacy_attrs,
+                attribute_factories=self.medkit_attribute_factories,
                 rebuild_medkit_anns_and_attrs=False,
             )
             # annotate

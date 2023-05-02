@@ -96,7 +96,7 @@ class TextAnnotation(abc.ABC, dict_conv.SubclassMapping):
 @dataclasses.dataclass(init=False)
 class Segment(TextAnnotation):
     """
-    Text segment referencing part of an {class}`~medkit.core.text.TextDocument`.
+    Text segment referencing part of an :class:`~medkit.core.text.TextDocument`.
 
     Attributes
     ----------
@@ -184,7 +184,7 @@ class Segment(TextAnnotation):
 @dataclasses.dataclass(init=False)
 class Entity(Segment):
     """
-    Text entity referencing part of an {class}`~medkit.core.text.TextDocument`.
+    Text entity referencing part of an :class:`~medkit.core.text.TextDocument`.
 
     Attributes
     ----------
@@ -206,6 +206,8 @@ class Entity(Segment):
     keys:
         Pipeline output keys to which the entity belongs to.
     """
+
+    attrs: EntityAttributeContainer
 
     def __init__(
         self,

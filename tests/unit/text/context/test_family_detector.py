@@ -1,8 +1,14 @@
 import logging
 
+import pytest
+
 from medkit.core import ProvTracer
 from medkit.core.text import Segment, Span
-from medkit.text.context.family_detector import FamilyDetector, FamilyDetectorRule
+from medkit.text.context.family_detector import (
+    FamilyDetector,
+    FamilyDetectorRule,
+    _PATH_TO_DEFAULT_RULES,
+)
 
 
 _OUTPUT_LABEL = "family"
@@ -253,3 +259,10 @@ def test_default_rules():
             assert (
                 attr.value is False
             ), f"Syntagma '{syntagma.text}' shouldn't have been detected as family"
+
+
+def test_rules_file_encoding_error():
+    with pytest.raises(UnicodeError):
+        FamilyDetector.load_rules(
+            path_to_rules=_PATH_TO_DEFAULT_RULES, encoding="utf-16"
+        )
