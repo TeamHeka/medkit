@@ -165,7 +165,9 @@ class HFEntityMatcherTrainable:
         self._tokenizer.save_pretrained(path)
 
     def load(self, path: Union[str, Path]):
-        tokenizer = transformers.AutoTokenizer.from_pretrained(path, use_fast=True)
+        tokenizer = transformers.AutoTokenizer.from_pretrained(
+            path, use_fast=True, model_max_length=self.tokenizer_max_length
+        )
 
         if not isinstance(tokenizer, transformers.PreTrainedTokenizerFast):
             raise ValueError(
@@ -203,7 +205,7 @@ class HFEntityMatcherTrainable:
             PreTrained with labels: {sorted(config.label2id.keys())}, new labels
             {sorted(label_to_id.keys())}. Ignoring the model labels as result."""
             )
-            config.label2id = {label: idx for idx, label in label_to_id.items()}
-            config.id2label = {idx: label for idx, label in label_to_id.items()}
+            config.label2id = {label: idx for label, idx in label_to_id.items()}
+            config.id2label = {idx: label for label, idx in label_to_id.items()}
 
         return config
