@@ -90,10 +90,13 @@ class QuickUMLSMatcher(NEROperation):
     _semtype_to_semgroup: Optional[Dict[str, str]] = None
 
     DEFAULT_LABEL_MAPPING: Dict[str, str] = {
+        "ACTI": "activity",
         "ANAT": "anatomy",
         "CHEM": "chemical",
+        "CONC": "concept",
         "DEVI": "device",
         "DISO": "disorder",
+        "GENE": "genes_sequence",
         "GEOG": "geographic_area",
         "LIVB": "living_being",
         "OBJC": "object",
