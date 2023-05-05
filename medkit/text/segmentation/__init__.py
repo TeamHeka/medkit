@@ -1,9 +1,14 @@
-__all__ = ["SectionTokenizer", "SentenceTokenizer", "SyntagmaTokenizer"]
+__all__ = [
+    "SectionTokenizer",
+    "SectionModificationRule",
+    "SentenceTokenizer",
+    "SyntagmaTokenizer",
+]
 
 
 from medkit.core.utils import modules_are_available
 
-from .section_tokenizer import SectionTokenizer
+from .section_tokenizer import SectionTokenizer, SectionModificationRule
 from .sentence_tokenizer import SentenceTokenizer
 from .syntagma_tokenizer import SyntagmaTokenizer
 

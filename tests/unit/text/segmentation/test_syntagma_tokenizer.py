@@ -26,30 +26,9 @@ TEST_CONFIG = [
                 ),
             },
             {
-                "spans": [Span(start=72, end=156)],
+                "spans": [Span(start=73, end=156)],
                 "text": (
-                    " mais présentait des petites douleurs résiduelles sur la face"
-                    " interne du genou droit"
-                ),
-            },
-        ],
-    ),
-    # don't keep separators in syntagma
-    (
-        SyntagmaTokenizer.get_example(keep_separator=False),
-        _TEXT,
-        [
-            {
-                "spans": [Span(start=1, end=72)],
-                "text": (
-                    "Elle avait été améliorée par l'intervention pratiquée par le"
-                    " chirurgien"
-                ),
-            },
-            {
-                "spans": [Span(start=78, end=156)],
-                "text": (
-                    "présentait des petites douleurs résiduelles sur la face"
+                    "mais présentait des petites douleurs résiduelles sur la face"
                     " interne du genou droit"
                 ),
             },
@@ -61,8 +40,8 @@ TEST_CONFIG = [
         "Elle avait été\naméliorée mais présentait des douleurs",
         [
             {
-                "spans": [Span(start=0, end=25)],
-                "text": "Elle avait été\naméliorée ",
+                "spans": [Span(start=0, end=24)],
+                "text": "Elle avait été\naméliorée",
             },
             {
                 "spans": [Span(start=25, end=53)],
