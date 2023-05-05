@@ -11,6 +11,7 @@ import yaml
 from flashtext import KeywordProcessor
 
 from medkit.core.text import Segment, SegmentationOperation, span_utils
+from medkit.text.segmentation.tokenizer_utils import lstrip, rstrip
 
 
 _DEFAULT_SECTION_DEFINITION_RULES = (
@@ -21,6 +22,7 @@ _DEFAULT_SECTION_DEFINITION_RULES = (
 @dataclasses.dataclass(frozen=True)
 class DefaultConfig:
     output_label: str = "SECTION"
+    strip_chars: str = ".;,?! \n\r\t"
 
 
 @dataclasses.dataclass
@@ -39,6 +41,7 @@ class SectionTokenizer(SegmentationOperation):
         section_dict: Dict[str, List[str]],
         output_label: str = DefaultConfig.output_label,
         section_rules: Tuple[SectionModificationRule] = (),
+        strip_chars: str = DefaultConfig.strip_chars,
         uid: Optional[str] = None,
     ):
         """
@@ -54,6 +57,11 @@ class SectionTokenizer(SegmentationOperation):
         section_rules
             List of rules for modifying a section name according its order to the other
             sections.
+        strip_chars
+            The list of characters to strip at the beginning of the returned segment.
+            Default: '.;,?! \n\r\t' (cf. DefaultConfig)
+        uid: str, Optional
+            Identifier of the tokenizer
         """
         # Pass all arguments to super (remove self)
         init_args = locals()
@@ -63,6 +71,7 @@ class SectionTokenizer(SegmentationOperation):
         self.output_label = output_label
         self.section_dict = section_dict
         self.section_rules = section_rules
+        self.strip_chars = strip_chars
         self.keyword_processor = KeywordProcessor(case_sensitive=True)
         self.keyword_processor.add_keywords_from_dict(section_dict)
 
@@ -108,11 +117,23 @@ class SectionTokenizer(SegmentationOperation):
             else:
                 ranges = [(section[1], len(segment.text))]
 
+            # Remove extra characters at beginning of the detected segments
+            # and white spaces at end of the text
+            strip_ranges = []
+            for start, end in ranges:
+                text, new_start = lstrip(
+                    segment.text[start:end], start, self.strip_chars
+                )
+                text, new_end = rstrip(text, end)
+                if len(text) == 0:  # empty segment
+                    continue
+                strip_ranges.append((new_start, new_end))
+
             # Extract medkit spans from relative spans (i.e., ranges)
             text, spans = span_utils.extract(
                 text=segment.text,
                 spans=segment.spans,
-                ranges=ranges,
+                ranges=strip_ranges,
             )
 
             # add section name in metadata
