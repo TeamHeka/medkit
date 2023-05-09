@@ -242,7 +242,7 @@ stored in `default_syntagma_definition.yml` inside `medkit.text.segmentation`.
 from medkit.text.segmentation import SyntagmaTokenizer
 
 synt_tokenizer = SyntagmaTokenizer(
-    output_label="sentence",
+    output_label="syntagma",
     separators=[r"\bmais\b", r"\bet\b"],
 )
 syntagmas = synt_tokenizer.run(sentences)
