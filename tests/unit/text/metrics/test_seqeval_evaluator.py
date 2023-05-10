@@ -1,10 +1,12 @@
 import pytest
 from numpy.testing import assert_almost_equal
 
-from medkit.core.text import Entity, TextDocument, Span
-from medkit.text.metrics.ner import SeqEvalEvaluator
-from medkit.tools import modules_are_available
-from tests.data_utils import get_path_hf_dummy_vocab
+pytest.importorskip(modname="seqeval", reason="seqeval is not installed")
+
+from medkit.core.text import Entity, TextDocument, Span  # noqa: E402
+from medkit.text.metrics.ner import SeqEvalEvaluator  # noqa: E402
+from medkit.tools import modules_are_available  # noqa: E402
+from tests.data_utils import get_path_hf_dummy_vocab  # noqa: E402
 
 TEST_BERT_TOKENIZER = modules_are_available(["transformers"])
 if TEST_BERT_TOKENIZER:

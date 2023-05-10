@@ -2,6 +2,8 @@ import pytest
 import torch
 from numpy.testing import assert_almost_equal
 
+pytest.importorskip(modname="seqeval", reason="seqeval is not installed")
+
 from medkit.text.metrics.ner import SeqEvalMetricsComputer
 from medkit.training import BatchData
 
