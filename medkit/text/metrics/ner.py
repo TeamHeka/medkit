@@ -12,29 +12,19 @@ from medkit.core.text import TextDocument, Entity
 from medkit.text.ner import hf_tokenization_utils
 from medkit.training.utils import BatchData
 
-SPECIAL_TAG_ID_HF: int = -100
-
 
 def _compute_seqeval_from_dict(
-    all_data: Dict[str, List[Any]],
-    scheme: Literal["bilou", "iob2"],
-    mode,
+    y_true_all: List[List[str]],
+    y_pred_all: List[List[str]],
+    tagging_scheme: Literal["bilou", "iob2"],
     return_metrics_by_label,
 ) -> Dict[str, float]:
-    """Compute seqeval metrics using a dictionary of NER tags"""
+    """Compute seqeval metrics using preprocessed data"""
 
-    # extract and format data from all_data
-    y_true_all = all_data.get("y_true", [])
-    y_pred_all = all_data.get("y_pred", [])
-
-    if not len(y_true_all) or not len(y_pred_all):
-        raise ValueError("'all_data' has no required data to compute the metric")
-
-    # check if data was collected by batches,
-    # the metrics need a list[list[str]] instead of list[list[list[str]]]
-    if isinstance(y_true_all[0][0], list):
-        y_true_all = list(itertools.chain(*y_true_all))
-        y_pred_all = list(itertools.chain(*y_pred_all))
+    # internal configuration for seqeval
+    # 'bilou' only works with 'strict' mode
+    scheme = BILOU if tagging_scheme == "bilou" else IOB2
+    mode = "strict" if tagging_scheme == "bilou" else None
 
     # returns precision, recall, F1 score for each class.
     report = classification_report(
@@ -63,7 +53,7 @@ class SeqEvalEvaluator:
     named entity recognition. This evaluator compares TextDocuments of reference
     with its predicted annotations and returns a dictionary of metrics.
 
-    The evaluator converts the set of entites and documents to tags before compute the metric.
+    The evaluator converts the set of entities and documents to tags before compute the metric.
     It supports two schemes, IOB2 (a BIO scheme) and BILOU. The IOB2 scheme tags the Beginning,
     the Inside and the Outside text of a entity. The BILOU scheme tags the Beginning,
     the Inside and the Last tokens of multi-token entity as well as Unit-length entity.
@@ -94,7 +84,7 @@ class SeqEvalEvaluator:
         tagging_scheme:
             Scheme for tagging the tokens, it can be `bilou` or `iob2`
         return_metrics_by_label:
-            If `True`, return the metrics by label in the output dictionnary.
+            If `True`, return the metrics by label in the output dictionary.
             If `False`, only return overall metrics
         """
         if tokenizer is None:
@@ -103,10 +93,6 @@ class SeqEvalEvaluator:
         self.tokenizer = tokenizer
         self.tagging_scheme = tagging_scheme
         self.return_metrics_by_label = return_metrics_by_label
-
-        # internal configuration for seqeval, 'bilou' only works with 'strict' mode
-        self._scheme = BILOU if self.tagging_scheme == "bilou" else IOB2
-        self._mode = "strict" if self.tagging_scheme == "bilou" else None
 
     def compute(
         self, documents: List[TextDocument], predicted_entities: List[List[Entity]]
@@ -147,12 +133,10 @@ class SeqEvalEvaluator:
                 )
             )
 
-        all_data = {"y_true": true_tags_all, "y_pred": pred_tags_all}
-
         scores = _compute_seqeval_from_dict(
-            all_data=all_data,
-            mode=self._mode,
-            scheme=self._scheme,
+            y_true_all=true_tags_all,
+            y_pred_all=pred_tags_all,
+            tagging_scheme=self.tagging_scheme,
             return_metrics_by_label=self.return_metrics_by_label,
         )
         return scores
@@ -215,16 +199,12 @@ class SeqEvalMetricsComputer:
         tagging_scheme:
             Scheme used for tagging the tokens, it can be `bilou` or `iob2`
         return_metrics_by_label:
-            If `True`, return the metrics by label in the output dictionnary.
+            If `True`, return the metrics by label in the output dictionary.
             If `False`, only return overall metrics
         """
         self.id_to_label = id_to_label
+        self.tagging_scheme = tagging_scheme
         self.return_metrics_by_label = return_metrics_by_label
-
-        # internal configuration for seqeval,
-        # 'bilou' only works with 'strict' mode
-        self._scheme = BILOU if tagging_scheme == "bilou" else IOB2
-        self._mode = "strict" if tagging_scheme == "bilou" else None
 
     def prepare_batch(
         self, model_output: BatchData, input_batch: BatchData
@@ -248,16 +228,18 @@ class SeqEvalMetricsComputer:
         )
         references_ids = input_batch["labels"].detach().to("cpu").numpy()
         # ignore special tokens
-        mask_special_tokens = references_ids != SPECIAL_TAG_ID_HF
+        mask_special_tokens = references_ids != hf_tokenization_utils.SPECIAL_TAG_ID_HF
 
         batch_true_tags = [
-            [self.id_to_label[tag] for tag in ref[mask_special_tokens[i]]]
-            for i, ref in enumerate(references_ids)
+            [self.id_to_label[tag] for tag in ref[mask]]
+            for ref, mask in zip(references_ids, mask_special_tokens)
         ]
+
         batch_pred_tags = [
-            [self.id_to_label[tag] for tag in pred[mask_special_tokens[i]]]
-            for i, pred in enumerate(predictions_ids)
+            [self.id_to_label[tag] for tag in pred[mask]]
+            for pred, mask in zip(predictions_ids, mask_special_tokens)
         ]
+
         return {"y_true": batch_true_tags, "y_pred": batch_pred_tags}
 
     def compute(self, all_data: Dict[str, List[Any]]) -> Dict[str, float]:
@@ -276,10 +258,23 @@ class SeqEvalMetricsComputer:
             included are : accuracy, precision, recall and F1 score.
 
         """
+        # extract and format data from all_data
+        y_true_all = all_data.get("y_true", [])
+        y_pred_all = all_data.get("y_pred", [])
+
+        if not len(y_true_all) or not len(y_pred_all):
+            raise ValueError("'all_data' has no required data to compute the metric")
+
+        # flat the list since data was collected by batches,
+        # the metrics need a list[list[str]] instead of list[list[list[str]]]
+        if isinstance(y_true_all[0][0], list):
+            y_true_all = list(itertools.chain(*y_true_all))
+            y_pred_all = list(itertools.chain(*y_pred_all))
+
         scores = _compute_seqeval_from_dict(
-            all_data=all_data,
-            mode=self._mode,
-            scheme=self._scheme,
+            y_pred_all=y_pred_all,
+            y_true_all=y_true_all,
+            tagging_scheme=self.tagging_scheme,
             return_metrics_by_label=self.return_metrics_by_label,
         )
         return scores
