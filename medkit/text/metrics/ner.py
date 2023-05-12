@@ -1,6 +1,5 @@
 __all__ = ["SeqEvalEvaluator", "SeqEvalMetricsComputer"]
 
-import dataclasses
 import itertools
 from typing import Any, Dict, List, Optional
 from typing_extensions import Literal
@@ -8,7 +7,7 @@ from typing_extensions import Literal
 from seqeval.metrics import accuracy_score, classification_report
 from seqeval.scheme import BILOU, IOB2
 
-from medkit.core.text import TextDocument, Entity
+from medkit.core.text import TextDocument, Entity, span_utils
 from medkit.text.ner import hf_tokenization_utils
 from medkit.training.utils import BatchData
 
@@ -71,25 +70,22 @@ class SeqEvalEvaluator:
 
     def __init__(
         self,
-        tokenizer: Optional[Any] = None,
         tagging_scheme: Literal["bilou", "iob2"] = "bilou",
         return_metrics_by_label: bool = True,
+        tokenizer: Optional[Any] = None,
     ):
         """
         Parameters
         ----------
-        tokenizer:
-            Optional tokenizer to convert text into tokens.
-            If not provided, a tokenizer per-character is created.
         tagging_scheme:
             Scheme for tagging the tokens, it can be `bilou` or `iob2`
         return_metrics_by_label:
             If `True`, return the metrics by label in the output dictionary.
             If `False`, only return overall metrics
+        tokenizer:
+            Optional Fast Tokenizer to convert text into tokens.
+            If not provided, the text is tokenized by character.
         """
-        if tokenizer is None:
-            tokenizer = _CharacterTokenizer()
-
         self.tokenizer = tokenizer
         self.tagging_scheme = tagging_scheme
         self.return_metrics_by_label = return_metrics_by_label
@@ -115,24 +111,15 @@ class SeqEvalEvaluator:
         true_tags_all, pred_tags_all = [], []
 
         for document, pred_entities in zip(documents, predicted_entities):
-            text_encoding = self.tokenizer(document.text).encodings[0]
+            text = document.text
             true_entities = document.anns.entities
 
             true_tags_all.append(
-                hf_tokenization_utils.transform_entities_to_tags(
-                    text_encoding=text_encoding,
-                    entities=true_entities,
-                    tagging_scheme=self.tagging_scheme,
-                )
+                self._tag_text_with_entities(text=text, entities=true_entities)
             )
             pred_tags_all.append(
-                hf_tokenization_utils.transform_entities_to_tags(
-                    text_encoding=text_encoding,
-                    entities=pred_entities,
-                    tagging_scheme=self.tagging_scheme,
-                )
+                self._tag_text_with_entities(text=text, entities=pred_entities)
             )
-
         scores = _compute_seqeval_from_dict(
             y_true_all=true_tags_all,
             y_pred_all=pred_tags_all,
@@ -141,43 +128,38 @@ class SeqEvalEvaluator:
         )
         return scores
 
+    def _tag_text_with_entities(self, text: str, entities: List[Entity]):
+        if self.tokenizer is not None:
+            # tags tokenized text, creates one tag per token
+            text_encoding = self.tokenizer(text).encodings[0]
+            tags = hf_tokenization_utils.transform_entities_to_tags(
+                text_encoding=text_encoding,
+                entities=entities,
+                tagging_scheme=self.tagging_scheme,
+            )
+            return tags
 
-class _CharacterTokenizer:
-    """A simple implementation of a per-character tokenizer.
-    The outputs use the same structure as a HuggingFace tokenizer,
-    this guarantees compatibility with tokenization methods.
+        # tags untokenized text, create one tag per character
+        tags = ["O"] * len(text)
+        for ent in entities:
+            label = ent.label
+            ent_spans = span_utils.normalize_spans(ent.spans)
+            start_char = ent_spans[0].start
+            end_char = ent_spans[-1].end
+            chars_entity = list(range(start_char, end_char))
 
-    Example
-    -------
-    >>> tokenizer = CharacterTokenizer()
-    >>> tokenizer("hello")
-    BatchEncoding(encodings=[Encoding(tokens=['h', 'e', 'l', 'l', 'o'])])
-    """
+            if not chars_entity:
+                continue
 
-    def __call__(self, text: str):
-        return _BatchEncoding([_Encoding(tokens=[c for c in text])])
+            entity_tags = hf_tokenization_utils.create_entity_tags(
+                nb_tags=len(chars_entity),
+                label=label,
+                tagging_scheme=self.tagging_scheme,
+            )
+            for token_idx, tag in zip(chars_entity, entity_tags):
+                tags[token_idx] = tag
 
-
-@dataclasses.dataclass
-class _Encoding:
-    tokens: List[str]
-
-    def char_to_token(self, idx):
-        return idx
-
-    def __len__(self):
-        return len(self.tokens)
-
-
-@dataclasses.dataclass
-class _BatchEncoding:
-    encodings: List[_Encoding]
-
-    def __len__(self):
-        return len(self.encodings)
-
-    def __getitem__(self, idx):
-        return self.encodings[idx]
+        return tags
 
 
 class SeqEvalMetricsComputer:
