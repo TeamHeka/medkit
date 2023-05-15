@@ -98,3 +98,26 @@ def test_syntagma_def_file_encoding_error():
         SyntagmaTokenizer.load_syntagma_definition(
             filepath=_DEFAULT_SYNTAGMA_DEFINITION_RULES, encoding="utf-16"
         )
+
+
+def test_syntagma_def_file(tmp_path):
+    filepath = tmp_path.joinpath("syntagma.yml")
+    separators = (
+        r"(?<=\. )[\w\d]+",  # Separateur: début de phrase (après un point-espace)
+        r"(?<=\n)[\w\d]+",  # Separateur: début de phrase (après une nouvelle ligne)
+        r"(?<=: )\w+",  # Separateur: debut de syntagme (après un :)
+        r"(?<= )mais\s+(?=\w)",
+        # Separateur: mais (précédé d'un espace et suivi d'un espace et mot
+        r"(?<= )sans\s+(?=\w)",
+        # Separateur: sans (précédé d'un espace et suivi d'un espace et mot
+        r"(?<= )donc\s+(?=\w)",
+        # Separateur: donc (précédé d'un espace et suivi d'un espace et mot
+    )
+    SyntagmaTokenizer.save_syntagma_definition(
+        syntagma_seps=separators, filepath=filepath, encoding="utf-8"
+    )
+
+    loaded_seps = SyntagmaTokenizer.load_syntagma_definition(
+        filepath=filepath, encoding="utf-8"
+    )
+    assert loaded_seps == separators

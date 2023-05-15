@@ -22,6 +22,10 @@ parts:
   chapters:
   - file: examples/spans
   - file: examples/cleaning_text
+  - file: examples/text_segmentation/index
+    sections:
+      - file: examples/text_segmentation/section
+      - file: examples/text_segmentation/syntagma
   - file: examples/brat_io
   - file: examples/spacy_io
   - file: examples/custom_text_operation
