@@ -126,3 +126,39 @@ def test_section_def_file_encoding_error():
         SectionTokenizer.load_section_definition(
             filepath=_DEFAULT_SECTION_DEFINITION_RULES, encoding="utf-16"
         )
+
+
+def test_section_def_file(tmp_path):
+    filepath = tmp_path.joinpath("section.yml")
+    section_dict = {
+        "patient": ["SUBJECTIF"],
+        "traitement": ["MÉDICAMENTS", "PLAN"],
+        "allergies": ["ALLERGIES"],
+        "examen clinique": ["EXAMEN PHYSIQUE"],
+        "diagnostique": ["EVALUATION"],
+    }
+    treatment_rules = (
+        SectionModificationRule(
+            section_name="traitement",
+            new_section_name="traitement_entree",
+            other_sections=["diagnostique"],
+            order="BEFORE",
+        ),
+        SectionModificationRule(
+            section_name="traitement",
+            new_section_name="traitement_sortie",
+            other_sections=["diagnostique"],
+            order="AFTER",
+        ),
+    )
+    SectionTokenizer.save_section_definition(
+        section_dict=section_dict,
+        section_rules=treatment_rules,
+        filepath=filepath,
+        encoding="utf-8",
+    )
+    loaded_dict, loaded_rules = SectionTokenizer.load_section_definition(
+        filepath, encoding="utf-8"
+    )
+    assert loaded_dict == section_dict
+    assert loaded_rules == treatment_rules

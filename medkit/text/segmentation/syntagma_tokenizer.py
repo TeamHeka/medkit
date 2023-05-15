@@ -46,10 +46,6 @@ class SyntagmaTokenizer(SegmentationOperation):
         strip_chars
             The list of characters to strip at the beginning of the returned segment.
             Default: '.;,?! \n\r\t' (cf. DefaultConfig)
-        keep_separator: bool, Optional
-            If True, the separators are kept in the detected syntagma
-            If False, the syntagma text does not include the separator
-            Default: True (cf. DefaultConfig)
         uid: str, Optional
             Identifier of the tokenizer
         """
@@ -134,7 +130,7 @@ class SyntagmaTokenizer(SegmentationOperation):
             yield syntagma
 
     @classmethod
-    def get_example(cls, keep_separator=True):
+    def get_example(cls):
         config_path = _DEFAULT_SYNTAGMA_DEFINITION_RULES
         separators = cls.load_syntagma_definition(config_path, encoding="utf-8")
         syntagma_tokenizer = cls(separators=separators)
@@ -166,3 +162,30 @@ class SyntagmaTokenizer(SegmentationOperation):
         syntagma_seps = tuple(str(sep) for sep in config["syntagmas"]["separators"])
 
         return syntagma_seps
+
+    @staticmethod
+    def save_syntagma_definition(
+        syntagma_seps: Tuple[str, ...],
+        filepath: pathlib.Path,
+        encoding: Optional[str] = None,
+    ):
+        """
+        Save syntagma yaml definition file
+
+        Parameters
+        ----------
+        syntagma_seps
+            The tuple of regular expressions corresponding to separators
+        filepath
+            The path of the file to save
+        encoding
+            The encoding of the file. Default: None
+        """
+        data = {
+            "syntagmas": {"separators": []},
+        }
+        for sep in syntagma_seps:
+            data["syntagmas"]["separators"].append(sep)
+
+        with open(filepath, "w", encoding=encoding) as f:
+            yaml.safe_dump(data, f, allow_unicode=True)

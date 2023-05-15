@@ -78,27 +78,61 @@ implemented for a specific case of EDS document.
 You can follow this [tutorial example](../examples/cleaning_text.md) for more
 details about this {class}`~.text.preprocessing.EDSCleaner` module.
 
+(api:text:segmentation_modules)=
 ## Segmentation modules
 
 This section lists text segmentation modules. They are part of
 {mod}`medkit.text.segmentation` package.
 
 :::{note}
-For {class}`~.text.segmentation.SectionTokenizer` and
-{class}`~.text.segmentation.SyntagmaTokenizer`, you may test an example using :
-```
-section_tokenizer = SectionTokenizer.get_example()
-syntagma_tokenizer = SyntagmaTokenizer.get_example()
-```
-
-For {class}`~.text.segmentation.SentenceTokenizer`, you may follow this tutorial
-example named [first steps tutorial](../user_guide/first_steps).
-:::
-
-:::{note}
 For more details about public APIs of each module, refer to
 {mod}`medkit.text.segmentation` sub-modules.
 :::
+
+{class}`~.text.segmentation.SectionTokenizer` and
+{class}`~.text.segmentation.SyntagmaTokenizer` may rely on a description file
+containing the set of user-defined rules for splitting document text into a list
+of medkit {class}`~.text.Segment` corresponding successively to sections or
+syntagmas.
+
+For {class}`~.text.segmentation.SectionTokenizer`, here is the yaml schema 
+reference of the file.
+
+* `sections` : dictionary of key-values where *key* will be the section name and
+*value* is a list of keywords to detect as the start of the section.
+* `rules` : list of modification rules which role is to rename a detected section
+  * `rules.section_name` : name of the detected section to rename
+  * `rules.new_section_name` : new name wanted for the section
+  * `rules.order`: order condition for renaming. Possible values: BEFORE, AFTER
+  * `other_sections` : list of other section names (i.e., context of the section
+  to rename) to use with the order condition
+
+:::{note}
+You may test an example using `section_tokenizer = SectionTokenizer.get_example()`.
+The corresponding file content is available
+[here](https://raw.githubusercontent.com/TeamHeka/medkit/develop/medkit/text/segmentation/default_section_definition.yml).
+:::
+
+For {class}`~.text.segmentation.SyntagmaTokenizer`, here is the yaml schema 
+reference of the file.
+
+* `syntagma.separators` : list of regular expressions allowing to trigger the
+start of a new syntagma.
+
+:::{note}
+You may test an example using `syntagma_tokenizer = SyntagmaTokenizer.get_example()`.
+The corresponding file content is available
+[here](https://raw.githubusercontent.com/TeamHeka/medkit/develop/medkit/text/segmentation/default_syntagma_definition.yml).
+:::
+
+
+```{admonition} Examples
+For a better understanding, you may follow these tutorial examples:
+* section: [section tokenizer tutorial](../examples/text_segmentation/section)
+* syntagma: [syntagma tokenizer tutorial](../examples/text_segmentation/syntagma)
+* sentence: [first steps tutorial](../user_guide/first_steps)
+```
+
 
 ## Context detection modules
 
