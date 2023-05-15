@@ -1,0 +1,25 @@
+version: 2
+
+build:
+  os: ubuntu-22.04
+  apt_packages:
+    - graphviz
+    - libsndfile1
+  tools:
+    python: "3.7"
+  jobs:
+    post_create_environment:
+      - pip install poetry
+      - poetry config --local virtualenvs.create false
+    post_install:
+      - poetry config --list
+      - poetry export -f requirements.txt --only docs --output requirements-doc.txt
+      - pip uninstall -y poetry
+      - pip install -r requirements-doc.txt
+      - pip install -e .
+    pre_build:
+      - jb config sphinx docs/
+
+sphinx:
+  builder: html
+  fail_on_warning: true
