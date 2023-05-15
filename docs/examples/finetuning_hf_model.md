@@ -11,7 +11,9 @@ Since these models are trained on general domain data, they learn complex patter
 
 ## Prepare DrBert for entity recognition 
 
-In this example, we show how to fine-tune **DrBERT: A PreTrained model in French for Biomedical and Clinical domains** to detect the following entities: `problem`, `treatment`, `test` using the **medkit Trainer**. [DrBert](https://huggingface.co/Dr-BERT/DrBERT-4GB-CP-PubMedBERT)[^footnote1] is a French RoBERTa trained in open source corpus of french medical documents for masked language modeling. As mentioned before, we can change the specific task, for example, to classify entities. 
+In this example, we show how to fine-tune **DrBERT: A PreTrained model in French for Biomedical and Clinical domains** to detect the following entities: `problem`, `treatment`, `test` using the **medkit Trainer**. 
+
+[DrBert](https://huggingface.co/Dr-BERT/DrBERT-4GB-CP-PubMedBERT)[^footnote1] is a French RoBERTa trained in open source corpus of french medical documents for masked language modeling. As mentioned before, we can change the specific task, for example, to classify entities. 
 
 [^footnote1]:Yanis Labrak, Adrien Bazoge, Richard Dufour, Mickael Rouvier, Emmanuel Morin, Béatrice Daille, and Pierre-Antoine Gourraud. (2023). DrBERT: A Robust Pre-trained Model in French for Biomedical and Clinical domains.
 
@@ -56,9 +58,12 @@ class CorpusCASM2(Dataset):
 Just to see how a document looks, let's print the first example from the test dataset.
 
 ```python
->>> doc = CorpusCASM2(split="test")[0]
->>> msg = "|".join(f"'{entity.label}':{entity.text}" for entity in doc.anns.entities)
->>> print(f"Text: '{doc.text}'\n{msg}")
+doc = CorpusCASM2(split="test")[0]
+msg = "|".join(f"'{entity.label}':{entity.text}" for entity in doc.anns.entities)
+print(f"Text: '{doc.text}'\n{msg}")
+```
+
+```
 Text: 'Une tachycardie et une fibrillation ventriculaire ont été observées.'
 'problem':tachycardie |'problem': fibrillation ventriculaire
 ```
@@ -97,7 +102,7 @@ hf_trainable = HFEntityMatcher.make_trainable(
 
 ## Fine-tuning with medkit Trainer 
 
-At this point we have prepared the data and the component to fine-tune. All we need to do is define the trainer with its configuration.
+At this point, we have prepared the data and the component to fine-tune. All we need to do is define the trainer with its configuration.
 
 ```python
 from medkit.training import Trainer,TrainerConfig
@@ -124,7 +129,7 @@ history = trainer.train()
 
 ### Training history
 
-The trainer has a callback to display basic training information like `loss`, `time` and `metrics` if required,the method `trainer.train()` returns a dictionary with the training history and saves a checkpoint with the tuned model.
+The trainer has a callback to display basic training information like `loss`, `time` and `metrics` if required, the method `trainer.train()` returns a dictionary with the training history and saves a checkpoint with the tuned model.
 
 An example of log:
 ```
@@ -137,8 +142,56 @@ ____
 
 ### Adding metrics in training
 
-By default only the loss configured by the trainable component is computed during the training / evaluation loop. We can add more metrics using a class that implements {class}`~.training.utils.MetricsComputer`. 
+By default, only the loss configured by the trainable component is computed during the training / evaluation loop. We can add more metrics using a class that implements {class}`~.training.utils.MetricsComputer`. For entity detection, we can instantiate {class}`~.text.metrics.ner.SeqEvalMetricsComputer` directly. This object process and compute the metrics during training (using PyTorch Tensors). 
 
-For entity detection, medkit has 
+```python
+from medkit.text.metrics.ner import SeqEvalMetricsComputer
 
+mc_seqeval = SeqEvalMetricsComputer(
+    id_to_label=hf_matcher.id_to_label, # mapping int value to tag
+    tagging_scheme=hf_matcher.tagging_scheme # tagging scheme to compute
+    return_metrics_by_label= True, # include metrics by label in results
+)
+```
+
+```{warning}
+The **Trainer** updates the trainable component (~ model's weights) during training, if you want to run a new experiment, you need to create a new instance of the **trainable component**.
+```
+
+**Running with metrics**
+
+```python
+trainer_config = TrainerConfig(
+    ...
+    do_metrics_in_training=False, # Set to True if you want also compute custom metrics using training data
+    ...
+)
+trainer_with_metrics = Trainer(
+    HFEntityMatcher.make_trainable(...),  # a new instance 
+    trainer_config,  # configuration
+    ...
+    metrics_computer = mc_seqeval
+)
+
+history_with_metrics = trainer.train()
+```
+
+Custom metrics are in `history_with_metrics` and the logs looks like this:
+
+```
+2023-05-04 20:33:59,128 - DefaultPrinterCallback - INFO - Training metrics : loss:   0.227
+2023-05-04 20:33:59,129 - DefaultPrinterCallback - INFO - Evaluation metrics : loss:   0.286|overall_precision:   0.626|overall_recall:   0.722|overall_f1-score:   0.670|overall_support:3542.000|overall_acc:   0.899|problem_precision:   0.609|problem_recall:   0.690|problem_f1-score:   0.647|problem_support:1812.000|test_precision:   0.667|test_recall:   0.780|test_f1-score:   0.719|test_support: 937.000|treatment_precision:   0.614|treatment_recall:   0.728|treatment_f1-score:   0.666|treatment_support: 793.000
+```
+
+Now we have a entity matcher fine-tuned with our custom dataset. We can use the last checkpoint to define a {class}`~.text.ner.hf_entity_matcher.HFEntityMatcher` and detect `problem`, `treatment`, `test` entities in french documents.
+
+```python
+from medkit.text.ner.hf_entity_matcher import HFEntityMatcher
+
+matcher = HFEntityMatcher(model="./DrBert-CASM2/checkpoint_03-05-2023_21:13")
+
+matcher.run(...)
+```
+
+**References**
 
