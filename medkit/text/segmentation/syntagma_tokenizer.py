@@ -10,6 +10,7 @@ from typing import Iterator, List, Optional, Tuple
 import yaml
 
 from medkit.core.text import Segment, SegmentationOperation, span_utils
+from medkit.text.segmentation.tokenizer_utils import lstrip, rstrip
 
 _DEFAULT_SYNTAGMA_DEFINITION_RULES = (
     pathlib.Path(__file__).parent / "default_syntagma_definition.yml"
@@ -19,7 +20,7 @@ _DEFAULT_SYNTAGMA_DEFINITION_RULES = (
 @dataclasses.dataclass
 class DefaultConfig:
     output_label = "SYNTAGMA"
-    keep_separator = True
+    strip_chars = ".;,?! \n\r\t"
 
 
 class SyntagmaTokenizer(SegmentationOperation):
@@ -29,7 +30,7 @@ class SyntagmaTokenizer(SegmentationOperation):
         self,
         separators: Tuple[str, ...],
         output_label: str = DefaultConfig.output_label,
-        keep_separator: bool = DefaultConfig.keep_separator,
+        strip_chars: str = DefaultConfig.strip_chars,
         uid: Optional[str] = None,
     ):
         """
@@ -42,10 +43,9 @@ class SyntagmaTokenizer(SegmentationOperation):
         output_label: str, Optional
             The output label of the created annotations.
             Default: "SYNTAGMA" (cf. DefaultConfig)
-        keep_separator: bool, Optional
-            If True, the separators are kept in the detected syntagma
-            If False, the syntagma text does not include the separator
-            Default: True (cf. DefaultConfig)
+        strip_chars
+            The list of characters to strip at the beginning of the returned segment.
+            Default: '.;,?! \n\r\t' (cf. DefaultConfig)
         uid: str, Optional
             Identifier of the tokenizer
         """
@@ -56,7 +56,7 @@ class SyntagmaTokenizer(SegmentationOperation):
 
         self.output_label = output_label
         self.separators = separators
-        self.keep_separator = keep_separator
+        self.strip_chars = strip_chars
 
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -92,12 +92,19 @@ class SyntagmaTokenizer(SegmentationOperation):
         start = 0
 
         for match in pattern.finditer(segment.text):
-            # Ignore empty syntagmas
-            if len(match.group("syntagma").strip()) == 0:
-                continue
-
             start = match.start("syntagma") if not sep_exists else start
             end = match.end("syntagma")
+            sep_exists = True
+
+            # Remove extra characters at beginning of the detected segments
+            # and white spaces at end of the text
+            text, start = lstrip(segment.text[start:end], start, self.strip_chars)
+            text, end = rstrip(text, end)
+
+            # Ignore empty syntagmas
+            if len(text) == 0:
+                start = match.start("separator")
+                continue
 
             # Extract raw span list from regex match ranges
             text, spans = span_utils.extract(
@@ -106,10 +113,8 @@ class SyntagmaTokenizer(SegmentationOperation):
                 ranges=[(start, end)],
             )
 
-            # Give next syntagma start if we want to keep separator
-            sep_exists = self.keep_separator
-            if sep_exists:
-                start = match.start("separator")
+            # Give next syntagma start
+            start = match.start("separator")
 
             syntagma = Segment(
                 label=self.output_label,
@@ -125,10 +130,10 @@ class SyntagmaTokenizer(SegmentationOperation):
             yield syntagma
 
     @classmethod
-    def get_example(cls, keep_separator=True):
+    def get_example(cls):
         config_path = _DEFAULT_SYNTAGMA_DEFINITION_RULES
         separators = cls.load_syntagma_definition(config_path, encoding="utf-8")
-        syntagma_tokenizer = cls(separators=separators, keep_separator=keep_separator)
+        syntagma_tokenizer = cls(separators=separators)
         return syntagma_tokenizer
 
     @staticmethod
@@ -157,3 +162,30 @@ class SyntagmaTokenizer(SegmentationOperation):
         syntagma_seps = tuple(str(sep) for sep in config["syntagmas"]["separators"])
 
         return syntagma_seps
+
+    @staticmethod
+    def save_syntagma_definition(
+        syntagma_seps: Tuple[str, ...],
+        filepath: pathlib.Path,
+        encoding: Optional[str] = None,
+    ):
+        """
+        Save syntagma yaml definition file
+
+        Parameters
+        ----------
+        syntagma_seps
+            The tuple of regular expressions corresponding to separators
+        filepath
+            The path of the file to save
+        encoding
+            The encoding of the file. Default: None
+        """
+        data = {
+            "syntagmas": {"separators": []},
+        }
+        for sep in syntagma_seps:
+            data["syntagmas"]["separators"].append(sep)
+
+        with open(filepath, "w", encoding=encoding) as f:
+            yaml.safe_dump(data, f, allow_unicode=True)

@@ -26,30 +26,9 @@ TEST_CONFIG = [
                 ),
             },
             {
-                "spans": [Span(start=72, end=156)],
+                "spans": [Span(start=73, end=156)],
                 "text": (
-                    " mais présentait des petites douleurs résiduelles sur la face"
-                    " interne du genou droit"
-                ),
-            },
-        ],
-    ),
-    # don't keep separators in syntagma
-    (
-        SyntagmaTokenizer.get_example(keep_separator=False),
-        _TEXT,
-        [
-            {
-                "spans": [Span(start=1, end=72)],
-                "text": (
-                    "Elle avait été améliorée par l'intervention pratiquée par le"
-                    " chirurgien"
-                ),
-            },
-            {
-                "spans": [Span(start=78, end=156)],
-                "text": (
-                    "présentait des petites douleurs résiduelles sur la face"
+                    "mais présentait des petites douleurs résiduelles sur la face"
                     " interne du genou droit"
                 ),
             },
@@ -61,8 +40,8 @@ TEST_CONFIG = [
         "Elle avait été\naméliorée mais présentait des douleurs",
         [
             {
-                "spans": [Span(start=0, end=25)],
-                "text": "Elle avait été\naméliorée ",
+                "spans": [Span(start=0, end=24)],
+                "text": "Elle avait été\naméliorée",
             },
             {
                 "spans": [Span(start=25, end=53)],
@@ -119,3 +98,26 @@ def test_syntagma_def_file_encoding_error():
         SyntagmaTokenizer.load_syntagma_definition(
             filepath=_DEFAULT_SYNTAGMA_DEFINITION_RULES, encoding="utf-16"
         )
+
+
+def test_syntagma_def_file(tmp_path):
+    filepath = tmp_path.joinpath("syntagma.yml")
+    separators = (
+        r"(?<=\. )[\w\d]+",  # Separateur: début de phrase (après un point-espace)
+        r"(?<=\n)[\w\d]+",  # Separateur: début de phrase (après une nouvelle ligne)
+        r"(?<=: )\w+",  # Separateur: debut de syntagme (après un :)
+        r"(?<= )mais\s+(?=\w)",
+        # Separateur: mais (précédé d'un espace et suivi d'un espace et mot
+        r"(?<= )sans\s+(?=\w)",
+        # Separateur: sans (précédé d'un espace et suivi d'un espace et mot
+        r"(?<= )donc\s+(?=\w)",
+        # Separateur: donc (précédé d'un espace et suivi d'un espace et mot
+    )
+    SyntagmaTokenizer.save_syntagma_definition(
+        syntagma_seps=separators, filepath=filepath, encoding="utf-8"
+    )
+
+    loaded_seps = SyntagmaTokenizer.load_syntagma_definition(
+        filepath=filepath, encoding="utf-8"
+    )
+    assert loaded_seps == separators

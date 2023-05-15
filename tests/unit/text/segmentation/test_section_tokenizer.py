@@ -13,16 +13,16 @@ TEST_CONFIG = [
     (
         "eds/clean/cas1",
         [
-            ([Span(start=0, end=418)], "antecedent"),
-            ([Span(start=418, end=1231)], "mode_de_vie"),
-            ([Span(start=1231, end=1606)], "conclusion"),
-            ([Span(start=1606, end=1899)], "conclusion"),
-            ([Span(start=1899, end=2268)], "conclusion"),
-            ([Span(start=2268, end=3109)], "conclusion"),
-            ([Span(start=3109, end=3246)], "antecedent"),
-            ([Span(start=3246, end=3843)], "antecedent"),
-            ([Span(start=3843, end=3916)], "antecedent"),
-            ([Span(start=3916, end=6668)], "antecedent"),
+            ([Span(start=0, end=417)], "antecedent"),
+            ([Span(start=418, end=1230)], "mode_de_vie"),
+            ([Span(start=1231, end=1605)], "conclusion"),
+            ([Span(start=1606, end=1898)], "conclusion"),
+            ([Span(start=1899, end=2267)], "conclusion"),
+            ([Span(start=2268, end=3108)], "conclusion"),
+            ([Span(start=3109, end=3245)], "antecedent"),
+            ([Span(start=3246, end=3842)], "antecedent"),
+            ([Span(start=3843, end=3915)], "antecedent"),
+            ([Span(start=3916, end=6667)], "antecedent"),
             ([Span(start=6668, end=9094)], "conclusion"),
         ],
     ),
@@ -30,7 +30,7 @@ TEST_CONFIG = [
     (
         "eds/clean/cas3",
         [
-            ([Span(start=0, end=315)], "head"),
+            ([Span(start=0, end=314)], "head"),
             ([Span(start=315, end=369)], "examen_clinique"),
         ],
     ),
@@ -126,3 +126,39 @@ def test_section_def_file_encoding_error():
         SectionTokenizer.load_section_definition(
             filepath=_DEFAULT_SECTION_DEFINITION_RULES, encoding="utf-16"
         )
+
+
+def test_section_def_file(tmp_path):
+    filepath = tmp_path.joinpath("section.yml")
+    section_dict = {
+        "patient": ["SUBJECTIF"],
+        "traitement": ["MÉDICAMENTS", "PLAN"],
+        "allergies": ["ALLERGIES"],
+        "examen clinique": ["EXAMEN PHYSIQUE"],
+        "diagnostique": ["EVALUATION"],
+    }
+    treatment_rules = (
+        SectionModificationRule(
+            section_name="traitement",
+            new_section_name="traitement_entree",
+            other_sections=["diagnostique"],
+            order="BEFORE",
+        ),
+        SectionModificationRule(
+            section_name="traitement",
+            new_section_name="traitement_sortie",
+            other_sections=["diagnostique"],
+            order="AFTER",
+        ),
+    )
+    SectionTokenizer.save_section_definition(
+        section_dict=section_dict,
+        section_rules=treatment_rules,
+        filepath=filepath,
+        encoding="utf-8",
+    )
+    loaded_dict, loaded_rules = SectionTokenizer.load_section_definition(
+        filepath, encoding="utf-8"
+    )
+    assert loaded_dict == section_dict
+    assert loaded_rules == treatment_rules
