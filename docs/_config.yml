@@ -45,17 +45,20 @@ sphinx:
     autodoc_member_order: 'bysource'
     autodoc_mock_imports:
       - edsnlp
+      - pandas
+      - pyannote
+      - pyannote.audio
+      - PyRuSH
+      - quickumls
       - resampy
+      - seqeval
+      - soundfile
+      - spacy
+      - speechbrain
       - torch
       - torchaudio
       - transformers
-      - quickumls
-      - pandas
-      - PyRuSH
-      - seqeval
-      - spacy
-      - speechbrain
-      - pyannote.audio
+      - webrtcvad
     autosummary_ignore_module_all: False
     execution_show_tb: True
     # napoleon extension config

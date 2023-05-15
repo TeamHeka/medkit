@@ -20,8 +20,10 @@ EDS-NLP within medkit is supported, as we will see.
 
 To follow this tutorial, you will need to install medkit spaCy support and
 EDS-NLP with
-```
-pip install medkit[edsnlp]
+```{code-cell} ipython3
+:tags: [remove-output]
+
+pip install 'medkit-lib[edsnlp]'
 ```
 ## Running an EDS-NLP spaCy pipeline on entire documents
 

@@ -1,6 +1,7 @@
 docs-clean:
 	jb clean docs
 	rm -rf docs/api-gen/_autosummary
+	rm -rf docs/_build
 
 docs: docs-clean
 	jb build docs
