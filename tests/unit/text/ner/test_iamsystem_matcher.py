@@ -1,4 +1,5 @@
 from iamsystem import Matcher, Entity as Term  # noqa: E402
+from medkit.core import Attribute  # noqa: E402
 from medkit.core.text import Segment, Span, ModifiedSpan  # noqa: E402
 from medkit.text.ner import IAMSystemMatcher  # noqa: E402
 from medkit.text.ner.iamsystem_matcher import MedkitKeyword  # noqa: E402
@@ -207,3 +208,30 @@ def test_matcher_custom_label_provider():
     segment = Segment(label="raw_text", text=text, spans=[Span(0, len(text))])
     entity = medkit_matcher.run([segment])[0]
     assert entity.label == "biological measurement"
+
+
+def test_attrs_to_copy():
+    """Copying of selected attributes from input segment to created entity"""
+
+    text = "The patient has asthma"
+    sentence = Segment(label="sentence", text=text, spans=[Span(0, len(text))])
+    # copied attribute
+    neg_attr = Attribute(label="negation", value=False)
+    sentence.attrs.add(neg_attr)
+    # uncopied attribute
+    sentence.attrs.add(Attribute(label="hypothesis", value=False))
+
+    # use iamsystem matcher
+    matcher = Matcher.build(keywords=["asthma"])
+    matcher = IAMSystemMatcher(matcher=matcher, attrs_to_copy=["negation"])
+    entity = matcher.run([sentence])[0]
+
+    # only negation attribute was copied
+    neg_attrs = entity.attrs.get(label="negation")
+    assert len(neg_attrs) == 1
+    assert len(entity.attrs.get(label="hypothesis")) == 0
+
+    # copied attribute has same value but new id
+    copied_neg_attr = neg_attrs[0]
+    assert copied_neg_attr.value == neg_attr.value
+    assert copied_neg_attr.uid != neg_attr.uid
