@@ -1,6 +1,6 @@
 # Training module
 
-This page describes all components related to the medkit training.
+This page describes all components related to medkit training.
 
 :::{important}
 For using this module, you need to install [PyTorch](https://pytorch.org/).
@@ -12,11 +12,12 @@ You may install additional dependencies using
 For more details about all sub-packages, refer to {mod}`medkit.training`.
 :::
 
-## Trainable Components
+## Be `trainable` in medkit
 
-The medkit {class}`~.training.TrainableComponent` protocol describes all the
-necessary methods to make a trainable component in medkit. An operation can contains 
-a trainable component and expose it using the `make_trainable()` method. 
+A component can implement the {class}`~.training.TrainableComponent` protocol to be trainable in medkit. With this protocol, you can define how to preprocess data, call the model and define the optimizer. Then, the {class}`~.training.Trainer` will use these methods inside the training / evaluation loop. 
+
+A trainable component could define how to train a model from scratch or fine-tune a pretrained model. As a first implementation, medkit includes {class}`~.text.ner.hf_entity_matcher_trainable.HFEntityMatcherTrainable`, a trainable version of {class}`~.text.ner.hf_entity_matcher.HFEntityMatcher`. As you can see, an operation can contains a trainable component and expose it using the `make_trainable()` method. 
+
 
 :::{important}
 Currently, medkit only supports the training of components using **PyTorch**
@@ -29,7 +30,8 @@ For more details, refer to {mod}`medkit.training.trainable_component` module.
 
 ## Trainer
 
-The {class}`~.training.Trainer` aims to train any {class}`~.training.TrainableComponent`.
+The {class}`~.training.Trainer` aims to train any component implementing the {class}`~.training.TrainableComponent` protocol.
+
 Therefore, it is possible to customise it using the {class}`~.training.TrainerConfig`.
 
 The {class}`~.training.Trainer` contains two optional parameters `metrics_computer`
