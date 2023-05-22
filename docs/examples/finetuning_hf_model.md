@@ -17,35 +17,39 @@ In this example, we show how to fine-tune **DrBERT: A PreTrained model in French
 
 [^footnote1]:Yanis Labrak, Adrien Bazoge, Richard Dufour, Mickael Rouvier, Emmanuel Morin, Béatrice Daille, and Pierre-Antoine Gourraud. (2023). DrBERT: A Robust Pre-trained Model in French for Biomedical and Clinical domains.
 
-
 ### Using a custom medkit dataset
-Let's start by defining a dataset using medkit documents with the annotations.
-In this case, `CorpusCASM2` contains documents with predefined splits for `train`, `validation` and `test`. Each split contains medkit documents with its entities.
 
-```{note}
-More info about medkit json in {mod}`~.io.medkit_json.text`
-```
+Let's start by defining a dataset using medkit documents. For this example, we use `CorpusCASM2`, an internal corpus with clinical cases annotated by master students. The corpus contains more than 5000 medkit documents (~ phrases) with entities to detect. The splits are predefined so, all we need to do is use the path of the desired split (`train` or `validation`) to load the documents.
+
+:::{tip}
+You can test this tutorial with your data. You can create medkit documents, add entities and export them to **JSONL** files.
 
 ```python
-from typing import Literal
+from medkit.core.text import TextDocument, Entity, Span
+from medkit.io.medkit_json import save_text_documents
+
+document = TextDocument(
+    "Your custom phrase with entities",
+    anns=[Entity(label="CUSTOM", spans=[Span(24, 32)], text="entities")],
+)
+# save your list of documents
+train_docs = [document]
+save_text_documents(train_docs, output_file="./train.jsonl")
+```
+You may refer to {mod}`~.io.medkit_json` for more information.
+:::
+
+```python
 from torch.utils.data import Dataset
 from medkit.io.medkit_json import load_text_documents
-
-CORPUS_PATH = "corpusCasM2/corpusCasM2Medkit"
-_DATA_URLS = {
-    "train": "train.jsonl",
-    "test": "test.jsonl",
-    "validation": "validation.jsonl",
-}
-
 
 class CorpusCASM2(Dataset):
     """A dataset of clinical cases from the CORPUS CAS(medkit--version)"""
 
-    def __init__(self, split: Literal["train", "validation", "test"]):
+    def __init__(self, split):
         print(f"Creating CorpusCASM2 corpus {split}")
         self.labels_set = ["treatment", "problem", "test"]
-        data_path = f"{CORPUS_PATH}/{_DATA_URLS[split]}"
+        data_path = f"{split}.jsonl"
         self.documents = [doc for doc in load_text_documents(data_path)]
 
     def __getitem__(self, idx):
@@ -90,14 +94,14 @@ Let's define a trainable instance for this example.
 ```python
 from medkit.text.ner.hf_entity_matcher import HFEntityMatcher
 
-hf_trainable = HFEntityMatcher.make_trainable(
+hf_config = dict(
     model_name_or_path="Dr-BERT/DrBERT-4GB-CP-PubMedBERT",  # name in HF hub
     labels=["problem", "treatment", "test"],  # labels to fine-tune
     tokenizer_max_length=128,  # max length per item
     tagging_scheme="iob2",  # scheme to tag documents
     tag_subtokens=False,  # only tag the first token by word
-    device="cpu",
 )
+hf_trainable = HFEntityMatcher.make_trainable(**hf_config)
 ```
 
 ## Fine-tuning with medkit Trainer 
@@ -118,8 +122,8 @@ trainer_config = TrainerConfig(
 )
 
 trainer = Trainer(
-    hf_trainable,  # trainable component
-    trainer_config,  # configuration
+    component=hf_trainable,  # trainable component
+    config=trainer_config,  # configuration
     train_data=train_dataset,  # training documents
     eval_data=val_dataset,  # eval documents
 )
@@ -160,17 +164,17 @@ The **Trainer** updates the trainable component (~ model's weights) during train
 
 **Running with metrics**
 
+:::{note}
+By default, the Trainer only computes custom metrics using eval data. You can set `do_metrics_in_training=True` in the trainer configuration to also compute custom metrics using training data.
+:::
+
 ```python
-trainer_config = TrainerConfig(
-    ...
-    do_metrics_in_training=False, # Set to True if you want also compute custom metrics using training data
-    ...
-)
 trainer_with_metrics = Trainer(
-    HFEntityMatcher.make_trainable(...),  # a new instance 
-    trainer_config,  # configuration
-    ...
-    metrics_computer = mc_seqeval
+    component=HFEntityMatcher.make_trainable(**hf_config),  # a new instance 
+    config=trainer_config,  # configuration
+    train_data=train_dataset,  # training documents
+    eval_data=val_dataset,  # eval documents    
+    metrics_computer=mc_seqeval 
 )
 
 history_with_metrics = trainer.train()
@@ -182,16 +186,32 @@ Custom metrics are in `history_with_metrics` and the logs looks like this:
 2023-05-04 20:33:59,128 - DefaultPrinterCallback - INFO - Training metrics : loss:   0.227
 2023-05-04 20:33:59,129 - DefaultPrinterCallback - INFO - Evaluation metrics : loss:   0.286|overall_precision:   0.626|overall_recall:   0.722|overall_f1-score:   0.670|overall_support:3542.000|overall_acc:   0.899|problem_precision:   0.609|problem_recall:   0.690|problem_f1-score:   0.647|problem_support:1812.000|test_precision:   0.667|test_recall:   0.780|test_f1-score:   0.719|test_support: 937.000|treatment_precision:   0.614|treatment_recall:   0.728|treatment_f1-score:   0.666|treatment_support: 793.000
 ```
+## Detecting entities in inference
 
 Now we have a entity matcher fine-tuned with our custom dataset. We can use the last checkpoint to define a {class}`~.text.ner.hf_entity_matcher.HFEntityMatcher` and detect `problem`, `treatment`, `test` entities in french documents.
 
+:::{hint}
+In this version, the trainer saves **one** checkpoint at the end of training. The path will be `{trainer_config.output_path}/checkpoint_{DATETIME_END_TRAINING}`
+:::
+
+
 ```python
+from medkit.core.text import TextDocument
 from medkit.text.ner.hf_entity_matcher import HFEntityMatcher
 
 matcher = HFEntityMatcher(model="./DrBert-CASM2/checkpoint_03-05-2023_21:13")
 
-matcher.run(...)
+test_doc = TextDocument("Elle souffre d'asthme mais n'a pas besoin d'Allegra")
+
+# detect entities in the raw segment
+detected_entities = matcher.run([test_doc.raw_segment]) 
+msg = "|".join(f"'{entity.label}':{entity.text}" for entity in detected_entities)
+print(f"Text: '{test_doc.text}'\n{msg}")
 ```
 
+```python
+Text: "Elle souffre d'asthme mais n'a pas besoin d'Allegra"
+'problem':asthme|'treatment':Allegra
+```
 **References**
 
