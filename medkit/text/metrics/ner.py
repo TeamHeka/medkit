@@ -1,6 +1,5 @@
 __all__ = ["SeqEvalEvaluator", "SeqEvalMetricsComputer"]
 
-import itertools
 from typing import Any, Dict, List, Optional
 from typing_extensions import Literal
 
@@ -243,15 +242,6 @@ class SeqEvalMetricsComputer:
         # extract and format data from all_data
         y_true_all = all_data.get("y_true", [])
         y_pred_all = all_data.get("y_pred", [])
-
-        if not len(y_true_all) or not len(y_pred_all):
-            raise ValueError("'all_data' has no required data to compute the metric")
-
-        # flat the list since data was collected by batches,
-        # the metrics need a list[list[str]] instead of list[list[list[str]]]
-        if isinstance(y_true_all[0][0], list):
-            y_true_all = list(itertools.chain(*y_true_all))
-            y_pred_all = list(itertools.chain(*y_pred_all))
 
         scores = _compute_seqeval_from_dict(
             y_pred_all=y_pred_all,

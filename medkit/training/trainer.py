@@ -176,7 +176,7 @@ class Trainer:
                     model_output, input_batch
                 )
                 for key, values in prepared_batch.items():
-                    data_for_metrics[key].append(values)
+                    data_for_metrics[key].extend(values)
 
             self.callback.on_step_end(
                 step, nb_batches=len(self.train_dataloader), phase="train"
@@ -212,7 +212,7 @@ class Trainer:
                         model_output, input_batch
                     )
                     for key, values in prepared_batch.items():
-                        data_for_metrics[key].append(values)
+                        data_for_metrics[key].extend(values)
 
                 self.callback.on_step_end(
                     step, nb_batches=len(eval_dataloader), phase="eval"
