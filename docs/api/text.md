@@ -398,6 +398,9 @@ metrics = evaluator.compute(documents=[document], predicted_entities=[pred_ents]
 assert metrics["overall_precision"] == 1.0
 print(metrics)
 ```
+```
+{'overall_precision': 1.0, 'overall_recall': 1.0, 'overall_f1-score': 1.0, 'overall_support': 2, 'overall_acc': 1.0, 'GPE_precision': 1.0, 'GPE_recall': 1.0, 'GPE_f1-score': 1.0, 'GPE_support': 1, 'PER_precision': 1.0, 'PER_recall': 1.0, 'PER_f1-score': 1.0, 'PER_support': 1}
+```
 :::{note}
 For more details about public APIs, refer to {class}`~.text.metrics.ner.SeqEvalEvaluator`
 :::
