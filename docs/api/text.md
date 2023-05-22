@@ -364,16 +364,16 @@ For more info about this module, refer to {mod}`~.text.relations.syntactic_relat
 
 This module provides components to evaluate annotations as well as some implementations of {class}`~.training.utils.MetricsComputer` to monitor the training of components in medkit.
 
-:::{important} 
-This module needs additional dependencies that can be installed with `pip install medkit-lib[metrics]` 
-:::
-
 :::{note}
 For more details about public APIs, refer to {mod}`~.text.metrics`
 :::
 ## NER Evaluation
 
 Medkit uses [seqeval](https://github.com/chakki-works/seqeval) as backend of evaluation.
+
+:::{important} 
+This module needs additional dependencies that can be installed with `pip install medkit-lib[metrics-ner]` 
+:::
 
 ### Entity detection
 
@@ -407,8 +407,7 @@ For more details about public APIs, refer to {class}`~.text.metrics.ner.SeqEvalE
 
 ### Using for training of NER components
 
-For example, a trainable component detects PER and GPE entities using `iob2` as tagging scheme.
-The {class}`~.training.Trainer` may compute metrics during its training/evaluation loop.
+For example, a trainable component detects PER and GPE entities using `iob2` as tagging scheme. The {class}`~.training.Trainer` may compute metrics during its training/evaluation loop.
 
 ```
 from medkit.text.metrics.ner import SeqEvalMetricsComputer
@@ -431,5 +430,9 @@ For more details about public APIs, refer to {class}`~.text.metrics.ner.SeqEvalM
 :::
 
 :::{hint}
-There is an utility to convert labels to NER tags if required, {mod}`~.text.ner.hf_tokenization_utils`
+There is an utility to convert labels to NER tags if required, {mod}`~.text.ner.hf_tokenization_utils`. 
+:::
+
+:::{seealso}
+You may refer to this [tutorial](../examples/finetuning_hf_model.md) to see how this works in a fine-tuning example.
 :::
