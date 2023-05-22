@@ -3,7 +3,7 @@
 ```{note}
 This example may require optional modules from medkit, use the following to install them:
 
-`pip install medkit-lib[training] medkit-lib[hf-entity-matcher]`
+`pip install medkit-lib[training,hf-entity-matcher]`
 ```
 In recent years, Large Language Models (LLMs) have achieved very good performance in natural language processing (NLP) tasks.  However, training a LLM (involving billions of parameters) from scratch requires a lot of resources and large quantities of text. 
 
@@ -209,7 +209,7 @@ msg = "|".join(f"'{entity.label}':{entity.text}" for entity in detected_entities
 print(f"Text: '{test_doc.text}'\n{msg}")
 ```
 
-```python
+```
 Text: "Elle souffre d'asthme mais n'a pas besoin d'Allegra"
 'problem':asthme|'treatment':Allegra
 ```
