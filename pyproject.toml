@@ -96,7 +96,7 @@ hf-translator = [
     "transformers"
 ]
 hf-utils = ["transformers"]
-metrics-ner = ["seqeval"]
+metrics-ner = ["seqeval","transformers","torch"]
 pa-speaker-detector = [
     "torch",
     "pyannote-audio",

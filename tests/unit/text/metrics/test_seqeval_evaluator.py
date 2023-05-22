@@ -2,15 +2,13 @@ import pytest
 from numpy.testing import assert_almost_equal
 
 pytest.importorskip(modname="seqeval", reason="seqeval is not installed")
+pytest.importorskip(modname="transformers", reason="transformers is not installed")
+
+from transformers import BertTokenizerFast  # noqa: E402
 
 from medkit.core.text import Entity, TextDocument, Span  # noqa: E402
 from medkit.text.metrics.ner import SeqEvalEvaluator  # noqa: E402
-from medkit.tools import modules_are_available  # noqa: E402
 from tests.data_utils import get_path_hf_dummy_vocab  # noqa: E402
-
-TEST_BERT_TOKENIZER = modules_are_available(["transformers"])
-if TEST_BERT_TOKENIZER:
-    from transformers import BertTokenizerFast
 
 
 @pytest.fixture()
@@ -136,7 +134,6 @@ def test_evaluator_with_entities_all_schemes(
         assert_almost_equal(metrics[metric_key], value, decimal=2)
 
 
-@pytest.mark.skipif(not TEST_BERT_TOKENIZER, reason="transformers is not available")
 @pytest.mark.parametrize(
     "tagging_scheme,expected_accuracy",
     [("iob2", 0.75), ("bilou", 0.75)],
