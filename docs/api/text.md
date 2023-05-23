@@ -364,6 +364,18 @@ dependencies.
 For more info about this module, refer to {mod}`~.text.relations.syntactic_relation_extractor`.
 :::
 
+## Post-processing modules
+
+Medkit provides some modules to facilitate post-processing operations. 
+
+For the moment, you can use this module to:
+- align source and target {class}`~.core.text.Segment`s from the same {class}`~.core.text.TextDocument`
+- duplicate attributes bewteen segments. For example, you can duplicate an attribute from a sentence to its entities.
+
+:::{note}
+For more details about public API, refer to {mod}`~.text.postprocessing`.
+:::
+
 # Metrics
 
 This module provides components to evaluate annotations as well as some implementations of {class}`~.training.utils.MetricsComputer` to monitor the training of components in medkit.
