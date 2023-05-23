@@ -207,6 +207,10 @@ which allows user:
 * to associate `kb_name` to `kb_id`
 * to provide a medkit entity label (e.g., category) associated to the IAM system entity label (i.e., text to search).
 
+```{admonition} Examples
+For a better understanding, you may follow the
+ [iamsystem matcher example tutorial](../examples/iamsystem)
+```
 
 ### Quick UMLS Matcher
 

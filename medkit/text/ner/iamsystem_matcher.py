@@ -73,6 +73,7 @@ class IAMSystemMatcher(NEROperation):
         self,
         matcher: IS_Matcher,
         label_provider: Optional[LabelProvider] = None,
+        attrs_to_copy: Optional[List[str]] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
     ):
@@ -90,6 +91,10 @@ class IAMSystemMatcher(NEROperation):
             number of matched keywords.
             In medkit, normalization attributes are used for representing detected
             keywords.
+        attrs_to_copy:
+            Labels of the attributes that should be copied from the input segment
+            to the created entity. Useful for propagating context attributes
+            (negation, antecedent, etc).
         name
             Name describing the matcher (defaults to the class name)
         uid
@@ -99,8 +104,13 @@ class IAMSystemMatcher(NEROperation):
         init_args = locals()
         init_args.pop("self")
         super().__init__(**init_args)
+
+        if attrs_to_copy is None:
+            attrs_to_copy = []
+
         self.matcher = matcher
         self.label_provider = label_provider or DefaultLabelProvider()
+        self.attrs_to_copy = attrs_to_copy
 
     def run(self, segments: List[Segment]) -> List[Entity]:
         entities = []
@@ -141,6 +151,15 @@ class IAMSystemMatcher(NEROperation):
             spans=spans,
             metadata=metadata,
         )
+
+        # Copy inherited attributes
+        for label in self.attrs_to_copy:
+            for attr in segment.attrs.get(label=label):
+                copied_attr = attr.copy()
+                entity.attrs.add(copied_attr)
+                # handle provenance
+                if self._prov_tracer is not None:
+                    self._prov_tracer.add_prov(copied_attr, self.description, [attr])
 
         if self._prov_tracer is not None:
             self._prov_tracer.add_prov(

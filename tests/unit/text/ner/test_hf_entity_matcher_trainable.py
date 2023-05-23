@@ -1,11 +1,11 @@
 from pathlib import Path
 import pytest
-import torch
 import logging
-import transformers
 
-pytest.importorskip(modname="torch", reason="torch is not installed")
-pytest.importorskip(modname="transformers", reason="transformers is not installed")
+torch = pytest.importorskip(modname="torch", reason="torch is not installed")
+transformers = pytest.importorskip(
+    modname="transformers", reason="transformers is not installed"
+)
 
 from medkit.core.text import Entity, Span, TextDocument  # noqa: E402
 from medkit.text.ner.hf_entity_matcher_trainable import (
