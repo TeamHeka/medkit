@@ -22,8 +22,8 @@ class DummyMetricsComputer:
         return {"predictions": predictions, "references": references}
 
     def compute(self, all_data):
-        predictions = torch.cat(all_data["predictions"])
-        references = torch.cat(all_data["references"])
+        predictions = torch.tensor(all_data["predictions"])
+        references = torch.tensor(all_data["references"])
 
         TP = (predictions == references).sum().item()
         score = TP / len(predictions)

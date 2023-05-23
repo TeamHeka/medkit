@@ -12,13 +12,14 @@ from medkit.text.ner.hf_entity_matcher_trainable import (
     HFEntityMatcherTrainable,
 )  # noqa: E402
 from medkit.training.utils import BatchData  # noqa: E402
-
-_PATH_TO_VOCAB_FILE = Path(__file__).parent / "dummy_hf_vocab" / "vocab.txt"
+from tests.data_utils import get_path_hf_dummy_vocab  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
 def create_model_and_tokenizer(tmp_path):
-    tokenizer = transformers.BertTokenizerFast(_PATH_TO_VOCAB_FILE, model_max_length=32)
+    tokenizer = transformers.BertTokenizerFast(
+        get_path_hf_dummy_vocab(), model_max_length=32
+    )
     config = transformers.BertConfig(
         vocab_size=tokenizer.vocab_size,
         hidden_size=20,
