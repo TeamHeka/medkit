@@ -53,6 +53,41 @@ def convert_labels_to_tags(
     return label_to_id
 
 
+def create_entity_tags(
+    nb_tags: int, label: str, tagging_scheme: Literal["bilou", "iob2"]
+) -> List[str]:
+    """Create a list of tags representing one entity
+
+    Parameters
+    ----------
+    nb_tags:
+        Total of tags to create
+    label:
+        Entity label
+    tagging_scheme:
+        Scheme to use in the conversion, "iob2" follows the BIO scheme.
+
+    Returns
+    -------
+    tags: List[str]:
+        Tags representing the entity
+
+    Examples
+    --------
+    >>> create_entity_tags(nb_tags=3, label="corporation", tagging_scheme="bilou")
+    ['B-corporation', 'I-corporation', 'L-corporation']
+    """
+    tags = [f"I-{label}"] * nb_tags
+    if len(tags) == 1:
+        prefix = "U" if tagging_scheme == "bilou" else "B"
+        tags[0] = f"{prefix}-{label}"
+    else:
+        tags[0] = f"B-{label}"
+        prefix = "L" if tagging_scheme == "bilou" else "I"
+        tags[-1] = f"{prefix}-{label}"
+    return tags
+
+
 def transform_entities_to_tags(
     text_encoding: EncodingFast,
     entities: List[Entity],
@@ -123,17 +158,12 @@ def transform_entities_to_tags(
         if not tokens_entity:
             continue
 
-        if len(tokens_entity) == 1:
-            prefix = "U" if tagging_scheme == "bilou" else "B"
-            tags[tokens_entity[0]] = f"{prefix}-{label}"
-        else:
-            tags[tokens_entity[0]] = f"B-{label}"
-            prefix = "L" if tagging_scheme == "bilou" else "I"
-            tags[tokens_entity[-1]] = f"{prefix}-{label}"
+        entity_tags = create_entity_tags(
+            nb_tags=len(tokens_entity), label=label, tagging_scheme=tagging_scheme
+        )
 
-            inside_tokens = tokens_entity[1:-1]
-            for token_idx in inside_tokens:
-                tags[token_idx] = f"I-{label}"
+        for token_idx, tag in zip(tokens_entity, entity_tags):
+            tags[token_idx] = tag
     return tags
 
 

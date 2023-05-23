@@ -52,6 +52,7 @@ sphinx:
       - quickumls
       - pandas
       - PyRuSH
+      - seqeval
       - spacy
       - speechbrain
       - pyannote.audio

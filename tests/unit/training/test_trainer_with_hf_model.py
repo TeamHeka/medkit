@@ -11,9 +11,14 @@ import transformers  # noqa: E402
 from medkit.core.text import Entity, TextDocument, Span  # noqa: E402
 from medkit.text.ner.hf_entity_matcher import HFEntityMatcher  # noqa: E402
 from medkit.training import Trainer, TrainerConfig  # noqa: E402
+from medkit.tools import modules_are_available
 
 _TOKENIZER_MAX_LENGTH = 24
 _MODEL_NER_CLINICAL = "samrawal/bert-base-uncased_clinical-ner"
+
+TEST_WITH_METRICS = modules_are_available(["seqeval"])
+if TEST_WITH_METRICS:
+    from medkit.text.metrics.ner import SeqEvalMetricsComputer  # noqa: E402
 
 
 # Creating a tiny model with the original vocabulary
@@ -99,6 +104,47 @@ def test_trainer_default(train_data, eval_data, tmp_path):
     assert log_history[0]["eval"]["loss"] > log_history[-1]["eval"]["loss"]
     eval_item = next(iter(trainer.eval_dataloader))
     assert list(eval_item["input_ids"].size()) == [1, _TOKENIZER_MAX_LENGTH]
+
+    # [FIX] remove model to prevent writing error (cache-pytest)
+    shutil.rmtree(output_dir)
+
+
+@pytest.mark.skipif(not TEST_WITH_METRICS, reason="seqeval is not available")
+def test_trainer_with_seqeval(train_data, eval_data, tmp_path):
+    matcher = HFEntityMatcher.make_trainable(
+        model_name_or_path=tmp_path / "tiny_bert",
+        labels=["problem", "treatment", "test"],
+        tagging_scheme="iob2",
+        tokenizer_max_length=_TOKENIZER_MAX_LENGTH,
+    )
+    output_dir = tmp_path / "trained_model_metrics"
+    config = TrainerConfig(
+        output_dir=output_dir,
+        batch_size=1,
+        learning_rate=5e-4,
+        nb_training_epochs=1,
+        seed=0,
+    )
+
+    # define a metrics computer with seq eval
+    metrics_computer = SeqEvalMetricsComputer(
+        id_to_label=matcher.id_to_label, tagging_scheme=matcher.tagging_scheme
+    )
+    trainer = Trainer(
+        component=matcher,
+        config=config,
+        train_data=train_data,
+        eval_data=eval_data,
+        metrics_computer=metrics_computer,
+    )
+
+    log_history = trainer.train()
+    assert len(log_history) == config.nb_training_epochs
+
+    # check key metrics
+    assert "overall_precision" in log_history[0]["eval"]
+    assert "overall_acc" in log_history[0]["eval"]
+    assert "problem_precision" in log_history[0]["eval"]
 
     # [FIX] remove model to prevent writing error (cache-pytest)
     shutil.rmtree(output_dir)

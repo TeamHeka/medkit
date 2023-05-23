@@ -359,3 +359,80 @@ dependencies.
 :::{note}
 For more info about this module, refer to {mod}`~.text.relations.syntactic_relation_extractor`.
 :::
+
+# Metrics
+
+This module provides components to evaluate annotations as well as some implementations of {class}`~.training.utils.MetricsComputer` to monitor the training of components in medkit.
+
+:::{note}
+For more details about public APIs, refer to {mod}`~.text.metrics`
+:::
+## NER Evaluation
+
+Medkit uses [seqeval](https://github.com/chakki-works/seqeval) as backend of evaluation.
+
+:::{important} 
+This module needs additional dependencies that can be installed with `pip install medkit-lib[metrics-ner]` 
+:::
+
+### Entity detection
+
+An example with perfect match:
+- The document has two entities: PER and GPE.
+- An operation has detected both entities
+
+```
+from medkit.core.text import TextDocument, Entity, Span
+from medkit.text.metrics.ner import SeqEvalEvaluator
+
+document = TextDocument("Marie lives in Paris", 
+                        anns = [Entity(label="PER",spans=[Span(0,5)],text="Marie"),
+                                Entity(label="GPE",spans=[Span(15,20)],text="Paris")])
+
+pred_ents = [Entity(label="PER",spans=[Span(0,5)],text="Marie"),
+             Entity(label="GPE",spans=[Span(15,20)],text="Paris")]
+
+# define a evaluator using `iob2` as tagging scheme
+evaluator = SeqEvalEvaluator(tagging_scheme="iob2")
+metrics = evaluator.compute(documents=[document], predicted_entities=[pred_ents])
+assert metrics["overall_precision"] == 1.0
+print(metrics)
+```
+```
+{'overall_precision': 1.0, 'overall_recall': 1.0, 'overall_f1-score': 1.0, 'overall_support': 2, 'overall_acc': 1.0, 'GPE_precision': 1.0, 'GPE_recall': 1.0, 'GPE_f1-score': 1.0, 'GPE_support': 1, 'PER_precision': 1.0, 'PER_recall': 1.0, 'PER_f1-score': 1.0, 'PER_support': 1}
+```
+:::{note}
+For more details about public APIs, refer to {class}`~.text.metrics.ner.SeqEvalEvaluator`
+:::
+
+### Using for training of NER components
+
+For example, a trainable component detects PER and GPE entities using `iob2` as tagging scheme. The {class}`~.training.Trainer` may compute metrics during its training/evaluation loop.
+
+```
+from medkit.text.metrics.ner import SeqEvalMetricsComputer
+from medkit.training import Trainer
+
+seqeval_mc = SeqEvalMetricsComputer(
+    id_to_label={'O': 0, 'B-PER': 1, 'I-PER': 2, 'B-GPE': 3, 'I-GPE': 4},
+    tagging_scheme="iob2"
+)
+
+trainer = Trainer(
+    ...
+    metrics_computer=seqeval_mc
+    ...
+)
+```
+
+:::{note}
+For more details about public APIs, refer to {class}`~.text.metrics.ner.SeqEvalMetricsComputer`. About training, refer to [training api](../api/training.md)
+:::
+
+:::{hint}
+There is an utility to convert labels to NER tags if required, {mod}`~.text.ner.hf_tokenization_utils`. 
+:::
+
+:::{seealso}
+You may refer to this [tutorial](../examples/finetuning_hf_model.md) to see how this works in a fine-tuning example.
+:::

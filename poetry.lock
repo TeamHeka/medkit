@@ -5685,6 +5685,21 @@ files = [
 ]
 
 [[package]]
+name = "seqeval"
+version = "1.2.2"
+description = "Testing framework for sequence labeling"
+category = "main"
+optional = true
+python-versions = "*"
+files = [
+    {file = "seqeval-1.2.2.tar.gz", hash = "sha256:f28e97c3ab96d6fcd32b648f6438ff2e09cfba87f05939da9b3970713ec56e6f"},
+]
+
+[package.dependencies]
+numpy = ">=1.14.0"
+scikit-learn = ">=0.21.3"
+
+[[package]]
 name = "setuptools"
 version = "67.4.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -7581,7 +7596,8 @@ hf-entity-matcher = ["torch", "transformers"]
 hf-transcriber-function = ["torchaudio", "transformers"]
 hf-translator = ["sacremoses", "sentencepiece", "torch", "transformers"]
 hf-utils = ["transformers"]
-optional = ["PyRuSH", "feather-format", "packaging", "pandas", "pandas", "quickumls", "resampy", "sacremoses", "sentencepiece", "spacy", "torch", "torchaudio", "transformers", "webrtcvad"]
+metrics-ner = ["seqeval", "torch", "transformers"]
+optional = ["PyRuSH", "feather-format", "packaging", "pandas", "pandas", "quickumls", "resampy", "sacremoses", "sentencepiece", "seqeval", "spacy", "torch", "torchaudio", "transformers", "webrtcvad"]
 pa-speaker-detector = ["pyannote-audio", "torch"]
 quick-umls = ["packaging", "quickumls"]
 resampler = ["resampy"]
@@ -7596,4 +7612,4 @@ webrtc-voice-detector = ["webrtcvad"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7.1, <4.0"
-content-hash = "b493696ed4b5cf239c57ce523a7da109cf021f236fceecbe41eb39ce1a075d30"
+content-hash = "67fa49977ad379946ec88571b135933fb1ea892f6c7cf8b613d8b91dff399bb0"
