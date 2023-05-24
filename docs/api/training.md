@@ -12,11 +12,13 @@ You may install additional dependencies using
 For more details about all sub-packages, refer to {mod}`medkit.training`.
 :::
 
-## Be `trainable` in medkit
+## Be trainable in medkit
 
 A component can implement the {class}`~.training.TrainableComponent` protocol to be trainable in medkit. With this protocol, you can define how to preprocess data, call the model and define the optimizer. Then, the {class}`~.training.Trainer` will use these methods inside the training / evaluation loop. 
 
 A trainable component could define how to train a model from scratch or fine-tune a pretrained model. As a first implementation, medkit includes {class}`~.text.ner.hf_entity_matcher_trainable.HFEntityMatcherTrainable`, a trainable version of {class}`~.text.ner.hf_entity_matcher.HFEntityMatcher`. As you can see, an operation can contains a trainable component and expose it using the `make_trainable()` method. 
+
+You may see this [tutorial](../examples/finetuning_hf_model.md) with a fine-tune case for entity detection.
 
 
 :::{important}
@@ -30,38 +32,67 @@ For more details, refer to {mod}`medkit.training.trainable_component` module.
 
 ## Trainer
 
-The {class}`~.training.Trainer` aims to train any component implementing the {class}`~.training.TrainableComponent` protocol.
+The {class}`~.training.Trainer` aims to train any component implementing the {class}`~.training.TrainableComponent` protocol. For each step involving data transformation, the Trainer calls the corresponding methods in the TrainableComponent. 
 
-Therefore, it is possible to customise it using the {class}`~.training.TrainerConfig`.
+For example, if you want to train a SegmentClassifier, you can define how **preprocess** the {class}`~.core.text.Segment` with its {class}`~.core.Attribute` to get a dictionary of **tensors** for the model. Under the hood, the training loop will call `SegmentClassifier.preprocess()` + `SegmentClassifier.collate()`   inside the  `training_dataloader` to transform the medkit segments into a Batch of tensors. 
 
-The {class}`~.training.Trainer` contains two optional parameters `metrics_computer`
-and `lr_scheduler_builder` to define the way metrics are calculated and how the
-learning rate is updated.
+The training loop simplified:
 
+```{code-block} python
+for input_data in training_dataloader:
+    input_data = input_data.to_device(device)
+    output_data, loss = trainableComponent.forward(input_data)
+    loss.backward()
+    optimizer.step() # trainableComponent.create_optimizer()
+```
+The {class}`~.training.TrainerConfig` allows you to define learning parameters such as learning rate, number of epochs, etc.
 
 :::{note}
 For more details, refer to {mod}`medkit.training.trainer` module.
 :::
 
-## Utils
+## Metrics and learning rate scheduler
 
-medkit provides utils for managing batch data and metrics computing for training.
+You can customise the training loop with these optional parameters:
 
-:::{note}
-For more details, refer to {mod}`medkit.training.utils` module.
-:::
+### Metrics Computer
+
+Add custom metrics in training. You can define how **prepare a batch** for the metric and how to **compute** the metric. For more details, refer to {class}`medkit.training.MetricsComputer` protocol.
+
+
+```{tip}
+For the moment, medkit includes {class}`~.text.metrics.ner.SeqEvalMetricsComputer` for entity detection. This is still in development, you can integrate more metrics depending on your task/modality.
+```
+
+### Learning rates scheduler**
+
+Define how to adjust learning rate. If you use PyTorch models, you can use a method from [`torch.optim.lr_scheduler`](https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate)
+
+Example, you can update the learning rate each 5 optimization steps: 
+
+```python
+import torch 
+
+trainer = Trainer(
+    ..., lr_scheduler_builder=lambda optimizer: torch.optim.lr_scheduler.StepLR(optimizer, step_size=5)
+)
+```
+
+If you use transformers models, you may refer to [`get_schedules`](https://huggingface.co/docs/transformers/main_classes/optimizer_schedules#transformers.get_scheduler) method.
 
 ## Callbacks
 
-medkit provides a set of callbacks that can be used if you want to do some
-stuff like logging information.
+medkit provides a set of callbacks that can be used if you want to do some stuff like logging information.
 
-For using these callbacks, you need to implement a class derived from
-{class}`~.training.TrainerCallback`.
+For using these callbacks, you need to implement a class derived from {class}`~.training.TrainerCallback`.
 
 If you do not provide your own one to the {class}`~.training.Trainer`, it will
 use the {class}`~.training.DefaultPrinterCallback`.
 
 :::{note}
 For more details, refer to {mod}`medkit.training.callbacks` module.
+:::
+
+:::{note}
+This module is under development, in future versions medkit could support more powerful callbacks. 
 :::
