@@ -16,6 +16,17 @@ For more details about all sub-packages, refer to {mod}`medkit.training`.
 
 A component can implement the {class}`~.training.TrainableComponent` protocol to be trainable in medkit. With this protocol, you can define how to preprocess data, call the model and define the optimizer. Then, the {class}`~.training.Trainer` will use these methods inside the training / evaluation loop. 
 
+The following table explains who makes the calls and where they make them:  
+
+| Who                | Where             | A TrainableComponent                                                                                     |
+| ------------------ | ----------------- | -------------------------------------------------------------------------------------------------------- |
+| TrainableComponent | Initialization    | **load** : load/initialize modules to be trained                                                         |
+| Trainer            | Initialization    | **create_optimizer** : define an optimizer for the training/evalution loop                               |
+|                    | Data loading      | **preproces**: transform medkit anns to input data <br>**collate**: creates a BatchData using input data |
+|                    | Forward step      | **forward**: call internal model, return loss and model output                                           |
+|                    | Saving checkpoint | **save**: save trained modules                                                                           |
+
+
 A trainable component could define how to train a model from scratch or fine-tune a pretrained model. As a first implementation, medkit includes {class}`~.text.ner.hf_entity_matcher_trainable.HFEntityMatcherTrainable`, a trainable version of {class}`~.text.ner.hf_entity_matcher.HFEntityMatcher`. As you can see, an operation can contains a trainable component and expose it using the `make_trainable()` method. 
 
 You may see this [tutorial](../examples/finetuning_hf_model.md) with a fine-tune case for entity detection.
@@ -43,32 +54,44 @@ for input_data in training_dataloader:
     input_data = input_data.to_device(device)
     output_data, loss = trainableComponent.forward(input_data)
     loss.backward()
-    optimizer.step() # trainableComponent.create_optimizer()
+    optimizer.step()
+
+    # if metrics_computer is defined
+    data_for_metrics.append(metrics_computer.prepare_batch(input_data,output_data))
+    ... 
+
+# compute metrics 
+metrics_computer.compute(data_for_metrics)    
 ```
-The {class}`~.training.TrainerConfig` allows you to define learning parameters such as learning rate, number of epochs, etc.
+
+### History 
+
+Once the trainer has been configured, you can start the training using `trainer.train()`. The method returns a dictionary with the metrics during training and evaluation by epoch. 
 
 :::{note}
 For more details, refer to {mod}`medkit.training.trainer` module.
 :::
 
-## Metrics and learning rate scheduler
+## Custom training
 
-You can customise the training loop with these optional parameters:
+### Hyperparameters
+
+The {class}`~.training.TrainerConfig` allows you to define learning parameters such as learning rate, number of epochs, etc.
 
 ### Metrics Computer
 
-Add custom metrics in training. You can define how **prepare a batch** for the metric and how to **compute** the metric. For more details, refer to {class}`medkit.training.MetricsComputer` protocol.
+You can add custom metrics in training. You can define how **prepare a batch** for the metric and how to **compute** the metric. For more details, refer to {class}`medkit.training.MetricsComputer` protocol.
 
 
 ```{tip}
 For the moment, medkit includes {class}`~.text.metrics.ner.SeqEvalMetricsComputer` for entity detection. This is still in development, you can integrate more metrics depending on your task/modality.
 ```
 
-### Learning rates scheduler**
+### Learning rate scheduler
 
-Define how to adjust learning rate. If you use PyTorch models, you can use a method from [`torch.optim.lr_scheduler`](https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate)
+You can define how to adjust learning rate. If you use PyTorch models, you can use a method from [`torch.optim.lr_scheduler`](https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate)
 
-Example, you can update the learning rate each 5 optimization steps: 
+For example, you can update the learning rate each 5 optimization steps: 
 
 ```python
 import torch 
@@ -78,7 +101,7 @@ trainer = Trainer(
 )
 ```
 
-If you use transformers models, you may refer to [`get_schedules`](https://huggingface.co/docs/transformers/main_classes/optimizer_schedules#transformers.get_scheduler) method.
+If you use transformers models, you may refer to [`get_scheduler`](https://huggingface.co/docs/transformers/main_classes/optimizer_schedules#transformers.get_scheduler) method.
 
 ## Callbacks
 
