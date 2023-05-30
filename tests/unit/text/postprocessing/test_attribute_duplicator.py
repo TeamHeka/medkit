@@ -3,11 +3,8 @@ from intervaltree import IntervalTree
 
 from medkit.core import Attribute, ProvTracer
 from medkit.core.text import Segment, TextDocument, span_utils
-from medkit.text.postprocessing import (
-    AttributeDuplicator,
-    compute_nested_segments,
-    create_segments_tree,
-)
+from medkit.text.postprocessing import AttributeDuplicator, compute_nested_segments
+from medkit.text.postprocessing.alignment_utils import _create_segments_tree
 
 
 def _extract_segment(segment, ranges, label, uid=None):
@@ -53,9 +50,9 @@ def test_compute_nested_segments(doc):
     assert nested[1][1][0].uid == "target_1"
 
 
-def test_create_segments_tree(doc):
+def test__create_segments_tree(doc):
     targets = doc.anns.get(label="disease")
-    tree = create_segments_tree(target_segments=targets)
+    tree = _create_segments_tree(target_segments=targets)
     assert isinstance(tree, IntervalTree)
     assert len(tree.overlap(17, 37)) == 1
     assert len(tree.overlap(63, 73)) == 1
