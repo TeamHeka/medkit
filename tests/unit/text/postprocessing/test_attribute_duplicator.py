@@ -1,22 +1,25 @@
+import pytest
+from intervaltree import IntervalTree
+
 from medkit.core import Attribute, ProvTracer
-from medkit.core.text import Segment, TextDocument
-from medkit.core.text import span_utils
-from medkit.text.postprocessing import AttributeDuplicator
+from medkit.core.text import Segment, TextDocument, span_utils
+from medkit.text.postprocessing import AttributeDuplicator, compute_nested_segments
+from medkit.text.postprocessing.alignment_utils import _create_segments_tree
 
 
-def _extract_segment(segment, ranges, label):
+def _extract_segment(segment, ranges, label, uid=None):
     text, spans = span_utils.extract(segment.text, segment.spans, ranges)
-    return Segment(label=label, spans=spans, text=text)
+    return Segment(label=label, spans=spans, text=text, uid=uid)
 
 
-def _get_doc():
-    text = (
+@pytest.fixture()
+def doc():
+    doc = TextDocument(
         """Sa mère présente douleurs abdominales mais le patient n'a pas une maladie."""
     )
-    doc = TextDocument(text)
     sentence = _extract_segment(doc.raw_segment, [(0, 73)], "sentence")
-    syntagme_0 = _extract_segment(sentence, [(0, 37)], "syntagme")
-    syntagme_1 = _extract_segment(sentence, [(37, 73)], "syntagme")
+    syntagme_0 = _extract_segment(sentence, [(0, 37)], "syntagme", uid="syntagme_0")
+    syntagme_1 = _extract_segment(sentence, [(37, 73)], "syntagme", uid="syntagme_1")
     # add is_family in sentence
     sentence.attrs.add(Attribute(label="is_family", value=True))
     sentence.attrs.add(Attribute(label="family_trigger", value="Mother"))
@@ -26,16 +29,37 @@ def _get_doc():
     syntagme_1.attrs.add(Attribute(label="is_negated", value=True))
 
     # create entities (target)
-    target_0 = _extract_segment(doc.raw_segment, [(17, 37)], "disease")
-    target_1 = _extract_segment(doc.raw_segment, [(66, 73)], "disease")
+    target_0 = _extract_segment(doc.raw_segment, [(17, 37)], "disease", uid="target_0")
+    target_1 = _extract_segment(doc.raw_segment, [(66, 73)], "disease", uid="target_1")
 
     for ann in [sentence, syntagme_0, syntagme_1, target_0, target_1]:
         doc.anns.add(ann)
     return doc
 
 
-def test_default_attribute_duplicator():
-    doc = _get_doc()
+def test_compute_nested_segments(doc):
+    # align syntagme with entities
+    source = doc.anns.get(label="syntagme")
+    targets = doc.anns.get(label="disease")
+    nested = compute_nested_segments(source_segments=source, target_segments=targets)
+    assert len(nested) == 2
+    assert len(nested[0][1]) == 1
+    assert nested[0][0].uid == "syntagme_0"
+    assert nested[0][1][0].uid == "target_0"
+    assert nested[1][0].uid == "syntagme_1"
+    assert nested[1][1][0].uid == "target_1"
+
+
+def test__create_segments_tree(doc):
+    targets = doc.anns.get(label="disease")
+    tree = _create_segments_tree(target_segments=targets)
+    assert isinstance(tree, IntervalTree)
+    assert len(tree.overlap(17, 37)) == 1
+    assert len(tree.overlap(63, 73)) == 1
+    assert len(tree.overlap(0, 100)) == 2
+
+
+def test_default_attribute_duplicator(doc):
     sentences = doc.anns.get(label="sentence")
     syntagmes = doc.anns.get(label="syntagme")
     targets = doc.anns.get(label="disease")
@@ -72,8 +96,7 @@ def test_default_attribute_duplicator():
     assert family.value
 
 
-def test_duplicate_a_list_of_attrs_labels():
-    doc = _get_doc()
+def test_duplicate_a_list_of_attrs_labels(doc):
     sentences = doc.anns.get(label="sentence")
     targets = doc.anns.get(label="disease")
 
@@ -100,8 +123,7 @@ def test_duplicate_a_list_of_attrs_labels():
         assert family_trigger.uid != attr_src_family_trigger.uid
 
 
-def test_provenance():
-    doc = _get_doc()
+def test_provenance(doc):
     sentences = doc.anns.get(label="sentence")
     targets = doc.anns.get(label="disease")
 

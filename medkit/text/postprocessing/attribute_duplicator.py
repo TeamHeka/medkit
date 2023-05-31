@@ -1,9 +1,10 @@
 __all__ = ["AttributeDuplicator"]
 
-from typing import List, Optional, Tuple
-from intervaltree import IntervalTree
+from typing import List, Optional
 from medkit.core import Attribute, Operation
-from medkit.core.text import Segment, span_utils
+from medkit.core.text import Segment
+
+from medkit.text.postprocessing import alignment_utils
 
 
 class AttributeDuplicator(Operation):
@@ -42,7 +43,9 @@ class AttributeDuplicator(Operation):
         target_segments:
             List of segments target
         """
-        nested = self._compute_nested_segments(source_segments, target_segments)
+        nested = alignment_utils.compute_nested_segments(
+            source_segments, target_segments
+        )
 
         for parent, children in nested:
             attrs_to_copy = [
@@ -55,38 +58,6 @@ class AttributeDuplicator(Operation):
             for attr in attrs_to_copy:
                 for child in children:
                     self._duplicate_attr(attr=attr, target=child)
-
-    def _compute_nested_segments(
-        self, source_segments: List[Segment], target_segments: List[Segment]
-    ) -> List[Tuple[Segment, List[Segment]]]:
-        tree = IntervalTree()
-        for segment in target_segments:
-            normalized_spans = span_utils.normalize_spans(segment.spans)
-
-            if not normalized_spans:
-                continue
-
-            tree.addi(
-                normalized_spans[0].start,
-                normalized_spans[-1].end,
-                data=segment,
-            )
-        return self._find_nested(tree, source_segments)
-
-    def _find_nested(
-        self, tree: IntervalTree, source_segments: List[Segment]
-    ) -> List[Tuple[Segment, List[Segment]]]:
-        nested = []
-        for parent in source_segments:
-            normalized_spans = span_utils.normalize_spans(parent.spans)
-
-            if not normalized_spans:
-                continue
-
-            start, end = normalized_spans[0].start, normalized_spans[-1].end
-            children = [child.data for child in tree.overlap(start, end)]
-            nested.append((parent, children))
-        return nested
 
     def _duplicate_attr(self, attr: Attribute, target: Segment):
         target_attr = attr.copy()
