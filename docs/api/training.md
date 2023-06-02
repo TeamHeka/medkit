@@ -26,6 +26,7 @@ The following table explains who makes the calls and where they make them:
 |                    | Forward step      | **forward**: call internal model, return loss and model output                                           |
 |                    | Saving checkpoint | **save**: save trained modules                                                                           |
 
+### A trainable component to detect entities
 
 A trainable component could define how to train a model from scratch or fine-tune a pretrained model. As a first implementation, medkit includes {class}`~.text.ner.hf_entity_matcher_trainable.HFEntityMatcherTrainable`, a trainable version of {class}`~.text.ner.hf_entity_matcher.HFEntityMatcher`. As you can see, an operation can contains a trainable component and expose it using the `make_trainable()` method. 
 
@@ -45,28 +46,50 @@ For more details, refer to {mod}`medkit.training.trainable_component` module.
 
 The {class}`~.training.Trainer` aims to train any component implementing the {class}`~.training.TrainableComponent` protocol. For each step involving data transformation, the Trainer calls the corresponding methods in the TrainableComponent. 
 
-For example, if you want to train a SegmentClassifier, you can define how **preprocess** the {class}`~.core.text.Segment` with its {class}`~.core.Attribute` to get a dictionary of **tensors** for the model. Under the hood, the training loop will call `SegmentClassifier.preprocess()` + `SegmentClassifier.collate()`   inside the  `training_dataloader` to transform the medkit segments into a Batch of tensors. 
+For example, if you want to train a SegmentClassifier, you can define how to **preprocess** the {class}`~.core.text.Segment` with its {class}`~.core.Attribute` to get a dictionary of **tensors** for the model. Under the hood, the training loop will call `SegmentClassifier.preprocess()` + `SegmentClassifier.collate()`   inside the  `training_dataloader` to transform the medkit segments into a Batch of tensors. 
 
-The training loop simplified:
+``` python
+# 1. Initialize the trainable component i.e. a segment_classifier
+segment_classifier = SegmentClassifier(...)
+
+# 2. Load/prepare the set of medkit anns (segments)
+# 3. Define hyperparameters for the trainer
+trainer_config = TrainerConfig(...)
+
+trainer = Trainer(
+    component=segment_classifier,  # trainable component
+    config=trainer_config,  # configuration
+    train_data=train_dataset,  # training documents
+    eval_data=val_dataset,  # eval documents
+)
+```
+### History 
+
+Once the trainer has been configured, you can start the training using `trainer.train()`. The method returns a dictionary with the metrics during training and evaluation by epoch. 
+
+``` python
+history = trainer.train()
+# ...
+# log main information, metrics and info about the checkpoint
+```
+
+The trainer controls the calling of methods and optional modules, here a simplified version of the training loop.
 
 ```{code-block} python
 for input_data in training_dataloader:
+    callback_on_step()
     input_data = input_data.to_device(device)
     output_data, loss = trainableComponent.forward(input_data)
     loss.backward()
     optimizer.step()
 
     # if metrics_computer is defined
-    data_for_metrics.append(metrics_computer.prepare_batch(input_data,output_data))
+    data_for_metrics.extend(metrics_computer.prepare_batch(input_data,output_data))
     ... 
 
 # compute metrics 
 metrics_computer.compute(data_for_metrics)    
 ```
-
-### History 
-
-Once the trainer has been configured, you can start the training using `trainer.train()`. The method returns a dictionary with the metrics during training and evaluation by epoch. 
 
 :::{note}
 For more details, refer to {mod}`medkit.training.trainer` module.
