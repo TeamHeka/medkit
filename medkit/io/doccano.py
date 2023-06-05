@@ -1,17 +1,14 @@
 import abc
 import dataclasses
+
 from typing import Any, Dict, List, Tuple
 from typing_extensions import Self
+
 from medkit.core.attribute import Attribute
+from medkit.core.text import Entity, Relation, Segment, Span, TextDocument
 
-from medkit.core.text import Entity, Relation, Span, TextDocument, Segment
-from medkit.core.text.span_utils import normalize_spans
 
-DEFAULT_SEQUENCE_SOURCE_LABEL = "DOCCANO_SOURCE"
-DEFAULT_SEQUENCE_LABEL = "DOCCANO_SEQUENCE"
-DEFAULT_DOCCANO_LABEL = "DOCCANO_LABEL"
-
-DEFAULT_COLUMN_DATA = "text"
+DEFAULT_COLUMN_TEXT = "text"
 DEFAULT_COLUMN_LABEL = "label"
 
 
@@ -21,25 +18,6 @@ class DoccanoEntity:
     start_offset: int
     end_offset: int
     label: str
-
-    @classmethod
-    def from_medkit(cls, entity: Entity) -> Self:
-        uid = entity.metadata.get("doccano_id", entity.uid)
-        spans = normalize_spans(entity.spans)
-        return cls(
-            id=uid,
-            label=entity.label,
-            start_offset=spans[0].start,
-            end_offset=spans[-1].end,
-        )
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dict(
-            id=self.id,
-            label=self.label,
-            start_offset=self.start_offset,
-            end_offset=self.end_offset,
-        )
 
 
 @dataclasses.dataclass()
@@ -62,7 +40,7 @@ class DoccanoDoc(abc.ABC):
     text: str
 
     @abc.abstractmethod
-    def from_dict(cls, doc_line: Dict[str, Any]) -> Self:
+    def from_dict(cls, doc_line: Dict[str, Any], column_text: str, **kwargs) -> Self:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -78,9 +56,9 @@ class DoccanoDocRelationExtraction(DoccanoDoc):
     metadata: Dict[str, Any]
 
     @classmethod
-    def from_dict(cls, doc_line: Dict[str, Any]) -> Self:
+    def from_dict(cls, doc_line: Dict[str, Any], column_text: str) -> Self:
         id = doc_line.get("id", None)
-        text = doc_line[DEFAULT_COLUMN_DATA]
+        text = doc_line[column_text]
         metadata = doc_line.get("metadata", {})
         entities = dict()
         relations = dict()
@@ -131,10 +109,12 @@ class DoccanoDocSeqLabeling(DoccanoDoc):
     metadata: Dict[str, Any]
 
     @classmethod
-    def from_dict(cls, doc_line: Dict[str, Any]) -> Self:
-        text = doc_line[DEFAULT_COLUMN_DATA]
+    def from_dict(
+        cls, doc_line: Dict[str, Any], column_text: str, column_label: str
+    ) -> Self:
+        text = doc_line[column_text]
         metadata = doc_line.get("metadata", {})
-        entities = [DoccanoEntityTuple(*ann) for ann in doc_line[DEFAULT_COLUMN_LABEL]]
+        entities = [DoccanoEntityTuple(*ann) for ann in doc_line[column_label]]
         return cls(text=text, label=entities, metadata=metadata)
 
     def to_medkit(self) -> TextDocument:
@@ -159,22 +139,28 @@ class DoccanoDocSeq2Seq(DoccanoDoc):
     sequences: List[str]
 
     @classmethod
-    def from_dict(cls, doc_line: Dict[str, Any]) -> Self:
-        text = doc_line[DEFAULT_COLUMN_DATA]
-        sequences = [seq for seq in doc_line[DEFAULT_COLUMN_LABEL]]
+    def from_dict(
+        cls, doc_line: Dict[str, Any], column_text: str, column_label: str
+    ) -> Self:
+        text = doc_line[column_text]
+        sequences = [seq for seq in doc_line[column_label]]
         return cls(text=text, sequences=sequences)
 
-    def to_medkit(self) -> Tuple[Segment, List[Segment]]:
+    def to_medkit(
+        self,
+        source_label: str,
+        sequence_label: str,
+    ) -> Tuple[Segment, List[Segment]]:
         source = Segment(
             text=self.text,
             spans=[Span(0, len(self.text))],
-            label=DEFAULT_SEQUENCE_SOURCE_LABEL,
+            label=source_label,
         )
         sequences = [
             Segment(
                 text=seq_text,
                 spans=[Span(0, len(seq_text))],
-                label=DEFAULT_SEQUENCE_LABEL,
+                label=sequence_label,
             )
             for seq_text in self.sequences
         ]
@@ -186,13 +172,13 @@ class DoccanoDocTextClassification(DoccanoDoc):
     label: str
 
     @classmethod
-    def from_dict(cls, doc_line: Dict[str, Any]) -> Self:
-        text = doc_line[DEFAULT_COLUMN_DATA]
-        return cls(text=text, label=doc_line[DEFAULT_COLUMN_LABEL][0])
+    def from_dict(
+        cls, doc_line: Dict[str, Any], column_text: str, column_label: str
+    ) -> Self:
+        text = doc_line[column_text]
+        return cls(text=text, label=doc_line[column_label][0])
 
-    def to_medkit(self) -> TextDocument:
+    def to_medkit(self, output_label: str) -> TextDocument:
         doc = TextDocument(text=self.text)
-        doc.raw_segment.attrs.add(
-            Attribute(label=DEFAULT_DOCCANO_LABEL, value=self.label)
-        )
+        doc.raw_segment.attrs.add(Attribute(label=output_label, value=self.label))
         return doc
