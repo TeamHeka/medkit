@@ -19,7 +19,7 @@ from medkit.core.id import generate_id
 
 @dataclasses.dataclass(init=False)
 class Segment(dict_conv.SubclassMapping):
-    """Audio segment referencing part of an {class}`~medkit.core.audio.AudioDocument`.
+    """Audio segment referencing part of an :class:`~.core.audio.AudioDocument`.
 
     Attributes
     ----------
