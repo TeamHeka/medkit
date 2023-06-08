@@ -88,18 +88,17 @@ class DuplicateFinder(Operation):
 
     When a duplicated chunk of text is found, a segment is created on the newest
     document covering the span that is duplicated. A
-    {class}`~.DuplicationSourceAttribute` having `is_duplicate` as label and
-    `True` as value is attached to the segment. It can later be propagated to
-    the entities created from the duplicate segments.
+    :class:`~.DuplicationAttribute` having `"is_duplicate"` as label and `True`
+    as value is attached to the segment. It can later be propagated to the
+    entities created from the duplicate segments.
 
     The attribute also holds the id of the source document from which the text
     was copied, the spans of the text in the source document, and optionally the
     date of the source document if provided.
 
-    Optionally, segments can also be created for non-duplicate zones so it is
-    afterward easier to process only those parts of the documents. For these
-    segments, the attribute value is `False` and the source, spans and date
-    fields are `None`.
+    Optionally, segments can also be created for non-duplicate zones to make it
+    easier to process only those parts of the documents. For these segments, the
+    attribute value is `False` and the source, spans and date fields are `None`.
 
     NB: better performance may be achieved by installing the `ncls` python
     package, which will then be used by `duptextfinder` library.
@@ -125,13 +124,13 @@ class DuplicateFinder(Operation):
         output_label:
             Label of created segments
         segments_to_output:
-            Type of segments to create: only duplicate segments ("dup"), only
-            non-duplicate segments "nondup", or both ("both")
+            Type of segments to create: only duplicate segments (`"dup"`), only
+            non-duplicate segments (`"nondup"`), or both (`"both"`)
         min_duplicate_length:
             Minimum length of duplicated segments, in characters (shorter
             segments will be discarded)
         fingerprint_type:
-            Base unit to use for fingerprinting (either chars of words)
+            Base unit to use for fingerprinting (either `"char"` or `"word"`)
         fingerprint_length:
             Number of chars or words in each fingerprint. If `fingerprint_type`
             is set to `"char"`, this should be the same value as
@@ -139,13 +138,11 @@ class DuplicateFinder(Operation):
             this should be around the average word size multiplied by
             `min_duplicate_length`
         date_metadata_key:
-            Key to use to retrieve the date of each document for their metadata
-            dicts.
-
-            When provided, this is used to determine which document should be
-            the source of a duplicate (the older) and which document should be
-            the recipient (the newer). If None, the order of the documents in
-            the collection will be used.
+            Key to use to retrieve the date of each document from their metadata
+            dicts. When provided, this is used to determine which document
+            should be the source of a duplicate (the older) and which document
+            should be the recipient (the newer). If None, the order of the
+            documents in the collection will be used.
         case_sensitive:
             Whether duplication detection should be case-sensitive or not
         allow_multiline:
@@ -176,8 +173,8 @@ class DuplicateFinder(Operation):
         """
         Find duplicates in each collection of documents
 
-        For each duplicate found, a `Segment` object with a
-        `DuplicationAttribute' will be created and attached to the document that
+        For each duplicate found, a :class:`~.core.text.Segment` object with a
+        :class:`~.DuplicationAttribute` will be created and attached to the document that
         is the recipient of the duplication (ie not the source document).
         """
 
