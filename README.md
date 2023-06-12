@@ -8,7 +8,7 @@ This python library aims at:
 
 ## Getting started
 
-To get started with medkit, follow the installation instructions described in our [documentation website](https://heka.gitlabpages.inria.fr/medkit/index.html).
+To get started with medkit, follow the installation instructions described in our [documentation website](https://medkit.readthedocs.io/en/latest/).
 This website also contains tutorials and examples that you can use for starting with medkit. 
 
 ## Contributing
