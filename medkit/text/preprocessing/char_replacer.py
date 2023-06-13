@@ -1,25 +1,21 @@
 from __future__ import annotations
 
-__all__ = ["Normalizer", "NormalizerRule"]
+__all__ = ["CharReplacer"]
 
-import re
-from typing import List, NamedTuple, Optional, Tuple
+from typing import List, Optional, Tuple
 
 from medkit.core.operation import Operation
 from medkit.core.text import Segment, span_utils
 
-
-class NormalizerRule(NamedTuple):
-    pattern_to_replace: str
-    new_text: str
+from medkit.text.preprocessing.char_rules import ALL_CHAR_RULES
 
 
-class Normalizer(Operation):
+class CharReplacer(Operation):
     """
-    Generic normalizer to be used as pre-processing module
+    Generic character replacer to be used as pre-processing module
 
-    This module is a non-destructive module allowing to replace selected characters
-    with the wanted characters.
+    This module is a non-destructive module allowing to replace selected 1-char string
+    with the wanted n-chars strings.
     It respects the span modification by creating a new text-bound annotation containing
     the span modification information from input text.
     """
@@ -37,7 +33,7 @@ class Normalizer(Operation):
         output_label
             The output label of the created annotations
         rules
-            The list of replacement rules
+            The list of replacement rules. Default: ALL_CHAR_RULES
         name:
             Name describing the pre-processing module (defaults to the class name)
         uid
@@ -50,13 +46,12 @@ class Normalizer(Operation):
 
         self.output_label = output_label
         if rules is None:
-            rules = []
-        self.rules = [NormalizerRule(*rule) for rule in rules]
+            rules = ALL_CHAR_RULES
+        self.rules = {key: value for (key, value) in rules}
 
-        regex_rules = ["(" + rule.pattern_to_replace + ")" for rule in self.rules]
-        regex_rule = r"|".join(regex_rules)
-
-        self._pattern = re.compile(regex_rule)
+        assert not any(
+            len(key) != 1 for key in self.rules.keys()
+        ), "CharReplacer can only contain rules that replace 1-char string."
 
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -66,29 +61,28 @@ class Normalizer(Operation):
         Parameters
         ----------
         segments
-            List of segments to normalize
+            List of segments to process
 
         Returns
         -------
         List[~medkit.core.text.Segment]:
-            List of normalized segments
+            List of new segments
         """
         return [
-            norm_segment
+            processed_segment
             for segment in segments
-            for norm_segment in self._normalize_segment_text(segment)
+            for processed_segment in self._process_segment_text(segment)
         ]
 
-    def _normalize_segment_text(self, segment: Segment):
+    def _process_segment_text(self, segment: Segment):
         ranges = []
         replacement_texts = []
 
-        for match in self._pattern.finditer(segment.text):
-            ranges.append(match.span())
-            for index in range(len(self.rules)):
-                if match.groups()[index] is not None:
-                    replacement_texts.append(self.rules[index].new_text)
-                    break
+        for ind, c in enumerate(segment.text):
+            nc = self.rules.get(c)
+            if nc is not None:
+                ranges.append((ind, ind + 1))
+                replacement_texts.append(nc)
 
         new_text, new_spans = span_utils.replace(
             text=segment.text,
@@ -97,13 +91,13 @@ class Normalizer(Operation):
             replacement_texts=replacement_texts,
         )
 
-        normalized_text = Segment(
+        processed_text = Segment(
             label=self.output_label, spans=new_spans, text=new_text
         )
 
         if self._prov_tracer is not None:
             self._prov_tracer.add_prov(
-                normalized_text, self.description, source_data_items=[segment]
+                processed_text, self.description, source_data_items=[segment]
             )
 
-        yield normalized_text
+        yield processed_text

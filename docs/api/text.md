@@ -16,11 +16,94 @@ For more details about public API, refer to
 {mod}`medkit.text.preprocessing`.
 :::
 
+If you need to pre-process your document texts for replacing some sub-texts by
+other ones, medkit provides some operations to do that and keep span information.
+
+If you want to use some rule-based operations (like
+{class}`~.text.ner.RegexpMatcher` for example), document texts may need to be
+pre-processed.
+
+For example, concerning the {class}`~.text.ner.RegexpMatcher`:
+
+> When the rule is not sensitive to unicode, we try to convert unicode chars
+> to the closest ascii chars. However, some characters need to be pre-processed
+> before (e.g., `n°` -> `number`). So, if the text lengths are different, we
+> fall back on initial unicode text for detection even if rule is not
+> unicode-sensitive.
+> In this case, a warning is logged for recommending to pre-process data.
+
+### CharReplacer
+
+{class}`~.text.preprocessing.CharReplacer` is a pre-processing operation allowing
+to replace one character by another one.
+It is faster than {class}`~.text.preprocessing.Normalizer` but is limited to
+character replacement and does not support pattern replacement.
+
+For example, if you want to replace some special characters like `+`:
+
+```
+from medkit.core.text import TextDocument
+from medkit.text.preprocessing import CharReplacer
+
+doc = TextDocument(text="Il suit + ou - son traitement,")
+
+rules = [("+", "plus"), ("-", "moins")]
+op = CharReplacer(output_label="preprocessed_text", rules=rules)
+new_segment = op.run([doc.raw_segment])[0]
+print(new_segment.text)
+```
+
+Results:
+* `new_segment.text` : "Il suit plus ou moins son traitement,"
+* `new_segment.spans` : [Span(start=0, end=8),
+            ModifiedSpan(length=4, replaced_spans=[Span(start=8, end=9)]),
+            Span(start=9, end=13),
+            ModifiedSpan(length=5, replaced_spans=[Span(start=13, end=14)]),
+            Span(start=14, end=30)]
+
+medkit also provides some pre-defined rules that you can import
+(cf. {mod}`medkit.text.preprocessing.rules`) and then combine with your own rules.
+
+For example:
+```
+from medkit.text.preprocessing import (
+    CharReplacer,
+    LIGATURE_RULES,
+    SIGN_RULES,
+    SPACE_RULES,
+    DOT_RULES,
+    FRACTION_RULES,
+    QUOTATION_RULES,
+)
+
+rules = (
+    LIGATURE_RULES
+    + SIGN_RULES
+    + SPACE_RULES
+    + DOT_RULES
+    + FRACTION_RULES
+    + QUOTATION_RULES
+    + <my_own_rules>
+)
+
+# same as rules = ALL_RULES + <my_own_rules>
+
+op = CharReplacer(output_label="preprocessed_text", rules=rules)
+```
+
+:::{note}
+If you do not provide rules when initializing char replacer operation, 
+all pre-defined rules (i.e., ALL_RULES) are used. 
+:::
+
+
 ### Normalizer
 
-If you need to pre-process your document texts for replacing some sub-texts by
-other ones, medkit provides a {class}`~.text.preprocessing.Normalizer`
-operation to do that and keep span information.
+The {class}`~.text.preprocessing.Normalizer` operation uses an algorithm based
+on regular expressions for detecting patterns in the text and replace them by
+the new text, and all that with preserving span information.
+So, it may be useful if you need to replace sub-text or text with a context by
+other ones.
 
 For example, if you want to replace `n°` by `numéro`:
 
@@ -42,32 +125,10 @@ Results:
  ModifiedSpan(length=6, replaced_spans=[Span(start=22, end=25)]),
  Span(start=25, end=28)]
 
-
-If you want to use some rule-based operations (like
-{class}`~.text.ner.RegexpMatcher` for example), document texts may need to be
-pre-processed.
-
-For example, concerning the {class}`~.text.ner.RegexpMatcher`:
-
-> When the rule is not sensitive to unicode, we try to convert unicode chars
-> to the closest ascii chars. However, some characters need to be pre-processed
-> before (e.g., `n°` -> `number`). So, if the text lengths are different, we
-> fall back on initial unicode text for detection even if rule is not
-> unicode-sensitive.
-> In this case, a warning is logged for recommending to pre-process data.
-
-For this use-case, medkit provides some pre-defined rules that you can import
-(cf. {mod}`medkit.text.preprocessing`).
-
-For example:
-```
-from medkit.text.preprocessing import LIGATURE_RULES
-```
-
 :::{warning}
 If you have a lot of single characters to change, it is not the optimal way to
-do it for performance reasons. We plan to provide another operation which will
-be faster.
+do it for performance reasons.
+In this case, we recommend to use {class}`~.text.preprocessing.CharReplacer`.
 :::
 
 ### Other pre-processing modules
