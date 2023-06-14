@@ -136,6 +136,32 @@ def test_both():
     assert segs[2].attrs.get(label="is_duplicate")[0].value is False
 
 
+def test_char_fingerprint():
+    """Use char fingerprint type"""
+
+    detector = DuplicateFinder(
+        output_label="duplicate", fingerprint_type="char", min_duplicate_length=10
+    )
+    docs = _get_docs()
+    collection = Collection(text_docs=docs)
+    detector.run([collection])
+
+    # 1st doc has zero duplicates
+    doc_1 = docs[0]
+    dup_segs = doc_1.anns.get(label="duplicate")
+    assert len(dup_segs) == 0
+
+    # 2d doc has 2 duplicates
+    doc_2 = docs[1]
+    dup_segs = doc_2.anns.get(label="duplicate")
+    assert len(dup_segs) == 2
+
+    # 3d doc also has same duplicates as 2d doc
+    doc_3 = docs[2]
+    dup_segs = doc_3.anns.get(label="duplicate")
+    assert len(dup_segs) == 2
+
+
 def test_date():
     """Use date in metadata to order documents"""
 
