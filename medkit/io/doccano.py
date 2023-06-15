@@ -2,13 +2,12 @@ __all__ = ["DoccanoTask", "DoccanoIDEConfig", "DoccanoInputConverter"]
 
 import dataclasses
 import enum
+import json
 import logging
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from zipfile import ZipFile
-
-import jsonlines
 
 from medkit.core import Attribute, OperationDescription, ProvTracer, generate_id
 from medkit.core.text import Entity, Relation, Span, TextDocument
@@ -157,8 +156,10 @@ class DoccanoInputConverter:
             A list of TextDocuments
         """
         documents = []
-        with jsonlines.open(input_file, mode="r") as reader:
-            for doc_line in reader:
+
+        with open(input_file) as fp:
+            for line in fp:
+                doc_line = json.loads(line)
                 doc = self.parse_doc_line(doc_line)
                 documents.append(doc)
         return documents
