@@ -10,7 +10,7 @@ from medkit.text.ner.umls_utils import (
 )
 
 
-_PATH_TO_MR_CONSO_FILE = Path(__file__).parent / "sample_umls_data" / "MRCONSO.RRF"
+_PATH_TO_MR_CONSO_FILE = Path(__file__).parent / "sample_umls_data/2021AB/MRCONSO.RRF"
 
 # fmt: off
 _LOAD_TEST_PARAMS = [
