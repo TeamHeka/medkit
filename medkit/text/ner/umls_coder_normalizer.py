@@ -20,7 +20,7 @@ from medkit.core.text import Entity
 import medkit.core.utils
 from medkit.text.ner.umls_norm_attribute import UMLSNormAttribute
 from medkit.text.ner.umls_utils import (
-    load_umls,
+    load_umls_entries,
     preprocess_term_to_match,
     guess_umls_version,
 )
@@ -320,7 +320,7 @@ class UMLSCoderNormalizer(Operation):
         ]
 
         # get iterator to all UMLS entries
-        entries_iter = load_umls(
+        entries_iter = load_umls_entries(
             self.umls_mrconso_file,
             languages=[self.language],
             show_progress=show_progress,

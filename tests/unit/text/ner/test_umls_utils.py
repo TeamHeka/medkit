@@ -4,7 +4,7 @@ import pytest
 
 from medkit.text.ner.umls_utils import (
     UMLSEntry,
-    load_umls,
+    load_umls_entries,
     preprocess_term_to_match,
     guess_umls_version,
 )
@@ -55,8 +55,8 @@ _LOAD_TEST_PARAMS = [
     "sources,languages,expected_entries",
     _LOAD_TEST_PARAMS,
 )
-def test_load_umls(sources, languages, expected_entries):
-    entries_iter = load_umls(
+def test_load_umls_entries(sources, languages, expected_entries):
+    entries_iter = load_umls_entries(
         _PATH_TO_MR_CONSO_FILE,
         sources=sources,
         languages=languages,

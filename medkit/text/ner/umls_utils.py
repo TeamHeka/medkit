@@ -1,8 +1,15 @@
-__all__ = ["UMLSEntry", "load_umls", "preprocess_term_to_match", "guess_umls_version"]
+__all__ = [
+    "UMLSEntry",
+    "load_umls_entries",
+    "preprocess_term_to_match",
+    "guess_umls_version",
+]
 
+
+from collections import defaultdict
 import dataclasses
 from pathlib import Path
-from typing import Iterator, List, Optional, Union
+from typing import Dict, Iterator, List, Optional, Union
 from tqdm import tqdm
 import re
 
@@ -22,17 +29,29 @@ class UMLSEntry:
         Unique identifier of the concept designated by the term
     ref_term:
         Original version of the term
+    semtypes:
+        Semantic types of the concept (TUIs)
+    semgroups:
+        Semantic groups of the concept
     """
 
     cui: str
     term: str
+    semtypes: Optional[List[str]] = None
+    semgroups: Optional[List[str]] = None
 
     def to_dict(self):
-        return dict(cui=self.cui, term=self.term)
+        return dict(
+            cui=self.cui,
+            term=self.term,
+            semtypes=self.semtypes,
+            semgroups=self.semgroups,
+        )
 
 
-def load_umls(
+def load_umls_entries(
     mrconso_file: Union[str, Path],
+    mrsty_file: Union[str, Path] = None,
     sources: Optional[List[str]] = None,
     languages: Optional[List[str]] = None,
     show_progress: bool = False,
@@ -43,6 +62,9 @@ def load_umls(
     ----------
     mrconso_file:
         Path to the UMLS MRCONSO.RRF file
+    mrsty_file:
+        Path to the UMLS MRSTY.RRF file. If provided, semtypes info will be
+        included in the entries returned.
     sources:
         Sources to consider (ex: ICD10, CCS) If none provided, CUIs and terms
         of all sources will be taken into account.
@@ -58,8 +80,19 @@ def load_umls(
         Iterator over all term entries found in UMLS install
     """
     mrconso_file = Path(mrconso_file)
+    if mrsty_file is not None:
+        mrsty_file = Path(mrsty_file)
+
     file_size = mrconso_file.stat().st_size
     luis_seen = set()
+
+    # load semtypes and semgroups if MRSTY is provided
+    if mrsty_file is not None:
+        semtypes_by_cui = load_semtypes_by_cui(mrsty_file)
+        semgroups_by_semtype = load_semgroups_by_semtype()
+    else:
+        semtypes_by_cui = None
+        semgroups_by_semtype = None
 
     with open(mrconso_file, encoding="utf-8") as fp:
         lines_iter = fp
@@ -91,11 +124,73 @@ def load_umls(
             if lui in luis_seen:
                 continue
 
+            if semtypes_by_cui is not None:
+                semtypes = semtypes_by_cui[cui] if semtypes_by_cui else None
+                semgroups = [semgroups_by_semtype[semtype] for semtype in semtypes]
+            else:
+                semtypes = None
+                semgroups = None
+
             luis_seen.add(lui)
-            yield UMLSEntry(cui, term)
+            yield UMLSEntry(cui, term, semtypes, semgroups)
 
     if show_progress:
         progress_bar.close()
+
+
+def load_semtypes_by_cui(mrsty_file: Union[str, Path]) -> Dict[str, List[str]]:
+    """
+    Load the list of semtypes associated to each CUI found in a MRSTY.RRF file
+
+    Params
+    ------
+    mrsty_file:
+        Path to the UMLS MRSTY.RRF file.
+
+    Returns
+    -------
+    Dict[str, List[str]]
+        Mapping between CUIs and associated semtypes
+    """
+
+    mrsty_file = Path(mrsty_file)
+    semtypes_by_cui = defaultdict(list)
+
+    with open(mrsty_file) as fp:
+        for line in fp:
+            row = line.strip().split("|")
+            cui = row[0]
+            semtypes_by_cui[cui].append(row[1])
+
+    return dict(semtypes_by_cui)
+
+
+# The semantic groups provide a partition of the UMLS Metathesaurus for 99.5%
+# of the concepts, we use this file to obtain a semtype-to-semgroup mapping.
+# Source: UMLS project
+# https://lhncbc.nlm.nih.gov/semanticnetwork/download/sg_archive/SemGroups-v04.txt
+_UMLS_SEMGROUPS_FILE = Path(__file__).parent / "umls_semgroups_v04.txt"
+_SEMGROUPS_BY_SEMTYPE = None
+
+
+def load_semgroups_by_semtype() -> Dict[str, str]:
+    """
+    Load the semgroup associated to each semtype
+
+    Returns
+    -------
+    Dict[str, str]
+        Mapping between semtype TUIs and corresponding semgroup
+    """
+
+    global _SEMGROUPS_BY_SEMTYPE
+    if _SEMGROUPS_BY_SEMTYPE is None:
+        _SEMGROUPS_BY_SEMTYPE = {}
+        with open(_UMLS_SEMGROUPS_FILE) as fp:
+            for line in fp:
+                semgroup, _, semtype, _ = line.split("|")
+                _SEMGROUPS_BY_SEMTYPE[semtype] = semgroup
+    return _SEMGROUPS_BY_SEMTYPE
 
 
 _BRACKET_PATTERN = re.compile("\\(.*?\\)")
@@ -125,7 +220,7 @@ def preprocess_term_to_match(
     clean_brackets:
         Whether to remove brackets
     clean_dashes:
-        Wehther to remove dashes
+        Whether to remove dashes
     """
     if lowercase:
         term = term.lower()
