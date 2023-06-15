@@ -71,7 +71,7 @@ class DoccanoDocSeqLabeling:
         text = doc_line[column_text]
         metadata = doc_line.get("metadata", {})
         entities = [DoccanoEntityTuple(*ann) for ann in doc_line[column_label]]
-        return cls(text=text, label=entities, metadata=metadata)
+        return cls(text=text, entities=entities, metadata=metadata)
 
 
 @dataclasses.dataclass()

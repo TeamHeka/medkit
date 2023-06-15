@@ -213,7 +213,9 @@ class DoccanoInputConverter:
                 spans=[Span(doccano_entity.start_offset, doccano_entity.end_offset)],
                 metadata=dict(doccano_id=doccano_entity.id),
             )
-            anns_by_doccano_id[doccano_entity.id] = entity
+            # entities can have the same id as relations
+            # add a prefix to identify entities
+            anns_by_doccano_id[f"E{doccano_entity.id}"] = entity
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
@@ -223,8 +225,8 @@ class DoccanoInputConverter:
         for doccano_relation in doccano_doc.relations.values():
             relation = Relation(
                 label=doccano_relation.type,
-                source_id=anns_by_doccano_id[doccano_relation.from_id].uid,
-                target_id=anns_by_doccano_id[doccano_relation.to_id].uid,
+                source_id=anns_by_doccano_id[f"E{doccano_relation.from_id}"].uid,
+                target_id=anns_by_doccano_id[f"E{doccano_relation.to_id}"].uid,
                 metadata=dict(doccano_id=doccano_relation.id),
             )
             anns_by_doccano_id[doccano_relation.id] = relation
