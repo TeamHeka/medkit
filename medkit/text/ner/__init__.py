@@ -9,6 +9,7 @@ __all__ = [
     "SimstringMatcher",
     "SimstringMatcherRule",
     "SimstringMatcherNormalization",
+    "UMLSMatcher",
     "IAMSystemMatcher",
     "MedkitKeyword",
     "DateAttribute",
@@ -33,6 +34,7 @@ from .simstring_matcher import (
     SimstringMatcherRule,
     SimstringMatcherNormalization,
 )
+from .umls_matcher import UMLSMatcher
 from .iamsystem_matcher import IAMSystemMatcher, MedkitKeyword
 from .date_attribute import (
     DateAttribute,
