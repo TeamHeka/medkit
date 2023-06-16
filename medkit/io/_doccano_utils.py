@@ -1,9 +1,7 @@
 import dataclasses
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from typing_extensions import Self
-
-from medkit.core.text import Segment, Span
 
 
 @dataclasses.dataclass()
@@ -87,37 +85,3 @@ class DoccanoDocTextClassification:
         text = doc_line[column_text]
         metadata = doc_line.get("metadata", {})
         return cls(text=text, label=doc_line[column_label][0], metadata=metadata)
-
-
-@dataclasses.dataclass()
-class DoccanoSeq2Seq:
-    # WIP:
-    sequences: List[str]
-
-    @classmethod
-    def from_dict(
-        cls, doc_line: Dict[str, Any], column_text: str, column_label: str
-    ) -> Self:
-        text = doc_line[column_text]
-        sequences = [seq for seq in doc_line[column_label]]
-        return cls(text=text, sequences=sequences)
-
-    def to_medkit(
-        self,
-        source_label: str,
-        sequence_label: str,
-    ) -> Tuple[Segment, List[Segment]]:
-        source = Segment(
-            text=self.text,
-            spans=[Span(0, len(self.text))],
-            label=source_label,
-        )
-        sequences = [
-            Segment(
-                text=seq_text,
-                spans=[Span(0, len(seq_text))],
-                label=sequence_label,
-            )
-            for seq_text in self.sequences
-        ]
-        return (source, sequences)
