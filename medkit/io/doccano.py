@@ -157,7 +157,7 @@ class DoccanoInputConverter:
         """
         documents = []
 
-        with open(input_file) as fp:
+        with open(input_file, encoding="utf-8") as fp:
             for line in fp:
                 doc_line = json.loads(line)
                 doc = self.parse_doc_line(doc_line)
