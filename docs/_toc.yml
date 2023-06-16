@@ -32,6 +32,7 @@ parts:
   - file: examples/edsnlp
   - file: examples/iamsystem
   - file: examples/finetuning_hf_model
+  - file: examples/detecting_text_duplicates
 - caption: API reference
   maxdepth: 2
   chapters:

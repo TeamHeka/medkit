@@ -1,5 +1,7 @@
 __all__ = [
     "CharReplacer",
+    "DuplicateFinder",
+    "DuplicationAttribute",
     "Normalizer",
     "NormalizerRule",
     "EDSCleaner",
@@ -13,6 +15,7 @@ __all__ = [
 ]
 
 from .char_replacer import CharReplacer
+from .duplicate_finder import DuplicateFinder, DuplicationAttribute
 from .normalizer import Normalizer, NormalizerRule
 from .eds_cleaner import EDSCleaner
 from .char_rules import (

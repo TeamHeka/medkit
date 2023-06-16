@@ -25,6 +25,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.7.1, <4.0"
+duptextfinder = "*"
 flashtext = "*"
 numpy = "*"
 pyaml = "*"
