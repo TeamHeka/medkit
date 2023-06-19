@@ -133,6 +133,8 @@ class UMLSMatcher(BaseSimstringMatcher):
         umls_dir = Path(umls_dir)
         cache_dir = Path(cache_dir)
 
+        cache_dir.mkdir(parents=True, exist_ok=True)
+
         labels_by_semgroup = self._get_labels_by_semgroup(output_labels_by_semgroup)
 
         cache_params = _UMLSMatcherCacheParams(
