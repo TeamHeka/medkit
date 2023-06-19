@@ -179,7 +179,6 @@ class UMLSMatcher(BaseSimstringMatcher):
                 lowercase=lowercase,
                 normalize_unicode=normalize_unicode,
             )
-            assert rules_db_file.exists()
 
             with open(cache_params_file, mode="w") as fp:
                 yaml.safe_dump(dataclasses.asdict(cache_params), fp)
