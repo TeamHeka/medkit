@@ -10,12 +10,10 @@ from typing import Any, Dict, List, Optional
 from zipfile import ZipFile
 
 from medkit.core import Attribute, OperationDescription, ProvTracer, generate_id
-from medkit.core.text import Entity, Relation, Span, TextDocument
-from medkit.io._doccano_utils import (
-    DoccanoDocRelationExtraction,
-    DoccanoDocSeqLabeling,
-    DoccanoDocTextClassification,
-)
+from medkit.core.text import Entity, Relation, Span, TextDocument, span_utils
+from medkit.io import _doccano_utils as utils
+
+from medkit.io._common import get_anns_by_type
 
 logger = logging.getLogger(__name__)
 
@@ -201,7 +199,7 @@ class DoccanoInputConverter:
         TextDocument
             The document with annotations
         """
-        doccano_doc = DoccanoDocRelationExtraction.from_dict(
+        doccano_doc = utils.DoccanoDocRelationExtraction.from_dict(
             doc_line, column_text=self.config.column_text
         )
 
@@ -263,7 +261,7 @@ class DoccanoInputConverter:
         TextDocument
             The document with annotations
         """
-        doccano_doc = DoccanoDocSeqLabeling.from_dict(
+        doccano_doc = utils.DoccanoDocSeqLabeling.from_dict(
             doc_line,
             column_text=self.config.column_text,
             column_label=self.config.column_label,
@@ -308,7 +306,7 @@ class DoccanoInputConverter:
         TextDocument
             The document with its category
         """
-        doccano_doc = DoccanoDocTextClassification.from_dict(
+        doccano_doc = utils.DoccanoDocTextClassification.from_dict(
             doc_line,
             column_text=self.config.column_text,
             column_label=self.config.column_label,
@@ -321,3 +319,208 @@ class DoccanoInputConverter:
         doc = TextDocument(text=doccano_doc.text)
         doc.raw_segment.attrs.add(attr)
         return doc
+
+
+class DoccanoOutputConverter:
+    """Convert medkit files to doccano files (.JSONL) for a given task.
+
+    For each :class:`~medkit.core.text.TextDocument` a jsonline will be created.
+    """
+
+    def __init__(
+        self,
+        task: DoccanoTask,
+        anns_labels: Optional[List[str]] = None,
+        attr: Optional[str] = None,
+        uid: Optional[str] = None,
+    ):
+        """
+        Parameters
+        ----------
+        task:
+            The doccano task for the input converter
+        anns_labels:
+            Labels of medkit annotations to convert into docccano annotations.
+            If `None` (default) all the annotations (entities and relations)
+            will be converted.
+        attr:
+            Label of medkit attribute for text classification.
+        uid:
+            Identifier of the converter.
+        """
+        if uid is None:
+            uid = generate_id()
+
+        self.uid = uid
+        self.task = task
+        self.anns_labels = anns_labels
+        self.attr = attr
+
+        if self.attr is None and task == utils.DoccanoDocTextClassification:
+            raise ValueError(
+                "You must specify an attribute to add as a label for text"
+                " classification, 'None' was provided."
+            )
+
+    @property
+    def description(self) -> OperationDescription:
+        config = dict(anns_labels=self.anns_labels, attr=self.attr)
+        return OperationDescription(
+            uid=self.uid, class_name=self.__class__.__name__, config=config
+        )
+
+    def save(self, docs: List[TextDocument], dir_path: str):
+        """Convert and save a list of TextDocuments into a doccano file (.JSONL)
+
+        Parameters
+        ----------
+        docs:
+            List of medkit doc objects to convert
+        dir_path:
+            String or path object to save the generated files
+        """
+
+        dir_path = Path(dir_path)
+        dir_path.mkdir(parents=True, exist_ok=True)
+
+        with open("all.jsonl", mode="w", encoding="utf-8") as fp:
+            for i, medkit_doc in enumerate(docs):
+                doc_line = self._convert_doc_by_task(i, medkit_doc)
+                fp.write(json.dumps(doc_line) + "\n")
+
+    def _convert_doc_by_task(
+        self, idx: int, medkit_doc: TextDocument
+    ) -> Dict[str, Any]:
+        """Convert a TextDocument into a dictionary depending on the task
+
+        Parameters
+        ----------
+        medkit_doc:
+            Document to convert
+
+        Returns
+        -------
+        Dict[str,Any]
+            Dictionary with doccano annotation
+        """
+        if self.task == DoccanoTask.RELATION_EXTRACTION:
+            return self._convert_doc_relation_extraction(idx=idx, medkit_doc=medkit_doc)
+        if self.task == DoccanoTask.TEXT_CLASSIFICATION:
+            return self._convert_doc_text_classification(medkit_doc=medkit_doc)
+        if self.task == DoccanoTask.SEQUENCE_LABELING:
+            return self._convert_doc_seq_labeling(medkit_doc=medkit_doc)
+
+    def _convert_doc_relation_extraction(
+        self, idx: int, medkit_doc: TextDocument
+    ) -> Dict[str, Any]:
+        """Convert a TextDocument to a doc_line compatible
+        with the doccano relation extraction task
+
+        Parameters
+        ----------
+        medkit_doc:
+            Document to convert, it may contain entities and relations
+
+        Returns
+        -------
+        Dict[str,Any]
+            Dictionary with doccano annotation. It may contain
+            text, entities and relations
+        """
+        nb_entity, nb_relation = 0, 0
+        entities, relations = dict(), dict()
+
+        anns_by_type = get_anns_by_type(medkit_doc, self.anns_labels)
+
+        for medkit_entity in anns_by_type["entities"]:
+            spans = span_utils.normalize_spans(medkit_entity.spans)
+            doccano_entity = utils.DoccanoEntity(
+                id=nb_entity,
+                start_offset=spans[0].start,
+                end_offset=spans[-1].end,
+                label=medkit_entity.label,
+            )
+            entities[medkit_entity.uid] = doccano_entity
+            nb_entity += 1
+
+        for medkit_relation in anns_by_type["relations"]:
+            subj = entities.get(medkit_relation.source_id)
+            obj = entities.get(medkit_relation.target_id)
+
+            if subj is None or obj is None:
+                logger.warning(
+                    f"Ignore relation {medkit_relation.uid}. Entity source/target was"
+                    " no found"
+                )
+                continue
+
+            doccano_relation = utils.DoccanoRelation(
+                id=nb_relation,
+                from_id=subj.id,
+                to_id=obj.id,
+                type=medkit_relation.label,
+            )
+            relations[medkit_relation.uid] = doccano_relation
+            nb_relation += 1
+
+        doccano_doc = utils.DoccanoDocRelationExtraction(
+            id=idx, text=medkit_doc.text, entities=entities, relations=relations
+        )
+
+        return doccano_doc.to_dict()
+
+    def _convert_doc_seq_labeling(self, medkit_doc: TextDocument) -> Dict[str, Any]:
+        """Convert a TextDocument to a doc_line compatible
+        with the doccano sequence labeling task
+
+        Parameters
+        ----------
+        medkit_doc:
+            Document to convert, it may contain entities and relations
+
+        Returns
+        -------
+        Dict[str,Any]
+            Dictionary with doccano annotation. It may contain
+            text ans its label (a list of tuples representing entities)
+        """
+        anns_by_type = get_anns_by_type(medkit_doc, self.anns_labels)
+        entities = []
+        for medkit_entity in anns_by_type["entities"]:
+            spans = span_utils.normalize_spans(medkit_entity.spans)
+            doccano_entity = utils.DoccanoEntityTuple(
+                start_offset=spans[0].start,
+                end_offset=spans[-1].end,
+                label=medkit_entity.label,
+            )
+            entities.append(doccano_entity)
+
+        doccano_doc = utils.DoccanoDocSeqLabeling(
+            text=medkit_doc.text, entities=entities
+        )
+
+        return doccano_doc.to_dict()
+
+    def _convert_doc_text_classification(
+        self, medkit_doc: TextDocument
+    ) -> Dict[str, Any]:
+        """Convert a TextDocument to a doc_line compatible with
+        the doccano text classification task. The attribute to add as a label
+        should be in its raw segment.
+
+        Parameters
+        ----------
+        doc_line:
+            Dictionary with doccano annotation.
+
+        Returns
+        -------
+        Dict[str,Any]
+            Dictionary with doccano annotation. It may contain
+            text ans its label (a list with its category(str))
+        """
+        attribute = medkit_doc.raw_segment.attrs.get(label=self.attr)[0]
+        doccano_doc = utils.DoccanoDocTextClassification(
+            text=medkit_doc.text, label=attribute.value
+        )
+        return doccano_doc.to_dict()

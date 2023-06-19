@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from typing_extensions import Self
 
@@ -11,12 +11,24 @@ class DoccanoEntity:
     end_offset: int
     label: str
 
+    def to_dict(self) -> Dict[str, Any]:
+        entity_dict = dict(
+            id=self.id,
+            start_offset=self.start_offset,
+            end_offset=self.end_offset,
+            label=self.label,
+        )
+        return entity_dict
+
 
 @dataclasses.dataclass()
 class DoccanoEntityTuple:
     start_offset: int
     end_offset: int
     label: str
+
+    def to_tuple(self) -> Tuple[Any]:
+        return (self.start_offset, self.end_offset, self.label)
 
 
 @dataclasses.dataclass()
@@ -25,6 +37,15 @@ class DoccanoRelation:
     from_id: int
     to_id: int
     type: str
+
+    def to_dict(self) -> Dict[str, Any]:
+        relation_dict = dict(
+            id=self.id,
+            from_id=self.from_id,
+            to_id=self.to_id,
+            type=self.type,
+        )
+        return relation_dict
 
 
 @dataclasses.dataclass()
@@ -55,6 +76,17 @@ class DoccanoDocRelationExtraction:
             text=text, id=id, entities=entities, relations=relations, metadata=metadata
         )
 
+    def to_dict(self) -> Dict[str, Any]:
+        doc_dict = dict(
+            id=self.id,
+            text=self.text,
+        )
+
+        doc_dict["entities"] = [ent.to_dict() for ent in self.entities.values()]
+        doc_dict["relations"] = [rel.to_dict() for rel in self.relations.values()]
+        doc_dict["metadata"] = self.metadata
+        return doc_dict
+
 
 @dataclasses.dataclass()
 class DoccanoDocSeqLabeling:
@@ -71,6 +103,12 @@ class DoccanoDocSeqLabeling:
         entities = [DoccanoEntityTuple(*ann) for ann in doc_line[column_label]]
         return cls(text=text, entities=entities, metadata=metadata)
 
+    def to_dict(self) -> Dict[str, Any]:
+        doc_dict = dict(text=self.text)
+        doc_dict["label"] = [ent.to_tuple() for ent in self.entities]
+        doc_dict["metadata"] = self.metadata
+        return doc_dict
+
 
 @dataclasses.dataclass()
 class DoccanoDocTextClassification:
@@ -85,3 +123,7 @@ class DoccanoDocTextClassification:
         text = doc_line[column_text]
         metadata = doc_line.get("metadata", {})
         return cls(text=text, label=doc_line[column_label][0], metadata=metadata)
+
+    def to_dict(self) -> Dict[str, Any]:
+        doc_dict = dict(text=self.text, label=[str(self.label)], metadata=self.metadata)
+        return doc_dict
