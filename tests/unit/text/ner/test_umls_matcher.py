@@ -117,14 +117,14 @@ def test_lowercase(tmpdir):
     # no match without lowercase flag because concept is only
     # available with leading uppercase in french
     umls_matcher = UMLSMatcher(
-        umls_dir=_UMLS_DIR, language="FRE", lowercase=False, cache_dir=tmpdir
+        umls_dir=_UMLS_DIR, language="FRE", lowercase=False, cache_dir=tmpdir / "nolower"
     )
     entities = umls_matcher.run([sentence])
     assert len(entities) == 0
 
     # with lowercase flag, entity is found
     umls_matcher = UMLSMatcher(
-        umls_dir=_UMLS_DIR, language="FRE", lowercase=True, cache_dir=tmpdir
+        umls_dir=_UMLS_DIR, language="FRE", lowercase=True, cache_dir=tmpdir / "lower"
     )
     entities = umls_matcher.run([sentence])
     assert len(entities) == 1
