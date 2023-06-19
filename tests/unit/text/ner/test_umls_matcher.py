@@ -87,11 +87,17 @@ def test_cache(tmpdir):
     _ = UMLSMatcher(umls_dir=_UMLS_DIR, language="FRE", cache_dir=tmpdir)
     assert db_file.stat().mtime == modification_time
 
-    # different params, cached can't be used
-    _ = UMLSMatcher(
-        umls_dir=_UMLS_DIR, language="FRE", cache_dir=tmpdir, normalize_unicode=True
-    )
-    assert db_file.stat().mtime != modification_time
+    # different params, cache can't be used, an error should be thrown
+    with pytest.raises(
+        Exception,
+        match=(
+            "Cache directory .* contains database pre-computed with different"
+            " params: .*"
+        ),
+    ):
+        _ = UMLSMatcher(
+            umls_dir=_UMLS_DIR, language="FRE", cache_dir=tmpdir, normalize_unicode=True
+        )
 
 
 def test_language(tmpdir):
@@ -117,7 +123,10 @@ def test_lowercase(tmpdir):
     # no match without lowercase flag because concept is only
     # available with leading uppercase in french
     umls_matcher = UMLSMatcher(
-        umls_dir=_UMLS_DIR, language="FRE", lowercase=False, cache_dir=tmpdir / "nolower"
+        umls_dir=_UMLS_DIR,
+        language="FRE",
+        lowercase=False,
+        cache_dir=tmpdir / "nolower",
     )
     entities = umls_matcher.run([sentence])
     assert len(entities) == 0

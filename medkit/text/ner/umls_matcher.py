@@ -87,8 +87,11 @@ class UMLSMatcher(BaseSimstringMatcher):
             Path to the directory into which the umls database will be cached.
             If it doesn't exist yet, the database will be automatically
             generated (it can take a long time) and stored there, ready to be
-            reused on further instantiations. If the init params have changed,
-            the database will be regenerated.
+            reused on further instantiations. If it already exists, a check will
+            be done to make sure the params used when the database was generated
+            are consistent with the params of the current instance. If you want
+            to rebuild the database with new params using the same cache dir,
+            you will have to manually delete it first.
         language:
             Language to consider as found in the MRCONSO.RRF file. Example:
             `"FRE"`.
@@ -150,23 +153,16 @@ class UMLSMatcher(BaseSimstringMatcher):
         simstring_db_file = cache_dir / _SIMSTRING_DB_FILENAME
         rules_db_file = cache_dir / _RULES_DB_FILENAME
 
-        if (
-            cache_params_file.exists()
-            and simstring_db_file.exists()
-            and rules_db_file.exists()
-        ):
+        if cache_params_file.exists():
             with open(cache_params_file) as fp:
                 existing_cache_params = _UMLSMatcherCacheParams(**yaml.safe_load(fp))
-        else:
-            existing_cache_params = None
-
-        if existing_cache_params is None or existing_cache_params != cache_params:
-            if existing_cache_params is not None:
-                print(
-                    "Found cached simstring database for UMLS terms but params have"
-                    " changed, rebuild is needed"
+            if cache_params != existing_cache_params:
+                raise Exception(
+                    f"Cache directory {cache_dir} contains database pre-computed"
+                    f" with different params: {existing_cache_params} vs"
+                    f" {cache_params}"
                 )
-
+        else:
             print("Building simstring database from UMLS terms, this may take a while")
             rules = self._build_rules(
                 umls_dir, language, allowed_semgroups, labels_by_semgroup
