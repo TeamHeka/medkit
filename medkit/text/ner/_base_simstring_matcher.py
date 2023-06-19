@@ -185,8 +185,7 @@ class BaseSimstringMatcher(NEROperation):
         self._simstring_db_reader.measure = _SIMILARITY_MAP[similarity]
         self._simstring_db_reader.threshold = threshold
 
-        # shelve automatically adds the .db suffix
-        self._rules_db = shelve.open(str(rules_db_file.with_suffix("")), flag="r")
+        self._rules_db = shelve.open(str(rules_db_file), flag="r")
 
     def _preprocess_segment_text(self, text: str) -> str:
         """Preprocessing segment text according to the `lowercase` and
@@ -408,8 +407,7 @@ def build_simstring_matcher_databases(
         True,  # use unicode mode
     )
 
-    # shelve automatically adds the .db suffix
-    rules_db = shelve.open(str(rules_db_file.with_suffix("")), flag="n")
+    rules_db = shelve.open(str(rules_db_file), flag="n")
 
     # add rules to databases
     for rule in rules:

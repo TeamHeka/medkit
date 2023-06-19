@@ -18,7 +18,7 @@ from medkit.text.ner._base_simstring_matcher import (
 )
 
 _CACHE_PARAMS_FILENAME = "params.yml"
-_RULES_DB_FILENAME = "rules.db"
+_RULES_DB_FILENAME = "rules"
 _SIMSTRING_DB_FILENAME = "simstring"
 
 
