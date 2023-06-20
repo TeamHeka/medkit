@@ -140,6 +140,8 @@ class DoccanoInputConverter:
 
         if len(documents) == 0:
             logger.warning(f"No .zip nor .jsonl found in '{dir_path}'")
+
+        logger.info(f"Created {len(documents)}  documents from {dir_path}")
         return documents
 
     def load_from_file(self, input_file) -> List[TextDocument]:
