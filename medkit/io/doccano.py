@@ -1,3 +1,4 @@
+
 import re
 import logging
 from pathlib import Path
@@ -153,17 +154,25 @@ class DoccannoJsonlConverter(InputConverter):
             # First convert entities, then relations, finally attributes
             # because new annotation identifier is needed
             text = doc_ann["text"]
-            ch_sp=[m.start(0) for m in re.finditer("\r", text)]
+            ch_sp=[m.start(0)-ind for ind, m in enumerate(re.finditer("\r", text))]
             
+         
+            
+            print(ch_sp)
+        
             
             
             for doccano_ent in doc_ann["entities"]:
-                nchar_less = sum(lim < doccano_ent["start_offset"] for lim in ch_sp)
+                nchar_less = sum(lim <= doccano_ent["start_offset"] for lim in ch_sp)
+
+                print(doccano_ent["start_offset"])
+                print(doccano_ent["label"])
+
                 entity = Entity(
                
                     label=doccano_ent["label"],
                     spans=[Span(doccano_ent["start_offset"]+nchar_less,doccano_ent["end_offset"]+nchar_less)],
-                    text=text[doccano_ent["start_offset"]:doccano_ent["end_offset"]],
+                    text=text[doccano_ent["start_offset"]+nchar_less:doccano_ent["end_offset"]+nchar_less],
                     
                 )
                 anns_by_doccano_id[doccano_ent["id"]] = entity
@@ -191,3 +200,5 @@ class DoccannoJsonlConverter(InputConverter):
                                            "id": doc_ann["id"], 
                                            "anns" : list(anns_by_doccano_id.values())})
         return text_anns
+
+
