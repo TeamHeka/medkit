@@ -1,4 +1,9 @@
-__all__ = ["DoccanoTask", "DoccanoIDEConfig", "DoccanoInputConverter"]
+__all__ = [
+    "DoccanoTask",
+    "DoccanoIDEConfig",
+    "DoccanoInputConverter",
+    "DoccanoOutputConverter",
+]
 
 import dataclasses
 import enum
@@ -383,7 +388,7 @@ class DoccanoOutputConverter:
         dir_path = Path(dir_path)
         dir_path.mkdir(parents=True, exist_ok=True)
 
-        with open("all.jsonl", mode="w", encoding="utf-8") as fp:
+        with open(dir_path / "all.jsonl", mode="w", encoding="utf-8") as fp:
             for i, medkit_doc in enumerate(docs):
                 doc_line = self._convert_doc_by_task(i, medkit_doc)
                 fp.write(json.dumps(doc_line) + "\n")
@@ -464,7 +469,11 @@ class DoccanoOutputConverter:
             nb_relation += 1
 
         doccano_doc = utils.DoccanoDocRelationExtraction(
-            id=idx, text=medkit_doc.text, entities=entities, relations=relations
+            id=idx,
+            text=medkit_doc.text,
+            entities=entities,
+            relations=relations,
+            metadata=medkit_doc.metadata,
         )
 
         return doccano_doc.to_dict()
@@ -496,7 +505,9 @@ class DoccanoOutputConverter:
             entities.append(doccano_entity)
 
         doccano_doc = utils.DoccanoDocSeqLabeling(
-            text=medkit_doc.text, entities=entities
+            text=medkit_doc.text,
+            entities=entities,
+            metadata=medkit_doc.metadata,
         )
 
         return doccano_doc.to_dict()
@@ -521,6 +532,8 @@ class DoccanoOutputConverter:
         """
         attribute = medkit_doc.raw_segment.attrs.get(label=self.attr)[0]
         doccano_doc = utils.DoccanoDocTextClassification(
-            text=medkit_doc.text, label=attribute.value
+            text=medkit_doc.text,
+            label=attribute.value,
+            metadata=medkit_doc.metadata,
         )
         return doccano_doc.to_dict()

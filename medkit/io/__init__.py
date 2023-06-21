@@ -3,6 +3,7 @@ __all__ = [
     "BratOutputConverter",
     "DoccanoInputConverter",
     "DoccanoIDEConfig",
+    "DoccanoOutputConverter",
     "DoccanoTask",
     "medkit_json",
     "RTTMInputConverter",
@@ -12,7 +13,12 @@ __all__ = [
 from medkit.core.utils import modules_are_available
 
 from .brat import BratInputConverter, BratOutputConverter
-from .doccano import DoccanoInputConverter, DoccanoTask, DoccanoIDEConfig
+from .doccano import (
+    DoccanoInputConverter,
+    DoccanoTask,
+    DoccanoIDEConfig,
+    DoccanoOutputConverter,
+)
 from . import medkit_json
 from .rttm import RTTMInputConverter, RTTMOutputConverter
 

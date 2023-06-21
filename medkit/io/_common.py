@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_anns_by_type(
-    medkit_doc: TextDocument, anns_labels: Optional(List[str])
+    medkit_doc: TextDocument, anns_labels: Optional[List[str]]
 ) -> Dict[str, TextAnnotation]:
     """Filter annotation by labels and return a dict by type of annotation"""
     anns_by_type = defaultdict(list)

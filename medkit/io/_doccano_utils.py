@@ -84,7 +84,9 @@ class DoccanoDocRelationExtraction:
 
         doc_dict["entities"] = [ent.to_dict() for ent in self.entities.values()]
         doc_dict["relations"] = [rel.to_dict() for rel in self.relations.values()]
-        doc_dict["metadata"] = self.metadata
+
+        if self.metadata:
+            doc_dict["metadata"] = self.metadata
         return doc_dict
 
 
@@ -106,7 +108,9 @@ class DoccanoDocSeqLabeling:
     def to_dict(self) -> Dict[str, Any]:
         doc_dict = dict(text=self.text)
         doc_dict["label"] = [ent.to_tuple() for ent in self.entities]
-        doc_dict["metadata"] = self.metadata
+
+        if self.metadata:
+            doc_dict["metadata"] = self.metadata
         return doc_dict
 
 
@@ -125,5 +129,7 @@ class DoccanoDocTextClassification:
         return cls(text=text, label=doc_line[column_label][0], metadata=metadata)
 
     def to_dict(self) -> Dict[str, Any]:
-        doc_dict = dict(text=self.text, label=[str(self.label)], metadata=self.metadata)
+        doc_dict = dict(text=self.text, label=[str(self.label)])
+        if self.metadata:
+            doc_dict["metadata"] = self.metadata
         return doc_dict
