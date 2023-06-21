@@ -1,4 +1,3 @@
-
 import re
 import logging
 from pathlib import Path
@@ -32,7 +31,7 @@ TEXT_EXT = ".txt"
 logger = logging.getLogger(__name__)
 
 
-class doccanoJsonlConverter(InputConverter):
+class DoccannoJsonlConverter(InputConverter):
     """Class in charge of converting doccano annotations from jsonl"""
 
     def __init__(self, uid: Optional[str] = None):
@@ -55,12 +54,12 @@ class doccanoJsonlConverter(InputConverter):
 
     def load(
         self,
-        dir_path: Union[str, Path],
+        file_path: Union[str, Path],
         jsonl_ext: str = JSONL_EXT,
 
     ) -> List[TextDocument]:
         """
-        Create a list of TextDocuments from a folder containing jsonl files from doccano.
+        Create a list of TextDocuments from a folder containing jsonl files from docanno.
 
         Parameters
         ----------
@@ -74,25 +73,20 @@ class doccanoJsonlConverter(InputConverter):
             The list of TextDocuments
         """
         documents = list()
-        dir_path = Path(dir_path)
+        file_path = Path(file_path)
 
-        # find all base paths with at least a corresponding text or ann file
-        base_paths = set()
-        for ann_path in sorted(dir_path.glob("*" + jsonl_ext)):
-            base_paths.add(dir_path / ann_path.stem)
+        
+        
 
-        # load doc for each base_path
-        for base_path in sorted(base_paths):
-
-            ann_path = base_path.with_suffix(jsonl_ext)
+        ann_path = file_path.with_suffix(jsonl_ext)
 
             
-            doc = self.load_doc(ann_path=ann_path)
+        documents = self.load_doc(ann_path=ann_path)
             
-            documents.append(doc)
+
 
         if not documents:
-            logger.warning(f"Didn't load any document from dir {dir_path}")
+            logger.warning(f"Didn't load any document from path {file_path}")
 
         return documents
 
@@ -106,7 +100,7 @@ class doccanoJsonlConverter(InputConverter):
         ----------
 
         ann_path:
-            The path to the jsonl doccano annotation file.
+            The path to the jsonl docanno annotation file.
 
         Returns
         -------
@@ -118,17 +112,18 @@ class doccanoJsonlConverter(InputConverter):
 
 
 
-        text,anns = self.load_annotations(ann_path)
-
-        metadata = dict(path_to_ann=str(ann_path))
-
-        doc = TextDocument(text=text, metadata=metadata)
-
-        for ann in anns:
-            doc.anns.add(ann)
-            
+        text_anns = self.load_annotations(ann_path)
         
-        return doc
+        documents = list()
+        for dict_i in text_anns :
+            
+            doc = TextDocument(text=dict_i["text"], metadata=dict_i["id"])
+
+            for ann in dict_i["anns"]:
+                doc.anns.add(ann)
+            
+        documents.append(doc)
+        return documents
 
     def load_annotations(self, ann_file: Union[str, Path]) -> List[TextAnnotation]:
         """
@@ -146,43 +141,53 @@ class doccanoJsonlConverter(InputConverter):
 
         
         
-        json_file= open(ann_file)
-        doccano_doc=json.load(json_file)
-        json_file.close()   
-        anns_by_doccano_id = dict()
 
+        with open(ann_file, 'r') as json_file:
+            doccano_doc = list(json_file)
+        text_anns = list()
+        
 
-        # First convert entities, then relations, finally attributes
-        # because new annotation identifier is needed
-        text = doccano_doc["text"]
-        for doccano_ent in doccano_doc["entities"]:
-            entity = Entity(
-           
-                label=doccano_ent["label"],
-                spans=[Span(doccano_ent["start_offset"],doccano_ent["end_offset"])],
-                text=text[doccano_ent["start_offset"]:doccano_ent["end_offset"]],
-                
-            )
-            anns_by_doccano_id[doccano_ent["id"]] = entity
-            if self._prov_tracer is not None:
-                self._prov_tracer.add_prov(
-                    entity, self.description, source_data_items=[]
-                )
-
-        for doccano_relation in doccano_doc["relations"]:
-            relation = Relation(
-                label=doccano_relation["type"],
-                source_id=anns_by_doccano_id[doccano_relation["from_id"]].uid,
-                target_id=anns_by_doccano_id[doccano_relation["to_id"]].uid,
+        for doc_i in doccano_doc:
+            doc_ann=json.loads(doc_i)
+            anns_by_doccano_id = dict()
+            # First convert entities, then relations, finally attributes
+            # because new annotation identifier is needed
+            text = doc_ann["text"]
+            ch_sp=[m.start(0) for m in re.finditer("\r", text)]
+            
+            
+            
+            for doccano_ent in doc_ann["entities"]:
+                nchar_less = sum(lim < doccano_ent["start_offset"] for lim in ch_sp)
+                entity = Entity(
                
-            )
-            anns_by_doccano_id[relation.uid] = relation
-            if self._prov_tracer is not None:
-                self._prov_tracer.add_prov(
-                    relation, self.description, source_data_items=[]
+                    label=doccano_ent["label"],
+                    spans=[Span(doccano_ent["start_offset"]+nchar_less,doccano_ent["end_offset"]+nchar_less)],
+                    text=text[doccano_ent["start_offset"]:doccano_ent["end_offset"]],
+                    
                 )
+                anns_by_doccano_id[doccano_ent["id"]] = entity
+                if self._prov_tracer is not None:
+                    self._prov_tracer.add_prov(
+                        entity, self.description, source_data_items=[]
+                    )
+    
+            for doccano_relation in doc_ann["relations"]:
+                relation = Relation(
+                    label=doccano_relation["type"],
+                    source_id=anns_by_doccano_id[doccano_relation["from_id"]].uid,
+                    target_id=anns_by_doccano_id[doccano_relation["to_id"]].uid,
+                   
+                )
+                anns_by_doccano_id[relation.uid] = relation
+                if self._prov_tracer is not None:
+                    self._prov_tracer.add_prov(
+                        relation, self.description, source_data_items=[]
+                    )
 
-       
-        return text, list(anns_by_doccano_id.values())
-
-
+            
+            
+            text_anns.append( {"text" : text, 
+                                           "id": doc_ann["id"], 
+                                           "anns" : list(anns_by_doccano_id.values())})
+        return text_anns
