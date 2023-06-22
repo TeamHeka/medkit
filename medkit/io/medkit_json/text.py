@@ -22,7 +22,7 @@ _DOC_ANNS_SUFFIX = "_anns.jsonl"
 def load_text_document(
     input_file: Union[str, Path],
     anns_input_file: Optional[Union[str, Path]] = None,
-    encoding: Optional[str] = None,
+    encoding: Optional[str] = "utf-8",
 ) -> TextDocument:
     """
     Load a text document from a medkit-json file generated with
@@ -59,7 +59,7 @@ def load_text_document(
 
 
 def load_text_documents(
-    input_file: Union[str, Path], encoding: Optional[str] = None
+    input_file: Union[str, Path], encoding: Optional[str] = "utf-8"
 ) -> Iterator[TextDocument]:
     """
     Load text documents from a medkit-json file generated with
@@ -92,7 +92,7 @@ def load_text_documents(
 
 
 def load_text_anns(
-    input_file: Union[str, Path], encoding: Optional[str] = None
+    input_file: Union[str, Path], encoding: Optional[str] = "utf-8"
 ) -> Iterator[TextAnnotation]:
     """
     Load text annotations from a medkit-json file generated with
@@ -129,7 +129,7 @@ def save_text_document(
     output_file: Union[str, Path],
     split_anns: bool = False,
     anns_output_file: Optional[Union[str, Path]] = None,
-    encoding: Optional[str] = None,
+    encoding: Optional[str] = "utf-8",
 ):
     """
     Save a text document into a medkit-json file.
@@ -172,7 +172,7 @@ def save_text_document(
 def save_text_documents(
     docs: Iterable[TextDocument],
     output_file: Union[str, Path],
-    encoding: Optional[str] = None,
+    encoding: Optional[str] = "utf-8",
 ):
     """
     Save text documents into a medkit-json file.
@@ -201,7 +201,7 @@ def save_text_documents(
 def save_text_anns(
     anns: Iterable[TextAnnotation],
     output_file: Union[str, Path],
-    encoding: Optional[str] = None,
+    encoding: Optional[str] = "utf-8",
 ):
     """
     Save text annotations into a medkit-json file.
