@@ -361,10 +361,11 @@ class DoccanoOutputConverter:
         self.anns_labels = anns_labels
         self.attr = attr
 
-        if self.attr is None and task == utils.DoccanoDocTextClassification:
-            raise ValueError(
-                "You must specify an attribute to add as a label for text"
-                " classification, 'None' was provided."
+        if self.attr is None and task == DoccanoTask.TEXT_CLASSIFICATION:
+            logger.warning(
+                "You should specify an attribute label for text classification. The"
+                " first attribute of the raw segment will be used as label for the"
+                " exported annotations."
             )
 
     @property
@@ -530,10 +531,17 @@ class DoccanoOutputConverter:
             Dictionary with doccano annotation. It may contain
             text ans its label (a list with its category(str))
         """
-        attribute = medkit_doc.raw_segment.attrs.get(label=self.attr)[0]
+        attribute = medkit_doc.raw_segment.attrs.get(label=self.attr)
+
+        if not attribute:
+            raise KeyError(
+                "The attribute with the corresponding text class was not found. Check"
+                " the 'attr', {self.attr} was provided."
+            )
+
         doccano_doc = utils.DoccanoDocTextClassification(
             text=medkit_doc.text,
-            label=attribute.value,
+            label=attribute[0].value,
             metadata=medkit_doc.metadata,
         )
         return doccano_doc.to_dict()

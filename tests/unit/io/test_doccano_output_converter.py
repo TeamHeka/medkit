@@ -1,4 +1,5 @@
 import json
+import logging
 
 import pytest
 from medkit.core import Attribute
@@ -58,8 +59,8 @@ EXPECTED_DOCLINE_BY_TASK = {
         DoccanoTask.SEQUENCE_LABELING,
     ],
 )
-def test_save_relation_extraction(tmp_path, task):
-    converter = DoccanoOutputConverter(task=task)
+def test_save_by_task(tmp_path, task):
+    converter = DoccanoOutputConverter(task=task, attr="category")
     dir_path = tmp_path / task.value
     expected_jsonl_path = dir_path / "all.jsonl"
 
@@ -73,3 +74,24 @@ def test_save_relation_extraction(tmp_path, task):
         data = json.load(fp)
 
     assert data == EXPECTED_DOCLINE_BY_TASK[task]
+
+
+def test_warnings(tmp_path, caplog):
+    task = DoccanoTask.RELATION_EXTRACTION
+    converter = DoccanoOutputConverter(task=task, anns_labels=["ORG", "created_in"])
+    dir_path = tmp_path / task.value
+
+    medkit_docs = [_get_doc_by_task(task)]
+    with caplog.at_level(logging.WARNING, logger="medkit.io.doccano"):
+        converter.save(medkit_docs, dir_path=dir_path)
+        assert "Entity source/target was no found" in caplog.text
+
+    with caplog.at_level(logging.WARNING, logger="medkit.io.doccano"):
+        DoccanoOutputConverter(task=DoccanoTask.TEXT_CLASSIFICATION)
+        assert "You should specify an attribute label" in caplog.text
+
+    with pytest.raises(KeyError, match="The attribute with the corresponding .*"):
+        converter = DoccanoOutputConverter(
+            task=DoccanoTask.TEXT_CLASSIFICATION, attr="is_negated"
+        )
+        converter.save(medkit_docs, dir_path=dir_path)
