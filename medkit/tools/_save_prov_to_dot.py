@@ -22,8 +22,8 @@ def save_prov_to_dot(
     max_sub_prov_depth: Optional[int] = None,
     show_attr_links: bool = True,
 ):
-    """Generate a graphviz-compatible .dot file from a `~medkit.core.ProvTracer`
-    for visualization.
+    """Generate a graphviz-compatible .dot file from a
+    :class:`~medkit.core.ProvTracer` for visualization.
 
     Parameters
     ----------

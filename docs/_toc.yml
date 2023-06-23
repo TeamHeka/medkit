@@ -18,6 +18,7 @@ parts:
   - file: api/audio
   - file: api/io
   - file: api/training
+  - file: api/tools
 - caption: Examples
   chapters:
   - file: examples/spans
