@@ -261,6 +261,17 @@ def test_default_rules():
             ), f"Syntagma '{syntagma.text}' shouldn't have been detected as family"
 
 
+def test_load_save_rules(tmpdir):
+    rules_file = tmpdir / "rules.yml"
+    rules = [
+        FamilyDetectorRule(regexp=r"\bfather\b"),
+        FamilyDetectorRule(regexp=r"\bmother\b"),
+    ]
+
+    FamilyDetector.save_rules(rules, rules_file)
+    assert FamilyDetector.load_rules(rules_file) == rules
+
+
 def test_rules_file_encoding_error():
     with pytest.raises(UnicodeError):
         FamilyDetector.load_rules(

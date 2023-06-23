@@ -384,3 +384,26 @@ class HypothesisDetector(ContextOperation):
                 raise ValueError(
                     "Some rules have the same uid, each rule must have a unique uid"
                 )
+
+    @staticmethod
+    def save_rules(
+        rules: List[HypothesisDetectorRule],
+        path_to_rules: Path,
+        encoding: Optional[str] = None,
+    ):
+        """
+        Store rules in a yml file
+
+        Parameters
+        ----------
+        rules
+            The rules to save
+        path_to_rules
+            Path to a .yml file that will contain the rules
+        encoding
+            Encoding of the .yml file
+        """
+
+        with open(path_to_rules, mode="w", encoding=encoding) as f:
+            rules_data = [dataclasses.asdict(r) for r in rules]
+            rules = yaml.safe_dump(rules_data, f)
