@@ -87,6 +87,15 @@ class FamilyDetector(ContextOperation):
     (e.g., `n°` -> `number`). So, if the text lengths are different, we fall back on
     initial unicode text for detection even if rule is not unicode-sensitive.
     In this case, a warning is logged for recommending to pre-process data.
+
+    Note that for better results, family detection should be run at the sentence
+    level (ie on sentence segments) rather than at the syntagma level [1].
+
+    [1] N. Garcelon, A. Neuraz, V. Benoit, R. Salomon, A. Burgun, "Improving a
+    full-text search engine: the importance of negation detection and family
+    history context to identify cases in a biomedical data warehouse", Journal
+    of the American Medical Informatics Association, Volume 24, Issue 3, May
+    2017
     """
 
     def __init__(
