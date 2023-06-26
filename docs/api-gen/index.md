@@ -10,4 +10,5 @@
     medkit.audio
     medkit.io
     medkit.training
+    medkit.tools
 ```

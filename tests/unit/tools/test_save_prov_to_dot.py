@@ -5,7 +5,7 @@ from medkit.core import (
     Attribute,
 )
 from medkit.core.text import Segment, Entity, Span
-from medkit.tools.save_prov_to_dot import save_prov_to_dot
+from medkit.tools import save_prov_to_dot
 
 
 def _get_segment_and_entity(with_attr=False):
