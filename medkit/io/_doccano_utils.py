@@ -52,8 +52,8 @@ class DoccanoRelation:
 class DoccanoDocRelationExtraction:
     id: int
     text: str
-    entities: Dict[str, DoccanoEntity]
-    relations: Dict[str, DoccanoRelation]
+    entities: List[DoccanoEntity]
+    relations: List[DoccanoRelation]
     metadata: Dict[str, Any]
 
     @classmethod
@@ -61,17 +61,8 @@ class DoccanoDocRelationExtraction:
         id = doc_line.get("id", None)
         text = doc_line[column_text]
         metadata = doc_line.get("metadata", {})
-        entities = dict()
-        relations = dict()
-
-        for ann in doc_line["entities"]:
-            entity = DoccanoEntity(**ann)
-            entities[entity.id] = entity
-
-        for ann in doc_line["relations"]:
-            relation = DoccanoRelation(**ann)
-            relations[relation.id] = relation
-
+        entities = [DoccanoEntity(**ann) for ann in doc_line["entities"]]
+        relations = [DoccanoRelation(**ann) for ann in doc_line["relations"]]
         return cls(
             text=text, id=id, entities=entities, relations=relations, metadata=metadata
         )
@@ -82,8 +73,8 @@ class DoccanoDocRelationExtraction:
             text=self.text,
         )
 
-        doc_dict["entities"] = [ent.to_dict() for ent in self.entities.values()]
-        doc_dict["relations"] = [rel.to_dict() for rel in self.relations.values()]
+        doc_dict["entities"] = [ent.to_dict() for ent in self.entities]
+        doc_dict["relations"] = [rel.to_dict() for rel in self.relations]
 
         if self.metadata:
             doc_dict["metadata"] = self.metadata

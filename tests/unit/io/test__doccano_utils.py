@@ -22,9 +22,9 @@ def test_doc_relation_extraction_from_dict():
     assert len(doc.relations) == 1
 
     entity = DoccanoEntity(id=0, start_offset=0, end_offset=6, label="ORG")
-    assert entity in doc.entities.values()
+    assert entity in doc.entities
     relation = DoccanoRelation(id=0, from_id=0, to_id=1, type="created_in")
-    assert relation in doc.relations.values()
+    assert relation in doc.relations
 
 
 def test_doc_seq_labeling_from_dict():

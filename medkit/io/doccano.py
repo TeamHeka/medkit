@@ -144,7 +144,6 @@ class DoccanoInputConverter:
         if len(documents) == 0:
             logger.warning(f"No .zip nor .jsonl found in '{dir_path}'")
 
-        logger.info(f"Created {len(documents)}  documents from {dir_path}")
         return documents
 
     def load_from_file(self, input_file) -> List[TextDocument]:
@@ -165,11 +164,12 @@ class DoccanoInputConverter:
         with open(input_file, encoding="utf-8") as fp:
             for line in fp:
                 doc_line = json.loads(line)
-                doc = self.parse_doc_line(doc_line)
+                doc = self._parse_doc_line(doc_line)
+                doc.metadata["path_to_file"] = str(input_file)
                 documents.append(doc)
         return documents
 
-    def parse_doc_line(self, doc_line: Dict[str, Any]) -> TextDocument:
+    def _parse_doc_line(self, doc_line: Dict[str, Any]) -> TextDocument:
         """Parse a doc_line into a TextDocument depending on the task
 
         Parameters
@@ -209,7 +209,7 @@ class DoccanoInputConverter:
         )
 
         anns_by_doccano_id = dict()
-        for doccano_entity in doccano_doc.entities.values():
+        for doccano_entity in doccano_doc.entities:
             text = doccano_doc.text[
                 doccano_entity.start_offset : doccano_entity.end_offset
             ]
@@ -228,7 +228,7 @@ class DoccanoInputConverter:
                     entity, self.description, source_data_items=[]
                 )
 
-        for doccano_relation in doccano_doc.relations.values():
+        for doccano_relation in doccano_doc.relations:
             relation = Relation(
                 label=doccano_relation.type,
                 source_id=anns_by_doccano_id[f"E{doccano_relation.from_id}"].uid,
@@ -243,7 +243,7 @@ class DoccanoInputConverter:
                 )
 
         metadata = doccano_doc.metadata.copy()
-        metadata.update(dict(doccano_id=doccano_doc.id))
+        metadata["doccano_id"] = doccano_doc.id
 
         doc = TextDocument(
             text=doccano_doc.text,
@@ -336,7 +336,7 @@ class DoccanoOutputConverter:
         self,
         task: DoccanoTask,
         anns_labels: Optional[List[str]] = None,
-        attr: Optional[str] = None,
+        attr_label: Optional[str] = None,
         uid: Optional[str] = None,
     ):
         """
@@ -348,7 +348,7 @@ class DoccanoOutputConverter:
             Labels of medkit annotations to convert into docccano annotations.
             If `None` (default) all the annotations (entities and relations)
             will be converted.
-        attr:
+        attr_label:
             Label of medkit attribute for text classification.
         uid:
             Identifier of the converter.
@@ -359,9 +359,9 @@ class DoccanoOutputConverter:
         self.uid = uid
         self.task = task
         self.anns_labels = anns_labels
-        self.attr = attr
+        self.attr_label = attr_label
 
-        if self.attr is None and task == DoccanoTask.TEXT_CLASSIFICATION:
+        if self.attr_label is None and task == DoccanoTask.TEXT_CLASSIFICATION:
             logger.warning(
                 "You should specify an attribute label for text classification. The"
                 " first attribute of the raw segment will be used as label for the"
@@ -370,7 +370,7 @@ class DoccanoOutputConverter:
 
     @property
     def description(self) -> OperationDescription:
-        config = dict(anns_labels=self.anns_labels, attr=self.attr)
+        config = dict(anns_labels=self.anns_labels, attr_label=self.attr_label)
         return OperationDescription(
             uid=self.uid, class_name=self.__class__.__name__, config=config
         )
@@ -472,8 +472,8 @@ class DoccanoOutputConverter:
         doccano_doc = utils.DoccanoDocRelationExtraction(
             id=idx,
             text=medkit_doc.text,
-            entities=entities,
-            relations=relations,
+            entities=list(entities.values()),
+            relations=list(relations.values()),
             metadata=medkit_doc.metadata,
         )
 
@@ -531,17 +531,17 @@ class DoccanoOutputConverter:
             Dictionary with doccano annotation. It may contain
             text ans its label (a list with its category(str))
         """
-        attribute = medkit_doc.raw_segment.attrs.get(label=self.attr)
+        attributes = medkit_doc.raw_segment.attrs.get(label=self.attr_label)
 
-        if not attribute:
+        if not attributes:
             raise KeyError(
                 "The attribute with the corresponding text class was not found. Check"
-                " the 'attr', {self.attr} was provided."
+                f" the 'attr_label' for this converter, {self.attr_label} was provided."
             )
 
         doccano_doc = utils.DoccanoDocTextClassification(
             text=medkit_doc.text,
-            label=attribute[0].value,
+            label=attributes[0].value,
             metadata=medkit_doc.metadata,
         )
         return doccano_doc.to_dict()

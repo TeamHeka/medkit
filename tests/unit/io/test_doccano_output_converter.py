@@ -60,7 +60,7 @@ EXPECTED_DOCLINE_BY_TASK = {
     ],
 )
 def test_save_by_task(tmp_path, task):
-    converter = DoccanoOutputConverter(task=task, attr="category")
+    converter = DoccanoOutputConverter(task=task, attr_label="category")
     dir_path = tmp_path / task.value
     expected_jsonl_path = dir_path / "all.jsonl"
 
@@ -92,6 +92,6 @@ def test_warnings(tmp_path, caplog):
 
     with pytest.raises(KeyError, match="The attribute with the corresponding .*"):
         converter = DoccanoOutputConverter(
-            task=DoccanoTask.TEXT_CLASSIFICATION, attr="is_negated"
+            task=DoccanoTask.TEXT_CLASSIFICATION, attr_label="is_negated"
         )
         converter.save(medkit_docs, dir_path=dir_path)
