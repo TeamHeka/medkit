@@ -12,8 +12,8 @@ import yaml
 from medkit.text.ner import umls_utils
 from medkit.text.ner._base_simstring_matcher import (
     BaseSimstringMatcher,
-    SimstringMatcherRule,
-    SimstringMatcherNormalization,
+    BaseSimstringMatcherRule,
+    BaseSimstringMatcherNormalization,
     build_simstring_matcher_databases,
 )
 
@@ -228,7 +228,7 @@ class UMLSMatcher(BaseSimstringMatcher):
         language: str,
         allowed_semgroups: Optional[List[str]],
         labels_by_semgroup: Dict[str, str],
-    ) -> Iterator[SimstringMatcherRule]:
+    ) -> Iterator[BaseSimstringMatcherRule]:
         """
         Create `SimstringMatcherRule` objects for all UMLS entries (filtered by
         `language` and `allowed_semgroups`) with appropriate labels (based on
@@ -262,8 +262,10 @@ class UMLSMatcher(BaseSimstringMatcher):
             semgroup = semgroups[0]
             label = labels_by_semgroup[semgroup]
 
-            norm = SimstringMatcherNormalization(
+            norm = BaseSimstringMatcherNormalization(
                 kb_name="umls", kb_version=version, id=entry.cui, term=entry.term
             )
-            rule = SimstringMatcherRule(term=term, label=label, normalizations=[norm])
+            rule = BaseSimstringMatcherRule(
+                term=term, label=label, normalizations=[norm]
+            )
             yield rule

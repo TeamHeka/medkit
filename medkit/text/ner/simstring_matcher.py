@@ -5,21 +5,74 @@ __all__ = ["SimstringMatcher", "SimstringMatcherRule", "SimstringMatcherNormaliz
 import dataclasses
 from pathlib import Path
 import tempfile
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from typing_extensions import Literal
 
 import yaml
 
 from medkit.text.ner._base_simstring_matcher import (
     BaseSimstringMatcher,
-    SimstringMatcherRule,
-    SimstringMatcherNormalization,
+    BaseSimstringMatcherRule,
+    BaseSimstringMatcherNormalization,
     build_simstring_matcher_databases,
 )
 
 
 _RULES_DB_FILENAME = "rules.db"
 _SIMSTRING_DB_FILENAME = "simstring"
+
+
+class SimstringMatcherRule(BaseSimstringMatcherRule):
+    """
+    Rule to use with :class:`~.SimstringMatcher`
+
+    Attributes
+    ----------
+    term:
+        Term to match using similarity-based fuzzy matching
+    label:
+        Label to use for the entities created when a match is found
+    normalization:
+        Optional list of normalization attributes that should be attached to the
+        entities created
+    """
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> SimstringMatcherRule:
+        return SimstringMatcherRule(
+            term=data["term"],
+            label=data["label"],
+            id=data["id"],
+            normalizations=[
+                SimstringMatcherNormalization.from_dict(n)
+                for n in data["normalizations"]
+            ],
+        )
+
+
+class SimstringMatcherNormalization(BaseSimstringMatcherNormalization):
+    """
+    Descriptor of normalization attributes to attach to entities
+    created from a :class:`~.SimstringMatcherRule`
+
+    Attributes
+    ----------
+    kb_name:
+        The name of the knowledge base we are referencing. Ex: "umls"
+    kb_version:
+        The name of the knowledge base we are referencing. Ex: "202AB"
+    id:
+        The id of the entity in the knowledge base, for instance a CUI
+    """
+
+    @staticmethod
+    def from_dict(data: Dict[str, Any]) -> SimstringMatcherNormalization:
+        return SimstringMatcherNormalization(
+            kb_name=data["kb_name"],
+            kb_version=data["kb_version"],
+            id=data["id"],
+            term=data["term"],
+        )
 
 
 class SimstringMatcher(BaseSimstringMatcher):

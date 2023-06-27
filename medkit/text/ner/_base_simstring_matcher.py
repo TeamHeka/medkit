@@ -2,8 +2,8 @@ from __future__ import annotations
 
 __all__ = [
     "BaseSimstringMatcher",
-    "SimstringMatcherRule",
-    "SimstringMatcherNormalization",
+    "BaseSimstringMatcherRule",
+    "BaseSimstringMatcherNormalization",
     "build_simstring_matcher_databases",
 ]
 
@@ -13,7 +13,7 @@ import logging
 import math
 from pathlib import Path
 import re
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Iterator, List, Optional, Tuple, Union
 from typing_extensions import Literal
 import shelve
 
@@ -42,32 +42,33 @@ _SIMILARITY_MAP = {
 
 
 @dataclasses.dataclass
-class SimstringMatcherRule:
+class BaseSimstringMatcherRule:
+    """
+    Rule to use with :class:`~.BaseSimstringMatcher`
+
+    Attributes
+    ----------
+    term:
+        Term to match using similarity-based fuzzy matching
+    label:
+        Label to use for the entities created when a match is found
+    normalization:
+        Optional list of normalization attributes that should be attached to the
+        entities created
+    """
+
     term: str
     label: str
-    id: Optional[str] = None
-    normalizations: List[SimstringMatcherNormalization] = dataclasses.field(
+    normalizations: List[BaseSimstringMatcherNormalization] = dataclasses.field(
         default_factory=list
     )
 
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> SimstringMatcherRule:
-        return SimstringMatcherRule(
-            term=data["term"],
-            label=data["label"],
-            id=data["id"],
-            normalizations=[
-                SimstringMatcherNormalization.from_dict(n)
-                for n in data["normalizations"]
-            ],
-        )
-
 
 @dataclasses.dataclass
-class SimstringMatcherNormalization:
+class BaseSimstringMatcherNormalization:
     """
     Descriptor of normalization attributes to attach to entities
-    created from a `SimstringMatcherRule`
+    created from a `~.BaseSimstringMatcherRule`
 
     Attributes
     ----------
@@ -83,15 +84,6 @@ class SimstringMatcherNormalization:
     kb_version: str
     id: Union[int, str]
     term: Optional[str] = None
-
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> SimstringMatcherNormalization:
-        return SimstringMatcherNormalization(
-            kb_name=data["kb_name"],
-            kb_version=data["kb_version"],
-            id=data["id"],
-            term=data["term"],
-        )
 
 
 @dataclasses.dataclass
@@ -369,7 +361,7 @@ class BaseSimstringMatcher(NEROperation):
 
     @staticmethod
     def _create_norm_attr(
-        norm: SimstringMatcherNormalization, score: float
+        norm: BaseSimstringMatcherNormalization, score: float
     ) -> EntityNormAttribute:
         """Create a normalization attribute based on the normalization descriptor of a rule
         """
@@ -395,7 +387,7 @@ class BaseSimstringMatcher(NEROperation):
 def build_simstring_matcher_databases(
     simstring_db_file: Path,
     rules_db_file: Path,
-    rules: Iterator[SimstringMatcherRule],
+    rules: Iterator[BaseSimstringMatcherRule],
     lowercase: bool,
     normalize_unicode: bool,
 ):
