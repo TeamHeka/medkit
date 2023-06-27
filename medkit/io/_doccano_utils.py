@@ -50,7 +50,6 @@ class DoccanoRelation:
 
 @dataclasses.dataclass()
 class DoccanoDocRelationExtraction:
-    id: int
     text: str
     entities: List[DoccanoEntity]
     relations: List[DoccanoRelation]
@@ -58,21 +57,14 @@ class DoccanoDocRelationExtraction:
 
     @classmethod
     def from_dict(cls, doc_line: Dict[str, Any], column_text: str) -> Self:
-        id = doc_line.get("id", None)
         text = doc_line[column_text]
         metadata = doc_line.get("metadata", {})
         entities = [DoccanoEntity(**ann) for ann in doc_line["entities"]]
         relations = [DoccanoRelation(**ann) for ann in doc_line["relations"]]
-        return cls(
-            text=text, id=id, entities=entities, relations=relations, metadata=metadata
-        )
+        return cls(text=text, entities=entities, relations=relations, metadata=metadata)
 
     def to_dict(self) -> Dict[str, Any]:
-        doc_dict = dict(
-            id=self.id,
-            text=self.text,
-        )
-
+        doc_dict = dict(text=self.text)
         doc_dict["entities"] = [ent.to_dict() for ent in self.entities]
         doc_dict["relations"] = [rel.to_dict() for rel in self.relations]
 

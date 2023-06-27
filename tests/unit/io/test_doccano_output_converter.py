@@ -3,6 +3,7 @@ import logging
 
 import pytest
 from medkit.core import Attribute
+from medkit.core.id import generate_deterministic_id
 from medkit.core.text import TextDocument, Entity, Relation, Span
 from medkit.io import DoccanoTask, DoccanoOutputConverter
 
@@ -30,13 +31,29 @@ def _get_doc_by_task(task: DoccanoTask):
 
 EXPECTED_DOCLINE_BY_TASK = {
     DoccanoTask.RELATION_EXTRACTION: {
-        "id": 0,
         "text": "medkit was created in 2022",
         "entities": [
-            {"id": 0, "start_offset": 0, "end_offset": 6, "label": "ORG"},
-            {"id": 1, "start_offset": 22, "end_offset": 26, "label": "DATE"},
+            {
+                "id": generate_deterministic_id("e1").int,
+                "start_offset": 0,
+                "end_offset": 6,
+                "label": "ORG",
+            },
+            {
+                "id": generate_deterministic_id("e2").int,
+                "start_offset": 22,
+                "end_offset": 26,
+                "label": "DATE",
+            },
         ],
-        "relations": [{"id": 0, "from_id": 0, "to_id": 1, "type": "created_in"}],
+        "relations": [
+            {
+                "id": generate_deterministic_id("r1").int,
+                "from_id": generate_deterministic_id("e1").int,
+                "to_id": generate_deterministic_id("e2").int,
+                "type": "created_in",
+            }
+        ],
     },
     # json does not recognize tuples
     # NOTE: this works with doccano IDE
