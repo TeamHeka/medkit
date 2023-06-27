@@ -103,7 +103,7 @@ class _Match:
 
 class BaseSimstringMatcher(NEROperation):
     """
-    Base class for entity matcher using the `simtring` fuzzy matching algorithm
+    Base class for entity matcher using the `simstring` fuzzy matching algorithm
     (also used by `QuickUMLS`).
     """
 

@@ -79,7 +79,8 @@ class SimstringMatcher(BaseSimstringMatcher):
     """
     Entity matcher relying on string similarity
 
-    Uses the `simtring` fuzzy matching algorithm (also used by `QuickUMLS`).
+    Uses the `simstring` fuzzy matching algorithm
+    (http://chokkan.org/software/simstring/).
     """
 
     def __init__(
@@ -160,16 +161,16 @@ class SimstringMatcher(BaseSimstringMatcher):
         Parameters
         ----------
         path_to_rules
-            Path to a yml file containing a list of mappings
-            with the same structure as `SimstringMatcherRule`
+            Path to a yml file containing a list of mappings with the same
+            structure as :class:`~.SimstringMatcherRule`
         encoding
             Encoding of the file to open
 
         Returns
         -------
         List[SimstringMatcherRule]
-            List of all the rules in `path_to_rules`,
-            can be used to init a `SimstringMatcher`
+            List of all the rules in `path_to_rules`, can be used to init a
+            :class:`~.SimstringMatcher`
         """
 
         class Loader(yaml.Loader):

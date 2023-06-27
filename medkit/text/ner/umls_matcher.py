@@ -34,9 +34,11 @@ class _UMLSMatcherCacheParams:
 
 class UMLSMatcher(BaseSimstringMatcher):
     """
-    Entity annotator identifying UMLS concepts using the `simtring` fuzzy matching algorithm.
+    Entity annotator identifying UMLS concepts using the `simstring` fuzzy
+    matching algorithm (http://chokkan.org/software/simstring/).
 
-    This operation is heavily inspired by the [`QuickUMLS` library](https://github.com/Georgetown-IR-Lab/QuickUMLS)
+    This operation is heavily inspired by the `QuickUMLS` library
+    (https://github.com/Georgetown-IR-Lab/QuickUMLS)
     """
 
     DEFAULT_LABELS_BY_SEMGROUP = {
@@ -230,8 +232,8 @@ class UMLSMatcher(BaseSimstringMatcher):
         labels_by_semgroup: Dict[str, str],
     ) -> Iterator[BaseSimstringMatcherRule]:
         """
-        Create `SimstringMatcherRule` objects for all UMLS entries (filtered by
-        `language` and `allowed_semgroups`) with appropriate labels (based on
+        Create rules for all UMLS entries (filtered by `language` and
+        `allowed_semgroups`) with appropriate labels (based on
         `labels_by_semgroup`)
         """
 

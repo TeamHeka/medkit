@@ -273,6 +273,15 @@ For a better understanding, you may follow the
  [iamsystem matcher example tutorial](../examples/iamsystem)
 ```
 
+### Simstring Matcher
+
+Medkit provides an entity matcher using the [simstring](http://chokkan.org/software/simstring/) fuzzy matching algorithm.
+
+:::{note}
+For more details about public APIs, refer to {mod}`~.text.ner.simstring_matcher`.
+:::
+
+
 ### Quick UMLS Matcher
 
 :::{important}
@@ -325,6 +334,17 @@ Its normalization attribute (`norm = entity.get_norms()[0]`) will be:
 :::{note}
 For more details about public APIs, refer to
 {mod}`~.text.ner.quick_umls_matcher`.
+:::
+
+### UMLS Matcher
+
+As an alternative to `QuickUMLSMatcher`, medkit also provides an entity matcher
+dedicated to [UMLS](https://www.nlm.nih.gov/research/umls/index.html) terms
+that uses the [simstring](http://chokkan.org/software/simstring/) fuzzy matching
+algorithm but does not rely on `QuickUMLS`
+
+:::{note}
+For more details about public APIs, refer to {mod}`~.text.ner.umls_matcher`.
 :::
 
 ### Duckling Matcher
