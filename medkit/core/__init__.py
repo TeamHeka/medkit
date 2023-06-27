@@ -12,6 +12,7 @@ __all__ = [
     "DocPipeline",
     "Document",
     "generate_id",
+    "generate_deterministic_id",
     "DocOperation",
     "Operation",
     "OperationDescription",
@@ -41,7 +42,7 @@ from .conversion import InputConverter, OutputConverter
 from .data_item import IdentifiableDataItem, IdentifiableDataItemWithAttrs
 from .doc_pipeline import DocPipeline
 from .document import Document
-from .id import generate_id
+from .id import generate_id, generate_deterministic_id
 from .operation import Operation, DocOperation
 from .operation_desc import OperationDescription
 from .pipeline import (
