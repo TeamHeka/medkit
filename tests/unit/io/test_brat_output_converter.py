@@ -18,6 +18,7 @@ from medkit.io._brat_utils import (
     BratAnnConfiguration,
 )
 from medkit.io.brat import BratOutputConverter
+from medkit.io._common import get_anns_by_type
 
 
 def _get_medkit_doc():
@@ -205,7 +206,12 @@ def test_annotation_conf_file():
         attrs=None,
     )
     config_file = BratAnnConfiguration()
-    segments, relations = brat_converter._get_anns_from_medkit_doc(medkit_doc)
+
+    # simulate expected annotations relations + entitites
+    annotations = get_anns_by_type(medkit_doc, anns_labels=None)
+    relations = annotations.get("relations", [])
+    segments = annotations.get("entities", [])
+
     _ = brat_converter._convert_medkit_anns_to_brat(
         segments, relations, config_file, medkit_doc.text
     )
