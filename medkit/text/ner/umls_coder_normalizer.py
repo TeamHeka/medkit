@@ -335,7 +335,13 @@ class UMLSCoderNormalizer(Operation):
         ):
             # get preprocess version of each term for matching
             terms_to_match = [
-                preprocess_term_to_match(e.term, self.lowercase, self.normalize_unicode)
+                preprocess_term_to_match(
+                    e.term,
+                    self.lowercase,
+                    self.normalize_unicode,
+                    clean_brackets=True,
+                    clean_dashes=True,
+                )
                 for e in chunk_entries
             ]
 

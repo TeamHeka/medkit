@@ -201,8 +201,8 @@ def preprocess_term_to_match(
     lowercase: bool,
     normalize_unicode: bool,
     clean_nos: bool = True,
-    clean_brackets: bool = True,
-    clean_dashes: bool = True,
+    clean_brackets: bool = False,
+    clean_dashes: bool = False,
 ):
     """
     Preprocess a UMLS term for matching purposes
