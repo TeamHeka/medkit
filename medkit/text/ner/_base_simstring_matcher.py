@@ -274,9 +274,11 @@ class BaseSimstringMatcher(NEROperation):
         ['I have', 'I have type', 'have', 'have type', 'type', 'type 2 diabetes', 'diabetes']
         """
 
-        # simple tokenization, good enough for our usecase and less fuss than using spacy
-        matches = [(m.group(0), m.span()) for m in _TOKENIZATION_PATTERN.finditer(text)]
-        tokens, ranges = zip(*matches)
+        # find all tokens and corresponding ranges using regexp
+        tokens_and_ranges = [
+            (m.group(0), m.span()) for m in _TOKENIZATION_PATTERN.finditer(text)
+        ]
+        tokens, ranges = zip(*tokens_and_ranges)
         nb_tokens = len(tokens)
 
         # iterate over non-empty tokens
