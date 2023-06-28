@@ -307,10 +307,11 @@ class BaseSimstringMatcher(NEROperation):
     @staticmethod
     def _filter_overlapping_matches(matches: List[_Match]) -> List[_Match]:
         """
-        Remove overlapping matches by keeping longest matches among overlapping matches
+        Remove overlapping matches by keeping matches with best score then max
+        length among overlapping matches
         """
 
-        matches.sort(key=lambda m: m.score, reverse=True)
+        matches.sort(key=lambda m: (m.score, m.length), reverse=True)
         matches_filtered = []
         for match in matches:
             if any(match.overlaps(prev_match) for prev_match in matches_filtered):
