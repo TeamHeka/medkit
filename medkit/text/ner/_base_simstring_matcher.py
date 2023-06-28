@@ -308,6 +308,8 @@ class BaseSimstringMatcher(NEROperation):
                 continue
             matches_filtered.append(match)
 
+        # restore initial order
+        matches_filtered.sort(key=lambda m: m.start)
         return matches_filtered
 
     def _build_entity(self, segment: Segment, match: _Match) -> Entity:
