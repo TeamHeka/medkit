@@ -9,7 +9,6 @@ __all__ = [
 
 import dataclasses
 import itertools
-import logging
 import math
 from pathlib import Path
 import re
@@ -29,8 +28,6 @@ from medkit.core.text import (
 )
 from medkit.text.ner import UMLSNormAttribute
 
-
-logger = logging.getLogger(__name__)
 
 _TOKENIZATION_PATTERN = re.compile(r"[\w]+|[^\w ]")
 _SIMILARITY_MAP = {
@@ -185,19 +182,8 @@ class BaseSimstringMatcher(NEROperation):
 
         if self.lowercase:
             text = text.lower()
-
         if self.normalize_unicode:
-            ascii_text = unidecode(text)
-            if len(ascii_text) != len(text):
-                logger.warning(
-                    "Lengths of unicode text and generated ascii text are different. "
-                    "Please, pre-process input text before running SimstringMatcher\n\n"
-                    f"Unicode:{text} (length: {len(text)})\n"
-                    f"Ascii: {ascii_text} (length: {len(ascii_text)})\n"
-                )
-            else:
-                text = ascii_text
-
+            text = unidecode(text)
         return text
 
     def run(self, segments: List[Segment]) -> List[Entity]:
