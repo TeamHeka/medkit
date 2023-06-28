@@ -278,6 +278,8 @@ class BaseSimstringMatcher(NEROperation):
         tokens_and_ranges = [
             (m.group(0), m.span()) for m in _TOKENIZATION_PATTERN.finditer(text)
         ]
+        if len(tokens_and_ranges) == 0:
+            return
         tokens, ranges = zip(*tokens_and_ranges)
         nb_tokens = len(tokens)
 

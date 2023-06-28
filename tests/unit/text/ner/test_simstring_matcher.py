@@ -71,15 +71,7 @@ def test_multiple_matches():
 def test_approximate_match():
     """Fuzzy matching"""
 
-    rule = SimstringMatcherRule(
-        term="diabète",
-        label="problem",
-        normalizations=[
-            SimstringMatcherNormalization(
-                kb_name="umls", kb_version="2021AB", id="C0011849"
-            )
-        ],
-    )
+    rule = SimstringMatcherRule(term="diabète", label="problem")
     matcher = SimstringMatcher(rules=[rule], threshold=0.1)
 
     sentence = _get_sentence_segment(text="Le patient souffre de diabèt et d'asthme.")
@@ -88,6 +80,18 @@ def test_approximate_match():
     assert len(entities) == 1
     entity = entities[0]
     assert entity.text == "diabèt"
+
+
+def test_empty_segment():
+    """Handling of segment with zero tokens"""
+
+    sentence = _get_sentence_segment(text="")
+
+    rule = SimstringMatcherRule(term="diabète", label="problem")
+    matcher = SimstringMatcher(rules=[rule])
+    entities = matcher.run([sentence])
+
+    assert len(entities) == 0
 
 
 def test_normalization():
