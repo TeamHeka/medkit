@@ -92,6 +92,8 @@ class QuickUMLSMatcher(NEROperation):
         "GEOG": "geographic_area",
         "LIVB": "living_being",
         "OBJC": "object",
+        "OCCU": "occupation",
+        "ORGA": "organization",
         "PHEN": "phenomenon",
         "PHYS": "physiology",
         "PROC": "procedure",
