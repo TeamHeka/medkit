@@ -1,10 +1,12 @@
 import json
+import logging
 from zipfile import ZipFile
 
 import pytest
 
 from medkit.core.prov_tracer import ProvTracer
-from medkit.io import DoccanoInputConverter, DoccanoTask
+from medkit.core.text.span import Span
+from medkit.io import DoccanoInputConverter, DoccanoTask, DoccanoIDEConfig
 
 TEST_LINE_BY_TASK = {
     DoccanoTask.RELATION_EXTRACTION: {
@@ -92,6 +94,49 @@ def test_text_classification_converter(tmp_path):
     attrs = segment.attrs.get(label=expected_label)
     assert len(attrs) == 1
     assert attrs[0].value == "header"
+
+
+def test_crlf_character(tmp_path, caplog):
+    # test when doccano export a document from a project with
+    # 'count grapheme clusters as one character' (CRLF is a grapheme cluster)
+    test_line = {
+        "text": "medkit was\r\ncreated in 2022",
+        "entities": [
+            {"id": 0, "start_offset": 0, "end_offset": 6, "label": "ORG"},
+            {"id": 1, "start_offset": 22, "end_offset": 26, "label": "DATE"},
+        ],
+        "relations": [{"id": 0, "from_id": 0, "to_id": 1, "type": "created_in"}],
+    }
+    task = DoccanoTask.RELATION_EXTRACTION
+    create_doccano_files_disk(tmp_path, data=test_line, task=task.value)
+
+    # test default config
+    with caplog.at_level(logging.WARNING, logger="medkit.io.doccano"):
+        converter = DoccanoInputConverter(
+            task=task, config=DoccanoIDEConfig(count_CRLF_character_as_one=False)
+        )
+        documents = converter.load_from_directory_zip(
+            dir_path=f"{tmp_path}/{task.value}"
+        )
+        assert "1/1 documents contain" in caplog.text
+
+    document = documents[0]
+    assert len(document.anns.entities) == 2
+    entity_no_aligned = document.anns.get(label="DATE")[0]
+    assert entity_no_aligned.text == " 202"
+    assert entity_no_aligned.spans == [Span(22, 26)]
+
+    # test 'correct' configuration for this use case
+    converter = DoccanoInputConverter(
+        task=task, config=DoccanoIDEConfig(count_CRLF_character_as_one=True)
+    )
+    documents = converter.load_from_directory_zip(dir_path=f"{tmp_path}/{task.value}")
+
+    document = documents[0]
+    assert len(document.anns.entities) == 2
+    entity_no_aligned = document.anns.get(label="DATE")[0]
+    assert entity_no_aligned.text == "2022"
+    assert entity_no_aligned.spans == [Span(22, 26)]
 
 
 TEST_PROV_BY_TASK = [

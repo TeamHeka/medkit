@@ -55,12 +55,20 @@ class DoccanoIDEConfig:
     column_label:
         Name or key representing the labels
     category_label:
-        Label of attribute to add for text classification
+        Label of attribute to add for text classification.
+        This is related to :class:`~.io.DoccanoTask.TEXT_CLASSIFICATION` projects.
+    count_CRLF_character_as_one:
+        Whether count the character `\\r\\n` as one character.
+        This is related to :class:`~.io.DoccanoTask.RELATION_EXTRACTION` and
+        :class:`~.io.DoccanoTask.SEQUENCE_LABELING` projects.
+        If True, medkit will replace this character by a single `\\n` character to get
+        the same span as defined by Doccano.
     """
 
     column_text: str = "text"
     column_label: str = "label"
     category_label: str = "doccano_category"
+    count_CRLF_character_as_one: bool = False
 
 
 class DoccanoInputConverter:
@@ -68,6 +76,9 @@ class DoccanoInputConverter:
 
     For each line a :class:`~medkit.core.text.TextDocument` will be created.
     The doccano files can be load from a directory with zip files or from a jsonl file.
+
+    The converter supports custom configuration to define the parameters used by doccano
+    when exporting the data (c.f :class:`~io.doccano.DoccanoIDEConfig`)
     """
 
     def __init__(
@@ -83,7 +94,7 @@ class DoccanoInputConverter:
             The doccano task for the input converter
         config:
             Optional IDEConfig to define default values in doccano IDE.
-            This config can change the name of the text field or labels.
+            This config can change, for example, the name of the text field or labels.
         uid:
             Identifier of the converter.
         """
@@ -167,7 +178,33 @@ class DoccanoInputConverter:
                 doc_line = json.loads(line)
                 doc = self._parse_doc_line(doc_line)
                 documents.append(doc)
+
+        self._check_crlf_character(documents)
         return documents
+
+    def _check_crlf_character(self, documents: List[TextDocument]):
+        if (
+            self.task == DoccanoTask.RELATION_EXTRACTION
+            or self.task == DoccanoTask.SEQUENCE_LABELING
+        ) and not self.config.count_CRLF_character_as_one:
+            nb_docs_with_warning = len(
+                [
+                    document.text[0]
+                    for document in documents
+                    if document.text.find("\r\n") > 0
+                ]
+            )
+
+            if nb_docs_with_warning > 0:
+                logger.warning(
+                    f"{nb_docs_with_warning}/{len(documents)} documents contain"
+                    " '\\r\\n' characters but 'count_CRLF_character_as_one' is False."
+                    " This can generate alignment problems in the converted documents,"
+                    " make sure that the configuration of the converter"
+                    " (count_CRLF_character_as_one) is the same as the one used in"
+                    " doccano. Ignore this message if this option was deactivated in"
+                    " doccano IDE."
+                )
 
     def _parse_doc_line(self, doc_line: Dict[str, Any]) -> TextDocument:
         """Parse a doc_line into a TextDocument depending on the task
@@ -205,7 +242,9 @@ class DoccanoInputConverter:
             The document with annotations
         """
         doccano_doc = utils.DoccanoDocRelationExtraction.from_dict(
-            doc_line, column_text=self.config.column_text
+            doc_line,
+            column_text=self.config.column_text,
+            count_CRLF_character_as_one=self.config.count_CRLF_character_as_one,
         )
 
         anns_by_doccano_id = dict()

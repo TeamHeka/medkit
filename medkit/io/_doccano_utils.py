@@ -1,7 +1,10 @@
 import dataclasses
+import logging
 from typing import Any, Dict, List, Tuple
 
 from typing_extensions import Self
+
+logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass()
@@ -56,8 +59,19 @@ class DoccanoDocRelationExtraction:
     metadata: Dict[str, Any]
 
     @classmethod
-    def from_dict(cls, doc_line: Dict[str, Any], column_text: str) -> Self:
-        text = doc_line[column_text]
+    def from_dict(
+        cls,
+        doc_line: Dict[str, Any],
+        column_text: str,
+        count_CRLF_character_as_one: bool,
+    ) -> Self:
+        text: str = doc_line[column_text]
+
+        if count_CRLF_character_as_one:
+            # doccano had exported the spans with this modification
+            # replace in medkit to get aligned spans
+            text = text.replace("\r\n", "\n")
+
         metadata = doc_line.get("metadata", {})
         entities = [DoccanoEntity(**ann) for ann in doc_line["entities"]]
         relations = [DoccanoRelation(**ann) for ann in doc_line["relations"]]
