@@ -1,5 +1,6 @@
 import dataclasses
 import datetime
+import logging
 
 import pytest
 
@@ -94,7 +95,7 @@ def test_medkit_to_spacy_doc_without_anns(nlp_spacy):
     assert spacy_doc._.get("medkit_id") is None
 
 
-def test_medkit_to_spacy_doc_selected_ents_list(nlp_spacy):
+def test_medkit_to_spacy_doc_selected_ents_list(nlp_spacy, caplog):
     medkit_doc = _get_doc()
     raw_segment = medkit_doc.raw_segment
 
@@ -128,7 +129,7 @@ def test_medkit_to_spacy_doc_selected_ents_list(nlp_spacy):
     assert (disease_spacy_span.start_char, disease_spacy_span.end_char) == (84, 96)
 
     # test warning for labels
-    with pytest.warns(UserWarning, match=r"No medkit annotations"):
+    with caplog.at_level(logging.WARNING, logger="medkit.io._common"):
         spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(
             nlp=nlp_spacy,
             medkit_doc=medkit_doc,
