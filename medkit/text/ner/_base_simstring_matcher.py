@@ -125,7 +125,7 @@ class BaseSimstringMatcher(NEROperation):
             Simstring database to use
         rules_db_file:
             Rules database (in python shelve format) mapping matched terms to
-            correponding rules
+            corresponding rules
         lowercase:
             Wether to use lowercased versions of rule terms and input entities.
         normalize_unicode:

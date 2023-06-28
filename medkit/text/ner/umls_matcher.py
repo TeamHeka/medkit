@@ -210,7 +210,7 @@ class UMLSMatcher(BaseSimstringMatcher):
         Returns
         -------
         Dict[str, str]:
-            A mapping with semgroups as keys and correponding label as values
+            A mapping with semgroups as keys and corresponding label as values
         """
 
         if output_labels is None:
