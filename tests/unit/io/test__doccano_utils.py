@@ -17,7 +17,9 @@ def test_doc_relation_extraction_from_dict():
         ],
         "relations": [{"id": 0, "from_id": 0, "to_id": 1, "type": "created_in"}],
     }
-    doc = DoccanoDocRelationExtraction.from_dict(test_line, column_text="text")
+    doc = DoccanoDocRelationExtraction.from_dict(
+        test_line, column_text="text", count_CRLF_character_as_one=False
+    )
     assert len(doc.entities) == 2
     assert len(doc.relations) == 1
 
