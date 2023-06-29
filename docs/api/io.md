@@ -10,7 +10,7 @@ For more details about public APIs, refer to
 (api:io:brat)=
 ## Brat
 
-Brat is a web-based tool for text annotation. Medkit supports the input and output conversion of text documents. 
+Brat is a web-based tool for text annotation. Medkit supports the **input** and **output** conversion of text documents. 
 
 :::{seealso}
 For more details, refer to {mod}`medkit.io.brat`.
@@ -20,18 +20,46 @@ You may refer to this [example](../examples/brat_io.md) for more information.
 
 ## Doccano
 
-Doccano is a text annotation tool, you can import doccano files coming from these tasks:
+[Doccano](https://github.com/doccano/doccano) is a text annotation tool from multiple tasks. Medkit supports the **input** and **output** conversion of doccano files (.JSONL format). 
 
-* Relation extraction: named entity recognition with relations
-* Sequence labeling: named entity recognition without relations
-* Text classification: A document with a category
+You can load annotations from a .jsonl file or a zip directory.
 
-Supported tasks can be found in {class}`medkit.io.doccano.DoccanoTask`. You can load documents from a JSONL file or a zip file directory.
+### Supported tasks
+| Doccano Project                  	| Task for io converter                                                                                                     	|
+|----------------------------------	|---------------------------------------------------------------------------------------------------------------------------	|
+| Sequence labeling                	| {class}`medkit.io.doccano.DoccanoTask.SEQUENCE_LABELING` <br> i.e : `{'text':...,'label':[(int,int,label)]}`              	|
+| Sequence labeling with relations 	| {class}`medkit.io.doccano.DoccanoTask.RELATION_EXTRACTION` <br>i.e : `{'text':...,'entities':[{...}],'relations':[{...}]}` 	|
+| Text Classification              	| {class}`medkit.io.doccano.DoccanoTask.TEXT_CLASSIFICATION`<br>i.e : `{'text':...,'label':[str]}`                          	|
+:::{note}
+Medkit use **metadata** field to load/save extra information about the annotation
+:::
+### Custom configuration
+
+The doccano user interface allows custom configuration over certain annotation parameters. The {class}`medkit.io.doccano.DoccanoIDEConfig` class contains the configuration to be used by the input converter. 
+
+You can modify the settings depending on the configuration of your project. If you don't provide a config, the converter will be used the default doccano configuration. The 'metadata' of the annotation will be included in the TextDocuments.
+
+**Example**
+
+You want to load documents coming from a sequence labeling project where,'\r\n' characters are counted by one character:
+
+```
+from medkit.io.doccano import DoccanoTask, DoccanoIDEConfig, DoccanoInputConverter
+
+# define the converter
+converter = DoccanoInputConverter(
+    task=DoccanoTask.SEQUENCE_LABELING,
+    config=DoccanoIDEConfig(count_CRLF_character_as_one=True),
+)
+docs = converter.load_from_file("doccano_file.jsonl")
+```
 
 For more details, refer to {mod}`medkit.io.doccano`.
 
 (api:io:spacy)=
 ## Spacy
+
+Medkit supports the **input** and **output** conversion of spacy documents.
 
 :::{important}
 For using spacy converters, you need to install [spacy](https://spacy.io/).
