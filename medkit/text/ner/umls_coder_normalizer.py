@@ -401,6 +401,16 @@ class _EmbeddingsPipeline(FeatureExtractionPipeline):
         self.summary_method = summary_method
         self.normalize = normalize
 
+    def _ensure_tensor_on_device(self, inputs, device):
+        """
+        Hack to force tensors to be kept on pipeline device. The base hugging
+        face pipeline tries to move the model outputs back to the cpu before
+        returning them but we want to keep them on the gpu if they are, because
+        we want to still be on the gpu when doing big similarity matrix multiplication
+        between entities embeddings and umls embeddings
+        """
+        return super()._ensure_tensor_on_device(inputs, self.device)
+
     def preprocess(self, inputs, truncation=True) -> Dict[str, torch.Tensor]:
         return self.tokenizer(
             inputs,
