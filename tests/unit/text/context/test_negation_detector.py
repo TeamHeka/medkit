@@ -330,6 +330,17 @@ def test_default_rules():
             )
 
 
+def test_load_save_rules(tmpdir):
+    rules_file = tmpdir / "rules.yml"
+    rules = [
+        NegationDetectorRule(id="id_neg_no", regexp=r"^no\b"),
+        NegationDetectorRule(id="id_neg_discard", regexp=r"\bdiscard(s|ed)?\b"),
+    ]
+
+    NegationDetector.save_rules(rules, rules_file)
+    assert NegationDetector.load_rules(rules_file) == rules
+
+
 def test_rules_file_encoding_error():
     with pytest.raises(UnicodeError):
         NegationDetector.load_rules(

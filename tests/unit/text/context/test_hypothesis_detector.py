@@ -257,6 +257,17 @@ def test_example_rules_and_verbs():
             assert not attr.metadata
 
 
+def test_load_save_rules(tmpdir):
+    rules_file = tmpdir / "rules.yml"
+    rules = [
+        HypothesisDetectorRule(id="id_if", regexp=r"\bif\b"),
+        HypothesisDetectorRule(id="id_assuming", regexp=r"\bassuming\b"),
+    ]
+
+    HypothesisDetector.save_rules(rules, rules_file)
+    assert HypothesisDetector.load_rules(rules_file) == rules
+
+
 def test_rules_and_verbs_file_encoding_error():
     with pytest.raises(UnicodeError):
         HypothesisDetector.load_rules(

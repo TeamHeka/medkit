@@ -289,6 +289,29 @@ def test_prov():
     assert attr_prov.source_data_items == [sentence]
 
 
+def test_load_save_rules(tmpdir):
+    rules_file = tmpdir / "rules.yml"
+    rules = [
+        RegexpMatcherRule(
+            label="Diabetes",
+            regexp="diabetes",
+            normalizations=[
+                RegexpMatcherNormalization("icd", "10", "E10-E14"),
+                RegexpMatcherNormalization("umls", "2020AB", "C0011849"),
+            ],
+        ),
+        RegexpMatcherRule(
+            id="id_regexp_asthma",
+            label="Asthma",
+            regexp="asthma",
+            version="1",
+        ),
+    ]
+
+    RegexpMatcher.save_rules(rules, rules_file)
+    assert RegexpMatcher.load_rules(rules_file) == rules
+
+
 def test_rules_file_encoding_error():
     with pytest.raises(UnicodeError):
         RegexpMatcher.load_rules(path_to_rules=_PATH_TO_DEFAULT_RULES, encoding="ascii")
