@@ -218,6 +218,13 @@ class ProvTracer:
         Prov
             Provenance info about the data item.
         """
+        if not self._graph.has_node(data_item_id):
+            raise ValueError(
+                f"No provenance info available for data item with id {data_item_id}."
+                " Make sure the id is valid and provenance tracking was enabled for"
+                " the operation that generated it."
+            )
+
         node = self._graph.get_node(data_item_id)
         return self._build_prov_from_node(node)
 
