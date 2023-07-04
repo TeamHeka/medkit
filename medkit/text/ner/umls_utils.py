@@ -3,6 +3,7 @@ __all__ = [
     "load_umls_entries",
     "preprocess_term_to_match",
     "guess_umls_version",
+    "SEMGROUP_LABELS",
 ]
 
 
@@ -15,8 +16,26 @@ import re
 
 import unidecode
 
-
-# based on https://github.com/GanjinZero/CODER/blob/master/coderpp/test/load_umls.py
+SEMGROUP_LABELS = {
+    "ACTI": "activity",
+    "ANAT": "anatomy",
+    "CHEM": "chemical",
+    "CONC": "concept",
+    "DEVI": "device",
+    "DISO": "disorder",
+    "GENE": "genes_sequence",
+    "GEOG": "geographic_area",
+    "LIVB": "living_being",
+    "OBJC": "object",
+    "OCCU": "occupation",
+    "ORGA": "organization",
+    "PHEN": "phenomenon",
+    "PHYS": "physiology",
+    "PROC": "procedure",
+}
+"""
+Labels corresponding to UMLS semgroups
+"""
 
 
 @dataclasses.dataclass
@@ -47,6 +66,9 @@ class UMLSEntry:
             semtypes=self.semtypes,
             semgroups=self.semgroups,
         )
+
+
+# based on https://github.com/GanjinZero/CODER/blob/master/coderpp/test/load_umls.py
 
 
 def load_umls_entries(

@@ -44,25 +44,6 @@ class UMLSMatcher(BaseSimstringMatcher):
     (https://github.com/Georgetown-IR-Lab/QuickUMLS)
     """
 
-    DEFAULT_LABELS_BY_SEMGROUP = {
-        "ACTI": "activity",
-        "ANAT": "anatomy",
-        "CHEM": "chemical",
-        "CONC": "concept",
-        "DEVI": "device",
-        "DISO": "disorder",
-        "GENE": "genes_sequence",
-        "GEOG": "geographic_area",
-        "LIVB": "living_being",
-        "OBJC": "object",
-        "OCCU": "occupation",
-        "ORGA": "organization",
-        "PHEN": "phenomenon",
-        "PHYS": "physiology",
-        "PROC": "procedure",
-    }
-    """Default label to use based on the semgroups of matched concepts"""
-
     _SEMGROUP_BY_SEMTYPE = None
 
     def __init__(
@@ -124,11 +105,11 @@ class UMLSMatcher(BaseSimstringMatcher):
             regeneration of the database if changed.
             Example: `["DISO", "PROC"]`
         output_labels_by_semgroup:
-            Optional mapping to overwrite
-            :attr:`UMLSMatcher.DEFAULT_LABELS_BY_SEMGROUP`. Example: `{"DISO":
-            "problem", "PROC": "test}`. If `output_labels_by_semgroup` is a
-            string, all entities will use this string as label instead. Will
-            trigger a regeneration of the database if changed.
+            By default, ~`medkit.text.ner.umls.SEMGROUP_LABELS` will be used as
+            entity labels. Use this parameter to override them. Example:
+            `{"DISO": "problem", "PROC": "test}`. If `output_labels_by_semgroup`
+            is a string, all entities will use this string as label instead.
+            Will trigger a regeneration of the database if changed.
         attrs_to_copy:
             Labels of the attributes that should be copied from the source
             segment to the created entity. Useful for propagating context
@@ -220,12 +201,12 @@ class UMLSMatcher(BaseSimstringMatcher):
         """
 
         if output_labels is None:
-            return cls.DEFAULT_LABELS_BY_SEMGROUP
+            return umls_utils.SEMGROUP_LABELS
 
         if isinstance(output_labels, str):
-            return {key: output_labels for key in cls.DEFAULT_LABELS_BY_SEMGROUP}
+            return {key: output_labels for key in umls_utils.SEMGROUP_LABELS}
 
-        label_mapping = cls.DEFAULT_LABELS_BY_SEMGROUP.copy()
+        label_mapping = umls_utils.SEMGROUP_LABELS.copy()
         label_mapping.update(output_labels)
         return label_mapping
 

@@ -81,26 +81,6 @@ class QuickUMLSMatcher(NEROperation):
 
     _install_paths: Dict[_QuickUMLSInstall, str] = {}
 
-    DEFAULT_LABEL_MAPPING: Dict[str, str] = {
-        "ACTI": "activity",
-        "ANAT": "anatomy",
-        "CHEM": "chemical",
-        "CONC": "concept",
-        "DEVI": "device",
-        "DISO": "disorder",
-        "GENE": "genes_sequence",
-        "GEOG": "geographic_area",
-        "LIVB": "living_being",
-        "OBJC": "object",
-        "OCCU": "occupation",
-        "ORGA": "organization",
-        "PHEN": "phenomenon",
-        "PHYS": "physiology",
-        "PROC": "procedure",
-    }
-    """Dict[str, str]: Mapping of UMLS semgroup identifier to label
-    """
-
     @classmethod
     def add_install(
         cls,
@@ -207,8 +187,10 @@ class QuickUMLSMatcher(NEROperation):
             to the created entity. Useful for propagating context attributes
             (negation, antecendent, etc)
         output_label:
-            Optional mapping to overwrite `DEFAULT_LABEL_MAPPING`.
-            If `output_label` is a string, all entities will use this string as label.
+            By default, ~`medkit.text.ner.umls.SEMGROUP_LABELS` will be used as
+            entity labels. Use this parameter to override them. Example:
+            `{"DISO": "problem", "PROC": "test}`. If `output_labels_by_semgroup`
+            is a string, all entities will use this string as label instead.
         name:
             Name describing the matcher (defaults to the class name)
         uid:
@@ -260,13 +242,13 @@ class QuickUMLSMatcher(NEROperation):
     ) -> Dict[str, str]:
         """Return label mapping according to `output_label`"""
         if output_label is None:
-            return self.DEFAULT_LABEL_MAPPING
+            return umls_utils.SEMGROUP_LABELS
 
         if isinstance(output_label, str):
-            return {key: output_label for key in self.DEFAULT_LABEL_MAPPING}
+            return {key: output_label for key in umls_utils.SEMGROUP_LABELS}
 
         if isinstance(output_label, Dict):
-            label_mapping = self.DEFAULT_LABEL_MAPPING.copy()
+            label_mapping = umls_utils.SEMGROUP_LABELS.copy()
             label_mapping.update(output_label)
             return label_mapping
 
