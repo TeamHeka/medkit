@@ -116,7 +116,7 @@ class UMLSCoderNormalizer(Operation):
         lowercase:
             Whether to use lowercased versions of UMLS terms and input entities.
         normalize_unicode:
-            Whether to ASCII-only versions of UMLS terms and input entities
+            Whether to use ASCII-only versions of UMLS terms and input entities
             (non-ASCII chars replaced by closest ASCII chars).
         threshold:
             Minimum similarity threshold (between 0.0 and 1.0) between the embeddings

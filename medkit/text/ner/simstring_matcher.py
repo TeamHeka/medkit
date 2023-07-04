@@ -111,9 +111,9 @@ class SimstringMatcher(BaseSimstringMatcher):
         similarity:
             Similarity metric to use.
         lowercase:
-            Wether to use lowercased versions of rule terms and input entities.
+            Whether to use lowercased versions of rule terms and input entities.
         normalize_unicode:
-            Wether to ASCII-only versions of rules terms and input entities
+            Whether to use ASCII-only versions of rules terms and input entities
             (non-ASCII chars replaced by closest ASCII chars).
         attrs_to_copy:
             Labels of the attributes that should be copied from the source

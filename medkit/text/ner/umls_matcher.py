@@ -96,7 +96,7 @@ class UMLSMatcher(BaseSimstringMatcher):
             you will have to manually delete it first.
         language:
             Language to consider as found in the MRCONSO.RRF file. Example:
-            `"FRE"`.
+            `"FRE"`. Will trigger a regeneration of the database if changed.
         min_length:
             Minimum number of chars in matched entities.
         max_length:
@@ -107,13 +107,13 @@ class UMLSMatcher(BaseSimstringMatcher):
         similarity:
             Similarity metric to use.
         lowercase:
-            Wether to use lowercased versions of rule terms and input entities.
+            Whether to use lowercased versions of rule terms and input entities.
             Will trigger a regeneration of the database if changed.
         normalize_unicode:
-            Wether to ASCII-only versions of rules terms and input entities
+            Whether to use ASCII-only versions of rules terms and input entities
             (non-ASCII chars replaced by closest ASCII chars). Will trigger a
             regeneration of the database if changed.
-        accepted_semantic groups:
+        allowed_semgroups:
             Ids of UMLS semantic groups that matched concepts should belong to.
             cf
             https://lhncbc.nlm.nih.gov/semanticnetwork/download/sg_archive/SemGroups-v04.txt
@@ -122,9 +122,10 @@ class UMLSMatcher(BaseSimstringMatcher):
             Example: `["DISO", "PROC"]`
         output_labels_by_semgroup:
             Optional mapping to overwrite
-            :attr:`UMLSMatcher.DEFAULT_LABELS_BY_SEMGROUP`. Example:
-            `{"DISO": "problem", "PROC": "test}`. If `output_labels_by_semgroup` is
-            a string, all entities will use this string as label instead.
+            :attr:`UMLSMatcher.DEFAULT_LABELS_BY_SEMGROUP`. Example: `{"DISO":
+            "problem", "PROC": "test}`. If `output_labels_by_semgroup` is a
+            string, all entities will use this string as label instead. Will
+            trigger a regeneration of the database if changed.
         attrs_to_copy:
             Labels of the attributes that should be copied from the source
             segment to the created entity. Useful for propagating context

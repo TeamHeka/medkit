@@ -127,9 +127,9 @@ class BaseSimstringMatcher(NEROperation):
             Rules database (in python shelve format) mapping matched terms to
             corresponding rules
         lowercase:
-            Wether to use lowercased versions of rule terms and input entities.
+            Whether to use lowercased versions of rule terms and input entities.
         normalize_unicode:
-            Wether to ASCII-only versions of rules terms and input entities
+            Whether to use ASCII-only versions of rules terms and input entities
             (non-ASCII chars replaced by closest ASCII chars).
         min_length:
             Minimum number of chars in matched entities.
