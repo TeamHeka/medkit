@@ -124,8 +124,8 @@ def load_umls_entries(
             if lui in luis_seen:
                 continue
 
-            if semtypes_by_cui is not None:
-                semtypes = semtypes_by_cui[cui] if semtypes_by_cui else None
+            if semtypes_by_cui is not None and cui in semtypes_by_cui:
+                semtypes = semtypes_by_cui[cui]
                 semgroups = [semgroups_by_semtype[semtype] for semtype in semtypes]
             else:
                 semtypes = None
