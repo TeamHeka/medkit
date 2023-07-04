@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = ["UMLSMatcher"]
 
 import dataclasses
+import logging
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Union
 from typing_extensions import Literal
@@ -20,6 +21,8 @@ from medkit.text.ner._base_simstring_matcher import (
 _CACHE_PARAMS_FILENAME = "params.yml"
 _RULES_DB_FILENAME = "rules"
 _SIMSTRING_DB_FILENAME = "simstring"
+
+logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
@@ -166,7 +169,9 @@ class UMLSMatcher(BaseSimstringMatcher):
                     f" {cache_params}"
                 )
         else:
-            print("Building simstring database from UMLS terms, this may take a while")
+            logger.info(
+                "Building simstring database from UMLS terms, this may take a while"
+            )
             rules = self._build_rules(
                 umls_dir, language, allowed_semgroups, labels_by_semgroup
             )
