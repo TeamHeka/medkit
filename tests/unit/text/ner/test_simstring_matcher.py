@@ -5,7 +5,7 @@ from medkit.text.ner.simstring_matcher import (
     SimstringMatcherRule,
     SimstringMatcherNormalization,
 )
-from medkit.text.ner._base_simstring_matcher import BaseSimstringMatcher
+from medkit.text.ner._base_simstring_matcher import _build_candidate_ranges
 from medkit.text.ner import UMLSNormAttribute
 
 
@@ -168,9 +168,7 @@ def test_normalize_unicode():
 def test_candidates():
     """Test internal function tokenizing the text and building candidates"""
 
-    ranges = BaseSimstringMatcher._build_candidate_ranges(
-        _TEXT, min_length=3, max_length=15
-    )
+    ranges = _build_candidate_ranges(_TEXT, min_length=3, max_length=15)
     candidates = [_TEXT[start:end] for start, end in ranges]
     assert candidates == [
         "Le patient",

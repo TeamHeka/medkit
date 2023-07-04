@@ -29,7 +29,6 @@ from medkit.core.text import (
 from medkit.text.ner import UMLSNormAttribute
 
 
-_TOKENIZATION_PATTERN = re.compile(r"[\w]+|[^\w ]")
 _SIMILARITY_MAP = {
     "cosine": simstring.cosine,
     "dice": simstring.dice,
@@ -213,7 +212,7 @@ class BaseSimstringMatcher(NEROperation):
 
         text = segment.text
         matches = []
-        for start, end in self._build_candidate_ranges(
+        for start, end in _build_candidate_ranges(
             text, self.min_length, self.max_length
         ):
             candidate_text = self._preprocess_segment_text(text[start:end])
@@ -228,71 +227,6 @@ class BaseSimstringMatcher(NEROperation):
 
         for match in matches:
             yield self._build_entity(segment, match)
-
-    @staticmethod
-    def _build_candidate_ranges(
-        text: str, min_length: int, max_length: int
-    ) -> Iterator[Tuple[int, int]]:
-        """From a string, generate all candidate matches (by tokenizing it and then
-        re-concatenating tokens) and return their ranges. Based on the QuickUMLS
-        code.
-
-        Parameters
-        ----------
-        text:
-            Text from which to generate candidates
-        min_length:
-            Min length of a candidate, in characters
-        max_length:
-            Max length of a candidate, in characters
-
-        Returns
-        -------
-        Iterator[Tuple[int, int]]
-            Iterator over ranges of candidate matches
-
-        Example
-        -------
-        >>> text = "I have type 2 diabetes"
-        >>> ranges = SimstringMatcher._build_candidate_ranges(text, 2, 15)
-        >>> candidates = [text[slice(*r)] for r in ranges]
-        >>> candidates
-        ['I have', 'I have type', 'have', 'have type', 'type', 'type 2 diabetes', 'diabetes']
-        """
-
-        # find all tokens and corresponding ranges using regexp
-        tokens_and_ranges = [
-            (m.group(0), m.span()) for m in _TOKENIZATION_PATTERN.finditer(text)
-        ]
-        if len(tokens_and_ranges) == 0:
-            return
-        tokens, ranges = zip(*tokens_and_ranges)
-        nb_tokens = len(tokens)
-
-        # iterate over non-empty tokens
-        for i in range(nb_tokens):
-            start_token = tokens[i]
-            if not start_token[0].isalnum():
-                continue
-            # build candidate by appending next tokens
-            start = ranges[i][0]
-            for j in itertools.count(start=i):
-                # reached end of available tokens
-                if j >= nb_tokens:
-                    break
-                end_token = tokens[j]
-                # next token is empty, skip candidate
-                if not end_token[0].isalnum():
-                    continue
-                end = ranges[j][1]
-                length = end - start
-                # candidate is too short, skip
-                if length < min_length:
-                    continue
-                # candidate is too long, stop appending tokens
-                if length > max_length:
-                    break
-                yield (start, end)
 
     @staticmethod
     def _filter_overlapping_matches(matches: List[_Match]) -> List[_Match]:
@@ -429,6 +363,74 @@ def build_simstring_matcher_databases(
     simstring_db_writer.close()
     rules_db.sync()
     rules_db.close()
+
+
+_TOKENIZATION_PATTERN = re.compile(r"[\w]+|[^\w ]")
+
+
+def _build_candidate_ranges(
+    text: str, min_length: int, max_length: int
+) -> Iterator[Tuple[int, int]]:
+    """From a string, generate all candidate matches (by tokenizing it and then
+    re-concatenating tokens) and return their ranges. Based on the QuickUMLS
+    code.
+
+    Parameters
+    ----------
+    text:
+        Text from which to generate candidates
+    min_length:
+        Min length of a candidate, in characters
+    max_length:
+        Max length of a candidate, in characters
+
+    Returns
+    -------
+    Iterator[Tuple[int, int]]
+        Iterator over ranges of candidate matches
+
+    Example
+    -------
+    >>> text = "I have type 2 diabetes"
+    >>> ranges = SimstringMatcher._build_candidate_ranges(text, 2, 15)
+    >>> candidates = [text[slice(*r)] for r in ranges]
+    >>> candidates
+    ['I have', 'I have type', 'have', 'have type', 'type', 'type 2 diabetes', 'diabetes']
+    """
+
+    # find all tokens and corresponding ranges using regexp
+    tokens_and_ranges = [
+        (m.group(0), m.span()) for m in _TOKENIZATION_PATTERN.finditer(text)
+    ]
+    if len(tokens_and_ranges) == 0:
+        return
+    tokens, ranges = zip(*tokens_and_ranges)
+    nb_tokens = len(tokens)
+
+    # iterate over non-empty tokens
+    for i in range(nb_tokens):
+        start_token = tokens[i]
+        if not start_token[0].isalnum():
+            continue
+        # build candidate by appending next tokens
+        start = ranges[i][0]
+        for j in itertools.count(start=i):
+            # reached end of available tokens
+            if j >= nb_tokens:
+                break
+            end_token = tokens[j]
+            # next token is empty, skip candidate
+            if not end_token[0].isalnum():
+                continue
+            end = ranges[j][1]
+            length = end - start
+            # candidate is too short, skip
+            if length < min_length:
+                continue
+            # candidate is too long, stop appending tokens
+            if length > max_length:
+                break
+            yield (start, end)
 
 
 # based on https://github.com/Georgetown-IR-Lab/QuickUMLS/blob/master/quickumls/toolbox.py
