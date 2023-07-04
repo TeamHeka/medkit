@@ -5,6 +5,7 @@ from medkit.text.ner.simstring_matcher import (
     SimstringMatcherRule,
     SimstringMatcherNormalization,
 )
+from medkit.text.ner._base_simstring_matcher import BaseSimstringMatcher
 from medkit.text.ner import UMLSNormAttribute
 
 
@@ -162,6 +163,32 @@ def test_normalize_unicode():
     entity = entities[0]
     # unicode normalization not applied to entity text
     assert entity.text == "dïabete"
+
+
+def test_candidates():
+    """Test internal function tokenizing the text and building candidates"""
+
+    ranges = BaseSimstringMatcher._build_candidate_ranges(
+        _TEXT, min_length=3, max_length=15
+    )
+    candidates = [_TEXT[start:end] for start, end in ranges]
+    assert candidates == [
+        "Le patient",
+        "patient",
+        "patient souffre",
+        "souffre",
+        "souffre de",
+        "de diabète",
+        "de diabète et",
+        "de diabète et d",
+        "diabète",
+        "diabète et",
+        "diabète et d",
+        "et d",
+        "et d'asthme",
+        "d'asthme",
+        "asthme",
+    ]
 
 
 def test_attrs_to_copy():
