@@ -384,9 +384,27 @@ def build_simstring_matcher_databases(
     lowercase: bool,
     normalize_unicode: bool,
 ):
+    """
+    Generate the databases needed by :class:`BaseSimstringMatcher.
+
+    Parameters
+    ----------
+    simstring_db_file:
+        Database used by the fuzzy matching `simstring` library.
+    rules_db_file:
+        `shelve` database storing the mapping between terms to match and
+        corresponding BaseSimstringMatcherRule` objects.
+    lowercase:
+        Whether to use lowercased versions of rule terms.
+    normalize_unicode:
+        Whether to use ASCII-only versions of rules terms
+        (non-ASCII chars replaced by closest ASCII chars).
+    """
+
+    # the params passed to simstring.writer are copy/pasted from QuickUMLS
+    # cf https://github.com/Georgetown-IR-Lab/QuickUMLS/blob/a3ba0b3559da2574a907f4d41aa0f2c1c0d5ce0a/quickumls/toolbox.py#L173
     simstring_db_writer = simstring.writer(
         str(simstring_db_file),
-        # the following params are copy/pasted from QuickUMLS
         3,  # unit of character n-grams
         False,  # represent begin and end of strings in n-grams
         True,  # use unicode mode
