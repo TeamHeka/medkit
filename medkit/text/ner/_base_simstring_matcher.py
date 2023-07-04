@@ -457,5 +457,7 @@ def _get_similarity_score(text_1, text_2, similarity_name, ngram_size=3):
         return nb_ngrams_common / (nb_ngrams_1 + nb_ngrams_2 - nb_ngrams_common)
     if similarity_name == "cosine":
         return nb_ngrams_common / math.sqrt(nb_ngrams_1 * nb_ngrams_2)
-    assert similarity_name == "overlap"
+    assert (
+        similarity_name == "overlap"
+    ), 'similitary_name should be one of ["dice", "jaccard", "cosine", "overlap"]'
     return nb_ngrams_common
