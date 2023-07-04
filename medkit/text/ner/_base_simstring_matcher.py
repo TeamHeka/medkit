@@ -81,6 +81,40 @@ class BaseSimstringMatcherNormalization:
     id: Union[int, str]
     term: Optional[str] = None
 
+    def to_attribute(
+        norm: BaseSimstringMatcherNormalization, score: float
+    ) -> EntityNormAttribute:
+        """
+        Create a normalization attribute based on the normalization descriptor
+
+        Parameters
+        ----------
+        score:
+            Score of similarity between the normalized term and the entity text
+
+        Returns
+        -------
+        EntityNormAttribute:
+            Normalization attribute to add to entity
+        """
+
+        if norm.kb_name == "umls":
+            norm_attr = UMLSNormAttribute(
+                cui=norm.id,
+                umls_version=norm.kb_version,
+                term=norm.term,
+                score=score,
+            )
+        else:
+            norm_attr = EntityNormAttribute(
+                kb_name=norm.kb_name,
+                kb_id=norm.id,
+                kb_version=norm.kb_version,
+                term=norm.term,
+                score=score,
+            )
+        return norm_attr
+
 
 @dataclasses.dataclass
 class _Match:
@@ -276,7 +310,7 @@ class BaseSimstringMatcher(NEROperation):
         # create normalization attributes for each
         # normalization descriptor of the rule
         for norm in rule.normalizations:
-            norm_attr = self._create_norm_attr(norm, match.score)
+            norm_attr = norm.to_attribute(match.score)
             entity.attrs.add(norm_attr)
 
             if self._prov_tracer is not None:
@@ -285,30 +319,6 @@ class BaseSimstringMatcher(NEROperation):
                 )
 
         return entity
-
-    @staticmethod
-    def _create_norm_attr(
-        norm: BaseSimstringMatcherNormalization, score: float
-    ) -> EntityNormAttribute:
-        """Create a normalization attribute based on the normalization descriptor of a rule
-        """
-
-        if norm.kb_name == "umls":
-            norm_attr = UMLSNormAttribute(
-                cui=norm.id,
-                umls_version=norm.kb_version,
-                term=norm.term,
-                score=score,
-            )
-        else:
-            norm_attr = EntityNormAttribute(
-                kb_name=norm.kb_name,
-                kb_id=norm.id,
-                kb_version=norm.kb_version,
-                term=norm.term,
-                score=score,
-            )
-        return norm_attr
 
 
 def build_simstring_matcher_databases(
