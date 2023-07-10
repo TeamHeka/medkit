@@ -160,6 +160,23 @@ def test_ambiguous_match(tmpdir):
     assert len(norm_attrs) == 1
 
 
+def test_acronym(tmpdir):
+    sentence = _get_sentence_segment("Le patient a fait un AVC.")
+
+    umls_matcher = UMLSMatcher(umls_dir=_UMLS_DIR, language="FRE", cache_dir=tmpdir)
+    entities = umls_matcher.run([sentence])
+
+    assert len(entities) == 1
+    entity = entities[0]
+    assert entity.text == "AVC"
+    assert entity.spans == [Span(21, 24)]
+
+    norm_attrs = entity.attrs.get_norms()
+    norm_attr = norm_attrs[0]
+    assert norm_attr.term == "AVC (Accident Vasculaire Cérébral)"
+    assert norm_attr.score == 1.0
+
+
 def test_attrs_to_copy(tmpdir):
     sentence = _get_sentence_segment("The patient has asthma.")
     # copied attribute

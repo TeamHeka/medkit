@@ -91,10 +91,11 @@ class UMLSMatcher(BaseSimstringMatcher):
         similarity:
             Similarity metric to use.
         lowercase:
-            Whether to use lowercased versions of rule terms and input entities.
+            Whether to use lowercased versions of UMLS terms and input entities
+            (except for acronyms for which the uppercase term is always used).
             Will trigger a regeneration of the database if changed.
         normalize_unicode:
-            Whether to use ASCII-only versions of rules terms and input entities
+            Whether to use ASCII-only versions of UMLS terms and input entities
             (non-ASCII chars replaced by closest ASCII chars). Will trigger a
             regeneration of the database if changed.
         allowed_semgroups:
@@ -262,21 +263,31 @@ class UMLSMatcher(BaseSimstringMatcher):
             semgroup = semgroups[0]
             label = labels_by_semgroup[semgroup]
 
-            # perform UMLS-specific cleaning, lowercase and normalize unicode
-            # will be handled by BaseSimstringMatcher
-            term = umls_utils.preprocess_term_to_match(
-                entry.term,
-                lowercase=False,
-                normalize_unicode=False,
-            )
-
             norm = BaseSimstringMatcherNormalization(
                 kb_name="umls", kb_version=version, id=entry.cui, term=entry.term
             )
+
+            # acronym detection
+            acronym = umls_utils.preprocess_acronym(entry.term)
+            if acronym is not None:
+                term = acronym
+            else:
+                # perform UMLS-specific cleaning (lowercase and normalize unicode
+                # will be handled by BaseSimstringMatcher)
+                term = umls_utils.preprocess_term_to_match(
+                    entry.term,
+                    lowercase=False,
+                    normalize_unicode=False,
+                )
+
+            # keep case sensitivity for terms that are all uppercase to avoid
+            # too many false positives
+            case_sensitive = True if term.isupper() else not lowercase
+
             rule = BaseSimstringMatcherRule(
                 term=term,
                 label=label,
-                case_sensitive=not lowercase,
+                case_sensitive=case_sensitive,
                 unicode_sensitive=not normalize_unicode,
                 normalizations=[norm],
             )

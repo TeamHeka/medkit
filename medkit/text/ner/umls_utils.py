@@ -2,6 +2,7 @@ __all__ = [
     "UMLSEntry",
     "load_umls_entries",
     "preprocess_term_to_match",
+    "preprocess_acronym",
     "guess_umls_version",
     "SEMGROUPS",
     "SEMGROUP_LABELS",
@@ -280,6 +281,51 @@ def preprocess_term_to_match(
         term = term.replace("-", " ")
     term = " ".join([w for w in term.split() if w])
     return term
+
+
+_ACRONYM_PATTERN = re.compile(
+    r"^ *(?P<acronym>[^ \(\)]+) *\( *(?P<expanded>[^\(\)]+) *\) *$"
+)
+
+
+def preprocess_acronym(term: str) -> Optional[str]:
+    """
+    Detect if a term contains an acronym with the expanded form between
+    parenthesis, and return the acronym if that is the case.
+
+    This will work for terms such as: "ECG (ÉlectroCardioGramme)", where the
+    acronym can be rebuilt by taking the ASCII version of each uppercase
+    letter inside the parenthesis.
+
+    Parameters
+    ----------
+    term:
+        Term that may contain an acronym. Ex: "ECG (ÉlectroCardioGramme)"
+
+    Returns
+    -------
+    Optional[str]
+        The acronym in the term if any, else `None`. Ex: "ECG"
+    """
+
+    match = _ACRONYM_PATTERN.match(term)
+    if not match:
+        return None
+
+    # extract acronym (before the parenthesis) and expanded form (between parenthesis)
+    acronym = match.group("acronym")
+    expanded = match.group("expanded")
+
+    # try to rebuild acronym from expanded form:
+    # replace special characters with ASCII
+    expanded = unidecode.unidecode(expanded)
+    # keep only uppercase chars
+    acronym_candidate = "".join(c for c in expanded if c.isupper())
+    # if it doesn't match the part before the parenthesis
+    # we decide it is not an acronym
+    if acronym != acronym_candidate:
+        return None
+    return acronym
 
 
 def guess_umls_version(path: Union[str, Path]) -> str:
