@@ -235,11 +235,6 @@ class UMLSMatcher(BaseSimstringMatcher):
         version = umls_utils.guess_umls_version(umls_dir)
 
         for entry in entries_iter:
-            # perform UMLS-specific cleaning, lowercase and normalize unicode
-            # will be handled by BaseSimstringMatcher
-            term = umls_utils.preprocess_term_to_match(
-                entry.term, lowercase=False, normalize_unicode=False
-            )
             # filter out entries not belonging to allowed semgroups
             semgroups = entry.semgroups
             if allowed_semgroups is not None:
@@ -250,6 +245,14 @@ class UMLSMatcher(BaseSimstringMatcher):
             # take label corresponding to semgroup (1st semgroup if multiple)
             semgroup = semgroups[0]
             label = labels_by_semgroup[semgroup]
+
+            # perform UMLS-specific cleaning, lowercase and normalize unicode
+            # will be handled by BaseSimstringMatcher
+            term = umls_utils.preprocess_term_to_match(
+                entry.term,
+                lowercase=False,
+                normalize_unicode=False,
+            )
 
             norm = BaseSimstringMatcherNormalization(
                 kb_name="umls", kb_version=version, id=entry.cui, term=entry.term
