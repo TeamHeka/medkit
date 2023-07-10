@@ -256,7 +256,7 @@ class BaseSimstringMatcher(NEROperation):
                 match = _Match(start, end, term, score=score)
                 matches.append(match)
 
-        # when matches overlap, keep only longest
+        # keep only best matches among overlaps
         matches = self._filter_overlapping_matches(matches)
 
         for match in matches:
