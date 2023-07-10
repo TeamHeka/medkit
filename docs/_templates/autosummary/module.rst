@@ -5,8 +5,10 @@
 {% if not modules %}
 .. automodule:: {{ fullname }}
     :members:
+    :inherited-members: dict
     :autosummary:
     :autosummary-members:
+    :autosummary-inherited-members: dict
 {% endif %}
 
 {% block members %}
@@ -22,8 +24,10 @@ For accessing these APIs, you may use import like this:
 
 .. automodule:: {{ fullname }}
     :members: {% for item in members %} {{ item }}, {%- endfor %}
+    :inherited-members: dict
     :autosummary:
     :autosummary-members:
+    :autosummary-inherited-members: dict
     :autosummary-no-nesting:
 {% endif %}
 {% endblock %}
