@@ -90,8 +90,6 @@ class SimstringMatcher(BaseSimstringMatcher):
         min_length: int = 3,
         max_length: int = 30,
         similarity: Literal["cosine", "dice", "jaccard", "overlap"] = "jaccard",
-        lowercase: bool = True,
-        normalize_unicode: bool = True,
         attrs_to_copy: Optional[List[str]] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
@@ -133,15 +131,11 @@ class SimstringMatcher(BaseSimstringMatcher):
             simstring_db_file,
             rules_db_file,
             rules,
-            lowercase=lowercase,
-            normalize_unicode=normalize_unicode,
         )
 
         super().__init__(
             simstring_db_file=simstring_db_file,
             rules_db_file=rules_db_file,
-            lowercase=lowercase,
-            normalize_unicode=normalize_unicode,
             threshold=threshold,
             min_length=min_length,
             max_length=max_length,

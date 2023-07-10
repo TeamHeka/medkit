@@ -121,21 +121,21 @@ def test_normalization():
     assert norm_attr_1.cui == "C0011849"
 
 
-def test_lowercase():
+def test_case_sensitive():
     """Rule term and entity in text have different case, but are matched anyway"""
 
     sentence = _get_sentence_segment()
     sentence.text = sentence.text.replace("asthme", "Asthme")
 
-    rule = SimstringMatcherRule(term="ASTHME", label="problem")
-
-    # no matches without lowercase flag
-    matcher = SimstringMatcher(rules=[rule], lowercase=False)
+    # no matches with case sensitivity
+    rule = SimstringMatcherRule(term="asthme", label="problem", case_sensitive=True)
+    matcher = SimstringMatcher(rules=[rule])
     entities = matcher.run([sentence])
     assert len(entities) == 0
 
-    # with lowercase flag, one match is found
-    matcher = SimstringMatcher(rules=[rule], lowercase=True)
+    # without case sensitivity, one match is found
+    rule = SimstringMatcherRule(term="asthme", label="problem", case_sensitive=False)
+    matcher = SimstringMatcher(rules=[rule])
     entities = matcher.run([sentence])
     assert len(entities) == 1
     entity = entities[0]
@@ -143,21 +143,23 @@ def test_lowercase():
     assert entity.text == "Asthme"
 
 
-def test_normalize_unicode():
+def test_unicode_sensitive():
     """Rule term and entity in text have different non-ascii chars, but are matched anyway
     """
     sentence = _get_sentence_segment()
     sentence.text = sentence.text.replace("diabète", "dïabete")
 
-    rule = SimstringMatcherRule(term="diabète", label="problem")
-
-    # no matches without unicode flag
-    matcher = SimstringMatcher(rules=[rule], normalize_unicode=False, threshold=1.0)
+    # no matches with unicode sensitivity
+    rule = SimstringMatcherRule(term="diabète", label="problem", unicode_sensitive=True)
+    matcher = SimstringMatcher(rules=[rule], threshold=1.0)
     entities = matcher.run([sentence])
     assert len(entities) == 0
 
-    # with unicode flag, one match is found
-    matcher = SimstringMatcher(rules=[rule], normalize_unicode=True, threshold=1.0)
+    # without unicode sensitivity, one match is found
+    rule = SimstringMatcherRule(
+        term="diabète", label="problem", unicode_sensitive=False
+    )
+    matcher = SimstringMatcher(rules=[rule], threshold=1.0)
     entities = matcher.run([sentence])
     assert len(entities) == 1
     entity = entities[0]

@@ -47,6 +47,11 @@ class BaseSimstringMatcherRule:
         Term to match using similarity-based fuzzy matching
     label:
         Label to use for the entities created when a match is found
+    case_sensitive:
+        Whether to ignore case when when looking for matches.
+    unicode_sensitive:
+        Whether to use ASCII-only versions of the rule term and input texts when
+        looking for matches (non-ASCII chars replaced by closest ASCII chars).
     normalization:
         Optional list of normalization attributes that should be attached to the
         entities created
@@ -54,6 +59,8 @@ class BaseSimstringMatcherRule:
 
     term: str
     label: str
+    case_sensitive: bool = False
+    unicode_sensitive: bool = False
     normalizations: List[BaseSimstringMatcherNormalization] = dataclasses.field(
         default_factory=list
     )
@@ -119,7 +126,7 @@ class BaseSimstringMatcherNormalization:
 class _Match:
     start: int
     end: int
-    term: str
+    rule: BaseSimstringMatcherRule
     score: float
 
     @property
@@ -140,8 +147,6 @@ class BaseSimstringMatcher(NEROperation):
         self,
         simstring_db_file: Path,
         rules_db_file: Path,
-        lowercase: bool = True,
-        normalize_unicode: bool = True,
         threshold: float = 0.7,
         min_length: int = 3,
         max_length: int = 15,
@@ -158,11 +163,6 @@ class BaseSimstringMatcher(NEROperation):
         rules_db_file:
             Rules database (in python shelve format) mapping matched terms to
             corresponding rules
-        lowercase:
-            Whether to use lowercased versions of rule terms and input entities.
-        normalize_unicode:
-            Whether to use ASCII-only versions of rules terms and input entities
-            (non-ASCII chars replaced by closest ASCII chars).
         min_length:
             Minimum number of chars in matched entities.
         max_length:
@@ -195,10 +195,9 @@ class BaseSimstringMatcher(NEROperation):
         if attrs_to_copy is None:
             attrs_to_copy = []
 
-        self.lowercase = lowercase
-        self.normalize_unicode = normalize_unicode
         self.min_length = min_length
         self.max_length = max_length
+        self.threshold = threshold
         self.similarity = similarity
         self.attrs_to_copy = attrs_to_copy
 
@@ -207,16 +206,6 @@ class BaseSimstringMatcher(NEROperation):
         self._simstring_db_reader.threshold = threshold
 
         self._rules_db = shelve.open(str(rules_db_file), flag="r")
-
-    def _preprocess_segment_text(self, text: str) -> str:
-        """Preprocessing segment text according to the `lowercase` and
-        `normalize_unicode` init params"""
-
-        if self.lowercase:
-            text = text.lower()
-        if self.normalize_unicode:
-            text = unidecode(text)
-        return text
 
     def run(self, segments: List[Segment]) -> List[Entity]:
         """
@@ -248,12 +237,39 @@ class BaseSimstringMatcher(NEROperation):
         for start, end in _build_candidate_ranges(
             text, self.min_length, self.max_length
         ):
-            candidate_text = self._preprocess_segment_text(text[start:end])
-            matched_terms = self._simstring_db_reader.retrieve(candidate_text)
-            for term in matched_terms:
-                score = _get_similarity_score(term, candidate_text, self.similarity)
-                match = _Match(start, end, term, score=score)
-                matches.append(match)
+            candidate_text = text[start:end]
+            # simstring matching is always performed on lowercased ASCII-only text,
+            # then for potential matches we will recompute the similarity
+            # taking into account the actual rule parameters
+            candidate_text_processed = unidecode(candidate_text.lower())
+            matched_terms = self._simstring_db_reader.retrieve(candidate_text_processed)
+
+            for matched_term in matched_terms:
+                # retrieve rules corresponding to matched term
+                rules = self._rules_db[matched_term]
+                # for each rule, recompute similarity
+                # taking into account case_sensitivity and unicode_sensitivity
+                for rule in rules:
+                    rule_term = rule.term
+
+                    # apply required text transforms on term and candidate texts
+                    if not rule.case_sensitive and not rule.unicode_sensitive:
+                        candidate_text = candidate_text_processed
+                        rule_term = matched_term
+                    elif not rule.case_sensitive:
+                        candidate_text = candidate_text.lower()
+                        rule_term = rule_term.lower()
+                    elif not rule.unicode_sensitive:
+                        candidate_text = unidecode(candidate_text)
+                        rule_term = unidecode(rule_term)
+
+                    # recompute similarity and keep match if above threshold
+                    score = _get_similarity_score(
+                        rule_term, candidate_text, self.similarity
+                    )
+                    if score >= self.threshold:
+                        match = _Match(start, end, rule, score)
+                        matches.append(match)
 
         # keep only best matches among overlaps
         matches = self._filter_overlapping_matches(matches)
@@ -287,11 +303,8 @@ class BaseSimstringMatcher(NEROperation):
             segment.text, segment.spans, [(match.start, match.end)]
         )
 
-        # retrieve rule corresponding to matched term
-        rule = self._rules_db[match.term]
-        label = rule.label
-
         # create entity
+        label = match.rule.label
         entity = Entity(label=label, text=text, spans=spans)
         if self._prov_tracer is not None:
             self._prov_tracer.add_prov(
@@ -308,7 +321,7 @@ class BaseSimstringMatcher(NEROperation):
 
         # create normalization attributes for each
         # normalization descriptor of the rule
-        for norm in rule.normalizations:
+        for norm in match.rule.normalizations:
             norm_attr = norm.to_attribute(match.score)
             entity.attrs.add(norm_attr)
 
@@ -324,8 +337,6 @@ def build_simstring_matcher_databases(
     simstring_db_file: Path,
     rules_db_file: Path,
     rules: Iterator[BaseSimstringMatcherRule],
-    lowercase: bool,
-    normalize_unicode: bool,
 ):
     """
     Generate the databases needed by :class:`BaseSimstringMatcher.
@@ -336,7 +347,8 @@ def build_simstring_matcher_databases(
         Database used by the fuzzy matching `simstring` library.
     rules_db_file:
         `shelve` database storing the mapping between terms to match and
-        corresponding BaseSimstringMatcherRule` objects.
+        corresponding BaseSimstringMatcherRule` objects (one term to match may
+        correspond to several rules)
     lowercase:
         Whether to use lowercased versions of rule terms.
     normalize_unicode:
@@ -353,22 +365,23 @@ def build_simstring_matcher_databases(
         True,  # use unicode mode
     )
 
-    rules_db = shelve.open(str(rules_db_file), flag="n")
+    # writeback=True needed because we are updating the values in the mapping,
+    # not just writing
+    rules_db = shelve.open(str(rules_db_file), flag="n", writeback=True)
 
     # add rules to databases
     for rule in rules:
         term_to_match = rule.term
 
         # apply preprocessing
-        if lowercase:
-            term_to_match = term_to_match.lower()
-        if normalize_unicode:
-            term_to_match = unidecode(term_to_match)
+        term_to_match = unidecode(term_to_match.lower())
 
         # add to simstring db
         simstring_db_writer.insert(term_to_match)
         # add to rules db
-        rules_db[term_to_match] = rule
+        if term_to_match not in rules_db:
+            rules_db[term_to_match] = []
+        rules_db[term_to_match].append(rule)
     simstring_db_writer.close()
     rules_db.sync()
     rules_db.close()

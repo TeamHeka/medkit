@@ -163,16 +163,15 @@ class UMLSMatcher(BaseSimstringMatcher):
                 "Building simstring database from UMLS terms, this may take a while"
             )
             rules = self._build_rules(
-                umls_dir, language, allowed_semgroups, labels_by_semgroup
+                umls_dir,
+                language,
+                lowercase,
+                normalize_unicode,
+                allowed_semgroups,
+                labels_by_semgroup,
             )
 
-            build_simstring_matcher_databases(
-                simstring_db_file,
-                rules_db_file,
-                rules,
-                lowercase=lowercase,
-                normalize_unicode=normalize_unicode,
-            )
+            build_simstring_matcher_databases(simstring_db_file, rules_db_file, rules)
 
             with open(cache_params_file, mode="w") as fp:
                 yaml.safe_dump(dataclasses.asdict(cache_params), fp)
@@ -180,8 +179,6 @@ class UMLSMatcher(BaseSimstringMatcher):
         super().__init__(
             simstring_db_file=simstring_db_file,
             rules_db_file=rules_db_file,
-            lowercase=lowercase,
-            normalize_unicode=normalize_unicode,
             threshold=threshold,
             min_length=min_length,
             max_length=max_length,
@@ -232,6 +229,8 @@ class UMLSMatcher(BaseSimstringMatcher):
         cls,
         umls_dir: Path,
         language: str,
+        lowercase: bool,
+        normalize_unicode: bool,
         allowed_semgroups: Optional[List[str]],
         labels_by_semgroup: Dict[str, str],
     ) -> Iterator[BaseSimstringMatcherRule]:
@@ -275,6 +274,10 @@ class UMLSMatcher(BaseSimstringMatcher):
                 kb_name="umls", kb_version=version, id=entry.cui, term=entry.term
             )
             rule = BaseSimstringMatcherRule(
-                term=term, label=label, normalizations=[norm]
+                term=term,
+                label=label,
+                case_sensitive=not lowercase,
+                unicode_sensitive=not normalize_unicode,
+                normalizations=[norm],
             )
             yield rule
