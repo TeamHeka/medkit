@@ -54,16 +54,19 @@ EXPECTED_DOCLINE_BY_TASK = {
                 "type": "created_in",
             }
         ],
+        "metadata": {},
     },
     # json does not recognize tuples
     # NOTE: this works with doccano IDE
     DoccanoTask.SEQUENCE_LABELING: {
         "text": "medkit was created in 2022",
         "label": [[0, 6, "ORG"], [22, 26, "DATE"]],
+        "metadata": {},
     },
     DoccanoTask.TEXT_CLASSIFICATION: {
         "text": "medkit was created in 2022",
         "label": ["header"],
+        "metadata": {},
     },
 }
 

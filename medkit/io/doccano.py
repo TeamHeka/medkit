@@ -1,6 +1,6 @@
 __all__ = [
     "DoccanoTask",
-    "DoccanoIDEConfig",
+    "DoccanoClientConfig",
     "DoccanoInputConverter",
     "DoccanoOutputConverter",
 ]
@@ -44,31 +44,23 @@ class DoccanoTask(enum.Enum):
 
 
 @dataclasses.dataclass
-class DoccanoIDEConfig:
-    """A class representing the IDE configuration in doccano client.
-    The default values are the default values used in doccano.
+class DoccanoClientConfig:
+    """A class representing the configuration in the doccano client.
+    The default values are the default values used by doccano.
 
     Attributes
     ----------
     column_text:
         Name or key representing the text
     column_label:
-        Name or key representing the labels
-    category_label:
-        Label of attribute to add for text classification.
-        This is related to :class:`~.io.DoccanoTask.TEXT_CLASSIFICATION` projects.
-    count_CRLF_character_as_one:
-        Whether count the character `\\r\\n` as one character.
-        This is related to :class:`~.io.DoccanoTask.RELATION_EXTRACTION` and
-        :class:`~.io.DoccanoTask.SEQUENCE_LABELING` projects.
-        If True, medkit will replace this character by a single `\\n` character to get
-        the same span as defined by Doccano.
+        Name or key representing the label
+    key_for_metadata:
+        Name or key representing the metadata
     """
 
     column_text: str = "text"
     column_label: str = "label"
-    category_label: str = "doccano_category"
-    count_CRLF_character_as_one: bool = False
+    metadata_key: str = "metadata"
 
 
 class DoccanoInputConverter:
@@ -78,13 +70,14 @@ class DoccanoInputConverter:
     The doccano files can be load from a directory with zip files or from a jsonl file.
 
     The converter supports custom configuration to define the parameters used by doccano
-    when exporting the data (c.f :class:`~io.doccano.DoccanoIDEConfig`)
+    when importing the data (c.f :class:`~io.doccano.DoccanoClientConfig`)
     """
 
     def __init__(
         self,
         task: DoccanoTask,
-        config: Optional[DoccanoIDEConfig] = None,
+        client_config: Optional[DoccanoClientConfig] = None,
+        attr_label: str = "doccano_category",
         uid: Optional[str] = None,
     ):
         """
@@ -92,21 +85,25 @@ class DoccanoInputConverter:
         ----------
         task:
             The doccano task for the input converter
-        config:
-            Optional IDEConfig to define default values in doccano IDE.
+        client_config:
+            Optional client configuration to define default values in doccano interface.
             This config can change, for example, the name of the text field or labels.
+        attr_label:
+            The label to use for the medkit attribute that represents the doccano category.
+            This is related to :class:`~.io.DoccanoTask.TEXT_CLASSIFICATION` projects.
         uid:
             Identifier of the converter.
         """
         if uid is None:
             uid = generate_id()
 
-        if config is None:
-            config = DoccanoIDEConfig()
+        if client_config is None:
+            client_config = DoccanoClientConfig()
 
         self.uid = uid
-        self.config = config
+        self.client_config = client_config
         self.task = task
+        self.attr_label = attr_label
         self._prov_tracer: Optional[ProvTracer] = None
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
@@ -186,7 +183,7 @@ class DoccanoInputConverter:
         if (
             self.task == DoccanoTask.RELATION_EXTRACTION
             or self.task == DoccanoTask.SEQUENCE_LABELING
-        ) and not self.config.count_CRLF_character_as_one:
+        ):
             nb_docs_with_warning = len(
                 [
                     document.text[0]
@@ -198,12 +195,11 @@ class DoccanoInputConverter:
             if nb_docs_with_warning > 0:
                 logger.warning(
                     f"{nb_docs_with_warning}/{len(documents)} documents contain"
-                    " '\\r\\n' characters but 'count_CRLF_character_as_one' is False."
-                    " This can generate alignment problems in the converted documents,"
-                    " make sure that the configuration of the converter"
-                    " (count_CRLF_character_as_one) is the same as the one used in"
-                    " doccano. Ignore this message if this option was deactivated in"
-                    " doccano IDE."
+                    " '\\r\\n' characters. If you have selected 'Count grapheme"
+                    " clusters as one character' when creating the doccano project,"
+                    " converted documents are likely to have alignment problems.\n"
+                    " Please ignore this message if you did not select this option when"
+                    " creating the project."
                 )
 
     def _parse_doc_line(self, doc_line: Dict[str, Any]) -> TextDocument:
@@ -242,9 +238,7 @@ class DoccanoInputConverter:
             The document with annotations
         """
         doccano_doc = utils.DoccanoDocRelationExtraction.from_dict(
-            doc_line,
-            column_text=self.config.column_text,
-            count_CRLF_character_as_one=self.config.count_CRLF_character_as_one,
+            doc_line, client_config=self.client_config
         )
 
         anns_by_doccano_id = dict()
@@ -305,9 +299,7 @@ class DoccanoInputConverter:
             The document with annotations
         """
         doccano_doc = utils.DoccanoDocSeqLabeling.from_dict(
-            doc_line,
-            column_text=self.config.column_text,
-            column_label=self.config.column_label,
+            doc_line, client_config=self.client_config
         )
         anns = []
         for doccano_entity in doccano_doc.entities:
@@ -350,11 +342,9 @@ class DoccanoInputConverter:
             The document with its category
         """
         doccano_doc = utils.DoccanoDocTextClassification.from_dict(
-            doc_line,
-            column_text=self.config.column_text,
-            column_label=self.config.column_label,
+            doc_line, client_config=self.client_config
         )
-        attr = Attribute(label=self.config.category_label, value=doccano_doc.label)
+        attr = Attribute(label=self.attr_label, value=doccano_doc.label)
 
         if self._prov_tracer is not None:
             self._prov_tracer.add_prov(attr, self.description, source_data_items=[])
@@ -375,7 +365,7 @@ class DoccanoOutputConverter:
         task: DoccanoTask,
         anns_labels: Optional[List[str]] = None,
         attr_label: Optional[str] = None,
-        include_metadata: Optional[bool] = False,
+        include_metadata: Optional[bool] = True,
         uid: Optional[str] = None,
     ):
         """
@@ -389,7 +379,7 @@ class DoccanoOutputConverter:
             Useful for :class:`~.io.DoccanoTask.SEQUENCE_LABELING` or
             :class:`~.io.DoccanoTask.RELATION_EXTRACTION` converters.
         attr_label:
-            Define the label of the medkit attribute for text classification.
+            The label of the medkit attribute that represents the text category.
             Useful for :class:`~.io.DoccanoTask.TEXT_CLASSIFICATION` converters.
         include_metadata:
             Whether include medkit metadata in the converted documents
@@ -572,7 +562,7 @@ class DoccanoOutputConverter:
         -------
         Dict[str,Any]
             Dictionary with doccano annotation. It may contain
-            text ans its label (a list with its category(str))
+            text ans its label (a category(str))
         """
         attributes = medkit_doc.raw_segment.attrs.get(label=self.attr_label)
 

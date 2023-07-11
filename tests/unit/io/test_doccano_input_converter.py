@@ -6,7 +6,7 @@ import pytest
 
 from medkit.core.prov_tracer import ProvTracer
 from medkit.core.text.span import Span
-from medkit.io import DoccanoInputConverter, DoccanoTask, DoccanoIDEConfig
+from medkit.io import DoccanoInputConverter, DoccanoTask
 
 TEST_LINE_BY_TASK = {
     DoccanoTask.RELATION_EXTRACTION: {
@@ -90,7 +90,7 @@ def test_text_classification_converter(tmp_path):
     assert len(document.anns.relations) == 0
 
     segment = document.raw_segment
-    expected_label = converter.config.category_label
+    expected_label = converter.attr_label
     attrs = segment.attrs.get(label=expected_label)
     assert len(attrs) == 1
     assert attrs[0].value == "header"
@@ -98,7 +98,7 @@ def test_text_classification_converter(tmp_path):
 
 def test_crlf_character(tmp_path, caplog):
     # test when doccano export a document from a project with
-    # 'count grapheme clusters as one character' (CRLF is a grapheme cluster)
+    # 'count grapheme clusters as one character'
     test_line = {
         "text": "medkit was\r\ncreated in 2022",
         "entities": [
@@ -112,9 +112,7 @@ def test_crlf_character(tmp_path, caplog):
 
     # test default config
     with caplog.at_level(logging.WARNING, logger="medkit.io.doccano"):
-        converter = DoccanoInputConverter(
-            task=task, config=DoccanoIDEConfig(count_CRLF_character_as_one=False)
-        )
+        converter = DoccanoInputConverter(task=task)
         documents = converter.load_from_directory_zip(
             dir_path=f"{tmp_path}/{task.value}"
         )
@@ -124,18 +122,6 @@ def test_crlf_character(tmp_path, caplog):
     assert len(document.anns.entities) == 2
     entity_no_aligned = document.anns.get(label="DATE")[0]
     assert entity_no_aligned.text == " 202"
-    assert entity_no_aligned.spans == [Span(22, 26)]
-
-    # test 'correct' configuration for this use case
-    converter = DoccanoInputConverter(
-        task=task, config=DoccanoIDEConfig(count_CRLF_character_as_one=True)
-    )
-    documents = converter.load_from_directory_zip(dir_path=f"{tmp_path}/{task.value}")
-
-    document = documents[0]
-    assert len(document.anns.entities) == 2
-    entity_no_aligned = document.anns.get(label="DATE")[0]
-    assert entity_no_aligned.text == "2022"
     assert entity_no_aligned.spans == [Span(22, 26)]
 
 

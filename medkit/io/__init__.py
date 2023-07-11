@@ -2,7 +2,7 @@ __all__ = [
     "BratInputConverter",
     "BratOutputConverter",
     "DoccanoInputConverter",
-    "DoccanoIDEConfig",
+    "DoccanoClientConfig",
     "DoccanoOutputConverter",
     "DoccanoTask",
     "medkit_json",
@@ -16,7 +16,7 @@ from .brat import BratInputConverter, BratOutputConverter
 from .doccano import (
     DoccanoInputConverter,
     DoccanoTask,
-    DoccanoIDEConfig,
+    DoccanoClientConfig,
     DoccanoOutputConverter,
 )
 from . import medkit_json

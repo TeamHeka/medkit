@@ -59,20 +59,9 @@ class DoccanoDocRelationExtraction:
     metadata: Dict[str, Any]
 
     @classmethod
-    def from_dict(
-        cls,
-        doc_line: Dict[str, Any],
-        column_text: str,
-        count_CRLF_character_as_one: bool,
-    ) -> Self:
-        text: str = doc_line[column_text]
-
-        if count_CRLF_character_as_one:
-            # doccano had exported the spans with this modification
-            # replace in medkit to get aligned spans
-            text = text.replace("\r\n", "\n")
-
-        metadata = doc_line.get("metadata", {})
+    def from_dict(cls, doc_line: Dict[str, Any], client_config: Any) -> Self:
+        text: str = doc_line[client_config.column_text]
+        metadata = doc_line.get(client_config.metadata_key, {})
         entities = [DoccanoEntity(**ann) for ann in doc_line["entities"]]
         relations = [DoccanoRelation(**ann) for ann in doc_line["relations"]]
         return cls(text=text, entities=entities, relations=relations, metadata=metadata)
@@ -81,9 +70,7 @@ class DoccanoDocRelationExtraction:
         doc_dict = dict(text=self.text)
         doc_dict["entities"] = [ent.to_dict() for ent in self.entities]
         doc_dict["relations"] = [rel.to_dict() for rel in self.relations]
-
-        if self.metadata:
-            doc_dict["metadata"] = self.metadata
+        doc_dict["metadata"] = self.metadata
         return doc_dict
 
 
@@ -94,20 +81,18 @@ class DoccanoDocSeqLabeling:
     metadata: Dict[str, Any]
 
     @classmethod
-    def from_dict(
-        cls, doc_line: Dict[str, Any], column_text: str, column_label: str
-    ) -> Self:
-        text = doc_line[column_text]
-        metadata = doc_line.get("metadata", {})
-        entities = [DoccanoEntityTuple(*ann) for ann in doc_line[column_label]]
+    def from_dict(cls, doc_line: Dict[str, Any], client_config: Any) -> Self:
+        text = doc_line[client_config.column_text]
+        metadata = doc_line.get(client_config.metadata_key, {})
+        entities = [
+            DoccanoEntityTuple(*ann) for ann in doc_line[client_config.column_label]
+        ]
         return cls(text=text, entities=entities, metadata=metadata)
 
     def to_dict(self) -> Dict[str, Any]:
         doc_dict = dict(text=self.text)
         doc_dict["label"] = [ent.to_tuple() for ent in self.entities]
-
-        if self.metadata:
-            doc_dict["metadata"] = self.metadata
+        doc_dict["metadata"] = self.metadata
         return doc_dict
 
 
@@ -118,15 +103,14 @@ class DoccanoDocTextClassification:
     metadata: Dict[str, Any]
 
     @classmethod
-    def from_dict(
-        cls, doc_line: Dict[str, Any], column_text: str, column_label: str
-    ) -> Self:
-        text = doc_line[column_text]
+    def from_dict(cls, doc_line: Dict[str, Any], client_config: Any) -> Self:
+        text = doc_line[client_config.column_text]
         metadata = doc_line.get("metadata", {})
-        return cls(text=text, label=doc_line[column_label][0], metadata=metadata)
+        return cls(
+            text=text, label=doc_line[client_config.column_label][0], metadata=metadata
+        )
 
     def to_dict(self) -> Dict[str, Any]:
         doc_dict = dict(text=self.text, label=[str(self.label)])
-        if self.metadata:
-            doc_dict["metadata"] = self.metadata
+        doc_dict["metadata"] = self.metadata
         return doc_dict
