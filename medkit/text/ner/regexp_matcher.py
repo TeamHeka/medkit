@@ -51,16 +51,16 @@ class RegexpMatcherRule:
         Whether to ignore case when running `regexp and `exclusion_regexp`
     unicode_sensitive:
         If True, regexp rule matches are searched on unicode text.
-        So, `regexp and `exclusion_regexs` shall not contain non-ASCII chars because
+        So, `regexp and `exclusion_regexps` shall not contain non-ASCII chars because
         they would never be matched.
         If False, regexp rule matches are searched on closest ASCII text when possible.
         (cf. RegexpMatcher)
     exclusion_regexp:
-        An optional exclusion pattern. Note that this exclusion pattern will
+        An optional exclusion pattern. Note that this exclusion pattern will be
         executed on the whole input annotation, so when relying on `exclusion_regexp`
         make sure the input annotations passed to `RegexpMatcher` are "local"-enough
-        (sentences or syntagmes) rather than the whole text or paragraphs
-    normalization:
+        (sentences or syntagmas) rather than the whole text or paragraphs
+    normalizations:
         Optional list of normalization attributes that should be attached to
         the entities created
     """
@@ -157,7 +157,7 @@ class RegexpMatcher(NEROperation):
         attrs_to_copy:
             Labels of the attributes that should be copied from the source segment
             to the created entity. Useful for propagating context attributes
-            (negation, antecendent, etc)
+            (negation, antecedent, etc)
         name:
             Name describing the matcher (defaults to the class name)
         uid:
@@ -374,4 +374,4 @@ class RegexpMatcher(NEROperation):
 
         with open(path_to_rules, mode="w", encoding=encoding) as f:
             rules_data = [dataclasses.asdict(r) for r in rules]
-            rules = yaml.safe_dump(rules_data, f)
+            yaml.safe_dump(rules_data, f)
