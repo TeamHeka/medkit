@@ -14,7 +14,6 @@ import re
 from typing import Any, Iterator, List, Optional, Union
 from typing_extensions import TypedDict
 
-import unidecode
 import yaml
 
 from medkit.core.text import (
@@ -25,7 +24,7 @@ from medkit.core.text import (
     span_utils,
 )
 from medkit.text.ner.umls_norm_attribute import UMLSNormAttribute
-
+from medkit.text.utils.decoding import get_ascii_from_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -218,29 +217,13 @@ class RegexpMatcher(NEROperation):
         ]
 
     def _find_matches_in_segment(self, segment: Segment) -> Iterator[Entity]:
-        text_ascii = None
-        text_unicode = segment.text
+        text = segment.text
 
         if self._has_non_unicode_sensitive_rule:
-            # If there exists one rule which is not unicode-sensitive
-            text_ascii = unidecode.unidecode(segment.text)
-            # Verify that text length is conserved
-            if len(text_ascii) != len(
-                text_unicode
-            ):  # if text conversion had changed its length
-                logger.warning(
-                    "Lengths of unicode text and generated ascii text are different. "
-                    "Please, pre-process input text before running RegexpMatcher\n\n"
-                    f"Unicode:{text_unicode} (length: {len(text_unicode)})\n"
-                    f"Ascii: {text_ascii} (length: {len(text_ascii)})\n"
-                )
-                # Fallback on unicode text
-                text_ascii = text_unicode
+            text = get_ascii_from_unicode(segment.text, logger=logger)
 
         for rule_index in range(len(self.rules)):
-            yield from self._find_matches_in_segment_for_rule(
-                rule_index, segment, text_ascii
-            )
+            yield from self._find_matches_in_segment_for_rule(rule_index, segment, text)
 
     def _find_matches_in_segment_for_rule(
         self, rule_index: int, segment: Segment, text_ascii: Optional[str]

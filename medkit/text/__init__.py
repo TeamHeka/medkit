@@ -7,4 +7,5 @@ __all__ = [
     "segmentation",
     "spacy",
     "translation",
+    "utils",
 ]
