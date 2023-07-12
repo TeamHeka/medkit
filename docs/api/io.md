@@ -30,29 +30,20 @@ You can load annotations from a .jsonl file or a zip directory.
 | Sequence labeling                	| {class}`medkit.io.doccano.DoccanoTask.SEQUENCE_LABELING` <br> i.e : `{'text':...,'label':[(int,int,label)]}`              	|
 | Sequence labeling with relations 	| {class}`medkit.io.doccano.DoccanoTask.RELATION_EXTRACTION` <br>i.e : `{'text':...,'entities':[{...}],'relations':[{...}]}` 	|
 | Text Classification              	| {class}`medkit.io.doccano.DoccanoTask.TEXT_CLASSIFICATION`<br>i.e : `{'text':...,'label':[str]}`                          	|
+
+### Client configuration
+
+The doccano user interface allows custom configuration over certain annotation parameters. The {class}`medkit.io.doccano.DoccanoClientConfig` class contains the configuration to be used by the input converter. 
+
+You can modify the settings depending on the configuration of your project. If you don't provide a config, the converter will be used the default doccano configuration.
+
+
 :::{note}
-Medkit use **metadata** field to load/save extra information about the annotation
+**Metadata**
+
+- Doccano to medkit: All the extra fields are imported as a dictionary in `TextDocument.metadata`
+- Medkit to Doccano: The `TextDocument.metadata` is exported as extra fields in the output data. You can set `include_metadata` to False to remove the extra fields.
 :::
-### Custom configuration
-
-The doccano user interface allows custom configuration over certain annotation parameters. The {class}`medkit.io.doccano.DoccanoIDEConfig` class contains the configuration to be used by the input converter. 
-
-You can modify the settings depending on the configuration of your project. If you don't provide a config, the converter will be used the default doccano configuration. The 'metadata' of the annotation will be included in the TextDocuments.
-
-**Example**
-
-You want to load documents coming from a sequence labeling project where,'\r\n' characters are counted by one character:
-
-```
-from medkit.io.doccano import DoccanoTask, DoccanoIDEConfig, DoccanoInputConverter
-
-# define the converter
-converter = DoccanoInputConverter(
-    task=DoccanoTask.SEQUENCE_LABELING,
-    config=DoccanoIDEConfig(count_CRLF_character_as_one=True),
-)
-docs = converter.load_from_file("doccano_file.jsonl")
-```
 
 For more details, refer to {mod}`medkit.io.doccano`.
 
