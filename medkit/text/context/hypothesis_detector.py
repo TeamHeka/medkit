@@ -39,11 +39,11 @@ class HypothesisDetectorRule:
     id:
         Unique identifier of the rule to store in the metadata of the entities
     case_sensitive:
-        Whether to ignore case when running `regexp and `exclusion_regexs`
+        Whether to ignore case when running `regexp and `exclusion_regexps`
     unicode_sensitive:
         Whether to replace all non-ASCII chars by the closest ASCII chars
-        on input text before runing `regexp and `exclusion_regexs`.
-        If True, then `regexp and `exclusion_regexs` shouldn't contain
+        on input text before running `regexp and `exclusion_regexps`.
+        If True, then `regexp and `exclusion_regexps` shouldn't contain
         non-ASCII chars because they would never be matched.
     """
 
@@ -69,7 +69,7 @@ class HypothesisRuleMetadata(TypedDict):
     Parameters
     ----------
     type:
-        Metadata type, here `"rule"` (use to differenciate
+        Metadata type, here `"rule"` (use to differentiate
         between rule/verb metadata dict)
     rule_id:
         Identifier of the rule used to detect an hypothesis.
@@ -88,7 +88,7 @@ class HypothesisVerbMetadata(TypedDict):
     Parameters
     ----------
     type:
-        Metadata type, here `"verb"` (use to differenciate
+        Metadata type, here `"verb"` (use to differentiate
         between rule/verb metadata dict).
     matched_verb:
         Root of the verb used to detect an hypothesis.
@@ -242,7 +242,7 @@ class HypothesisDetector(ContextOperation):
             hyp_attr = Attribute(
                 label=self.output_label,
                 value=True,
-                metadata=HypothesisRuleMetadata(type="verb", matched_verb=matched_verb),
+                metadata=HypothesisVerbMetadata(type="verb", matched_verb=matched_verb),
             )
         elif rule_id is not None:
             hyp_attr = Attribute(
@@ -393,4 +393,4 @@ class HypothesisDetector(ContextOperation):
 
         with open(path_to_rules, mode="w", encoding=encoding) as f:
             rules_data = [dataclasses.asdict(r) for r in rules]
-            rules = yaml.safe_dump(rules_data, f)
+            yaml.safe_dump(rules_data, f)
