@@ -9,11 +9,11 @@ import re
 from typing import List, Optional, Union
 from typing_extensions import TypedDict
 
-import unidecode
 import yaml
 
 from medkit.core import Attribute
 from medkit.core.text import ContextOperation, Segment
+from medkit.text.utils.decoding import get_ascii_from_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -194,20 +194,7 @@ class FamilyDetector(ContextOperation):
         text_ascii = None
 
         if self._has_non_unicode_sensitive_rule:
-            # If there exists one rule which is not unicode-sensitive
-            text_ascii = unidecode.unidecode(text_unicode)
-            # Verify that text length is conserved
-            if len(text_ascii) != len(
-                text_unicode
-            ):  # if text conversion had changed its length
-                logger.warning(
-                    "Lengths of unicode text and generated ascii text are different. "
-                    "Please, pre-process input text before running NegationDetector\n\n"
-                    f"Unicode:{text_unicode} (length: {len(text_unicode)})\n"
-                    f"Ascii: {text_ascii} (length: {len(text_ascii)})\n"
-                )
-                # Fallback on unicode text
-                text_ascii = text_unicode
+            text_ascii = get_ascii_from_unicode(text, logger=logger)
 
         # try all rules until we have a match
         for rule_index, rule in enumerate(self.rules):

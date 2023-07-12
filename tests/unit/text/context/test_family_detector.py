@@ -157,9 +157,7 @@ def test_unicode_sensitive_off(caplog):
     assert attr_2.value is True
 
     syntagmas_with_ligatures = _get_syntagma_segments(["Sœur non covidée"])
-    with caplog.at_level(
-        logging.WARNING, logger="medkit.text.context.negation_detector"
-    ):
+    with caplog.at_level(logging.INFO, logger="medkit.text.context.family_detector"):
         detector.run(syntagmas_with_ligatures)
         assert len(caplog.messages) == 1
 
