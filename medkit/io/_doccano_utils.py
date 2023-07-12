@@ -108,6 +108,10 @@ class DoccanoDocTextClassification:
     def from_dict(cls, doc_line: Dict[str, Any], client_config: Any) -> Self:
         text = doc_line.pop(client_config.column_text)
         label = doc_line.pop(client_config.column_label)[0]
+
+        if not isinstance(label, str):
+            raise TypeError("The label must be a string")
+
         # in doccano, metadata is what remains after removing key fields
         metadata = doc_line
         return cls(text=text, label=label, metadata=metadata)

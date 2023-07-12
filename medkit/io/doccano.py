@@ -234,9 +234,15 @@ class DoccanoInputConverter:
         TextDocument
             The document with annotations
         """
-        doccano_doc = utils.DoccanoDocRelationExtraction.from_dict(
-            doc_line, client_config=self.client_config
-        )
+        try:
+            doccano_doc = utils.DoccanoDocRelationExtraction.from_dict(
+                doc_line, client_config=self.client_config
+            )
+        except KeyError as err:
+            raise KeyError(
+                f"The key {err} must be in the data to import. Please check the task"
+                " or the client configuration of the converter"
+            )
 
         anns_by_doccano_id = dict()
         for doccano_entity in doccano_doc.entities:
@@ -293,9 +299,16 @@ class DoccanoInputConverter:
         TextDocument
             The document with annotations
         """
-        doccano_doc = utils.DoccanoDocSeqLabeling.from_dict(
-            doc_line, client_config=self.client_config
-        )
+        try:
+            doccano_doc = utils.DoccanoDocSeqLabeling.from_dict(
+                doc_line, client_config=self.client_config
+            )
+        except Exception as err:
+            raise Exception(
+                "Imposible to convert the document. Please check the task"
+                " or the client configuration of the converter"
+            ) from err
+
         anns = []
         for doccano_entity in doccano_doc.entities:
             text = doccano_doc.text[
@@ -336,9 +349,16 @@ class DoccanoInputConverter:
         TextDocument
             The document with its category
         """
-        doccano_doc = utils.DoccanoDocTextClassification.from_dict(
-            doc_line, client_config=self.client_config
-        )
+        try:
+            doccano_doc = utils.DoccanoDocTextClassification.from_dict(
+                doc_line, client_config=self.client_config
+            )
+        except Exception as err:
+            raise Exception(
+                "Imposible to convert the document. Please check the task"
+                " or the client configuration of the converter"
+            ) from err
+
         attr = Attribute(label=self.attr_label, value=doccano_doc.label)
 
         if self._prov_tracer is not None:

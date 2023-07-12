@@ -151,3 +151,35 @@ def test_prov(tmp_path, task, check_prov_entity):
     assert prov.data_item == ann
     assert prov.op_desc == converter.description
     assert len(prov.source_data_items) == 0
+
+
+def test_exceptions(tmp_path, caplog):
+    # testing incoherence between data and task
+    task = DoccanoTask.SEQUENCE_LABELING
+    test_line = TEST_LINE_BY_TASK[DoccanoTask.RELATION_EXTRACTION]
+    create_doccano_files_disk(tmp_path, data=test_line, task=task.value)
+
+    with pytest.raises(Exception, match="Imposible to convert.*"):
+        DoccanoInputConverter(task=task).load_from_directory_zip(
+            dir_path=f"{tmp_path}/{task.value}"
+        )
+
+    # testing incoherence between data and task
+    task = DoccanoTask.RELATION_EXTRACTION
+    test_line = TEST_LINE_BY_TASK[DoccanoTask.SEQUENCE_LABELING]
+    create_doccano_files_disk(tmp_path, data=test_line, task=task.value)
+
+    with pytest.raises(KeyError, match="The key .*"):
+        DoccanoInputConverter(task=task).load_from_directory_zip(
+            dir_path=f"{tmp_path}/{task.value}"
+        )
+
+    # testing incoherence between data and task
+    task = DoccanoTask.TEXT_CLASSIFICATION
+    test_line = TEST_LINE_BY_TASK[DoccanoTask.SEQUENCE_LABELING]
+    create_doccano_files_disk(tmp_path, data=test_line, task=task.value)
+
+    with pytest.raises(Exception, match="Imposible to convert.*"):
+        DoccanoInputConverter(task=task).load_from_directory_zip(
+            dir_path=f"{tmp_path}/{task.value}"
+        )
