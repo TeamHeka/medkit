@@ -7,11 +7,16 @@ from medkit.core.id import generate_deterministic_id
 from medkit.core.text import TextDocument, Entity, Relation, Span
 from medkit.io import DoccanoTask, DoccanoOutputConverter
 
+_METADATA_KEY = "DOC_ID"
+_METADATA_VALUE = "1234"
+
 
 def _get_doc_by_task(task: DoccanoTask):
-    # get a TextDocument by task, seqlabeling and relationextraction use
+    # get a TextDocument by task, seqlabeling and RelationExtraction use
     # the same doc, the output format changes
-    doc = TextDocument(text="medkit was created in 2022")
+    doc = TextDocument(
+        text="medkit was created in 2022", metadata={_METADATA_KEY: _METADATA_VALUE}
+    )
 
     if task == DoccanoTask.RELATION_EXTRACTION or task == DoccanoTask.SEQUENCE_LABELING:
         medkit_anns = [
@@ -54,19 +59,16 @@ EXPECTED_DOCLINE_BY_TASK = {
                 "type": "created_in",
             }
         ],
-        "metadata": {},
     },
     # json does not recognize tuples
     # NOTE: this works with doccano IDE
     DoccanoTask.SEQUENCE_LABELING: {
         "text": "medkit was created in 2022",
         "label": [[0, 6, "ORG"], [22, 26, "DATE"]],
-        "metadata": {},
     },
     DoccanoTask.TEXT_CLASSIFICATION: {
         "text": "medkit was created in 2022",
         "label": ["header"],
-        "metadata": {},
     },
 }
 
@@ -80,7 +82,9 @@ EXPECTED_DOCLINE_BY_TASK = {
     ],
 )
 def test_save_by_task(tmp_path, task):
-    converter = DoccanoOutputConverter(task=task, attr_label="category")
+    converter = DoccanoOutputConverter(
+        task=task, attr_label="category", include_metadata=False
+    )
     dir_path = tmp_path / task.value
     expected_jsonl_path = dir_path / "all.jsonl"
 
@@ -115,3 +119,33 @@ def test_warnings(tmp_path, caplog):
             task=DoccanoTask.TEXT_CLASSIFICATION, attr_label="is_negated"
         )
         converter.save(medkit_docs, dir_path=dir_path)
+
+
+@pytest.mark.parametrize(
+    "task",
+    [
+        DoccanoTask.RELATION_EXTRACTION,
+        DoccanoTask.TEXT_CLASSIFICATION,
+        DoccanoTask.SEQUENCE_LABELING,
+    ],
+)
+def test_save_by_task_with_metadata(tmp_path, task):
+    converter = DoccanoOutputConverter(
+        task=task, attr_label="category", include_metadata=True
+    )
+    dir_path = tmp_path / task.value
+    expected_jsonl_path = dir_path / "all.jsonl"
+
+    medkit_docs = [_get_doc_by_task(task)]
+    converter.save(medkit_docs, dir_path=dir_path)
+
+    assert dir_path.exists()
+    assert expected_jsonl_path.exists()
+
+    with open(expected_jsonl_path) as fp:
+        data = json.load(fp)
+
+    # metadata is exported as items in the output data
+    metadata = data.pop(_METADATA_KEY)
+    assert metadata == _METADATA_VALUE
+    assert data == EXPECTED_DOCLINE_BY_TASK[task]

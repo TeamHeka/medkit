@@ -13,7 +13,6 @@ from medkit.io._doccano_utils import (
 class _MockClientConfig:
     column_text: str = "text"
     column_label: str = "label"
-    metadata_key: str = "metadata"
 
 
 def test_doc_relation_extraction_from_dict():
@@ -24,6 +23,7 @@ def test_doc_relation_extraction_from_dict():
             {"id": 1, "start_offset": 22, "end_offset": 26, "label": "DATE"},
         ],
         "relations": [{"id": 0, "from_id": 0, "to_id": 1, "type": "created_in"}],
+        "custom_data": "phrase_0",
     }
     doc = DoccanoDocRelationExtraction.from_dict(
         test_line, client_config=_MockClientConfig()
@@ -35,6 +35,8 @@ def test_doc_relation_extraction_from_dict():
     assert entity in doc.entities
     relation = DoccanoRelation(id=0, from_id=0, to_id=1, type="created_in")
     assert relation in doc.relations
+    # test with metadata import
+    assert doc.metadata == dict(custom_data="phrase_0")
 
 
 def test_doc_seq_labeling_from_dict():
@@ -47,6 +49,9 @@ def test_doc_seq_labeling_from_dict():
     assert len(doc.entities) == 2
     entity = DoccanoEntityTuple(start_offset=0, end_offset=6, label="ORG")
     assert entity in doc.entities
+    # test with metadata import,
+    # there is no additional keys, so metadata should be empty
+    assert doc.metadata == {}
 
 
 def test_doc_text_classification_from_dict():
@@ -55,3 +60,6 @@ def test_doc_text_classification_from_dict():
         test_line, client_config=_MockClientConfig()
     )
     assert doc.label == "header"
+    # test with metadata import,
+    # there is no additional keys, so metadata should be empty
+    assert doc.metadata == {}

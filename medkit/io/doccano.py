@@ -54,13 +54,10 @@ class DoccanoClientConfig:
         Name or key representing the text
     column_label:
         Name or key representing the label
-    key_for_metadata:
-        Name or key representing the metadata
     """
 
     column_text: str = "text"
     column_label: str = "label"
-    metadata_key: str = "metadata"
 
 
 class DoccanoInputConverter:
@@ -275,12 +272,10 @@ class DoccanoInputConverter:
                     relation, self.description, source_data_items=[]
                 )
 
-        metadata = doccano_doc.metadata.copy()
-
         doc = TextDocument(
             text=doccano_doc.text,
             anns=list(anns_by_doccano_id.values()),
-            metadata=metadata,
+            metadata=doccano_doc.metadata,
         )
 
         return doc
@@ -349,7 +344,7 @@ class DoccanoInputConverter:
         if self._prov_tracer is not None:
             self._prov_tracer.add_prov(attr, self.description, source_data_items=[])
 
-        doc = TextDocument(text=doccano_doc.text)
+        doc = TextDocument(text=doccano_doc.text, metadata=doccano_doc.metadata)
         doc.raw_segment.attrs.add(attr)
         return doc
 

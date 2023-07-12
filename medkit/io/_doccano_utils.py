@@ -60,17 +60,18 @@ class DoccanoDocRelationExtraction:
 
     @classmethod
     def from_dict(cls, doc_line: Dict[str, Any], client_config: Any) -> Self:
-        text: str = doc_line[client_config.column_text]
-        metadata = doc_line.get(client_config.metadata_key, {})
-        entities = [DoccanoEntity(**ann) for ann in doc_line["entities"]]
-        relations = [DoccanoRelation(**ann) for ann in doc_line["relations"]]
+        text: str = doc_line.pop(client_config.column_text)
+        entities = [DoccanoEntity(**ann) for ann in doc_line.pop("entities")]
+        relations = [DoccanoRelation(**ann) for ann in doc_line.pop("relations")]
+        # in doccano, metadata is what remains after removing key fields
+        metadata = doc_line
         return cls(text=text, entities=entities, relations=relations, metadata=metadata)
 
     def to_dict(self) -> Dict[str, Any]:
         doc_dict = dict(text=self.text)
         doc_dict["entities"] = [ent.to_dict() for ent in self.entities]
         doc_dict["relations"] = [rel.to_dict() for rel in self.relations]
-        doc_dict["metadata"] = self.metadata
+        doc_dict.update(self.metadata)
         return doc_dict
 
 
@@ -82,17 +83,18 @@ class DoccanoDocSeqLabeling:
 
     @classmethod
     def from_dict(cls, doc_line: Dict[str, Any], client_config: Any) -> Self:
-        text = doc_line[client_config.column_text]
-        metadata = doc_line.get(client_config.metadata_key, {})
+        text = doc_line.pop(client_config.column_text)
         entities = [
-            DoccanoEntityTuple(*ann) for ann in doc_line[client_config.column_label]
+            DoccanoEntityTuple(*ann) for ann in doc_line.pop(client_config.column_label)
         ]
+        # in doccano, metadata is what remains after removing key fields
+        metadata = doc_line
         return cls(text=text, entities=entities, metadata=metadata)
 
     def to_dict(self) -> Dict[str, Any]:
         doc_dict = dict(text=self.text)
         doc_dict["label"] = [ent.to_tuple() for ent in self.entities]
-        doc_dict["metadata"] = self.metadata
+        doc_dict.update(self.metadata)
         return doc_dict
 
 
@@ -104,13 +106,13 @@ class DoccanoDocTextClassification:
 
     @classmethod
     def from_dict(cls, doc_line: Dict[str, Any], client_config: Any) -> Self:
-        text = doc_line[client_config.column_text]
-        metadata = doc_line.get("metadata", {})
-        return cls(
-            text=text, label=doc_line[client_config.column_label][0], metadata=metadata
-        )
+        text = doc_line.pop(client_config.column_text)
+        label = doc_line.pop(client_config.column_label)[0]
+        # in doccano, metadata is what remains after removing key fields
+        metadata = doc_line
+        return cls(text=text, label=label, metadata=metadata)
 
     def to_dict(self) -> Dict[str, Any]:
         doc_dict = dict(text=self.text, label=[str(self.label)])
-        doc_dict["metadata"] = self.metadata
+        doc_dict.update(self.metadata)
         return doc_dict
