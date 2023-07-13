@@ -217,14 +217,15 @@ class RegexpMatcher(NEROperation):
         ]
 
     def _find_matches_in_segment(self, segment: Segment) -> Iterator[Entity]:
-        text_unicode = segment.text
         text_ascii = None
 
         if self._has_non_unicode_sensitive_rule:
             text_ascii = get_ascii_from_unicode(segment.text, logger=logger)
 
         for rule_index in range(len(self.rules)):
-            yield from self._find_matches_in_segment_for_rule(rule_index, segment, text_ascii)
+            yield from self._find_matches_in_segment_for_rule(
+                rule_index, segment, text_ascii
+            )
 
     def _find_matches_in_segment_for_rule(
         self, rule_index: int, segment: Segment, text_ascii: Optional[str]
