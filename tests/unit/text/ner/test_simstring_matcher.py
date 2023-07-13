@@ -1,3 +1,10 @@
+try:
+    import spacy
+except ImportError:
+    spacy = None
+
+import pytest
+
 from medkit.core import Attribute, ProvTracer
 from medkit.core.text import Segment, Span
 from medkit.text.ner.simstring_matcher import (
@@ -5,7 +12,10 @@ from medkit.text.ner.simstring_matcher import (
     SimstringMatcherRule,
     SimstringMatcherNormalization,
 )
-from medkit.text.ner._base_simstring_matcher import _build_candidate_ranges
+from medkit.text.ner._base_simstring_matcher import (
+    _build_candidate_ranges_with_regexp,
+    _build_candidate_ranges_with_spacy,
+)
 from medkit.text.ner import UMLSNormAttribute
 
 
@@ -167,10 +177,27 @@ def test_unicode_sensitive():
     assert entity.text == "dïabete"
 
 
-def test_candidates():
+def test_spacy_tokenization():
+    """Tokenize with spacy and use POS tag to avoid false positive"""
+    sentence = _get_sentence_segment("Les symptomes se sont atténués")
+
+    rule = SimstringMatcherRule(term="LES", label="problem")
+
+    # one match with default tokenization
+    matcher = SimstringMatcher(rules=[rule])
+    entities = matcher.run([sentence])
+    assert len(entities) == 1
+
+    # zero match with spacy tokenization
+    matcher = SimstringMatcher(rules=[rule], spacy_tokenization_language="fr")
+    entities = matcher.run([sentence])
+    assert len(entities) == 0
+
+
+def test_candidates_with_regexp():
     """Test internal function tokenizing the text and building candidates"""
 
-    ranges = _build_candidate_ranges(_TEXT, min_length=3, max_length=15)
+    ranges = _build_candidate_ranges_with_regexp(_TEXT, min_length=3, max_length=15)
     candidates = [_TEXT[start:end] for start, end in ranges]
     assert candidates == [
         "Le patient",
@@ -187,6 +214,28 @@ def test_candidates():
         "et d",
         "et d'asthme",
         "d'asthme",
+        "asthme",
+    ]
+
+
+@pytest.mark.skipif(spacy is None, reason="spacy not available")
+def test_candidates_with_spacy():
+    """Test internal function tokenizing the text and building candidates"""
+
+    spacy_lang = spacy.load(
+        "fr_core_news_sm",
+        # only keep tok2vec and morphologizer to get POS tags
+        disable=["tagger", "parser", "attribute_ruler", "lemmatizer", "ner"],
+    )
+    doc = spacy_lang(_TEXT)
+
+    ranges = _build_candidate_ranges_with_spacy(doc, min_length=3, max_length=15)
+    candidates = [_TEXT[start:end] for start, end in ranges]
+    assert candidates == [
+        "patient",
+        "patient souffre",
+        "souffre",
+        "diabète",
         "asthme",
     ]
 

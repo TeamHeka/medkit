@@ -22,6 +22,16 @@ _CACHE_PARAMS_FILENAME = "params.yml"
 _RULES_DB_FILENAME = "rules"
 _SIMSTRING_DB_FILENAME = "simstring"
 
+_SPACY_LANGUAGE_MAP = {
+    "ENG": "en",
+    "GER": "de",
+    "SPA": "es",
+    "POR": "pt",
+    "FRE": "fr",
+    "ITA": "it",
+    "DUT": "nl",
+}
+
 logger = logging.getLogger(__name__)
 
 
@@ -41,7 +51,11 @@ class UMLSMatcher(BaseSimstringMatcher):
     matching algorithm (http://chokkan.org/software/simstring/).
 
     This operation is heavily inspired by the `QuickUMLS` library
-    (https://github.com/Georgetown-IR-Lab/QuickUMLS)
+    (https://github.com/Georgetown-IR-Lab/QuickUMLS).
+
+    Note that setting `spacy_tokenization_language` to `True` might reduce the
+    number of false positives. This requires the `spacy` optional dependency,
+    which can be installed with `pip install medkit-lib[spacy]`.
     """
 
     _SEMGROUP_BY_SEMTYPE = None
@@ -57,6 +71,7 @@ class UMLSMatcher(BaseSimstringMatcher):
         similarity: Literal["cosine", "dice", "jaccard", "overlap"] = "jaccard",
         lowercase: bool = True,
         normalize_unicode: bool = False,
+        spacy_tokenization: bool = False,
         allowed_semgroups: Optional[List[str]] = None,
         output_labels_by_semgroup: Optional[Union[str, Dict[str, str]]] = None,
         attrs_to_copy: Optional[List[str]] = None,
@@ -98,6 +113,12 @@ class UMLSMatcher(BaseSimstringMatcher):
             Whether to use ASCII-only versions of UMLS terms and input entities
             (non-ASCII chars replaced by closest ASCII chars). Will trigger a
             regeneration of the database if changed.
+        spacy_tokenization:
+            If `True`, spacy will be used to tokenize input segments and filter
+            out some tokens based on their part-of-speech tags, such as
+            determinants, conjunctions and prepositions. If `None`, a simple
+            regexp based tokenization will be used, which is faster but might
+            give more false positives.
         allowed_semgroups:
             Ids of UMLS semantic groups that matched concepts should belong to.
             cf
@@ -177,6 +198,16 @@ class UMLSMatcher(BaseSimstringMatcher):
             with open(cache_params_file, mode="w") as fp:
                 yaml.safe_dump(dataclasses.asdict(cache_params), fp)
 
+        if spacy_tokenization:
+            spacy_tokenization_language = _SPACY_LANGUAGE_MAP.get(language)
+            if spacy_tokenization_language is None:
+                raise ValueError(
+                    "Spacy tokenization not supported for language"
+                    f" '{spacy_tokenization_language}'"
+                )
+        else:
+            spacy_tokenization_language = None
+
         super().__init__(
             simstring_db_file=simstring_db_file,
             rules_db_file=rules_db_file,
@@ -184,6 +215,7 @@ class UMLSMatcher(BaseSimstringMatcher):
             min_length=min_length,
             max_length=max_length,
             similarity=similarity,
+            spacy_tokenization_language=spacy_tokenization_language,
             attrs_to_copy=attrs_to_copy,
             name=name,
             uid=uid,

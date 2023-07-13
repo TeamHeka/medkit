@@ -11,12 +11,18 @@ import dataclasses
 import math
 from pathlib import Path
 import re
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Any, Iterator, List, Optional, Tuple, Union
 from typing_extensions import Literal
 import shelve
 
 from pysimstring import simstring
 from unidecode import unidecode
+
+try:
+    import spacy
+except ImportError:
+    spacy = None
+
 
 from medkit.core.text import (
     Entity,
@@ -151,6 +157,7 @@ class BaseSimstringMatcher(NEROperation):
         min_length: int = 3,
         max_length: int = 15,
         similarity: Literal["cosine", "dice", "jaccard", "overlap"] = "jaccard",
+        spacy_tokenization_language: Optional[str] = None,
         attrs_to_copy: Optional[List[str]] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
@@ -172,6 +179,13 @@ class BaseSimstringMatcher(NEROperation):
             text of an entity matched on that rule.
         similarity:
             Similarity metric to use.
+        spacy_tokenization_language:
+            2-letter code (ex: "fr", "en", etc) designating the language of the
+            spacy model to use for tokenization. If provided, spacy will be used
+            to tokenize input segments and filter out some tokens based on their
+            part-of-speech tags, such as determinants, conjunctions and
+            prepositions. If `None`, a simple regexp based tokenization will be
+            used, which is faster but might give more false positives.
         attrs_to_copy:
             Labels of the attributes that should be copied from the source
             segment to the created entity. Useful for propagating context
@@ -207,6 +221,24 @@ class BaseSimstringMatcher(NEROperation):
 
         self._rules_db = shelve.open(str(rules_db_file), flag="r")
 
+        if spacy_tokenization_language is not None:
+            if spacy is None:
+                raise Exception(
+                    "Spacy module must be installed to use the 'spacy_language_code'"
+                    " init parameter"
+                )
+            if spacy_tokenization_language == "en":
+                spacy_model = "en_core_web_sm"
+            else:
+                spacy_model = f"{spacy_tokenization_language}_core_news_sm"
+            self._spacy_lang = spacy.load(
+                spacy_model,
+                # only keep tok2vec and morphologizer to get POS tags
+                disable=["tagger", "parser", "attribute_ruler", "lemmatizer", "ner"],
+            )
+        else:
+            self._spacy_lang = None
+
     def run(self, segments: List[Segment]) -> List[Entity]:
         """
         Return entities (with optional normalization attributes) matched in `segments`
@@ -222,21 +254,35 @@ class BaseSimstringMatcher(NEROperation):
             Entities found in `segments` (with optional normalization
             attributes)
         """
+        # pre-tokenize all segments with pipe() so spacy can parallelize it
+        if self._spacy_lang is not None:
+            spacy_docs = self._spacy_lang.pipe(s.text for s in segments)
+        else:
+            spacy_docs = [None] * len(segments)
 
         return [
             entity
-            for segment in segments
-            for entity in self._find_matches_in_segment(segment)
+            for segment, spacy_doc in zip(segments, spacy_docs)
+            for entity in self._find_matches_in_segment(segment, spacy_doc)
         ]
 
-    def _find_matches_in_segment(self, segment: Segment) -> Iterator[Entity]:
+    def _find_matches_in_segment(
+        self, segment: Segment, spacy_doc: Optional[Any]
+    ) -> Iterator[Entity]:
         """Return an iterator to the entities matched in a segment"""
 
         text = segment.text
         matches = []
-        for start, end in _build_candidate_ranges(
-            text, self.min_length, self.max_length
-        ):
+        if spacy_doc is not None:
+            ranges = _build_candidate_ranges_with_spacy(
+                spacy_doc, self.min_length, self.max_length
+            )
+        else:
+            ranges = _build_candidate_ranges_with_regexp(
+                text, self.min_length, self.max_length
+            )
+
+        for start, end in ranges:
             candidate_text = text[start:end]
             # simstring matching is always performed on lowercased ASCII-only text,
             # then for potential matches we will recompute the similarity
@@ -390,7 +436,7 @@ def build_simstring_matcher_databases(
 _TOKENIZATION_PATTERN = re.compile(r"[\w]+|[^\w ]")
 
 
-def _build_candidate_ranges(
+def _build_candidate_ranges_with_regexp(
     text: str, min_length: int, max_length: int
 ) -> Iterator[Tuple[int, int]]:
     """From a string, generate all candidate matches (by tokenizing it and then
@@ -414,7 +460,7 @@ def _build_candidate_ranges(
     Example
     -------
     >>> text = "I have type 2 diabetes"
-    >>> ranges = _build_candidate_ranges(text, 2, 10)
+    >>> ranges = _build_candidate_ranges_with_regexp(text, 2, 10)
     >>> candidates = [text[slice(*r)] for r in ranges]
     >>> candidates
     ['I have', 'have', 'have type', 'type', 'type 2', '2 diabetes', 'diabetes']
@@ -450,6 +496,73 @@ def _build_candidate_ranges(
             if length > max_length:
                 break
             yield (start, end)
+
+
+def _build_candidate_ranges_with_spacy(
+    spacy_doc: Any,
+    min_length: int,
+    max_length: int,
+) -> Iterator[Tuple[int, int]]:
+    """From a pre-tokenized spacy Document, generate all candidate matches (by
+    concatenating tokens) and return their ranges, filtering out some tokens
+    based on their part-of-speech tags. Based on the QuickUMLS code.
+
+    This will often give better results than _build_candidate_ranges_with_regexp()
+    because the part-of-speech filtering allows us to avoid some false positives.
+
+    Parameters
+    ----------
+    spacy_doc:
+        Spacy document of text from which to generate candidates
+    min_length:
+        Min length of a candidate, in characters
+    max_length:
+        Max length of a candidate, in characters
+
+    Returns
+    -------
+    Iterator[Tuple[int, int]]
+        Iterator over ranges of candidate matches
+
+    Example
+    -------
+    >>> text = "I have type 2 diabetes"
+    >>> doc = spacy.blank("en")(text)
+    >>> ranges = _build_candidate_ranges_with_spacy(doc, 2, 10)
+    >>> candidates = [text[slice(*r)] for r in ranges]
+    >>> candidates
+    ['I have', 'have', 'have type', 'type', 'type 2', '2 diabetes', 'diabetes']
+    """
+
+    # don't allow candidates to start or end with pre/post positions,
+    # determinants or conjunctions
+    def is_invalid_boundary_token(token):
+        return (
+            token.is_punct
+            or token.is_space
+            or token.pos_ in ("ADP", "DET", "SCONJ", "CCONJ", "CONJ")
+        )
+
+    # iterate over tokens
+    nb_tokens = len(spacy_doc)
+    for i in range(nb_tokens):
+        start_token = spacy_doc[i]
+        if is_invalid_boundary_token(start_token):
+            continue
+        # build candidate by appending next tokens
+        for j in range(i, nb_tokens):
+            end_token = spacy_doc[j]
+            if is_invalid_boundary_token(end_token):
+                continue
+            span = spacy_doc[i : j + 1]
+            length = span.end_char - span.start_char
+            # candidate is too short, skip
+            if length < min_length:
+                continue
+            # candidate is too long, stop appending tokens
+            if length > max_length:
+                break
+            yield (span.start_char, span.end_char)
 
 
 # based on https://github.com/Georgetown-IR-Lab/QuickUMLS/blob/master/quickumls/toolbox.py

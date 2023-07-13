@@ -81,6 +81,10 @@ class SimstringMatcher(BaseSimstringMatcher):
 
     Uses the `simstring` fuzzy matching algorithm
     (http://chokkan.org/software/simstring/).
+
+    Note that setting `spacy_tokenization_language` to `True` might reduce the
+    number of false positives. This requires the `spacy` optional dependency,
+    which can be installed with `pip install medkit-lib[spacy]`.
     """
 
     def __init__(
@@ -90,6 +94,7 @@ class SimstringMatcher(BaseSimstringMatcher):
         min_length: int = 3,
         max_length: int = 30,
         similarity: Literal["cosine", "dice", "jaccard", "overlap"] = "jaccard",
+        spacy_tokenization_language: Optional[str] = None,
         attrs_to_copy: Optional[List[str]] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
@@ -113,6 +118,13 @@ class SimstringMatcher(BaseSimstringMatcher):
         normalize_unicode:
             Whether to use ASCII-only versions of rules terms and input entities
             (non-ASCII chars replaced by closest ASCII chars).
+        spacy_tokenization_language:
+            2-letter code (ex: "fr", "en", etc) designating the language of the
+            spacy model to use for tokenization. If provided, spacy will be used
+            to tokenize input segments and filter out some tokens based on their
+            part-of-speech tags, such as determinants, conjunctions and
+            prepositions. If `None`, a simple regexp based tokenization will be
+            used, which is faster but might give more false positives.
         attrs_to_copy:
             Labels of the attributes that should be copied from the source
             segment to the created entity. Useful for propagating context
@@ -140,6 +152,7 @@ class SimstringMatcher(BaseSimstringMatcher):
             min_length=min_length,
             max_length=max_length,
             similarity=similarity,
+            spacy_tokenization_language=spacy_tokenization_language,
             attrs_to_copy=attrs_to_copy,
             name=name,
             uid=uid,
