@@ -15,6 +15,8 @@ def get_ascii_from_unicode(text: str, keep_length: bool = True, logger=None) -> 
     keep_length
         If True, special characters which change the length are kept in returned string
     logger
+        Logger to pass if one wants to keep caller information
+
     Returns
     -------
     str
@@ -38,10 +40,11 @@ def get_ascii_from_unicode(text: str, keep_length: bool = True, logger=None) -> 
                 special_chars.add(c)
 
         logger.info(
-            "Some characters can't be decoded to ascii without changing length. "
-            f"Strategy is to keep these special characters: {special_chars}\n"
-            f"original text:\t{text}\n"
-            f"decoded text:\t{output}\n"
+            "Some characters can't be decoded to ascii without changing length."
+            " Strategy is to keep these special characters: %s \n",
+            special_chars,
         )
+
+        logger.debug("original text:\t%s\ndecoded text:\t%s\n", text, output)
 
     return output
