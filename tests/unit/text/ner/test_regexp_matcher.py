@@ -198,7 +198,7 @@ def test_unicode_sensitive_off(caplog):
         "Il a une sœur atteinte de diabète et pensait que sa mère avait peut-être aussi"
         " le diabète. "
     )
-    with caplog.at_level(logging.WARNING, logger="medkit.text.ner.regexp_matcher"):
+    with caplog.at_level(logging.INFO, logger="medkit.text.ner.regexp_matcher"):
         matcher.run([sentence_with_ligatures])
         assert len(caplog.messages) == 1
 

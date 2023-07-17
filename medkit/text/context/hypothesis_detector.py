@@ -13,12 +13,12 @@ from pathlib import Path
 import re
 from typing import Dict, List, Optional, Tuple, Union
 from typing_extensions import Literal, TypedDict
-import unidecode
 
 import yaml
 
 from medkit.core import Attribute
 from medkit.core.text import ContextOperation, Segment
+from medkit.text.utils.decoding import get_ascii_from_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -39,11 +39,11 @@ class HypothesisDetectorRule:
     id:
         Unique identifier of the rule to store in the metadata of the entities
     case_sensitive:
-        Whether to ignore case when running `regexp and `exclusion_regexs`
+        Whether to ignore case when running `regexp and `exclusion_regexps`
     unicode_sensitive:
         Whether to replace all non-ASCII chars by the closest ASCII chars
-        on input text before runing `regexp and `exclusion_regexs`.
-        If True, then `regexp and `exclusion_regexs` shouldn't contain
+        on input text before running `regexp and `exclusion_regexps`.
+        If True, then `regexp and `exclusion_regexps` shouldn't contain
         non-ASCII chars because they would never be matched.
     """
 
@@ -69,7 +69,7 @@ class HypothesisRuleMetadata(TypedDict):
     Parameters
     ----------
     type:
-        Metadata type, here `"rule"` (use to differenciate
+        Metadata type, here `"rule"` (use to differentiate
         between rule/verb metadata dict)
     rule_id:
         Identifier of the rule used to detect an hypothesis.
@@ -88,7 +88,7 @@ class HypothesisVerbMetadata(TypedDict):
     Parameters
     ----------
     type:
-        Metadata type, here `"verb"` (use to differenciate
+        Metadata type, here `"verb"` (use to differentiate
         between rule/verb metadata dict).
     matched_verb:
         Root of the verb used to detect an hypothesis.
@@ -242,7 +242,7 @@ class HypothesisDetector(ContextOperation):
             hyp_attr = Attribute(
                 label=self.output_label,
                 value=True,
-                metadata=HypothesisRuleMetadata(type="verb", matched_verb=matched_verb),
+                metadata=HypothesisVerbMetadata(type="verb", matched_verb=matched_verb),
             )
         elif rule_id is not None:
             hyp_attr = Attribute(
@@ -275,20 +275,7 @@ class HypothesisDetector(ContextOperation):
         text_ascii = None
 
         if self._has_non_unicode_sensitive_rule:
-            # If there exists one rule which is not unicode-sensitive
-            text_ascii = unidecode.unidecode(text_unicode)
-            # Verify that text length is conserved
-            if len(text_ascii) != len(
-                text_unicode
-            ):  # if text conversion had changed its length
-                logger.warning(
-                    "Lengths of unicode text and generated ascii text are different. "
-                    "Please, pre-process input text before running NegationDetector\n\n"
-                    f"Unicode:{text_unicode} (length: {len(text_unicode)})\n"
-                    f"Ascii: {text_ascii} (length: {len(text_ascii)})\n"
-                )
-                # Fallback on unicode text
-                text_ascii = text_unicode
+            text_ascii = get_ascii_from_unicode(text, logger=logger)
 
         # try all rules until we have a match
         for rule_index, rule in enumerate(self.rules):
@@ -406,4 +393,4 @@ class HypothesisDetector(ContextOperation):
 
         with open(path_to_rules, mode="w", encoding=encoding) as f:
             rules_data = [dataclasses.asdict(r) for r in rules]
-            rules = yaml.safe_dump(rules_data, f)
+            yaml.safe_dump(rules_data, f)

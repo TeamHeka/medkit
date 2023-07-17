@@ -14,7 +14,6 @@ import re
 from typing import Any, Iterator, List, Optional, Union
 from typing_extensions import TypedDict
 
-import unidecode
 import yaml
 
 from medkit.core.text import (
@@ -25,7 +24,7 @@ from medkit.core.text import (
     span_utils,
 )
 from medkit.text.ner.umls_norm_attribute import UMLSNormAttribute
-
+from medkit.text.utils.decoding import get_ascii_from_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -52,16 +51,16 @@ class RegexpMatcherRule:
         Whether to ignore case when running `regexp and `exclusion_regexp`
     unicode_sensitive:
         If True, regexp rule matches are searched on unicode text.
-        So, `regexp and `exclusion_regexs` shall not contain non-ASCII chars because
+        So, `regexp and `exclusion_regexps` shall not contain non-ASCII chars because
         they would never be matched.
         If False, regexp rule matches are searched on closest ASCII text when possible.
         (cf. RegexpMatcher)
     exclusion_regexp:
-        An optional exclusion pattern. Note that this exclusion pattern will
+        An optional exclusion pattern. Note that this exclusion pattern will be
         executed on the whole input annotation, so when relying on `exclusion_regexp`
         make sure the input annotations passed to `RegexpMatcher` are "local"-enough
-        (sentences or syntagmes) rather than the whole text or paragraphs
-    normalization:
+        (sentences or syntagmas) rather than the whole text or paragraphs
+    normalizations:
         Optional list of normalization attributes that should be attached to
         the entities created
     """
@@ -158,7 +157,7 @@ class RegexpMatcher(NEROperation):
         attrs_to_copy:
             Labels of the attributes that should be copied from the source segment
             to the created entity. Useful for propagating context attributes
-            (negation, antecendent, etc)
+            (negation, antecedent, etc)
         name:
             Name describing the matcher (defaults to the class name)
         uid:
@@ -219,23 +218,9 @@ class RegexpMatcher(NEROperation):
 
     def _find_matches_in_segment(self, segment: Segment) -> Iterator[Entity]:
         text_ascii = None
-        text_unicode = segment.text
 
         if self._has_non_unicode_sensitive_rule:
-            # If there exists one rule which is not unicode-sensitive
-            text_ascii = unidecode.unidecode(segment.text)
-            # Verify that text length is conserved
-            if len(text_ascii) != len(
-                text_unicode
-            ):  # if text conversion had changed its length
-                logger.warning(
-                    "Lengths of unicode text and generated ascii text are different. "
-                    "Please, pre-process input text before running RegexpMatcher\n\n"
-                    f"Unicode:{text_unicode} (length: {len(text_unicode)})\n"
-                    f"Ascii: {text_ascii} (length: {len(text_ascii)})\n"
-                )
-                # Fallback on unicode text
-                text_ascii = text_unicode
+            text_ascii = get_ascii_from_unicode(segment.text, logger=logger)
 
         for rule_index in range(len(self.rules)):
             yield from self._find_matches_in_segment_for_rule(
@@ -391,4 +376,4 @@ class RegexpMatcher(NEROperation):
 
         with open(path_to_rules, mode="w", encoding=encoding) as f:
             rules_data = [dataclasses.asdict(r) for r in rules]
-            rules = yaml.safe_dump(rules_data, f)
+            yaml.safe_dump(rules_data, f)
