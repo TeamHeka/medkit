@@ -8,7 +8,6 @@ __all__ = [
 ]
 
 import dataclasses
-import itertools
 import math
 from pathlib import Path
 import re
@@ -424,10 +423,7 @@ def _build_candidate_ranges(
             continue
         # build candidate by appending next tokens
         start = ranges[i][0]
-        for j in itertools.count(start=i):
-            # reached end of available tokens
-            if j >= nb_tokens:
-                break
+        for j in range(i, nb_tokens):
             end_token = tokens[j]
             # next token is empty, skip candidate
             if not end_token[0].isalnum():
