@@ -402,10 +402,10 @@ def _build_candidate_ranges(
     Example
     -------
     >>> text = "I have type 2 diabetes"
-    >>> ranges = SimstringMatcher._build_candidate_ranges(text, 2, 15)
+    >>> ranges = _build_candidate_ranges(text, 2, 10)
     >>> candidates = [text[slice(*r)] for r in ranges]
     >>> candidates
-    ['I have', 'I have type', 'have', 'have type', 'type', 'type 2 diabetes', 'diabetes']
+    ['I have', 'have', 'have type', 'type', 'type 2', '2 diabetes', 'diabetes']
     """
 
     # find all tokens and corresponding ranges using regexp
