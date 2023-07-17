@@ -1,6 +1,8 @@
+#file: noinspection YAMLSchemaValidation
 ---
 - id: "id_regexp_infarct"
-  label: "Infarctus, IDM, myocarde, cardiopathie ischémique, angor, angine de poitrine"
+  label: "disorder"
+  term: "Infarctus, IDM, myocarde, cardiopathie ischémique, angor, angine de poitrine"
   regexp: "infarctus|[^a-z]IDM[^a-z]|infarctus.{0,5}du.{0,5}myocarde|cardiopathie.{0,5}isch[eéè]mique|[^a-z]angor[^a-z]|angine.{0,5}de.{0,5}poitrine|crise.{0,5}cardiaque|syndrome *coronarien *aigu"
   exclusion_regexp: "infarctus +pulmonaire|infarctus +c[ée]r[ée]bral|AVC *avec *infarctus|infarctus *spl[ée]nique|petit *infarctus"
   version: "2"
@@ -20,56 +22,65 @@
       id: "C0340288"
 
 - id: "id_regexp_kawasaki"
-  label: "Kawasaki"
+  label: "disorder"
+  term: "Kawasaki"
   regexp: "Kawasaki"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_allongementqt"
-  label: "allongement QT"
+  label: "disorder"
+  term: "allongement QT"
   regexp: "allongement.{0,10}QT"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_allergiehydroxchloroquine"
-  label: "allergie hydroxchloroquine"
+  label: "disorder"
+  term: "allergie hydroxchloroquine"
   regexp: "allergi.{0,10}hydroxchloroquine|hydroxchloroquine.{0,10}allergi"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_retinopathie"
-  label: "retinopathie"
+  label: "disorder"
+  term: "retinopathie"
   regexp: "r[ée]tinopathie"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_igs2"
   index_extract: 2
-  label: "igs2"
+  label: "procedure"
+  term: "igs2"
   regexp: "igs2[^0-9]{0,10}(24h)?[^0-9]{0,10}([0-9]+)"
   version: "3"
   unicode_sensitive: True
 
 - id: "id_regexp_encephalopathie"
-  label: "encephalopathie"
+  label: "disorder"
+  term: "encephalopathie"
   regexp: "enc[ée]phalopathie"
   version: "2"
   unicode_sensitive: True
 
 - id: "id_regexp_insrenchronique"
-  label: "Insuffisance rénale chronique"
+  label: "disorder"
+  term: "Insuffisance rénale chronique"
   regexp: "Insuffisance *r[ée]nale *chronique"
   version: "2"
   unicode_sensitive: True
 
 - id: "id_regexp_insrenaigue"
-  label: "Insuffisance rénale aiguë"
+  label: "disorder"
+  term: "Insuffisance rénale aiguë"
   regexp: "Insuffisance *r[ée]nale *aigu[ëe]"
   version: "2"
   unicode_sensitive: True
 
 - id: "id_regexp_diabete"
-  label: "Diabète"
+  label: "disorder"
+  term: "Diabète"
   regexp: "(?<!pre)(?<!pre.)diab[ée]te|[^a-z]DID[^a-z]|[^a-z]DNID[^a-z]|diab[ée]tique"
   exclusion_regexp: "diab[ée]te *insipide|diab[ée]te *gestationnel|diab[ée]te:[.]"
   version: "2"
@@ -83,7 +94,8 @@
       id: "C0011849"
 
 - id: "id_regexp_hta"
-  label: "HTA"
+  label: "disorder"
+  term: "HTA"
   regexp: "[^A-Z]HTA[^A-Z]|hyperten[st]ion.{0,5}art[eé]rielle|hyperten[st]ion.{0,5}[eé]s{1,2}entiel{1,2}."
   exclusion_regexp: "HTA:[.]"
   version: "2"
@@ -93,8 +105,9 @@
       kb_version: "202AB"
       id: "C1305855"
 
-- id: "id_regexp_dyslpidemie"
-  label: "Dyslipidémies"
+- id: "id_regexp_dyslipidemie"
+  label: "disorder"
+  term: "Dyslipidémies"
   regexp: "dyslipid.mi.?|hyperlipid.mi.?|hyper.{0,5}cholest.rol.mi.?|cholest.rol.{0,5}[ée]l[ée]v[ée]|hypertriglyc.rid.mi.?|triglyc[ée]rides? +[ée]lev[ée]s?"
   version: "2"
   unicode_sensitive: True
@@ -110,7 +123,8 @@
       id: "C0020443"
 
 - id: "id_regexp_hypertriglyceridemie"
-  label: "Hypertriglycéridémies"
+  label: "disorder"
+  term: "Hypertriglycéridémies"
   regexp: "hypertriglyc.rid.mi.?|triglyc[ée]rides? +[ée]lev[ée]s?"
   version: "2"
   unicode_sensitive: True
@@ -121,7 +135,8 @@
 
 - id: "id_regexp_imc"
   index_extract: 4
-  label: "IMC,BMI"
+  label: "procedure"
+  term: "IMC,BMI"
   regexp: "(^|[^a-z])(IMC|BMI) *(est *de|de|=|:)? *([0-9]+[,.]?[0-9]*)[^\\/]?"
   version: "2"
   unicode_sensitive: True
@@ -131,7 +146,8 @@
       id: "C1305855"
 
 - id: "id_regexp_surpoids"
-  label: "Surpoids"
+  label: "disorder"
+  term: "Surpoids"
   regexp: "surpoi.{0,2}|surcharge *pond[ée]rale?"
   version: "2"
   unicode_sensitive: True
@@ -141,7 +157,8 @@
       id: "C0497406"
 
 - id: "id_regexp_obesite"
-  label: "Obésité"
+  label: "disorder"
+  term: "Obésité"
   regexp: "ob[éeè]sit[éeè]|ob[èeé]se"
   version: "2"
   unicode_sensitive: True
@@ -154,7 +171,8 @@
       id: "C0028754"
 
 - id: "id_regexp_stent"
-  label: "pose/présence stent, endoprothèse, angioplastie"
+  label: "procedure"
+  term: "pose/présence stent, endoprothèse, angioplastie"
   regexp: "[^a-z]stents?[^a-z].{0,5}|[ae]ndoproth?.se|[ae]ngioplasti."
   version: "2"
   unicode_sensitive: True
@@ -170,7 +188,8 @@
       id: "C0190211"
 
 - id: "id_regexp_troublerythme"
-  label: "trouble du rythme, AC/FA, arythmie, fibrillation, flutter"
+  label: "disorder"
+  term: "trouble du rythme, AC/FA, arythmie, fibrillation, flutter"
   regexp: "[^a-z]ACFA[^a-z]|[^a-z]AC\\/FA[^a-z]|ar.thmi.|fibril{1,}ation|flut{1,}er|trouble.?.{0,5}du.{0,5}r.thme|d.sr.thmie"
   version: "2"
   unicode_sensitive: True
@@ -189,7 +208,8 @@
       id: "C0003811"
 
 - id: "id_regexp_arythmie"
-  label: "trouble du rythme, AC/FA, arythmie, fibrillation, flutter"
+  label: "disorder"
+  term: "trouble du rythme, AC/FA, arythmie, fibrillation, flutter"
   regexp: "[^a-z]ACFA[^a-z]|[^a-z]AC\\/FA[^a-z]|ar.thmi.|fibril{1,}ation|flut{1,}er|trouble.?.{0,5}du.{0,5}r.thme|d.sr.thmie"
   version: "2"
   unicode_sensitive: True
@@ -204,8 +224,9 @@
       kb_version: "202AB"
       id: "C0003811"
 
-- id: "id_regexp_arretcardiaq"
-  label: "Arrêt respiratoire, arrêt cardiaque"
+- id: "id_regexp_arret"
+  label: "disorder"
+  term: "Arrêt respiratoire, arrêt cardiaque"
   regexp: "[^a-z]arr?[éêe]t *respiratoire|[^a-z]arr?[éêe]t *cardiaque|arr[êeèé]t *cardio[^a-z]*respiratoire|[^a-z]ACR[^a-z]"
   version: "2"
   unicode_sensitive: True
@@ -221,7 +242,8 @@
       id: "C0162297"
 
 - id: "id_regexp_insfugcardiaque"
-  label: "Insuffisance cardiaque, défaillance cardiaque"
+  label: "disorder"
+  term: "Insuffisance cardiaque, défaillance cardiaque"
   regexp: "insuf{1,}isance.{0,5}cardiaque|d[ée]faill[ea]nce.{0,5}cardiaque"
   version: "1"
   unicode_sensitive: True
@@ -234,7 +256,8 @@
       id: "C0018801"
 
 - id: "id_regexp_avc"
-  label: "AVC, accident vasculaire cérébral, accident ischémique cérébral"
+  label: "disorder"
+  term: "AVC, accident vasculaire cérébral, accident ischémique cérébral"
   regexp: "[^a-z]AVC[^a-z]|acc*ident.{0,5}vasculaire.{0,5}c[ée]r[ée]bral|acc*ident.{0,5}isch?[ée]mique.{0,5}c[ée]r[ée]bral|acc*ident.{0,3}h[ée]morragique.{0,3}c[ée]r[ée]bral"
   exclusion_regexp: "APHP AVC|UHCD AVC|AVC UNITE"
   version: "4"
@@ -251,7 +274,8 @@
       id: "C0948008"
 
 - id: "id_regexp_hemormening"
-  label: "hémorragie sous-arachnoïdienne"
+  label: "disorder"
+  term: "hémorragie sous-arachnoïdienne"
   regexp: "h[ée]morr?agi.{0,5}m[ée]ning[ée]e|h[ée]morr?agi.{0,5}sous-?arachno[ïi]dienne"
   version: "2"
   unicode_sensitive: True
@@ -264,7 +288,8 @@
       id: "C0038525"
 
 - id: "id_regexp_bpco"
-  label: "BPCO, maladie pulmonaire, pneumopathie, HTAP"
+  label: "disorder"
+  term: "BPCO, maladie pulmonaire, pneumopathie, HTAP"
   regexp: "[^a-z]BPCO[^a-z]|[^a-z]HTAP[^a-z]|bronchopneumopathie|maladie.{0,5}pulmonaire|pneumopathie|a[sth][sth][sth]me|bronch?ospasme|a[sth][sth][sth]matique|insuf.{1,2}isance.{0,5}respiratoire.{0,5}chronique|emph.s[èe]me|emf.s[èe]me"
   version: "2"
   unicode_sensitive: True
@@ -301,7 +326,8 @@
       id: "C0034067"
 
 - id: "id_regexp_asthme"
-  label: "Asthme, bronchospasmes"
+  label: "disorder"
+  term: "Asthme, bronchospasmes"
   regexp: "a[sth][sth][sth]me|bronch?ospasme|a[sth][sth][sth]matique"
   version: "2"
   unicode_sensitive: True
@@ -317,7 +343,8 @@
       id: "C0006266"
 
 - id: "id_regexp_insrespchronique"
-  label: "Insuffisance repiratoire chronique"
+  label: "disorder"
+  term: "Insuffisance repiratoire chronique"
   regexp: "insuf.{1,2}isance.{0,5}respiratoire.{0,5}chronique"
   version: "2"
   unicode_sensitive: True
@@ -330,7 +357,8 @@
       id: "C0264492"
 
 - id: "id_regexp_emphyseme"
-  label: "Emphysème"
+  label: "disorder"
+  term: "Emphysème"
   regexp: "emph.s[èe]me|emf.s[èe]me"
   version: "1"
   unicode_sensitive: True
@@ -343,7 +371,8 @@
       id: "C0034067"
 
 - id: "id_regexp_malrenale"
-  label: "Insuffisance rénale chronique, maladie rénale, néphropathie,IRC,Insuffisance rénale aiguë"
+  label: "disorder"
+  term: "Insuffisance rénale chronique, maladie rénale, néphropathie,IRC,Insuffisance rénale aiguë"
   regexp: "maladie.{0,5}r[eé]nale|n[eé]phropathie|Insuffisance.{0,5}r[eé]nale.{0,5}chronique|[^a-z]IRC[^a-z]|[^a-z]dialyse|h[ée]modialyse"
   version: "2"
   unicode_sensitive: True
@@ -365,7 +394,8 @@
       id: "C0022660"
 
 - id: "id_regexp_somnolence"
-  label: "Somnolence"
+  label: "disorder"
+  term: "Somnolence"
   regexp: "somnole(nce|nt|nte)?"
   exclusion_regexp: "non *somnolente?|somnolen(t|ce|te) *non|risque *de *somnolence"
   version: "2"
@@ -377,7 +407,8 @@
 
 - id: "id_regexp_debito2"
   index_extract: 1
-  label: "Debit O2 L/Min"
+  label: "procedure"
+  term: "Debit O2 L/Min"
   regexp: "[^0-9,]([0-9]+,?[0-9]*) *L *\\/ *mi?n?"
   exclusion_regexp: "cardiaque|[^a-z]dc[^a-z]|[^a-z]dq[^a-z]|[^a-z]dc[^a-z]|[^a-z]DEP[^a-z]|[^A-Z]DEP[^A-Z]|PeakFlow"
   version: "2"
@@ -385,25 +416,29 @@
 
 - id: "id_regexp_sofa"
   index_extract: 2
-  label: "Score SOFA"
+  label: "procedure"
+  term: "Score SOFA"
   regexp: "SOFA[^a-z0-9]*(.{0,5}24h)?[^a-z0-9]*([0-9]+)"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_plaquenil"
-  label: "Hydroxychloroquine, Plaquenil"
+  label: "chemical"
+  term: "Hydroxychloroquine, Plaquenil"
   regexp: "hydroxychloroquine|plaqu[ée]nil"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_nivaquin"
-  label: "Chloroquine"
+  label: "chemical"
+  term: "Chloroquine"
   regexp: "[^a-z]chloroquine?|[^a-z]nivaquin"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_sep"
-  label: "Sclérose en Plaques"
+  label: "disorder"
+  term: "Sclérose en Plaques"
   regexp: "scl[ée]rose.{0,5}en.{0,5}plaque.?|[^a-z]SEP[^a-z]"
   version: "2"
   unicode_sensitive: True
@@ -416,7 +451,8 @@
       id: "C0026769"
 
 - id: "id_regexp_cancer"
-  label: "Cancer"
+  label: "disorder"
+  term: "Cancer"
   regexp: "(?<!pre)(?<!pre )cancer[^a-z]|tumeur(?!.{0,7}b[eéè]nigne)|carcinome|m[eé]lanome|n[eé]oplasie|sarcome"
   version: "2"
   unicode_sensitive: True
@@ -433,14 +469,16 @@
 
 # on supprime \\bVI\\b, trop de faux positifs
 - id: "id_regexp_ventilation"
-  label: "Ventilation, Intubation"
+  label: "procedure"
+  term: "Ventilation, Intubation"
   regexp: "intub[eé]|intubation|extubation|[^a-z]ventil[ée]|mise?\\s*sous\\s*respirateur|\\bIOT\\b|\\bVM\\b|\\bVNI\\b"
   exclusion_regexp: "d[ée]cision\\s*de\\s*non\\s*intubation|fonction\\s+ventilatoire\\s*précaire|ventilation\\s*manuelle|non-?intubation|VNI.{0,5}\\s*ne\\s*pas\\s*d[ée]]buter"
   version: "2"
   unicode_sensitive: True
 
 - id: "id_regexp_cirrhose"
-  label: "Cirrhose, hypertension portale"
+  label: "disorder"
+  term: "Cirrhose, hypertension portale"
   regexp: "cirrhose|h[yi]perten[ts]ion.{0,5}portale|cirrhotique"
   version: "2"
   unicode_sensitive: True
@@ -453,7 +491,8 @@
       id: "C0023890"
 
 - id: "id_regexp_lymphome"
-  label: "Lymphome"
+  label: "disorder"
+  term: "Lymphome"
   regexp: "Lymphome"
   version: "1"
   unicode_sensitive: True
@@ -466,7 +505,8 @@
       id: "C0024299"
 
 - id: "id_regexp_leucemie"
-  label: "Leucémie"
+  label: "disorder"
+  term: "Leucémie"
   regexp: "Leuc[ée]mie"
   version: "1"
   unicode_sensitive: True
@@ -482,7 +522,8 @@
       id: "C0023418"
 
 - id: "id_regexp_hemopathie"
-  label: "Hémopathie"
+  label: "disorder"
+  term: "Hémopathie"
   regexp: "leuc[ée]mie|lymphome|my[ée]lome"
   version: "2"
   unicode_sensitive: True
@@ -501,7 +542,8 @@
       id: "C0024299"
 
 - id: "id_regexp_defimmun"
-  label: "Déficit immunitaire"
+  label: "disorder"
+  term: "Déficit immunitaire"
   regexp: "D[ée]ficit *immunitaire|Syndromes *d.immunod[eé]ficience|Hypogammaglobulin[ée]mie"
   exclusion_regexp: "Syndrome *d.immunodeficience *acquise"
   version: "2"
@@ -516,7 +558,8 @@
 
 # Trop de faux positifs... developper une méthode spécifique
 - id: "id_regexp_vih"
-  label: "VIH - SIDA - Séropositif"
+  label: "disorder"
+  term: "VIH - SIDA - Séropositif"
   regexp: "[^A-Z]HIV+[^A-Z]|[^A-Z]VIH[^A-Z]|[^A-Z]SIDA[^A-Z]|S[ée]ropositi.."
   exclusion_regexp: "[^A-Z]VIH[^.]{0,20}n..?gative|[^A-Z]VIH[ :]*-[^0-9]"
   version: "1"
@@ -530,7 +573,8 @@
       id: "C0001175"
 
 - id: "id_regexp_hepb"
-  label: "Hépatite B, VHB"
+  label: "disorder"
+  term: "Hépatite B, VHB"
   regexp: "(h[eé]patite *B|VHB) *(chronique|compliqu[eé]|suivi|contr[ôo]l[ée]|trait[eé])|cirrhose *VHB|pour (h[ée]patite B|VHB)|(dans *le *cadre.|suivi|trait[eéè]|en charge){0,20}(h[ée]patite b|VHB)"
   exclusion_regexp: "vaccination hepatite B|vaccin vhb|vhb-"
   version: "2"
@@ -541,7 +585,8 @@
       id: "C0019163"
 
 - id: "id_regexp_aomi"
-  label: "AOMI, artériopathie oblitérante des membres inférieurs"
+  label: "disorder"
+  term: "AOMI, artériopathie oblitérante des membres inférieurs"
   regexp: "[^a-z]AOMI[^a-z]|art[eé]riopathi..{0,5}oblit.r[ea]nte|art.rite.{0,5}des.{0,5}membres.{0,5}inf.rieurs"
   version: "1"
   unicode_sensitive: True
@@ -551,7 +596,8 @@
       id: "C1306889"
 
 - id: "id_regexp_sdra"
-  label: "SDRA, détresse respiratoire"
+  label: "disorder"
+  term: "SDRA, détresse respiratoire"
   regexp: "[^a-z]SDRA[^a-z]|d[ée]tresse.{0,5}respiratoire"
   version: "1"
   unicode_sensitive: True
@@ -561,7 +607,8 @@
       id: "C0035222"
 
 - id: "id_regexp_sepsis"
-  label: "Sepsis, choc septique"
+  label: "disorder"
+  term: "Sepsis, choc septique"
   regexp: "sepsis|choc.{0,5}septique"
   version: "1"
   unicode_sensitive: True
@@ -572,7 +619,8 @@
 
 # on supprime, utiliser les mouvements des patients
 - id: "id_regexp_chir"
-  label: "Chirurgie récente"
+  label: "procedure"
+  term: "Chirurgie"
   regexp: "chirurgie.{0,5}?r.cente|chirurgie"
   version: "2"
   unicode_sensitive: True
@@ -582,7 +630,8 @@
       id: "C0543467"
 
 - id: "id_regexp_grossesse"
-  label: "Grossesse en cours, enceinte, semaines d'aménorrhée, SA"
+  label: "physiology"
+  term: "Grossesse en cours, enceinte, semaines d'aménorrhée, SA"
   regexp: "grossesse.{0,5}en.{0,5}cours|[enceinte.{0,5}|semaine *d.?am[ée]norr?h[ée]|gravid.?"
   exclusion_regexp: "femmes enceintes|femme non enceinte|femme *enceinte *: *[0-9]"
   version: "2"
@@ -593,7 +642,8 @@
       id: "C0032961"
 
 - id: "id_regexp_sla"
-  label: "SLA"
+  label: "disorder"
+  term: "SLA"
   regexp: "[^A-Z]SLA[^A-Z]|Scl[ée]rose *lat[ée]rale *amyotrophiq|maladie *de *charcot|un *charcot"
   version: "2"
   unicode_sensitive: True
@@ -604,28 +654,32 @@
 
 - id: "id_regexp_taille"
   index_extract: 2
-  label: "Taille"
+  label: "physiology"
+  term: "Taille"
   regexp: "taille[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z,<>]*([0-9]+[.,]?[0-9]* *(cm|m)[0-9]*)(?!DS)"
   version: "2"
   unicode_sensitive: True
 
 - id: "id_regexp_poids"
   index_extract: 3
-  label: "Poids"
+  label: "physiology"
+  term: "Poids"
   regexp: "(Poids|p[éeè]se)[^a-z0-9A-Z<>]*(de|est|est a|a)?[^a-z0-9A-Z<>,]*([0-9]+[.,]?[0-9]* *(kg|g)[0-9]*)"
   exclusion_regexp: "prise de poids"
   version: "2"
   unicode_sensitive: True
 
 - id: "id_regexp_greffe"
-  label: "Greffe"
+  label: "physiology"
+  term: "Greffe"
   regexp: "greff[ée]|transplantation|patient *transplant"
   exclusion_regexp: "en *attente *de *greffe|en *attente *de *transplantation|bilan[^a-z]*pre[^a-z]*greffe"
   version: "2"
   unicode_sensitive: True
 
 - id: "id_regexp_surinfion"
-  label: "Surinfection"
+  label: "disorder"
+  term: "Surinfection"
   regexp: "Surinfection"
   version: "2"
   unicode_sensitive: True
@@ -641,7 +695,8 @@
       id: "C0729518"
 
 - id: "id_regexp_candida"
-  label: "Candida"
+  label: "disorder"
+  term: "Candida"
   regexp: "[^a-z]candida[^a-z]|candidose"
   exclusion_regexp: "en cours"
   version: "2"
@@ -652,7 +707,8 @@
       id: "C0006840"
 
 - id: "id_regexp_fumeur"
-  label: "Fumeur, tabagisme, paquet-année (PA)"
+  label: "activity"
+  term: "Fumeur, tabagisme, paquet-année (PA)"
   regexp: "fumeur|fumeuse|[^-]tabagi|[^a-z]tabac[^a-z]|paquet.{0,5}?ann[ée].?"
   exclusion_regexp: "non\\s+fumeur|tabac\\s+non|tabagisme\\s+non|Tabac\\s*[=:]?\\s*0|tabagi(sm|qu)e\\s+sevr|(pas|ni|ou)\\s+de\\s+(consommation\\s+de\\s+)?taba|pas\\s+d\\'intoxication\\s+tabagi|0 tabac"
   version: "2"
@@ -664,81 +720,94 @@
 
 - id: "id_regexp_paquetannee"
   index_extract: 1
-  label: "Paquet-année (PA)"
+  label: "activity"
+  term: "Paquet-année (PA)"
   regexp: "(\\d{1,4})\\s*(paquet|cigarette|cig)s?\\s*(par|/|-)\\s*(an(n[ée]e)?)( *(pendant|jusqu.[àa]) *\\d+.{7})?"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_paquetjour"
   index_extract: 1
-  label: "Paquet-jour)"
+  label: "activity"
+  term: "Paquet-jour)"
   regexp: "(\\d{1,4})\\s*(paquet|cigarette|cig)s?\\s*(par|/|-)\\s*(j|jour)( *(pendant|jusqu.[àa]) *\\d+.{7})?"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_chimio"
-  label: "Chimiotherapie"
+  label: "procedure"
+  term: "Chimiotherapie"
   regexp: "chimio.* "
   version: "2"
   unicode_sensitive: True
 
 - id: "id_regexp_radiotherapie"
-  label: "radiotherapie"
+  label: "procedure"
+  term: "radiotherapie"
   regexp: "radioth[eéè]rapie"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_embolie"
   case_sensitive: true
-  label: "Embolie pulmonaire"
+  label: "disorder"
+  term: "Embolie pulmonaire"
   regexp: "[Ee]mbolie *[pP]ulmonaire|[^a-zA-Z]EP[^a-zA-Z]"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_thrombose"
-  label: "Thrombose"
+  label: "disorder"
+  term: "Thrombose"
   regexp: "thrombose|thrombus"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_ischemiedigestive"
-  label: "Ischémie digestive"
+  label: "disorder"
+  term: "Ischémie digestive"
   regexp: "isch[eé]mie *digestive|isch[eé]mie *intestinale?|isch[eé]mie *m[eé]sent[eé]rique"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_ischemierenale"
-  label: "Ischémie rénale"
+  label: "disorder"
+  term: "Ischémie rénale"
   regexp: "isch[eé]mie *r[eé]nale|isch[eé]mie *n[eé]phrique|rein *isch[eé]mique"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_bariatrique"
-  label: "Chirurgie bariatrique"
+  label: "procedure"
+  term: "Chirurgie bariatrique"
   regexp: "chirurgie *(bariatrique|.{0,10}ob[eé]sit[eé])"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_sleeve"
-  label: "Sleeve"
+  label: "procedure"
+  term: "Sleeve"
   regexp: "[^a-z]sleeve[^a-z]|[^a-z]slive[^a-z]|gastroplastie *verticale *calibr[eé]e *avec *r[eé]section *gastrique"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_bypass"
-  label: "Bypass"
+  label: "procedure"
+  term: "Bypass"
   regexp: "bypass|by-pass|minibypass|court.?circuit *gastrique"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_anneaugastrique"
-  label: "Anneau gastrique"
+  label: "procedure"
+  term: "Anneau gastrique"
   regexp: "anneau *gastrique"
   version: "1"
   unicode_sensitive: True
 
 - id: "id_regexp_dermatolupique"
-  label: "Raynaud, engelures, livedo, vascularite cutanée"
+  label: "disorder"
+  term: "Raynaud, engelures, livedo, vascularite cutanée"
   regexp: "[^a-z]de *Raynaud[^a-z]|engelures|[^a-z]livedo[^a-z]|vascularite *cutan[eé]e"
   version: "1"
   unicode_sensitive: True
