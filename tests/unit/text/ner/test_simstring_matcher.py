@@ -213,6 +213,25 @@ def test_blacklist():
     assert len(entities) == 0
 
 
+def test_same_beginning():
+    """Ignore matches with different start"""
+
+    sentence = _get_sentence_segment("On constate une inactivation virale")
+
+    rule = SimstringMatcherRule(term="activation virale", label="phenomena")
+
+    # 1 match without same beginning flag
+    matcher = SimstringMatcher(rules=[rule], threshold=0.8, same_beginning=False)
+    entities = matcher.run([sentence])
+    assert len(entities) == 1
+    assert entities[0].text == "inactivation virale"
+
+    # 0 match with flag
+    matcher = SimstringMatcher(rules=[rule], threshold=0.8, same_beginning=True)
+    entities = matcher.run([sentence])
+    assert len(entities) == 0
+
+
 def test_candidates_with_regexp():
     """Test internal function tokenizing the text and building candidates"""
 

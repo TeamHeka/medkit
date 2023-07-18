@@ -159,6 +159,7 @@ class BaseSimstringMatcher(NEROperation):
         similarity: Literal["cosine", "dice", "jaccard", "overlap"] = "jaccard",
         spacy_tokenization_language: Optional[str] = None,
         blacklist: Optional[List[str]] = None,
+        same_beginning: bool = False,
         attrs_to_copy: Optional[List[str]] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
@@ -189,6 +190,12 @@ class BaseSimstringMatcher(NEROperation):
             used, which is faster but might give more false positives.
         blacklist:
             Optional list of exact terms to ignore.
+        same_beginning:
+            Ignore all matches that start with a different character than the
+            term of the rule. This can be convenient to get rid of false
+            positives on words that are very similar but have opposite meanings
+            because of a preposition, for instance "activation" and
+            "inactivation".
         attrs_to_copy:
             Labels of the attributes that should be copied from the source
             segment to the created entity. Useful for propagating context
@@ -219,6 +226,7 @@ class BaseSimstringMatcher(NEROperation):
         self.threshold = threshold
         self.similarity = similarity
         self.blacklist = set(blacklist)
+        self.same_beginning = same_beginning
         self.attrs_to_copy = attrs_to_copy
 
         self._simstring_db_reader = simstring.reader(str(simstring_db_file))
@@ -297,6 +305,13 @@ class BaseSimstringMatcher(NEROperation):
             matched_terms = self._simstring_db_reader.retrieve(candidate_text_processed)
 
             for matched_term in matched_terms:
+                # if requested, ignore matches that start differently
+                if (
+                    self.same_beginning
+                    and matched_term[0] != candidate_text_processed[0]
+                ):
+                    continue
+
                 # retrieve rules corresponding to matched term
                 rules = self._rules_db[matched_term]
                 # for each rule, recompute similarity

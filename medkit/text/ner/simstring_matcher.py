@@ -96,6 +96,7 @@ class SimstringMatcher(BaseSimstringMatcher):
         similarity: Literal["cosine", "dice", "jaccard", "overlap"] = "jaccard",
         spacy_tokenization_language: Optional[str] = None,
         blacklist: Optional[List[str]] = None,
+        same_beginning: bool = False,
         attrs_to_copy: Optional[List[str]] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
@@ -128,6 +129,12 @@ class SimstringMatcher(BaseSimstringMatcher):
             used, which is faster but might give more false positives.
         blacklist:
             Optional list of exact terms to ignore.
+        same_beginning:
+            Ignore all matches that start with a different character than the
+            term of the rule. This can be convenient to get rid of false
+            positives on words that are very similar but have opposite meanings
+            because of a preposition, for instance "activation" and
+            "inactivation".
         attrs_to_copy:
             Labels of the attributes that should be copied from the source
             segment to the created entity. Useful for propagating context
@@ -157,6 +164,7 @@ class SimstringMatcher(BaseSimstringMatcher):
             similarity=similarity,
             spacy_tokenization_language=spacy_tokenization_language,
             blacklist=blacklist,
+            same_beginning=same_beginning,
             attrs_to_copy=attrs_to_copy,
             name=name,
             uid=uid,

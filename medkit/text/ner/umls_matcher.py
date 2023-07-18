@@ -86,6 +86,7 @@ class UMLSMatcher(BaseSimstringMatcher):
             "PROC",
         ],
         blacklist: Optional[List[str]] = None,
+        same_beginning: bool = False,
         output_labels_by_semgroup: Optional[Union[str, Dict[str, str]]] = None,
         attrs_to_copy: Optional[List[str]] = None,
         name: Optional[str] = None,
@@ -118,6 +119,12 @@ class UMLSMatcher(BaseSimstringMatcher):
             and the text of a matched entity.
         similarity:
             Similarity metric to use.
+        same_beginning:
+            Ignore all matches that start with a different character than the
+            term of the rule. This can be convenient to get rid of false
+            positives on words that are very similar but have opposite meanings
+            because of a preposition, for instance "activation" and
+            "inactivation".
         lowercase:
             Whether to use lowercased versions of UMLS terms and input entities
             (except for acronyms for which the uppercase term is always used).
@@ -232,6 +239,7 @@ class UMLSMatcher(BaseSimstringMatcher):
             similarity=similarity,
             spacy_tokenization_language=spacy_tokenization_language,
             blacklist=blacklist,
+            same_beginning=same_beginning,
             attrs_to_copy=attrs_to_copy,
             name=name,
             uid=uid,
