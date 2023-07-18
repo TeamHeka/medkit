@@ -40,6 +40,8 @@ class RegexpMatcherRule:
         The regexp pattern used to match entities
     label:
         The label to attribute to entities created based on this rule
+    term:
+        The optional normalized version of the entity text
     id:
         Unique identifier of the rule to store in the metadata of the entities
     version:
@@ -67,6 +69,7 @@ class RegexpMatcherRule:
 
     regexp: str
     label: str
+    term: Optional[str] = None
     id: Optional[str] = None
     version: Optional[str] = None
     index_extract: int = 0
@@ -278,6 +281,12 @@ class RegexpMatcher(NEROperation):
             norm_attrs = [self._create_norm_attr(norm) for norm in rule.normalizations]
             for norm_attr in norm_attrs:
                 entity.attrs.add(norm_attr)
+
+            # create manual normalization attribute from term
+            if rule.term is not None:
+                entity.attrs.add(
+                    EntityNormAttribute(kb_name="rules", kb_id=None, term=rule.term)
+                )
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
