@@ -161,7 +161,7 @@ def save_audio_document(
     data = build_header(content_type=ContentType.AUDIO_DOCUMENT)
     data["content"] = doc.to_dict(with_anns=not split_anns)
     with open(output_file, mode="w", encoding=encoding) as fp:
-        json.dump(data, fp, indent=4)
+        json.dump(data, fp, ensure_ascii=False, indent=4)
 
     if split_anns:
         if anns_output_file is None:
@@ -191,11 +191,11 @@ def save_audio_documents(
 
     header = build_header(content_type=ContentType.AUDIO_DOCUMENT_LIST)
     with open(output_file, mode="w", encoding=encoding) as fp:
-        fp.write(json.dumps(header) + "\n")
+        fp.write(json.dumps(header, ensure_ascii=False) + "\n")
 
         for doc in docs:
             doc_data = doc.to_dict()
-            fp.write(json.dumps(doc_data) + "\n")
+            fp.write(json.dumps(doc_data, ensure_ascii=False) + "\n")
 
 
 def save_audio_anns(
@@ -220,8 +220,8 @@ def save_audio_anns(
 
     header = build_header(content_type=ContentType.AUDIO_ANNOTATION_LIST)
     with open(output_file, mode="w", encoding=encoding) as fp:
-        fp.write(json.dumps(header) + "\n")
+        fp.write(json.dumps(header, ensure_ascii=False) + "\n")
 
         for ann in anns:
             ann_data = ann.to_dict()
-            fp.write(json.dumps(ann_data) + "\n")
+            fp.write(json.dumps(ann_data, ensure_ascii=False) + "\n")
