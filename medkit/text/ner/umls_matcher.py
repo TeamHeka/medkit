@@ -85,6 +85,7 @@ class UMLSMatcher(BaseSimstringMatcher):
             "PHYS",
             "PROC",
         ],
+        blacklist: Optional[List[str]] = None,
         output_labels_by_semgroup: Optional[Union[str, Dict[str, str]]] = None,
         attrs_to_copy: Optional[List[str]] = None,
         name: Optional[str] = None,
@@ -138,6 +139,8 @@ class UMLSMatcher(BaseSimstringMatcher):
             The default value is `["ANAT","CHEM", "DEVI", "DISO",
             "PHYS","PROC"].` If set to `None`, all concepts can be matched. Will
             trigger a regeneration of the database if changed.
+        blacklist:
+            Optional list of exact terms to ignore.
         output_labels_by_semgroup:
             By default, ~`medkit.text.ner.umls.SEMGROUP_LABELS` will be used as
             entity labels. Use this parameter to override them. Example:
@@ -228,6 +231,7 @@ class UMLSMatcher(BaseSimstringMatcher):
             max_length=max_length,
             similarity=similarity,
             spacy_tokenization_language=spacy_tokenization_language,
+            blacklist=blacklist,
             attrs_to_copy=attrs_to_copy,
             name=name,
             uid=uid,

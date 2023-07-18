@@ -194,6 +194,25 @@ def test_spacy_tokenization():
     assert len(entities) == 0
 
 
+def test_blacklist():
+    """Ignore blacklisted exact matches"""
+
+    sentence = _get_sentence_segment("Il est possible que le patient ait subi un AVC")
+
+    rule = SimstringMatcherRule(term="AIT", label="problem")
+
+    # 1 match without blacklist
+    matcher = SimstringMatcher(rules=[rule])
+    entities = matcher.run([sentence])
+    assert len(entities) == 1
+    assert entities[0].text == "ait"
+
+    # 0 match with blacklist
+    matcher = SimstringMatcher(rules=[rule], blacklist=["ait"])
+    entities = matcher.run([sentence])
+    assert len(entities) == 0
+
+
 def test_candidates_with_regexp():
     """Test internal function tokenizing the text and building candidates"""
 

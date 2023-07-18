@@ -95,6 +95,7 @@ class SimstringMatcher(BaseSimstringMatcher):
         max_length: int = 30,
         similarity: Literal["cosine", "dice", "jaccard", "overlap"] = "jaccard",
         spacy_tokenization_language: Optional[str] = None,
+        blacklist: Optional[List[str]] = None,
         attrs_to_copy: Optional[List[str]] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
@@ -125,6 +126,8 @@ class SimstringMatcher(BaseSimstringMatcher):
             part-of-speech tags, such as determinants, conjunctions and
             prepositions. If `None`, a simple regexp based tokenization will be
             used, which is faster but might give more false positives.
+        blacklist:
+            Optional list of exact terms to ignore.
         attrs_to_copy:
             Labels of the attributes that should be copied from the source
             segment to the created entity. Useful for propagating context
@@ -153,6 +156,7 @@ class SimstringMatcher(BaseSimstringMatcher):
             max_length=max_length,
             similarity=similarity,
             spacy_tokenization_language=spacy_tokenization_language,
+            blacklist=blacklist,
             attrs_to_copy=attrs_to_copy,
             name=name,
             uid=uid,

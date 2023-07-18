@@ -158,6 +158,7 @@ class BaseSimstringMatcher(NEROperation):
         max_length: int = 15,
         similarity: Literal["cosine", "dice", "jaccard", "overlap"] = "jaccard",
         spacy_tokenization_language: Optional[str] = None,
+        blacklist: Optional[List[str]] = None,
         attrs_to_copy: Optional[List[str]] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
@@ -186,6 +187,8 @@ class BaseSimstringMatcher(NEROperation):
             part-of-speech tags, such as determinants, conjunctions and
             prepositions. If `None`, a simple regexp based tokenization will be
             used, which is faster but might give more false positives.
+        blacklist:
+            Optional list of exact terms to ignore.
         attrs_to_copy:
             Labels of the attributes that should be copied from the source
             segment to the created entity. Useful for propagating context
@@ -206,6 +209,8 @@ class BaseSimstringMatcher(NEROperation):
             f" {list(_SIMILARITY_MAP.keys())}"
         )
 
+        if blacklist is None:
+            blacklist = []
         if attrs_to_copy is None:
             attrs_to_copy = []
 
@@ -213,6 +218,7 @@ class BaseSimstringMatcher(NEROperation):
         self.max_length = max_length
         self.threshold = threshold
         self.similarity = similarity
+        self.blacklist = set(blacklist)
         self.attrs_to_copy = attrs_to_copy
 
         self._simstring_db_reader = simstring.reader(str(simstring_db_file))
@@ -308,6 +314,10 @@ class BaseSimstringMatcher(NEROperation):
                     elif not rule.unicode_sensitive:
                         candidate_text = unidecode(candidate_text)
                         rule_term = unidecode(rule_term)
+
+                    # ignore blacklisted terms
+                    if rule_term in self.blacklist:
+                        continue
 
                     # recompute similarity and keep match if above threshold
                     score = _get_similarity_score(
