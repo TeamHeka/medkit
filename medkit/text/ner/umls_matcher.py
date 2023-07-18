@@ -72,7 +72,7 @@ class UMLSMatcher(BaseSimstringMatcher):
         language: str,
         threshold: float = 0.9,
         min_length: int = 3,
-        max_length: int = 30,
+        max_length: int = 50,
         similarity: Literal["cosine", "dice", "jaccard", "overlap"] = "jaccard",
         lowercase: bool = True,
         normalize_unicode: bool = False,
