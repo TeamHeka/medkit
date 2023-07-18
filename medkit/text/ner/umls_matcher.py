@@ -123,6 +123,15 @@ class UMLSMatcher(BaseSimstringMatcher):
         umls_dir = Path(umls_dir)
         cache_dir = Path(cache_dir)
 
+        # check that values of allowed_semgroups are valid semgroup ids
+        if allowed_semgroups is not None:
+            for semgroup in allowed_semgroups:
+                if semgroup not in umls_utils.SEMGROUPS:
+                    raise ValueError(
+                        f"Unknown semgroup: {semgroup}. Should be one of"
+                        f" {umls_utils.SEMGROUPS}"
+                    )
+
         cache_dir.mkdir(parents=True, exist_ok=True)
 
         labels_by_semgroup = self._get_labels_by_semgroup(output_labels_by_semgroup)
@@ -205,6 +214,14 @@ class UMLSMatcher(BaseSimstringMatcher):
 
         if isinstance(output_labels, str):
             return {key: output_labels for key in umls_utils.SEMGROUP_LABELS}
+
+        # check that the keys of output_labels are valid semgroup ids
+        for semgroup in output_labels.keys():
+            if semgroup not in umls_utils.SEMGROUPS:
+                raise ValueError(
+                    f"Unknown semgroup: {semgroup}. Should be one of"
+                    f" {umls_utils.SEMGROUPS}"
+                )
 
         label_mapping = umls_utils.SEMGROUP_LABELS.copy()
         label_mapping.update(output_labels)

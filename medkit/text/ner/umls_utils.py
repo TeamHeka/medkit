@@ -3,6 +3,7 @@ __all__ = [
     "load_umls_entries",
     "preprocess_term_to_match",
     "guess_umls_version",
+    "SEMGROUPS",
     "SEMGROUP_LABELS",
 ]
 
@@ -15,6 +16,27 @@ from tqdm import tqdm
 import re
 
 import unidecode
+
+SEMGROUPS = [
+    "ACTI",
+    "ANAT",
+    "CHEM",
+    "CONC",
+    "DEVI",
+    "DISO",
+    "GENE",
+    "GEOG",
+    "LIVB",
+    "OBJC",
+    "OCCU",
+    "ORGA",
+    "PHEN",
+    "PHYS",
+    "PROC",
+]
+"""
+Valid UMLS semgroups
+"""
 
 SEMGROUP_LABELS = {
     "ACTI": "activity",
