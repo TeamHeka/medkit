@@ -153,7 +153,7 @@ class BaseSimstringMatcher(NEROperation):
         self,
         simstring_db_file: Path,
         rules_db_file: Path,
-        threshold: float = 0.7,
+        threshold: float = 0.9,
         min_length: int = 3,
         max_length: int = 15,
         similarity: Literal["cosine", "dice", "jaccard", "overlap"] = "jaccard",

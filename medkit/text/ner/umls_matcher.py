@@ -53,6 +53,11 @@ class UMLSMatcher(BaseSimstringMatcher):
     This operation is heavily inspired by the `QuickUMLS` library
     (https://github.com/Georgetown-IR-Lab/QuickUMLS).
 
+    By default, only terms belonging to the `ANAT` (anatomy), `CHEM` (Chemicals &
+    Drugs), `DEVI` (Devices), `DISO` (Disorders), `PHYS` (Physiology) and `PROC`
+    (Procedures) semgroups will be considered. This behavior can be changed with
+    the `allowed_semgroups` parameter.
+
     Note that setting `spacy_tokenization_language` to `True` might reduce the
     number of false positives. This requires the `spacy` optional dependency,
     which can be installed with `pip install medkit-lib[spacy]`.
@@ -65,14 +70,21 @@ class UMLSMatcher(BaseSimstringMatcher):
         umls_dir: Union[str, Path],
         cache_dir: Union[str, Path],
         language: str,
-        threshold: float = 0.7,
+        threshold: float = 0.9,
         min_length: int = 3,
         max_length: int = 30,
         similarity: Literal["cosine", "dice", "jaccard", "overlap"] = "jaccard",
         lowercase: bool = True,
         normalize_unicode: bool = False,
         spacy_tokenization: bool = False,
-        allowed_semgroups: Optional[List[str]] = None,
+        allowed_semgroups: Optional[List[str]] = [
+            "ANAT",
+            "CHEM",
+            "DEVI",
+            "DISO",
+            "PHYS",
+            "PROC",
+        ],
         output_labels_by_semgroup: Optional[Union[str, Dict[str, str]]] = None,
         attrs_to_copy: Optional[List[str]] = None,
         name: Optional[str] = None,
@@ -123,9 +135,9 @@ class UMLSMatcher(BaseSimstringMatcher):
             Ids of UMLS semantic groups that matched concepts should belong to.
             cf
             https://lhncbc.nlm.nih.gov/semanticnetwork/download/sg_archive/SemGroups-v04.txt
-            If `None` provided, all concepts can be matched. Will trigger a
-            regeneration of the database if changed.
-            Example: `["DISO", "PROC"]`
+            The default value is `["ANAT","CHEM", "DEVI", "DISO",
+            "PHYS","PROC"].` If set to `None`, all concepts can be matched. Will
+            trigger a regeneration of the database if changed.
         output_labels_by_semgroup:
             By default, ~`medkit.text.ner.umls.SEMGROUP_LABELS` will be used as
             entity labels. Use this parameter to override them. Example:
