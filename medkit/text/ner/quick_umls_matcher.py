@@ -237,8 +237,9 @@ class QuickUMLSMatcher(NEROperation):
         self._semtype_to_semgroup = umls_utils.load_semgroups_by_semtype()
         self.label_mapping = self._get_label_mapping(output_label)
 
+    @staticmethod
     def _get_label_mapping(
-        self, output_label: Union[None, str, Dict[str, str]]
+        output_label: Union[None, str, Dict[str, str]]
     ) -> Dict[str, str]:
         """Return label mapping according to `output_label`"""
         if output_label is None:
