@@ -94,7 +94,7 @@ class BaseSimstringMatcherNormalization:
     term: Optional[str] = None
 
     def to_attribute(
-        norm: BaseSimstringMatcherNormalization, score: float
+        self: BaseSimstringMatcherNormalization, score: float
     ) -> EntityNormAttribute:
         """
         Create a normalization attribute based on the normalization descriptor
@@ -110,19 +110,19 @@ class BaseSimstringMatcherNormalization:
             Normalization attribute to add to entity
         """
 
-        if norm.kb_name == "umls":
+        if self.kb_name == "umls":
             norm_attr = UMLSNormAttribute(
-                cui=norm.id,
-                umls_version=norm.kb_version,
-                term=norm.term,
+                cui=self.id,
+                umls_version=self.kb_version,
+                term=self.term,
                 score=score,
             )
         else:
             norm_attr = EntityNormAttribute(
-                kb_name=norm.kb_name,
-                kb_id=norm.id,
-                kb_version=norm.kb_version,
-                term=norm.term,
+                kb_name=self.kb_name,
+                kb_id=self.id,
+                kb_version=self.kb_version,
+                term=self.term,
                 score=score,
             )
         return norm_attr
