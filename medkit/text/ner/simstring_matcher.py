@@ -32,6 +32,11 @@ class SimstringMatcherRule(BaseSimstringMatcherRule):
         Term to match using similarity-based fuzzy matching
     label:
         Label to use for the entities created when a match is found
+    case_sensitive:
+        Whether to take case into account when looking for matches.
+    unicode_sensitive:
+        Whether to use ASCII-only versions of the rule term and input texts when
+        looking for matches (non-ASCII chars replaced by closest ASCII chars).
     normalizations:
         Optional list of normalization attributes that should be attached to the
         entities created
@@ -63,6 +68,8 @@ class SimstringMatcherNormalization(BaseSimstringMatcherNormalization):
         The name of the knowledge base we are referencing. Ex: "202AB"
     id:
         The id of the entity in the knowledge base, for instance a CUI
+    term:
+        Optional normalized version of the entity text in the knowledge base
     """
 
     @staticmethod

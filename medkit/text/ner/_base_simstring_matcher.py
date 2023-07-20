@@ -54,7 +54,7 @@ class BaseSimstringMatcherRule:
     label:
         Label to use for the entities created when a match is found
     case_sensitive:
-        Whether to ignore case when when looking for matches.
+        Whether to take case into account when looking for matches.
     unicode_sensitive:
         Whether to use ASCII-only versions of the rule term and input texts when
         looking for matches (non-ASCII chars replaced by closest ASCII chars).
@@ -412,7 +412,7 @@ def build_simstring_matcher_databases(
     rules: Iterator[BaseSimstringMatcherRule],
 ):
     """
-    Generate the databases needed by :class:`BaseSimstringMatcher.
+    Generate the databases needed by :class:`BaseSimstringMatcher`.
 
     Parameters
     ----------
@@ -422,11 +422,8 @@ def build_simstring_matcher_databases(
         `shelve` database storing the mapping between terms to match and
         corresponding BaseSimstringMatcherRule` objects (one term to match may
         correspond to several rules)
-    lowercase:
-        Whether to use lowercased versions of rule terms.
-    normalize_unicode:
-        Whether to use ASCII-only versions of rules terms
-        (non-ASCII chars replaced by closest ASCII chars).
+    rules:
+        Rules to add to databases
     """
 
     # the params passed to simstring.writer are copy/pasted from QuickUMLS
