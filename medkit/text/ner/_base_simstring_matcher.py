@@ -575,6 +575,9 @@ def _build_candidate_ranges_with_spacy(
             continue
         # build candidate by appending next tokens
         for j in range(i, nb_tokens):
+            # don't allow candidates made of only one word that is a stop word
+            if i == j and start_token.is_stop:
+                continue
             end_token = spacy_doc[j]
             if is_invalid_boundary_token(end_token):
                 continue
