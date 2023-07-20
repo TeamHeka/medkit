@@ -1,4 +1,3 @@
-import json
 import logging
 from zipfile import ZipFile
 
@@ -8,38 +7,21 @@ from medkit.core.prov_tracer import ProvTracer
 from medkit.core.text.span import Span
 from medkit.io import DoccanoInputConverter, DoccanoTask
 
-TEST_LINE_BY_TASK = {
-    DoccanoTask.RELATION_EXTRACTION: {
-        "text": "medkit was created in 2022",
-        "entities": [
-            {"id": 0, "start_offset": 0, "end_offset": 6, "label": "ORG"},
-            {"id": 1, "start_offset": 22, "end_offset": 26, "label": "DATE"},
-        ],
-        "relations": [{"id": 0, "from_id": 0, "to_id": 1, "type": "created_in"}],
-    },
-    DoccanoTask.SEQUENCE_LABELING: {
-        "text": "medkit was created in 2022",
-        "label": [(0, 6, "ORG"), (22, 26, "DATE")],
-    },
-    DoccanoTask.TEXT_CLASSIFICATION: {
-        "text": "medkit was created in 2022",
-        "label": ["header"],
-    },
-}
+from tests.data_utils import PATH_DOCCANO_FILES
 
 
-def create_doccano_files_disk(tmp_path, data, task):
-    dir_path = tmp_path / task
-    dir_path.mkdir()
+def create_doccano_zip_files_disk(tmp_path, filename):
+    dir_path = tmp_path / filename
+    dir_path.mkdir(exist_ok=True)
+
     with ZipFile(dir_path / "file.zip", "w") as zip_file:
-        json_line = json.dumps(data)
-        zip_file.writestr("all.jsonl", data=json_line)
+        filepath = PATH_DOCCANO_FILES / f"{filename}.jsonl"
+        zip_file.write(filepath)
 
 
 def test_relation_extraction_converter(tmp_path):
     task = DoccanoTask.RELATION_EXTRACTION
-    test_line = TEST_LINE_BY_TASK[task]
-    create_doccano_files_disk(tmp_path, data=test_line, task=task.value)
+    create_doccano_zip_files_disk(tmp_path, filename=task.value)
 
     converter = DoccanoInputConverter(task=task)
     documents = converter.load_from_directory_zip(dir_path=f"{tmp_path}/{task.value}")
@@ -61,8 +43,7 @@ def test_relation_extraction_converter(tmp_path):
 
 def test_sequence_labeling_converter(tmp_path):
     task = DoccanoTask.SEQUENCE_LABELING
-    test_line = TEST_LINE_BY_TASK[task]
-    create_doccano_files_disk(tmp_path, data=test_line, task=task.value)
+    create_doccano_zip_files_disk(tmp_path, filename=task.value)
 
     converter = DoccanoInputConverter(task=task)
     documents = converter.load_from_directory_zip(dir_path=f"{tmp_path}/{task.value}")
@@ -78,8 +59,7 @@ def test_sequence_labeling_converter(tmp_path):
 
 def test_text_classification_converter(tmp_path):
     task = DoccanoTask.TEXT_CLASSIFICATION
-    test_line = TEST_LINE_BY_TASK[task]
-    create_doccano_files_disk(tmp_path, data=test_line, task=task.value)
+    create_doccano_zip_files_disk(tmp_path, filename=task.value)
 
     converter = DoccanoInputConverter(task=task)
     documents = converter.load_from_directory_zip(dir_path=f"{tmp_path}/{task.value}")
@@ -99,23 +79,14 @@ def test_text_classification_converter(tmp_path):
 def test_crlf_character(tmp_path, caplog):
     # test when doccano export a document from a project with
     # 'count grapheme clusters as one character'
-    test_line = {
-        "text": "medkit was\r\ncreated in 2022",
-        "entities": [
-            {"id": 0, "start_offset": 0, "end_offset": 6, "label": "ORG"},
-            {"id": 1, "start_offset": 22, "end_offset": 26, "label": "DATE"},
-        ],
-        "relations": [{"id": 0, "from_id": 0, "to_id": 1, "type": "created_in"}],
-    }
     task = DoccanoTask.RELATION_EXTRACTION
-    create_doccano_files_disk(tmp_path, data=test_line, task=task.value)
+    filename = "relation_extraction_wrong_character"
+    create_doccano_zip_files_disk(tmp_path, filename=filename)
 
     # test default config
     with caplog.at_level(logging.WARNING, logger="medkit.io.doccano"):
         converter = DoccanoInputConverter(task=task)
-        documents = converter.load_from_directory_zip(
-            dir_path=f"{tmp_path}/{task.value}"
-        )
+        documents = converter.load_from_directory_zip(dir_path=f"{tmp_path}/{filename}")
         assert "1/1 documents contain" in caplog.text
 
     document = documents[0]
@@ -141,8 +112,7 @@ def test_prov(tmp_path, task, check_prov_entity):
     prov_tracer = ProvTracer()
     converter.set_prov_tracer(prov_tracer)
 
-    test_line = TEST_LINE_BY_TASK[task]
-    create_doccano_files_disk(tmp_path, data=test_line, task=task.value)
+    create_doccano_zip_files_disk(tmp_path, filename=task.value)
     docs = converter.load_from_directory_zip(dir_path=f"{tmp_path}/{task.value}")
 
     doc = docs[0]
@@ -156,30 +126,30 @@ def test_prov(tmp_path, task, check_prov_entity):
 def test_exceptions(tmp_path, caplog):
     # testing incoherence between data and task
     task = DoccanoTask.SEQUENCE_LABELING
-    test_line = TEST_LINE_BY_TASK[DoccanoTask.RELATION_EXTRACTION]
-    create_doccano_files_disk(tmp_path, data=test_line, task=task.value)
+    wrong_task = DoccanoTask.RELATION_EXTRACTION
+    create_doccano_zip_files_disk(tmp_path, filename=wrong_task.value)
 
     with pytest.raises(Exception, match="Imposible to convert.*"):
         DoccanoInputConverter(task=task).load_from_directory_zip(
-            dir_path=f"{tmp_path}/{task.value}"
+            dir_path=f"{tmp_path}/{wrong_task.value}"
         )
 
     # testing incoherence between data and task
     task = DoccanoTask.RELATION_EXTRACTION
-    test_line = TEST_LINE_BY_TASK[DoccanoTask.SEQUENCE_LABELING]
-    create_doccano_files_disk(tmp_path, data=test_line, task=task.value)
+    wrong_task = DoccanoTask.SEQUENCE_LABELING
+    create_doccano_zip_files_disk(tmp_path, filename=wrong_task.value)
 
     with pytest.raises(KeyError, match="The key .*"):
         DoccanoInputConverter(task=task).load_from_directory_zip(
-            dir_path=f"{tmp_path}/{task.value}"
+            dir_path=f"{tmp_path}/{wrong_task.value}"
         )
 
     # testing incoherence between data and task
     task = DoccanoTask.TEXT_CLASSIFICATION
-    test_line = TEST_LINE_BY_TASK[DoccanoTask.SEQUENCE_LABELING]
-    create_doccano_files_disk(tmp_path, data=test_line, task=task.value)
+    wrong_task = DoccanoTask.SEQUENCE_LABELING
+    create_doccano_zip_files_disk(tmp_path, filename=wrong_task.value)
 
     with pytest.raises(Exception, match="Imposible to convert.*"):
         DoccanoInputConverter(task=task).load_from_directory_zip(
-            dir_path=f"{tmp_path}/{task.value}"
+            dir_path=f"{tmp_path}/{wrong_task.value}"
         )
