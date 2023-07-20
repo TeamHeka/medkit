@@ -18,27 +18,6 @@ import re
 
 import unidecode
 
-SEMGROUPS = [
-    "ACTI",
-    "ANAT",
-    "CHEM",
-    "CONC",
-    "DEVI",
-    "DISO",
-    "GENE",
-    "GEOG",
-    "LIVB",
-    "OBJC",
-    "OCCU",
-    "ORGA",
-    "PHEN",
-    "PHYS",
-    "PROC",
-]
-"""
-Valid UMLS semgroups
-"""
-
 SEMGROUP_LABELS = {
     "ACTI": "activity",
     "ANAT": "anatomy",
@@ -58,6 +37,12 @@ SEMGROUP_LABELS = {
 }
 """
 Labels corresponding to UMLS semgroups
+"""
+
+
+SEMGROUPS = list(SEMGROUP_LABELS.keys())
+"""
+Valid UMLS semgroups
 """
 
 
