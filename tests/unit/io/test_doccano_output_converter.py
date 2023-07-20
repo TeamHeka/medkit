@@ -110,10 +110,6 @@ def test_warnings(tmp_path, caplog):
         converter.save(medkit_docs, dir_path=dir_path)
         assert "Entity source/target was no found" in caplog.text
 
-    with caplog.at_level(logging.WARNING, logger="medkit.io.doccano"):
-        DoccanoOutputConverter(task=DoccanoTask.TEXT_CLASSIFICATION)
-        assert "You should specify an attribute label" in caplog.text
-
     with pytest.raises(KeyError, match="The attribute with the corresponding .*"):
         converter = DoccanoOutputConverter(
             task=DoccanoTask.TEXT_CLASSIFICATION, attr_label="is_negated"

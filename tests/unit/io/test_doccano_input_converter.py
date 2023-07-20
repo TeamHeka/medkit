@@ -30,6 +30,7 @@ def test_relation_extraction_converter(tmp_path):
     document = documents[0]
     assert len(document.anns.entities) == 2
     assert len(document.anns.relations) == 1
+    assert document.metadata == {}
 
     entity_0 = document.anns.get(label="ORG")[0]
     entity_1 = document.anns.get(label="DATE")[0]
@@ -52,6 +53,7 @@ def test_sequence_labeling_converter(tmp_path):
     document = documents[0]
     assert len(document.anns.entities) == 2
     assert len(document.anns.relations) == 0
+    assert document.metadata == {}
 
     entity_0 = document.anns.get(label="ORG")[0]
     assert entity_0.text == "medkit"
@@ -68,6 +70,7 @@ def test_text_classification_converter(tmp_path):
     document = documents[0]
     assert len(document.anns.entities) == 0
     assert len(document.anns.relations) == 0
+    assert document.metadata == {}
 
     segment = document.raw_segment
     expected_label = converter.attr_label
@@ -123,13 +126,13 @@ def test_prov(tmp_path, task, check_prov_entity):
     assert len(prov.source_data_items) == 0
 
 
-def test_exceptions(tmp_path, caplog):
+def test_exceptions(tmp_path):
     # testing incoherence between data and task
     task = DoccanoTask.SEQUENCE_LABELING
     wrong_task = DoccanoTask.RELATION_EXTRACTION
     create_doccano_zip_files_disk(tmp_path, filename=wrong_task.value)
 
-    with pytest.raises(Exception, match="Imposible to convert.*"):
+    with pytest.raises(Exception, match="Impossible to convert.*"):
         DoccanoInputConverter(task=task).load_from_directory_zip(
             dir_path=f"{tmp_path}/{wrong_task.value}"
         )
@@ -149,7 +152,7 @@ def test_exceptions(tmp_path, caplog):
     wrong_task = DoccanoTask.SEQUENCE_LABELING
     create_doccano_zip_files_disk(tmp_path, filename=wrong_task.value)
 
-    with pytest.raises(Exception, match="Imposible to convert.*"):
+    with pytest.raises(Exception, match="Impossible to convert.*"):
         DoccanoInputConverter(task=task).load_from_directory_zip(
             dir_path=f"{tmp_path}/{wrong_task.value}"
         )
