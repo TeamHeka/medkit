@@ -86,6 +86,8 @@ class BaseSimstringMatcherNormalization:
         The name of the knowledge base we are referencing. Ex: "202AB"
     id:
         The id of the entity in the knowledge base, for instance a CUI
+    term:
+        Optional normalized version of the entity text in the knowledge base
     """
 
     kb_name: str
