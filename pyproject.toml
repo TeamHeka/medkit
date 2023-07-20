@@ -82,6 +82,7 @@ sphinx-toolbox = "*"
 
 # Dependencies related to optional medkit modules
 edsnlp = ["edsnlp"]
+edsnlp-date-matcher = ["edsnlp"]
 hf-entity-matcher = [
     "torch",
     "transformers",

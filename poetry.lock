@@ -7609,6 +7609,7 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 
 [extras]
 edsnlp = ["edsnlp"]
+edsnlp-date-matcher = ["edsnlp"]
 hf-entity-matcher = ["torch", "transformers"]
 hf-transcriber-function = ["torchaudio", "transformers"]
 hf-translator = ["sacremoses", "sentencepiece", "torch", "transformers"]
@@ -7629,4 +7630,4 @@ webrtc-voice-detector = ["webrtcvad"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7.1, <4.0"
-content-hash = "73153ec1603f798a98a8d70bb95f97856bd2343a763823403921e83e93298413"
+content-hash = "caabdecf63d31d270c9d69ad32d352aa4b744c990d260fbe3c76bc18c99f38c3"
