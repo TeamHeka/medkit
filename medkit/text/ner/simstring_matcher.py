@@ -32,7 +32,7 @@ class SimstringMatcherRule(BaseSimstringMatcherRule):
         Term to match using similarity-based fuzzy matching
     label:
         Label to use for the entities created when a match is found
-    normalization:
+    normalizations:
         Optional list of normalization attributes that should be attached to the
         entities created
     """

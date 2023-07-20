@@ -58,7 +58,7 @@ class BaseSimstringMatcherRule:
     unicode_sensitive:
         Whether to use ASCII-only versions of the rule term and input texts when
         looking for matches (non-ASCII chars replaced by closest ASCII chars).
-    normalization:
+    normalizations:
         Optional list of normalization attributes that should be attached to the
         entities created
     """
