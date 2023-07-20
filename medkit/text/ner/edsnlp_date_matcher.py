@@ -1,6 +1,6 @@
 """
 This module needs extra-dependencies not installed as core dependencies of medkit.
-To install them, use `pip install medkit-lib[edsnlp-date-time-matcher]`.
+To install them, use `pip install medkit-lib[edsnlp]`.
 """
 
 __all__ = ["EDSNLPDateMatcher"]

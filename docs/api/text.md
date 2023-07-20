@@ -346,7 +346,7 @@ directly using inside medkit to identify date and duration mentions in texts.
 
 :::{important}
 {class}`~.edsnlp_date_matcher.EDSNLPDateMatcher` needs additional dependencies that can be
-installed with `pip install medkit-lib[edsnlp-date-matcher]`
+installed with `pip install medkit-lib[edsnlp]`
 :::
 
 :::{note}
