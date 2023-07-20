@@ -5,7 +5,7 @@ __all__ = ["UMLSMatcher"]
 import dataclasses
 import logging
 from pathlib import Path
-from typing import Dict, Iterator, List, Optional, Union
+from typing import Dict, Iterator, List, Optional, Sequence, Set, Union
 from typing_extensions import Literal
 
 import yaml
@@ -77,14 +77,14 @@ class UMLSMatcher(BaseSimstringMatcher):
         lowercase: bool = True,
         normalize_unicode: bool = False,
         spacy_tokenization: bool = False,
-        allowed_semgroups: Optional[List[str]] = [
+        allowed_semgroups: Optional[Sequence[str]] = (
             "ANAT",
             "CHEM",
             "DEVI",
             "DISO",
             "PHYS",
             "PROC",
-        ],
+        ),
         blacklist: Optional[List[str]] = None,
         same_beginning: bool = False,
         output_labels_by_semgroup: Optional[Union[str, Dict[str, str]]] = None,
@@ -183,7 +183,7 @@ class UMLSMatcher(BaseSimstringMatcher):
         cache_params = _UMLSMatcherCacheParams(
             umls_version=umls_utils.guess_umls_version(umls_dir),
             language=language,
-            allowed_semgroups=allowed_semgroups,
+            allowed_semgroups=list(allowed_semgroups),
             labels_by_semgroup=labels_by_semgroup,
             lowercase=lowercase,
             normalize_unicode=normalize_unicode,
@@ -211,7 +211,7 @@ class UMLSMatcher(BaseSimstringMatcher):
                 language,
                 lowercase,
                 normalize_unicode,
-                allowed_semgroups,
+                set(allowed_semgroups),
                 labels_by_semgroup,
             )
 
@@ -288,7 +288,7 @@ class UMLSMatcher(BaseSimstringMatcher):
         language: str,
         lowercase: bool,
         normalize_unicode: bool,
-        allowed_semgroups: Optional[List[str]],
+        allowed_semgroups: Optional[Set[str]],
         labels_by_semgroup: Dict[str, str],
     ) -> Iterator[BaseSimstringMatcherRule]:
         """
