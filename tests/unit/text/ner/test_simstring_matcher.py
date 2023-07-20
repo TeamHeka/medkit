@@ -340,6 +340,8 @@ def test_load_save_rules(tmpdir):
         SimstringMatcherRule(
             term="diabète",
             label="problem",
+            case_sensitive=True,
+            unicode_sensitive=True,
             normalizations=[
                 SimstringMatcherNormalization(
                     kb_name="umls", kb_version="2021AB", id="C0011849"

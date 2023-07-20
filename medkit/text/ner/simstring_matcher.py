@@ -47,7 +47,8 @@ class SimstringMatcherRule(BaseSimstringMatcherRule):
         return SimstringMatcherRule(
             term=data["term"],
             label=data["label"],
-            id=data["id"],
+            case_sensitive=data["case_sensitive"],
+            unicode_sensitive=data["unicode_sensitive"],
             normalizations=[
                 SimstringMatcherNormalization.from_dict(n)
                 for n in data["normalizations"]
