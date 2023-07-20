@@ -22,6 +22,7 @@ _RULES_DB_FILENAME = "rules.db"
 _SIMSTRING_DB_FILENAME = "simstring"
 
 
+@dataclasses.dataclass
 class SimstringMatcherRule(BaseSimstringMatcherRule):
     """
     Rule to use with :class:`~.SimstringMatcher`
