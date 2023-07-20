@@ -11,7 +11,7 @@ import dataclasses
 import math
 from pathlib import Path
 import re
-from typing import Any, Iterator, List, Optional, Tuple, Union
+from typing import Any, Iterable, Iterator, List, Optional, Tuple, Union
 from typing_extensions import Literal
 import shelve
 
@@ -409,7 +409,7 @@ class BaseSimstringMatcher(NEROperation):
 def build_simstring_matcher_databases(
     simstring_db_file: Path,
     rules_db_file: Path,
-    rules: Iterator[BaseSimstringMatcherRule],
+    rules: Iterable[BaseSimstringMatcherRule],
 ):
     """
     Generate the databases needed by :class:`BaseSimstringMatcher`.
