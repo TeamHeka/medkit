@@ -32,7 +32,9 @@ _MTSAMPLES_TRANSLATED_FILE: str = "mtsamples_translated.json"
 
 
 def load_mtsamples(
-    cache_dir: Union[Path, str] = ".cache", translated: bool = True
+    cache_dir: Union[Path, str] = ".cache",
+    translated: bool = True,
+    nb_max: Optional[int] = None,
 ) -> List[TextDocument]:
     """
     Function loading mtsamples data into medkit text documents
@@ -44,6 +46,8 @@ def load_mtsamples(
     translated
         If True (default), `mtsamples_translated.json` file is used (FR).
         If False, `mtsamples.csv` is used (EN)
+    nb_max
+        Maximum number of documents to load
 
     Returns
     -------
@@ -71,6 +75,9 @@ def load_mtsamples(
             mtsamples = json.load(f)
         else:
             mtsamples = csv.DictReader(f)
+
+        if nb_max is not None:
+            mtsamples = mtsamples[:nb_max]
 
         return [
             TextDocument(
