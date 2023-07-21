@@ -35,7 +35,7 @@ You can load annotations from a .jsonl file or a zip directory.
 
 The doccano user interface allows custom configuration over certain annotation parameters. The {class}`medkit.io.doccano.DoccanoClientConfig` class contains the configuration to be used by the input converter. 
 
-You can modify the settings depending on the configuration of your project. If you don't provide a config, the converter will be used the default doccano configuration.
+You can modify the settings depending on the configuration of your project. If you don't provide a config, the converter will use the default doccano configuration.
 
 
 :::{note}

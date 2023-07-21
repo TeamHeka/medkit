@@ -545,9 +545,11 @@ class DoccanoOutputConverter:
 
     @property
     def description(self) -> OperationDescription:
-        config = dict(anns_labels=self.anns_labels, attr_label=self.attr_label)
         return OperationDescription(
-            uid=self.uid, class_name=self.__class__.__name__, config=config
+            uid=self.uid,
+            name=self.__class__.__name__,
+            class_name=self.__class__.__name__,
+            config=dict(task=self.task.value),
         )
 
     def save(self, docs: List[TextDocument], dir_path: str):
