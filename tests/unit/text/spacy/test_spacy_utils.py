@@ -129,7 +129,7 @@ def test_medkit_to_spacy_doc_selected_ents_list(nlp_spacy, caplog):
     assert (disease_spacy_span.start_char, disease_spacy_span.end_char) == (84, 96)
 
     # test warning for labels
-    with caplog.at_level(logging.WARNING, logger="medkit.io._common"):
+    with caplog.at_level(logging.INFO, logger="medkit.io._common"):
         spacy_doc = spacy_utils.build_spacy_doc_from_medkit_doc(
             nlp=nlp_spacy,
             medkit_doc=medkit_doc,
@@ -137,6 +137,7 @@ def test_medkit_to_spacy_doc_selected_ents_list(nlp_spacy, caplog):
             attrs=[],
             include_medkit_info=True,
         )
+        assert "No medkit annotations" in caplog.text
 
 
 def test_medkit_to_spacy_doc_all_anns(nlp_spacy):
