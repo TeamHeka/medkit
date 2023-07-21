@@ -22,6 +22,7 @@ def create_doccano_zip_files_disk(tmp_path, filename):
 def test_relation_extraction_converter(tmp_path):
     task = DoccanoTask.RELATION_EXTRACTION
     create_doccano_zip_files_disk(tmp_path, filename=task.value)
+    expected_metadata = dict(custom_metadata="custom", doc_id=1234)
 
     converter = DoccanoInputConverter(task=task)
     documents = converter.load_from_directory_zip(dir_path=f"{tmp_path}/{task.value}")
@@ -30,7 +31,7 @@ def test_relation_extraction_converter(tmp_path):
     document = documents[0]
     assert len(document.anns.entities) == 2
     assert len(document.anns.relations) == 1
-    assert document.metadata == {}
+    assert document.metadata == expected_metadata
 
     entity_0 = document.anns.get(label="ORG")[0]
     entity_1 = document.anns.get(label="DATE")[0]
