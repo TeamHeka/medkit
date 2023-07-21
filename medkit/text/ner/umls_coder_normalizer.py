@@ -20,7 +20,7 @@ from medkit.core.text import Entity
 import medkit.core.utils
 from medkit.text.ner.umls_norm_attribute import UMLSNormAttribute
 from medkit.text.ner.umls_utils import (
-    load_umls,
+    load_umls_entries,
     preprocess_term_to_match,
     guess_umls_version,
 )
@@ -116,7 +116,7 @@ class UMLSCoderNormalizer(Operation):
         lowercase:
             Whether to use lowercased versions of UMLS terms and input entities.
         normalize_unicode:
-            Whether to ASCII-only versions of UMLS terms and input entities
+            Whether to use ASCII-only versions of UMLS terms and input entities
             (non-ASCII chars replaced by closest ASCII chars).
         threshold:
             Minimum similarity threshold (between 0.0 and 1.0) between the embeddings
@@ -320,7 +320,7 @@ class UMLSCoderNormalizer(Operation):
         ]
 
         # get iterator to all UMLS entries
-        entries_iter = load_umls(
+        entries_iter = load_umls_entries(
             self.umls_mrconso_file,
             languages=[self.language],
             show_progress=show_progress,
@@ -335,7 +335,13 @@ class UMLSCoderNormalizer(Operation):
         ):
             # get preprocess version of each term for matching
             terms_to_match = [
-                preprocess_term_to_match(e.term, self.lowercase, self.normalize_unicode)
+                preprocess_term_to_match(
+                    e.term,
+                    self.lowercase,
+                    self.normalize_unicode,
+                    clean_brackets=True,
+                    clean_dashes=True,
+                )
                 for e in chunk_entries
             ]
 

@@ -6,6 +6,10 @@ __all__ = [
     "RegexpMatcherRule",
     "RegexpMatcherNormalization",
     "RegexpMetadata",
+    "SimstringMatcher",
+    "SimstringMatcherRule",
+    "SimstringMatcherNormalization",
+    "UMLSMatcher",
     "IAMSystemMatcher",
     "MedkitKeyword",
     "DateAttribute",
@@ -25,6 +29,12 @@ from .regexp_matcher import (
     RegexpMatcherNormalization,
     RegexpMetadata,
 )
+from .simstring_matcher import (
+    SimstringMatcher,
+    SimstringMatcherRule,
+    SimstringMatcherNormalization,
+)
+from .umls_matcher import UMLSMatcher
 from .iamsystem_matcher import IAMSystemMatcher, MedkitKeyword
 from .date_attribute import (
     DateAttribute,

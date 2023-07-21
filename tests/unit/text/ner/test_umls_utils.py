@@ -4,13 +4,14 @@ import pytest
 
 from medkit.text.ner.umls_utils import (
     UMLSEntry,
-    load_umls,
+    load_umls_entries,
     preprocess_term_to_match,
+    preprocess_acronym,
     guess_umls_version,
 )
 
 
-_PATH_TO_MR_CONSO_FILE = Path(__file__).parent / "sample_umls_data" / "MRCONSO.RRF"
+_PATH_TO_MR_CONSO_FILE = Path(__file__).parent / "sample_umls_data/2021AB/MRCONSO.RRF"
 
 # fmt: off
 _LOAD_TEST_PARAMS = [
@@ -27,6 +28,7 @@ _LOAD_TEST_PARAMS = [
             UMLSEntry(cui="C0011854", term="Diabète de type 1"),
             UMLSEntry(cui="C0011860", term="Diabetes Mellitus, Non-Insulin-Dependent"),
             UMLSEntry(cui="C0011860", term="Diabète de type 2"),
+            UMLSEntry(cui='C0038454', term='AVC (Accident Vasculaire Cérébral)'),
         ],
     ),
     # filter on language
@@ -55,8 +57,8 @@ _LOAD_TEST_PARAMS = [
     "sources,languages,expected_entries",
     _LOAD_TEST_PARAMS,
 )
-def test_load_umls(sources, languages, expected_entries):
-    entries_iter = load_umls(
+def test_load_umls_entries(sources, languages, expected_entries):
+    entries_iter = load_umls_entries(
         _PATH_TO_MR_CONSO_FILE,
         sources=sources,
         languages=languages,
@@ -82,6 +84,21 @@ def test_preprocess_term_to_match(term, expected_result, lowercase, normalize_un
         normalize_unicode,
     )
     assert result == expected_result
+
+
+_ACRONYM_TEST_PARAMS = [
+    ("AVC (Accident Vasculaire Cérébral)", "AVC"),
+    ("ECG (ÉlectroCardioGramme)", "ECG"),
+    ("Nutrition (physiologie)", None),
+]
+
+
+@pytest.mark.parametrize(
+    "term,expected_result",
+    _ACRONYM_TEST_PARAMS,
+)
+def test_acronym(term, expected_result):
+    assert preprocess_acronym(term) == expected_result
 
 
 _VERSION_TEST_PARAMS = [

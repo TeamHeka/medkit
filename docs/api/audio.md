@@ -27,8 +27,8 @@ For more details, refer to {mod}`medkit.audio.preprocessing.power_normalizer`.
 ### Resampler
 
 :::{important}
-{class}`~.audio.preprocessing.Resampler` needs additional dependencies that can
-be installed with `pip install medkit-lib[resampler]`
+{class}`~.audio.preprocessing.resampler.Resampler` needs additional dependencies
+that can be installed with `pip install medkit-lib[resampler]`
 :::
 
 For more details, refer to {mod}`medkit.audio.preprocessing.resampler`.
@@ -47,8 +47,9 @@ For more details, refer to
 ### Pyannote speaker detector
 
 :::{important}
-{class}`~.audio.segmentation.PASpeakerDetector` needs additional dependencies
-that can be installed with `pip install medkit-lib[pa-speaker-detector]`
+{class}`~.audio.segmentation.pa_speaker_detector.PASpeakerDetector` needs
+additional dependencies that can be installed with `pip install
+medkit-lib[pa-speaker-detector]`
 :::
 
 For more details, refer to {mod}`medkit.audio.segmentation.pa_speaker_detector`.

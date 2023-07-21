@@ -12,7 +12,7 @@ from medkit.text.ner import UMLSNormAttribute
 from medkit.text.ner.umls_coder_normalizer import UMLSCoderNormalizer
 
 
-_PATH_TO_MR_CONSO_FILE = Path(__file__).parent / "sample_umls_data" / "MRCONSO.RRF"
+_PATH_TO_MR_CONSO_FILE = Path(__file__).parent / "sample_umls_data/2021AB/MRCONSO.RRF"
 _LANGUAGE = "ENG"
 _MODEL = "GanjinZero/UMLSBert_ENG"
 _ASTHMA_CUI = "C0004096"
@@ -68,7 +68,7 @@ def test_basic(normalizer):
     norm_attr_1 = norm_attrs_1[0]
     assert isinstance(norm_attr_1, UMLSNormAttribute)
     assert norm_attr_1.cui == _ASTHMA_CUI
-    assert norm_attr_1.umls_version == "sample_umls_data"
+    assert norm_attr_1.umls_version == "2021AB"
     # exact match has 1.0 score
     assert norm_attr_1.score == 1.0
     assert norm_attr_1.term == "Asthma"
