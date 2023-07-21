@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 class _UMLSMatcherCacheParams:
     umls_version: str
     language: str
-    allowed_semgroups: List[str]
+    semgroups: List[str]
     labels_by_semgroup: Dict[str]
     lowercase: bool
     normalize_unicode: bool
@@ -56,7 +56,7 @@ class UMLSMatcher(BaseSimstringMatcher):
     By default, only terms belonging to the `ANAT` (anatomy), `CHEM` (Chemicals &
     Drugs), `DEVI` (Devices), `DISO` (Disorders), `PHYS` (Physiology) and `PROC`
     (Procedures) semgroups will be considered. This behavior can be changed with
-    the `allowed_semgroups` parameter.
+    the `semgroups` parameter.
 
     Note that setting `spacy_tokenization_language` to `True` might reduce the
     number of false positives. This requires the `spacy` optional dependency,
@@ -77,7 +77,7 @@ class UMLSMatcher(BaseSimstringMatcher):
         lowercase: bool = True,
         normalize_unicode: bool = False,
         spacy_tokenization: bool = False,
-        allowed_semgroups: Optional[Sequence[str]] = (
+        semgroups: Optional[Sequence[str]] = (
             "ANAT",
             "CHEM",
             "DEVI",
@@ -139,7 +139,7 @@ class UMLSMatcher(BaseSimstringMatcher):
             determinants, conjunctions and prepositions. If `None`, a simple
             regexp based tokenization will be used, which is faster but might
             give more false positives.
-        allowed_semgroups:
+        semgroups:
             Ids of UMLS semantic groups that matched concepts should belong to.
             cf
             https://lhncbc.nlm.nih.gov/semanticnetwork/download/sg_archive/SemGroups-v04.txt
@@ -167,9 +167,9 @@ class UMLSMatcher(BaseSimstringMatcher):
         umls_dir = Path(umls_dir)
         cache_dir = Path(cache_dir)
 
-        # check that values of allowed_semgroups are valid semgroup ids
-        if allowed_semgroups is not None:
-            for semgroup in allowed_semgroups:
+        # check that values of semgroups are valid semgroup ids
+        if semgroups is not None:
+            for semgroup in semgroups:
                 if semgroup not in umls_utils.SEMGROUPS:
                     raise ValueError(
                         f"Unknown semgroup: {semgroup}. Should be one of"
@@ -183,7 +183,7 @@ class UMLSMatcher(BaseSimstringMatcher):
         cache_params = _UMLSMatcherCacheParams(
             umls_version=umls_utils.guess_umls_version(umls_dir),
             language=language,
-            allowed_semgroups=list(allowed_semgroups),
+            semgroups=list(semgroups),
             labels_by_semgroup=labels_by_semgroup,
             lowercase=lowercase,
             normalize_unicode=normalize_unicode,
@@ -211,7 +211,7 @@ class UMLSMatcher(BaseSimstringMatcher):
                 language,
                 lowercase,
                 normalize_unicode,
-                set(allowed_semgroups),
+                set(semgroups),
                 labels_by_semgroup,
             )
 
@@ -288,13 +288,12 @@ class UMLSMatcher(BaseSimstringMatcher):
         language: str,
         lowercase: bool,
         normalize_unicode: bool,
-        allowed_semgroups: Optional[Set[str]],
+        semgroups: Optional[Set[str]],
         labels_by_semgroup: Dict[str, str],
     ) -> Iterator[BaseSimstringMatcherRule]:
         """
         Create rules for all UMLS entries (filtered by `language` and
-        `allowed_semgroups`) with appropriate labels (based on
-        `labels_by_semgroup`)
+        `semgroups`) with appropriate labels (based on `labels_by_semgroup`)
         """
 
         # get iterator to all UMLS entries
@@ -309,14 +308,14 @@ class UMLSMatcher(BaseSimstringMatcher):
 
         for entry in entries_iter:
             # filter out entries not belonging to allowed semgroups
-            semgroups = entry.semgroups
-            if allowed_semgroups is not None:
-                semgroups = [s for s in semgroups if s in allowed_semgroups]
-                if len(semgroups) == 0:
+            entry_semgroups = entry.semgroups
+            if semgroups is not None:
+                entry_semgroups = [s for s in entry_semgroups if s in semgroups]
+                if len(entry_semgroups) == 0:
                     continue
 
             # take label corresponding to semgroup (1st semgroup if multiple)
-            semgroup = semgroups[0]
+            semgroup = entry_semgroups[0]
             label = labels_by_semgroup[semgroup]
 
             norm = BaseSimstringMatcherNormalization(
