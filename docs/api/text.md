@@ -339,6 +339,21 @@ For more details about public APIs, refer to
 {mod}`~.text.ner.duckling_matcher`.
 :::
 
+### EDS-NLP Date Matcher
+
+The [EDS-NLP dates pipeline](https://aphp.github.io/edsnlp/latest/pipelines/misc/dates/) can be
+directly using inside medkit to identify date and duration mentions in texts.
+
+:::{important}
+{class}`~.edsnlp_date_matcher.EDSNLPDateMatcher` needs additional dependencies that can be
+installed with `pip install medkit-lib[edsnlp]`
+:::
+
+:::{note}
+For more details about public APIs, refer to
+{mod}`~.text.ner.edsnlp_date_matcher`.
+:::
+
 ### Hugging Face Entity Matcher
 
 medkit provides an entity matcher based on Hugging Face models.
