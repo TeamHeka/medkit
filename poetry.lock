@@ -7317,13 +7317,13 @@ files = [
 
 [[package]]
 name = "unqlite"
-version = "0.9.3"
+version = "0.9.6"
 description = "Fast Python bindings for the UnQLite embedded NoSQL database."
 category = "main"
 optional = true
 python-versions = "*"
 files = [
-    {file = "unqlite-0.9.3.tar.gz", hash = "sha256:c4cfe3d687d34423e543c6284659a57e88988caf1765b800c4d199ad451a671b"},
+    {file = "unqlite-0.9.6.tar.gz", hash = "sha256:2db08624da69e25fe74a1b66b4dc8a975b256b2bb3d4f83fa185133961225c97"},
 ]
 
 [package.dependencies]
@@ -7616,7 +7616,7 @@ hf-utils = ["transformers"]
 metrics-ner = ["seqeval", "torch", "transformers"]
 optional = ["PyRuSH", "feather-format", "packaging", "pandas", "pandas", "quickumls", "resampy", "sacremoses", "sentencepiece", "seqeval", "spacy", "torch", "torchaudio", "transformers", "webrtcvad"]
 pa-speaker-detector = ["pyannote-audio", "torch"]
-quick-umls = ["packaging", "quickumls"]
+quick-umls = ["packaging", "quickumls", "unqlite"]
 resampler = ["resampy"]
 rush-sentence-tokenizer = ["PyRuSH"]
 sb-transcriber-function = ["speechbrain", "torch", "transformers"]
@@ -7629,4 +7629,4 @@ webrtc-voice-detector = ["webrtcvad"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7.1, <4.0"
-content-hash = "73153ec1603f798a98a8d70bb95f97856bd2343a763823403921e83e93298413"
+content-hash = "4642d6d2c387f03d27d8ab6840282d02af3110f157a8b41e15643ed921712044"
