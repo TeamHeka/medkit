@@ -312,12 +312,8 @@ class DoccanoInputConverter:
             self.task == DoccanoTask.RELATION_EXTRACTION
             or self.task == DoccanoTask.SEQUENCE_LABELING
         ):
-            nb_docs_with_warning = len(
-                [
-                    document.text[0]
-                    for document in documents
-                    if document.text.find("\r\n") > 0
-                ]
+            nb_docs_with_warning = sum(
+                document.text.find("\r\n") != -1 for document in documents
             )
 
             if nb_docs_with_warning > 0:
@@ -375,7 +371,8 @@ class DoccanoInputConverter:
                 " or the client configuration of the converter"
             )
 
-        anns_by_doccano_id = dict()
+        ents_by_doccano_id = dict()
+        relations = []
         for doccano_entity in doccano_doc.entities:
             text = doccano_doc.text[
                 doccano_entity.start_offset : doccano_entity.end_offset
@@ -386,9 +383,7 @@ class DoccanoInputConverter:
                 spans=[Span(doccano_entity.start_offset, doccano_entity.end_offset)],
                 metadata=dict(doccano_id=doccano_entity.id),
             )
-            # entities can have the same id as relations
-            # add a prefix to identify entities
-            anns_by_doccano_id[f"E{doccano_entity.id}"] = entity
+            ents_by_doccano_id[doccano_entity.id] = entity
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
@@ -398,20 +393,21 @@ class DoccanoInputConverter:
         for doccano_relation in doccano_doc.relations:
             relation = Relation(
                 label=doccano_relation.type,
-                source_id=anns_by_doccano_id[f"E{doccano_relation.from_id}"].uid,
-                target_id=anns_by_doccano_id[f"E{doccano_relation.to_id}"].uid,
+                source_id=ents_by_doccano_id[doccano_relation.from_id].uid,
+                target_id=ents_by_doccano_id[doccano_relation.to_id].uid,
                 metadata=dict(doccano_id=doccano_relation.id),
             )
-            anns_by_doccano_id[doccano_relation.id] = relation
+            relations.append(relation)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     relation, self.description, source_data_items=[]
                 )
 
+        anns = list(ents_by_doccano_id.values()) + relations
         doc = TextDocument(
             text=doccano_doc.text,
-            anns=list(anns_by_doccano_id.values()),
+            anns=anns,
             metadata=doccano_doc.metadata,
         )
 
@@ -440,7 +436,7 @@ class DoccanoInputConverter:
                 " or the client configuration of the converter"
             ) from err
 
-        anns = []
+        entities = []
         for doccano_entity in doccano_doc.entities:
             text = doccano_doc.text[
                 doccano_entity.start_offset : doccano_entity.end_offset
@@ -450,7 +446,7 @@ class DoccanoInputConverter:
                 label=doccano_entity.label,
                 spans=[Span(doccano_entity.start_offset, doccano_entity.end_offset)],
             )
-            anns.append(entity)
+            entities.append(entity)
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
@@ -459,7 +455,7 @@ class DoccanoInputConverter:
 
         doc = TextDocument(
             text=doccano_doc.text,
-            anns=anns,
+            anns=entities,
             metadata=doccano_doc.metadata,
         )
         return doc
@@ -608,24 +604,25 @@ class DoccanoOutputConverter:
             Dictionary with doccano annotation. It may contain
             text, entities and relations
         """
-        entities, relations = dict(), dict()
+        doccano_ents_by_medkit_uid = dict()
+        doccano_relations = []
 
         anns_by_type = get_anns_by_type(medkit_doc, self.anns_labels)
 
         for medkit_entity in anns_by_type["entities"]:
             spans = span_utils.normalize_spans(medkit_entity.spans)
             ann_id = generate_deterministic_id(medkit_entity.uid)
-            doccano_entity = _DoccanoEntity(
+            entity = _DoccanoEntity(
                 id=ann_id.int,
                 start_offset=spans[0].start,
                 end_offset=spans[-1].end,
                 label=medkit_entity.label,
             )
-            entities[medkit_entity.uid] = doccano_entity
+            doccano_ents_by_medkit_uid[medkit_entity.uid] = entity
 
         for medkit_relation in anns_by_type["relations"]:
-            subj = entities.get(medkit_relation.source_id)
-            obj = entities.get(medkit_relation.target_id)
+            subj = doccano_ents_by_medkit_uid.get(medkit_relation.source_id)
+            obj = doccano_ents_by_medkit_uid.get(medkit_relation.target_id)
 
             if subj is None or obj is None:
                 logger.warning(
@@ -635,20 +632,20 @@ class DoccanoOutputConverter:
                 continue
 
             ann_id = generate_deterministic_id(medkit_relation.uid)
-            doccano_relation = _DoccanoRelation(
+            relation = _DoccanoRelation(
                 id=ann_id.int,
                 from_id=subj.id,
                 to_id=obj.id,
                 type=medkit_relation.label,
             )
-            relations[medkit_relation.uid] = doccano_relation
+            doccano_relations.append(relation)
 
         metadata = medkit_doc.metadata if self.include_metadata else {}
 
         doccano_doc = _DoccanoDocRelationExtraction(
             text=medkit_doc.text,
-            entities=list(entities.values()),
-            relations=list(relations.values()),
+            entities=list(doccano_ents_by_medkit_uid.values()),
+            relations=doccano_relations,
             metadata=metadata,
         )
 
@@ -670,20 +667,20 @@ class DoccanoOutputConverter:
             text ans its label (a list of tuples representing entities)
         """
         anns_by_type = get_anns_by_type(medkit_doc, self.anns_labels)
-        entities = []
+        doccano_entities = []
         for medkit_entity in anns_by_type["entities"]:
             spans = span_utils.normalize_spans(medkit_entity.spans)
-            doccano_entity = _DoccanoEntityTuple(
+            entity = _DoccanoEntityTuple(
                 start_offset=spans[0].start,
                 end_offset=spans[-1].end,
                 label=medkit_entity.label,
             )
-            entities.append(doccano_entity)
+            doccano_entities.append(entity)
 
         metadata = medkit_doc.metadata if self.include_metadata else {}
         doccano_doc = _DoccanoDocSeqLabeling(
             text=medkit_doc.text,
-            entities=entities,
+            entities=doccano_entities,
             metadata=metadata,
         )
 
