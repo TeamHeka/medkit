@@ -318,18 +318,17 @@ class BratOutputConverter(OutputConverter):
 
             # convert medkit anns to brat format
             annotations = get_anns_by_type(medkit_doc, anns_labels=self.anns_labels)
-            relations = annotations.get("relations", [])
-            all_segments = annotations.get("entities", [])
+            all_segments = annotations["entities"]
 
             if not self.ignore_segments:
                 # In brat only entities exists, in some cases
                 # a medkit document could include segments
                 # that may be exported as entities
-                all_segments += annotations.get("segments", [])
+                all_segments += annotations["segments"]
 
             brat_anns = self._convert_medkit_anns_to_brat(
                 segments=all_segments,
-                relations=relations,
+                relations=annotations["relations"],
                 config=config,
                 raw_text=text,
             )

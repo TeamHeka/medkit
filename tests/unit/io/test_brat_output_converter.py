@@ -209,11 +209,11 @@ def test_annotation_conf_file():
 
     # simulate expected annotations relations + entitites
     annotations = get_anns_by_type(medkit_doc, anns_labels=None)
-    relations = annotations.get("relations", [])
-    segments = annotations.get("entities", [])
-
     _ = brat_converter._convert_medkit_anns_to_brat(
-        segments, relations, config_file, medkit_doc.text
+        segments=annotations["entities"],
+        relations=annotations["relations"],
+        config=config_file,
+        raw_text=medkit_doc.text,
     )
 
     assert config_file.entity_types == ["grade", "level", "maladie"]
