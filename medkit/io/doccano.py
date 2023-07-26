@@ -171,8 +171,10 @@ class _DoccanoDocTextClassification:
         label = doc_line.pop(client_config.column_label)[0]
 
         if not isinstance(label, str):
-            raise TypeError("The label must be a string")
-
+            raise TypeError(
+                "The label must be a string. Please check if the document corresponds"
+                " to a text classification task rather than sequence labeling"
+            )
         # in doccano, metadata is what remains after removing key fields
         metadata = doc_line
         return cls(text=text, label=label, metadata=metadata)
