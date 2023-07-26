@@ -70,40 +70,41 @@ def _load_json_file(filepath):
         DoccanoTask.SEQUENCE_LABELING,
     ],
 )
-def test_save_by_task(tmp_path, task):
-    dir_path = tmp_path / task.value
-    generated_json_path = dir_path / "all.jsonl"
-
+def test_save_by_task_with_metadat(tmp_path, task):
+    medkit_docs = [_get_doc_by_task(task)]
     converter = DoccanoOutputConverter(
         task=task, attr_label="category", include_metadata=True
     )
-    medkit_docs = [_get_doc_by_task(task)]
-    converter.save(medkit_docs, dir_path=dir_path)
 
-    assert dir_path.exists()
-    assert generated_json_path.exists()
+    output_file = tmp_path / f"{task.value}.jsonl"
+    converter.save(medkit_docs, output_file=output_file)
 
-    data = _load_json_file(generated_json_path)
+    # check generated data
+    data = _load_json_file(output_file)
     expected_data = _load_json_file(PATH_DOCCANO_FILES / f"{task.value}.jsonl")
-
     assert data == expected_data
 
 
 def test_warnings(tmp_path, caplog):
-    task = DoccanoTask.RELATION_EXTRACTION
-    converter = DoccanoOutputConverter(task=task, anns_labels=["ORG", "created_in"])
-    dir_path = tmp_path / task.value
-
-    medkit_docs = [_get_doc_by_task(task)]
     with caplog.at_level(logging.WARNING, logger="medkit.io.doccano"):
-        converter.save(medkit_docs, dir_path=dir_path)
+        # get only ORG entities and created_in relations
+        # target of the relation is mising
+        task = DoccanoTask.RELATION_EXTRACTION
+        converter = DoccanoOutputConverter(task=task, anns_labels=["ORG", "created_in"])
+        medkit_docs = [_get_doc_by_task(task)]
+
+        output_file = tmp_path / f"{task.value}.jsonl"
+        converter.save(medkit_docs, output_file=output_file)
         assert "Entity source/target was no found" in caplog.text
 
     with pytest.raises(KeyError, match="The attribute with the corresponding .*"):
-        converter = DoccanoOutputConverter(
-            task=DoccanoTask.TEXT_CLASSIFICATION, attr_label="is_negated"
-        )
-        converter.save(medkit_docs, dir_path=dir_path)
+        # the attr_label is header not is_negated
+        task = DoccanoTask.TEXT_CLASSIFICATION
+        medkit_docs = [_get_doc_by_task(task)]
+        converter = DoccanoOutputConverter(task=task, attr_label="is_negated")
+
+        output_file = tmp_path / f"{task.value}.jsonl"
+        converter.save(medkit_docs, output_file=output_file)
 
 
 @pytest.mark.parametrize(
@@ -115,23 +116,20 @@ def test_warnings(tmp_path, caplog):
     ],
 )
 def test_save_by_task_without_metadata(tmp_path, task):
-    dir_path = tmp_path / task.value
-    generated_json_path = dir_path / "all.jsonl"
-
+    medkit_docs = [_get_doc_by_task(task)]
     converter = DoccanoOutputConverter(
         task=task, attr_label="category", include_metadata=False
     )
-    medkit_docs = [_get_doc_by_task(task)]
-    converter.save(medkit_docs, dir_path=dir_path)
 
-    assert dir_path.exists()
-    assert generated_json_path.exists()
+    output_file = tmp_path / f"{task.value}.jsonl"
+    converter.save(medkit_docs, output_file=output_file)
 
-    data = _load_json_file(generated_json_path)
+    # check generated data
+    data = _load_json_file(output_file)
     expected_data = _load_json_file(PATH_DOCCANO_FILES / f"{task.value}.jsonl")
 
-    # TBD: remove metadata from expected_data
-    # the test force no metadata export
+    # Prepare expected_data, the test forces not to export metadata
+    # the data should not include it
     for key in _METADATA.keys():
         expected_data.pop(key, None)
 

@@ -547,21 +547,20 @@ class DoccanoOutputConverter:
             config=dict(task=self.task.value),
         )
 
-    def save(self, docs: List[TextDocument], dir_path: str):
+    def save(self, docs: List[TextDocument], output_file: Union[str, Path]):
         """Convert and save a list of TextDocuments into a doccano file (.JSONL)
 
         Parameters
         ----------
         docs:
             List of medkit doc objects to convert
-        dir_path:
-            String or path object to save the generated files
+        output_file:
+            Path or string of the JSONL file where to save the converted documents
         """
 
-        dir_path = Path(dir_path)
-        dir_path.mkdir(parents=True, exist_ok=True)
+        output_file = Path(output_file)
 
-        with open(dir_path / "all.jsonl", mode="w", encoding="utf-8") as fp:
+        with open(output_file, mode="w", encoding="utf-8") as fp:
             for medkit_doc in docs:
                 doc_line = self._convert_doc_by_task(medkit_doc)
                 fp.write(json.dumps(doc_line) + "\n")
