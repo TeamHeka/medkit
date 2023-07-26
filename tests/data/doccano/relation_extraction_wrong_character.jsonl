@@ -1,0 +1,1 @@
+{"text": "medkit was\r\ncreated in 2022","entities": [{"id": 0, "start_offset": 0, "end_offset": 6, "label": "ORG"},{"id": 1, "start_offset": 22, "end_offset": 26, "label": "DATE"}],"relations": [{"id": 0, "from_id": 0, "to_id": 1, "type": "created_in"}]}

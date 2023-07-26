@@ -21,6 +21,7 @@ from medkit.core.text import (
     Span,
     span_utils,
 )
+from medkit.io._common import get_anns_by_type
 
 
 _ATTR_MEDKIT_ID = "medkit_id"
@@ -221,25 +222,13 @@ def build_spacy_doc_from_medkit_doc(
 
     # get the raw text segment to transfer
     raw_segment = medkit_doc.raw_segment
-    annotations = medkit_doc.anns.get()
-
-    if labels_anns is not None:
-        # filter annotations by label
-        annotations = [ann for ann in annotations if ann.label in labels_anns]
-        if labels_anns and annotations == []:
-            # labels_anns were a list but none of the annotations
-            # had a label of interest
-            labels_str = ",".join(labels_anns)
-            warnings.warn(
-                f"No medkit annotations were included because none have '{labels_str}'"
-                " as label."
-            )
+    annotations = get_anns_by_type(medkit_doc, anns_labels=labels_anns)
 
     # create a spacy doc
     doc = build_spacy_doc_from_medkit_segment(
         nlp=nlp,
         segment=raw_segment,
-        annotations=annotations,
+        annotations=annotations["segments"] + annotations["entities"],
         attrs=attrs,
         include_medkit_info=include_medkit_info,
     )

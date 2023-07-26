@@ -3,13 +3,11 @@ from __future__ import annotations
 __all__ = ["TextDocument"]
 
 import dataclasses
-import random
-import uuid
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Self
 
 from medkit.core import dict_conv
-from medkit.core.id import generate_id
+from medkit.core.id import generate_id, generate_deterministic_id
 from medkit.core.text.annotation import TextAnnotation, Segment
 from medkit.core.text.annotation_container import TextAnnotationContainer
 from medkit.core.text.span import Span
@@ -77,10 +75,7 @@ class TextDocument(dict_conv.SubclassMapping):
 
     @classmethod
     def _generate_raw_segment(cls, text: str, doc_id: str) -> Segment:
-        # generate deterministic uuid based on document uid
-        # so that the annotation uid is the same if the doc uid is the same
-        rng = random.Random(doc_id)
-        uid = str(uuid.UUID(int=rng.getrandbits(128)))
+        uid = str(generate_deterministic_id(reference_id=doc_id))
 
         return Segment(
             label=cls.RAW_LABEL,

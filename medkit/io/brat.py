@@ -32,6 +32,8 @@ from medkit.core.text import (
     span_utils,
 )
 
+from medkit.io._common import get_anns_by_type
+
 
 TEXT_EXT = ".txt"
 ANN_EXT = ".ann"
@@ -315,9 +317,20 @@ class BratOutputConverter(OutputConverter):
             doc_id = medkit_doc.uid if doc_names is None else doc_names[i]
 
             # convert medkit anns to brat format
-            segments, relations = self._get_anns_from_medkit_doc(medkit_doc)
+            annotations = get_anns_by_type(medkit_doc, anns_labels=self.anns_labels)
+            all_segments = annotations["entities"]
+
+            if not self.ignore_segments:
+                # In brat only entities exists, in some cases
+                # a medkit document could include segments
+                # that may be exported as entities
+                all_segments += annotations["segments"]
+
             brat_anns = self._convert_medkit_anns_to_brat(
-                segments, relations, config, text
+                segments=all_segments,
+                relations=annotations["relations"],
+                config=config,
+                raw_text=text,
             )
 
             # save text file
@@ -332,43 +345,6 @@ class BratOutputConverter(OutputConverter):
             # save configuration file by collection or list of documents
             conf_path = dir_path / ANN_CONF_FILE
             conf_path.write_text(config.to_str(), encoding="utf-8")
-
-    def _get_anns_from_medkit_doc(
-        self, medkit_doc: TextDocument
-    ) -> Tuple[List[Segment], List[Relation]]:
-        """Return selected annotations from a medkit document"""
-        if self.anns_labels is not None:
-            # filter annotations by label
-            annotations = [
-                ann
-                for label in self.anns_labels
-                for ann in medkit_doc.anns.get(label=label)
-            ]
-        else:
-            annotations = medkit_doc.anns.get()
-
-        if self.anns_labels and annotations == []:
-            # labels_anns were a list but none of the annotations
-            # had a label of interest
-            labels_str = ",".join(self.anns_labels)
-            logger.info(
-                "No medkit annotations were included because none have"
-                f" '{labels_str}' as label."
-            )
-
-        segments = []
-        relations = []
-        for ann in annotations:
-            if isinstance(ann, Entity):
-                segments.append(ann)
-            elif isinstance(ann, Segment) and not self.ignore_segments:
-                # In brat only entities exists, in some cases
-                # a medkit document could include segments
-                # that may be exported as entities
-                segments.append(ann)
-            elif isinstance(ann, Relation):
-                relations.append(ann)
-        return segments, relations
 
     def _convert_medkit_anns_to_brat(
         self,

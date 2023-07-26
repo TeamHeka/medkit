@@ -3,6 +3,7 @@ __all__ = [
     "get_text_document",
     "get_text",
     "get_path_hf_dummy_vocab",
+    "PATH_DOCCANO_FILES",
 ]
 
 from pathlib import Path
@@ -11,6 +12,7 @@ from medkit.core.text import TextDocument
 
 _PATH_TO_TEXT_DOCS = Path(__file__).parent / "data" / "text"
 _PATH_HF_DUMMY_VOCAB = Path(__file__).parent / "data" / "dummy_hf_vocab" / "vocab.txt"
+PATH_DOCCANO_FILES = Path(__file__).parent / "data" / "doccano"
 
 
 def get_path_hf_dummy_vocab():

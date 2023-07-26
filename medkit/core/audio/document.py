@@ -3,8 +3,6 @@ from __future__ import annotations
 __all__ = ["AudioDocument"]
 
 import dataclasses
-import random
-import uuid
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Self
 
@@ -17,7 +15,7 @@ from medkit.core.audio.audio_buffer import (
     MemoryAudioBuffer,
     PlaceholderAudioBuffer,
 )
-from medkit.core.id import generate_id
+from medkit.core.id import generate_id, generate_deterministic_id
 
 
 @dataclasses.dataclass(init=False)
@@ -76,10 +74,7 @@ class AudioDocument(dict_conv.SubclassMapping):
 
     @classmethod
     def _generate_raw_segment(cls, audio: AudioBuffer, doc_id: str) -> Segment:
-        # generate deterministic uuid based on document identifier
-        # so that the annotation identifier is the same if the doc identifier is the same
-        rng = random.Random(doc_id)
-        uid = str(uuid.UUID(int=rng.getrandbits(128)))
+        uid = str(generate_deterministic_id(reference_id=doc_id))
 
         return Segment(
             label=cls.RAW_LABEL,
