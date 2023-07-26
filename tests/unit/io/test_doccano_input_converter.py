@@ -143,7 +143,7 @@ def test_exceptions(tmp_path):
     wrong_task = DoccanoTask.SEQUENCE_LABELING
     create_doccano_zip_files_disk(tmp_path, filename=wrong_task.value)
 
-    with pytest.raises(KeyError, match="The key .*"):
+    with pytest.raises(Exception, match="Impossible to convert.*"):
         DoccanoInputConverter(task=task).load_from_directory_zip(
             dir_path=f"{tmp_path}/{wrong_task.value}"
         )
