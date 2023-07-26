@@ -83,6 +83,8 @@ def test_text_classification_converter(tmp_path):
 def test_crlf_character(tmp_path, caplog):
     # test when doccano export a document from a project with
     # 'count grapheme clusters as one character'
+    # This option defines the span differently in Doccano
+    # In medkit this results in alignment problems.
     task = DoccanoTask.RELATION_EXTRACTION
     filename = "relation_extraction_wrong_character"
     create_doccano_zip_files_disk(tmp_path, filename=filename)
@@ -95,6 +97,7 @@ def test_crlf_character(tmp_path, caplog):
 
     document = documents[0]
     assert len(document.anns.entities) == 2
+    # in doccano the text is '2020'
     entity_no_aligned = document.anns.get(label="DATE")[0]
     assert entity_no_aligned.text == " 202"
     assert entity_no_aligned.spans == [Span(22, 26)]
