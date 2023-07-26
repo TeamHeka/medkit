@@ -11,7 +11,7 @@ import json
 import logging
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Self
 from zipfile import ZipFile
 
@@ -251,7 +251,7 @@ class DoccanoInputConverter:
             config=dict(task=self.task.value),
         )
 
-    def load_from_directory_zip(self, dir_path: str) -> List[TextDocument]:
+    def load_from_directory_zip(self, dir_path: Union[str, Path]) -> List[TextDocument]:
         """Create a list of TextDocuments from zip files in a directory.
         The zip files should contain a JSONL file coming from doccano.
 
@@ -267,12 +267,12 @@ class DoccanoInputConverter:
         """
         documents = []
         with tempfile.TemporaryDirectory() as tmpdir:
-            for i, path_zip in enumerate(Path(dir_path).glob("*.zip")):
+            for i, path_zip in enumerate(sorted(Path(dir_path).glob("*.zip"))):
                 with ZipFile(path_zip, mode="r") as zip_file:
                     filename = zip_file.namelist()[0]
                     zip_file.extract(filename, Path(f"{tmpdir}/tmpfile_{i}"))
 
-            for input_file in Path(tmpdir).rglob("*.jsonl"):
+            for input_file in sorted(Path(tmpdir).rglob("*.jsonl")):
                 documents.extend(self.load_from_file(input_file))
 
         if len(documents) == 0:
@@ -280,7 +280,7 @@ class DoccanoInputConverter:
 
         return documents
 
-    def load_from_file(self, input_file) -> List[TextDocument]:
+    def load_from_file(self, input_file: Union[str, Path]) -> List[TextDocument]:
         """Create a list of TextDocuments from a doccano JSONL file.
 
         Parameters
@@ -294,8 +294,7 @@ class DoccanoInputConverter:
             A list of TextDocuments
         """
         documents = []
-
-        with open(input_file, encoding="utf-8") as fp:
+        with open(Path(input_file), encoding="utf-8") as fp:
             for line in fp:
                 doc_line = json.loads(line)
                 doc = self._parse_doc_line(doc_line)
@@ -365,11 +364,11 @@ class DoccanoInputConverter:
             doccano_doc = _DoccanoDocRelationExtraction.from_dict(
                 doc_line, client_config=self.client_config
             )
-        except KeyError as err:
-            raise KeyError(
-                f"The key {err} must be in the data to import. Please check the task"
+        except Exception as err:
+            raise Exception(
+                "Impossible to convert the document. Please check the task"
                 " or the client configuration of the converter"
-            )
+            ) from err
 
         ents_by_doccano_id = dict()
         relations = []
