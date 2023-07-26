@@ -1,22 +1,40 @@
+import dataclasses
 import json
 import logging
 
 import pytest
 from medkit.core import Attribute
-from medkit.core.id import generate_deterministic_id
 from medkit.core.text import TextDocument, Entity, Relation, Span
 from medkit.io import DoccanoTask, DoccanoOutputConverter
 
-_METADATA_KEY = "DOC_ID"
-_METADATA_VALUE = "1234"
+from tests.data_utils import PATH_DOCCANO_FILES
+
+_METADATA = {"custom_metadata": "custom", "doc_id": 1234}
+
+
+# mock of UUID class used by generate_deterministic_id
+@dataclasses.dataclass()
+class _MockUUID:
+    idx: int
+
+    @property
+    def int(self):
+        return self.idx
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _mocked_generator_id(module_mocker):
+    # mock ids, force to be 0 or 1
+    module_mocker.patch(
+        "medkit.io.doccano.generate_deterministic_id",
+        lambda ref_id: _MockUUID(int(ref_id == "e2")),
+    )
 
 
 def _get_doc_by_task(task: DoccanoTask):
     # get a TextDocument by task, seqlabeling and RelationExtraction use
     # the same doc, the output format changes
-    doc = TextDocument(
-        text="medkit was created in 2022", metadata={_METADATA_KEY: _METADATA_VALUE}
-    )
+    doc = TextDocument(text="medkit was created in 2022")
 
     if task == DoccanoTask.RELATION_EXTRACTION or task == DoccanoTask.SEQUENCE_LABELING:
         medkit_anns = [
@@ -31,46 +49,17 @@ def _get_doc_by_task(task: DoccanoTask):
     elif task == DoccanoTask.TEXT_CLASSIFICATION:
         attr = Attribute(label="category", value="header")
         doc.raw_segment.attrs.add(attr)
+
+    # only RELATION EXTRACTION has metadata
+    if task == DoccanoTask.RELATION_EXTRACTION:
+        doc.metadata = _METADATA
     return doc
 
 
-EXPECTED_DOCLINE_BY_TASK = {
-    DoccanoTask.RELATION_EXTRACTION: {
-        "text": "medkit was created in 2022",
-        "entities": [
-            {
-                "id": generate_deterministic_id("e1").int,
-                "start_offset": 0,
-                "end_offset": 6,
-                "label": "ORG",
-            },
-            {
-                "id": generate_deterministic_id("e2").int,
-                "start_offset": 22,
-                "end_offset": 26,
-                "label": "DATE",
-            },
-        ],
-        "relations": [
-            {
-                "id": generate_deterministic_id("r1").int,
-                "from_id": generate_deterministic_id("e1").int,
-                "to_id": generate_deterministic_id("e2").int,
-                "type": "created_in",
-            }
-        ],
-    },
-    # json does not recognize tuples
-    # NOTE: this works with doccano IDE
-    DoccanoTask.SEQUENCE_LABELING: {
-        "text": "medkit was created in 2022",
-        "label": [[0, 6, "ORG"], [22, 26, "DATE"]],
-    },
-    DoccanoTask.TEXT_CLASSIFICATION: {
-        "text": "medkit was created in 2022",
-        "label": ["header"],
-    },
-}
+def _load_json_file(filepath):
+    with open(filepath) as fp:
+        data = json.load(fp)
+    return data
 
 
 @pytest.mark.parametrize(
@@ -82,22 +71,22 @@ EXPECTED_DOCLINE_BY_TASK = {
     ],
 )
 def test_save_by_task(tmp_path, task):
-    converter = DoccanoOutputConverter(
-        task=task, attr_label="category", include_metadata=False
-    )
     dir_path = tmp_path / task.value
-    expected_jsonl_path = dir_path / "all.jsonl"
+    generated_json_path = dir_path / "all.jsonl"
 
+    converter = DoccanoOutputConverter(
+        task=task, attr_label="category", include_metadata=True
+    )
     medkit_docs = [_get_doc_by_task(task)]
     converter.save(medkit_docs, dir_path=dir_path)
 
     assert dir_path.exists()
-    assert expected_jsonl_path.exists()
+    assert generated_json_path.exists()
 
-    with open(expected_jsonl_path) as fp:
-        data = json.load(fp)
+    data = _load_json_file(generated_json_path)
+    expected_data = _load_json_file(PATH_DOCCANO_FILES / f"{task.value}.jsonl")
 
-    assert data == EXPECTED_DOCLINE_BY_TASK[task]
+    assert data == expected_data
 
 
 def test_warnings(tmp_path, caplog):
@@ -125,23 +114,25 @@ def test_warnings(tmp_path, caplog):
         DoccanoTask.SEQUENCE_LABELING,
     ],
 )
-def test_save_by_task_with_metadata(tmp_path, task):
-    converter = DoccanoOutputConverter(
-        task=task, attr_label="category", include_metadata=True
-    )
+def test_save_by_task_without_metadata(tmp_path, task):
     dir_path = tmp_path / task.value
-    expected_jsonl_path = dir_path / "all.jsonl"
+    generated_json_path = dir_path / "all.jsonl"
 
+    converter = DoccanoOutputConverter(
+        task=task, attr_label="category", include_metadata=False
+    )
     medkit_docs = [_get_doc_by_task(task)]
     converter.save(medkit_docs, dir_path=dir_path)
 
     assert dir_path.exists()
-    assert expected_jsonl_path.exists()
+    assert generated_json_path.exists()
 
-    with open(expected_jsonl_path) as fp:
-        data = json.load(fp)
+    data = _load_json_file(generated_json_path)
+    expected_data = _load_json_file(PATH_DOCCANO_FILES / f"{task.value}.jsonl")
 
-    # metadata is exported as items in the output data
-    metadata = data.pop(_METADATA_KEY)
-    assert metadata == _METADATA_VALUE
-    assert data == EXPECTED_DOCLINE_BY_TASK[task]
+    # TBD: remove metadata from expected_data
+    # the test force no metadata export
+    for key in _METADATA.keys():
+        expected_data.pop(key, None)
+
+    assert data == expected_data
