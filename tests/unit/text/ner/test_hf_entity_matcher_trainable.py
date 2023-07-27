@@ -62,9 +62,8 @@ def input_data():
 def test_preprocessing(matcher: HFEntityMatcherTrainable, input_data):
     features = matcher.preprocess(data_item=input_data)
     assert "input_ids" in features
-    assert "attention_masks" in features
     assert "labels" in features
-    assert features["labels"] == [-100, 2, 2, 0, -100, -100, -100, -100]
+    assert features["labels"] == [-100, 2, 2, 0, -100, -100]
 
 
 def test_collate_and_forward(matcher: HFEntityMatcherTrainable, input_data):
@@ -72,7 +71,7 @@ def test_collate_and_forward(matcher: HFEntityMatcherTrainable, input_data):
     collated_data = matcher.collate(batch)
     assert isinstance(collated_data, BatchData)
     assert isinstance(collated_data["input_ids"], torch.Tensor)
-    assert all(tensor.size() == torch.Size([4, 8]) for tensor in collated_data.values())
+    assert all(tensor.size() == torch.Size([4, 6]) for tensor in collated_data.values())
 
     # returning loss
     model_output, loss = matcher.forward(
@@ -81,7 +80,7 @@ def test_collate_and_forward(matcher: HFEntityMatcherTrainable, input_data):
     assert isinstance(model_output, BatchData)
     assert "logits" in model_output
     assert isinstance(model_output["logits"], torch.Tensor)
-    assert model_output["logits"].size() == torch.Size(([4, 8, 3]))
+    assert model_output["logits"].size() == torch.Size(([4, 6, 3]))
     assert loss is not None and isinstance(loss, torch.Tensor)
 
     # without loss
@@ -91,6 +90,34 @@ def test_collate_and_forward(matcher: HFEntityMatcherTrainable, input_data):
     assert isinstance(model_output, BatchData)
     assert isinstance(model_output["logits"], torch.Tensor)
     assert loss is None
+
+
+def test_collate_padding(tmp_path):
+    matcher = HFEntityMatcherTrainable(
+        model_name_or_path=tmp_path / "dummy-bert",
+        labels=["corporation"],
+        tagging_scheme="iob2",
+        tokenizer_max_length=512,
+    )
+
+    docs = [
+        TextDocument(
+            text="a test medkit",
+            anns=[Entity(text="medkit", label="corporation", spans=[Span(7, 13)])],
+        ),
+        TextDocument(
+            text="a test medkit but that is very very much longer",
+            anns=[Entity(text="medkit", label="corporation", spans=[Span(7, 13)])],
+        ),
+    ]
+    batch = [matcher.preprocess(d) for d in docs]
+    batch_data = matcher.collate(batch)
+
+    # number of tokens in 2d longest text
+    expected_padded_length = 13
+    assert batch_data["input_ids"].size() == (2, expected_padded_length)
+    assert batch_data["attention_mask"].size() == (2, expected_padded_length)
+    assert batch_data["labels"].size() == (2, expected_padded_length)
 
 
 def test_initialization_warnings(tmp_path, caplog):
