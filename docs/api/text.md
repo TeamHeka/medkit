@@ -468,6 +468,8 @@ For the moment, you can use this module to:
 - align source and target {class}`~.core.text.Segment`s from the same {class}`~.core.text.TextDocument`
 - duplicate attributes bewteen segments. For example, you can duplicate an attribute from a sentence to its entities.
 
+- filter overlapping entities: useful when creating named entity reconigtion (NER) datasets
+
 :::{note}
 For more details about public API, refer to {mod}`~.text.postprocessing`.
 :::
