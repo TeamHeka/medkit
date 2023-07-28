@@ -83,6 +83,11 @@ class HFEntityMatcherTrainable:
         self.device = torch.device("cpu" if device < 0 else f"cuda:{device}")
         self._model.to(self.device)
 
+        # init data collator in charge of padding
+        self._data_collator = transformers.DataCollatorForTokenClassification(
+            tokenizer=self._tokenizer
+        )
+
     def configure_optimizer(self, lr: float) -> torch.optim.Optimizer:
         # todo: group_params optimizer_parameters = [{}]
         optimizer_parameters = self._model.parameters()
@@ -90,6 +95,9 @@ class HFEntityMatcherTrainable:
         return optimizer
 
     def preprocess(self, data_item: TextDocument) -> Dict[str, Any]:
+        # tokenize each and compute corresponding labels for each tokens
+        # (no padding for now, this will be done at the collate stage)
+
         text_encoding = self._encode_text(data_item.text)
         entities: List[Entity] = data_item.anns.entities
 
@@ -107,7 +115,6 @@ class HFEntityMatcherTrainable:
 
         model_input = {}
         model_input["input_ids"] = text_encoding.ids
-        model_input["attention_masks"] = text_encoding.attention_mask
         model_input["labels"] = tags_ids
 
         return model_input
@@ -116,7 +123,7 @@ class HFEntityMatcherTrainable:
         """Return a EncodingFast instance"""
         text_tokenized = self._tokenizer(
             text,
-            padding="max_length",
+            padding="do_not_pad",
             max_length=self.tokenizer_max_length,
             truncation=True,
             return_special_tokens_mask=True,
@@ -125,20 +132,10 @@ class HFEntityMatcherTrainable:
         return encoding
 
     def collate(self, batch: List[Dict[str, Any]]) -> BatchData:
-        input_ids, attention_masks, labels = [], [], []
-        for input_data in batch:
-            input_ids.append(input_data["input_ids"])
-            attention_masks.append(input_data["attention_masks"])
-            labels.append(input_data["labels"])
-
-        collated_batch = BatchData(
-            {
-                "input_ids": torch.LongTensor(input_ids),
-                "attention_masks": torch.LongTensor(attention_masks),
-                "labels": torch.LongTensor(labels),
-            }
-        )
-        return collated_batch
+        # rely on transformer's collator to handle padding
+        batch = self._data_collator(features=batch)
+        # wrap results in our own data structure
+        return BatchData(batch)
 
     def forward(
         self,
@@ -153,7 +150,7 @@ class HFEntityMatcherTrainable:
 
         model_output = self._model(
             input_ids=input_batch["input_ids"],
-            attention_mask=input_batch["attention_masks"],
+            attention_mask=input_batch["attention_mask"],
             labels=input_batch["labels"],
         )
         loss = model_output["loss"] if return_loss else None
@@ -174,6 +171,10 @@ class HFEntityMatcherTrainable:
                 "This operation only works with model that have a fast tokenizer. Check"
                 " the hugging face documentation to find the required tokenizer"
             )
+
+        # we intentionally do not pad at the encoding stage
+        # so we disable this warning
+        tokenizer.deprecation_warnings["Asking-to-pad-a-fast-tokenizer"] = True
 
         model = transformers.AutoModelForTokenClassification.from_pretrained(
             path,
