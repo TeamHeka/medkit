@@ -74,7 +74,7 @@ from medkit.core.text import TextDocument
 
 text_file = Path("../data/text/1.txt")
 # You can download the file available in source code
-# !wget https://raw.githubusercontent.com/TeamHeka/medkit/develop/docs/data/text/1.txt
+# !wget https://raw.githubusercontent.com/TeamHeka/medkit/main/docs/data/text/1.txt
 # or create your file and copy the text
 doc = TextDocument(text=text_file.read_text(encoding="utf-8"))
 
@@ -306,8 +306,8 @@ like:
 
 ```{code-cell} ipython3
 # You can download the files available in source code
-# !wget https://raw.githubusercontent.com/TeamHeka/medkit/develop/docs/data/text/1.txt
-# !wget https://raw.githubusercontent.com/TeamHeka/medkit/develop/docs/data/text/2.txt
+# !wget https://raw.githubusercontent.com/TeamHeka/medkit/main/docs/data/text/1.txt
+# !wget https://raw.githubusercontent.com/TeamHeka/medkit/main/docs/data/text/2.txt
 
 def load_docs():
     text_files = [Path("../data/text/1.txt"), Path("../data/text/2.txt")]
