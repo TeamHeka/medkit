@@ -24,7 +24,7 @@ from medkit.training.utils import BatchData, MetricsComputer
 # checkpoint constants
 OPTIMIZER_NAME = "optimizer.pt"
 SCHEDULER_NAME = "scheduler.pt"
-CONFIG_NAME = "config.yml"
+CONFIG_NAME = "trainer_config.yml"
 
 
 def set_seed(seed: int = 0):
