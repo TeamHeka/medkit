@@ -565,7 +565,7 @@ class DoccanoOutputConverter:
         with open(output_file, mode="w", encoding="utf-8") as fp:
             for medkit_doc in docs:
                 doc_line = self._convert_doc_by_task(medkit_doc)
-                fp.write(json.dumps(doc_line) + "\n")
+                fp.write(json.dumps(doc_line, ensure_ascii=False) + "\n")
 
     def _convert_doc_by_task(self, medkit_doc: TextDocument) -> Dict[str, Any]:
         """Convert a TextDocument into a dictionary depending on the task
