@@ -152,8 +152,8 @@ By default, only the loss configured by the trainable component is computed duri
 from medkit.text.metrics.ner import SeqEvalMetricsComputer
 
 mc_seqeval = SeqEvalMetricsComputer(
-    id_to_label=hf_matcher.id_to_label, # mapping int value to tag
-    tagging_scheme=hf_matcher.tagging_scheme # tagging scheme to compute
+    id_to_label=hf_trainable.id_to_label, # mapping int value to tag
+    tagging_scheme=hf_trainable.tagging_scheme, # tagging scheme to compute
     return_metrics_by_label= True, # include metrics by label in results
 )
 ```
