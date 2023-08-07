@@ -8,7 +8,7 @@ __all__ = [
 
 import abc
 from enum import IntEnum
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from medkit.core.operation import Operation
 from medkit.core.prov_tracer import ProvTracer
@@ -95,13 +95,16 @@ class _CustomTextOperation(Operation):
 
         self._function = None
         self._function_type = None
+        self._kwargs = None
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
         self._prov_tracer = prov_tracer
 
-    def set_function(self, function: Callable, function_type: CustomTextOpType):
+    def set_function(
+        self, function: Callable, function_type: CustomTextOpType, **kwargs: Any
+    ):
         """
-        Assign a user-defined fonction to the operation
+        Assign a user-defined function to the operation
         Parameters
         ----------
         function
@@ -109,6 +112,8 @@ class _CustomTextOperation(Operation):
         function_type
             Type of function.
             Supported values are defined in :class:`~medkit.core.text.CustomTextOpType`
+        **kwargs
+            Additional arguments of the callable function
 
         Returns
         -------
@@ -116,6 +121,7 @@ class _CustomTextOperation(Operation):
         """
         self._function = function
         self._function_type = function_type
+        self._kwargs = kwargs
         self.description.config["function_type"] = function_type.name
         # TODO: check signature according to type
 
@@ -151,7 +157,7 @@ class _CustomTextOperation(Operation):
     ) -> List[Any]:
         all_output_data = []
         for input_data in all_input_data:
-            output_data = self._function(input_data)
+            output_data = self._function(input_data, **self._kwargs)
             if type(output_data) == list:
                 all_output_data.extend(output_data)
             else:
@@ -178,7 +184,7 @@ class _CustomTextOperation(Operation):
     def _run_filter_function(self, all_input_data: List[Any]) -> List[Any]:
         all_output_data = []
         for input_data in all_input_data:
-            checked = self._function(input_data)
+            checked = self._function(input_data, **self._kwargs)
             if checked:
                 all_output_data.append(input_data)
         return all_output_data
@@ -188,9 +194,10 @@ def create_text_operation(
     function: Callable,
     function_type: CustomTextOpType,
     name: Optional[str] = None,
+    args: Optional[Dict] = None,
 ) -> _CustomTextOperation:
     """
-    Function for instanciating a custom test operation from a user-defined function
+    Function for instantiating a custom test operation from a user-defined function
 
     Parameters
     ----------
@@ -201,7 +208,8 @@ def create_text_operation(
         Supported values are defined in :class:`~medkit.core.text.CustomTextOpType`
     name
         Name of the operation used for provenance info (default: function name)
-
+    args
+        Dictionary containing the arguments of the function if any.
     Returns
     -------
     operation
@@ -209,6 +217,8 @@ def create_text_operation(
     """
     if name is None:
         name = function.__name__
+    if args is None:
+        args = {}
     operation = _CustomTextOperation(name=name)
-    operation.set_function(function=function, function_type=function_type)
+    operation.set_function(function=function, function_type=function_type, **args)
     return operation
