@@ -13,7 +13,7 @@ build:
       - poetry config --local virtualenvs.create false
     post_install:
       - poetry config --list
-      - poetry export -f requirements.txt --only docs --output requirements-doc.txt
+      - poetry export -f requirements.txt --with docs --output requirements-doc.txt
       - pip uninstall -y poetry
       - pip install -r requirements-doc.txt
       - pip install -e .
