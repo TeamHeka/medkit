@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterator, Optional, List, Union
 
-from medkit.core.text import Entity, Span, TextDocument
+from medkit.core.text import Entity, Segment, Span, TextDocument
 from medkit.io.medkit_json import save_text_documents
 from medkit.text.ner import UMLSNormAttribute
 
@@ -165,11 +165,14 @@ def load_annotated_document(
     filepath: Union[str, Path],
     encoding: str = "utf-8",
     keep_id: bool = False,
+    keep_sentences=False,
 ) -> TextDocument:
     """
     Load a E3C corpus annotated document (xml document) as medkit text document.
-    For the time being, only supports 'CLINENTITY' annotations.
     For example, one in data annotation folder.
+
+    For the time being, only supports 'CLINENTITY' annotations.
+    'SENTENCE' annotations may be also loaded.
 
     Parameters
     ----------
@@ -181,6 +184,8 @@ def load_annotated_document(
         Whether to set medkit text document uid to the document id.
         Whatever this boolean value, the document id is always kept in medkit document
         metadata.
+    keep_sentences
+        Whether to load sentences into medkit documents.
 
     Returns
     -------
@@ -217,6 +222,18 @@ def load_annotated_document(
         text=doc.text, uid=doc.id if keep_id else None, metadata=doc.extract_metadata()
     )
 
+    # parse sentences if wanted by user
+    if keep_sentences:
+        for elem in root.findall("type4:Sentence", ns):
+            sentence = elem.attrib
+            span = Span(int(sentence["begin"]), int(sentence["end"]))
+            medkit_sentence = Segment(
+                label="sentence", spans=[span], text=doc.text[span.start : span.end]
+            )
+
+            # attach medkit sentence to medkit document
+            medkit_doc.anns.add(medkit_sentence)
+
     # parse clinical entities
     for elem in root.findall("custom:CLINENTITY", ns):
         clin_entity = elem.attrib
@@ -249,6 +266,7 @@ def load_data_annotation(
     dir_path: Union[Path, str],
     encoding: str = "utf-8",
     keep_id: bool = False,
+    keep_sentences: bool = False,
 ) -> Iterator[TextDocument]:
     """
     Load the E3C corpus data annotation as medkit text documents
@@ -264,6 +282,8 @@ def load_data_annotation(
         Whether to set medkit text document uid to the document id.
         Whatever this boolean value, the document id is always kept in medkit document
         metadata.
+    keep_sentences
+        Whether to load sentences into medkit documents.
 
     Returns
     -------
@@ -277,7 +297,9 @@ def load_data_annotation(
 
     for filename in dir_path.glob("*.xml"):
         filepath = dir_path / filename
-        yield load_annotated_document(filepath, keep_id=keep_id, encoding=encoding)
+        yield load_annotated_document(
+            filepath, keep_id=keep_id, encoding=encoding, keep_sentences=keep_sentences
+        )
 
 
 def convert_data_annotation_to_medkit(
@@ -285,6 +307,7 @@ def convert_data_annotation_to_medkit(
     output_file: Union[str, Path],
     encoding: Optional[str] = "utf-8",
     keep_id: bool = False,
+    keep_sentences: bool = False,
 ):
     """
     Convert E3C corpus data annotation to medkit jsonl file
@@ -302,6 +325,13 @@ def convert_data_annotation_to_medkit(
         Whether to set medkit text document uid to the document id.
         Whatever this boolean value, the document id is always kept in medkit document
         metadata.
+    keep_sentences
+        Whether to load sentences into medkit documents.
     """
-    docs = load_data_annotation(dir_path=dir_path, encoding=encoding, keep_id=keep_id)
+    docs = load_data_annotation(
+        dir_path=dir_path,
+        encoding=encoding,
+        keep_id=keep_id,
+        keep_sentences=keep_sentences,
+    )
     save_text_documents(docs=docs, output_file=output_file, encoding=encoding)
