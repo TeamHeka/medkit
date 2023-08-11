@@ -1,5 +1,8 @@
 try:
     import spacy
+
+    if not spacy.util.is_package("fr_core_news_sm"):
+        spacy.cli.download("fr_core_news_sm")
 except ImportError:
     spacy = None
 
