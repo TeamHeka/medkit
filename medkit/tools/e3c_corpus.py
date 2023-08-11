@@ -23,6 +23,8 @@ __all__ = [
     "load_annotated_document",
     "load_data_annotation",
     "convert_data_annotation_to_medkit",
+    "SENTENCE_LABEL",
+    "CLINENTITY_LABEL",
 ]
 
 import json
@@ -40,6 +42,16 @@ from medkit.text.ner import UMLSNormAttribute
 
 
 logger = logging.getLogger(__name__)
+
+
+SENTENCE_LABEL = "sentence"
+"""
+Label used by medkit for annotated sentences of E3C corpus
+"""
+CLINENTITY_LABEL = "disorder"
+"""
+Label used by medkit for annotated clinical entities of E3C corpus
+"""
 
 
 @dataclass
@@ -234,7 +246,7 @@ def load_annotated_document(
 
             medkit_sentence = Segment(
                 uid=sentence_uid,
-                label="sentence",
+                label=SENTENCE_LABEL,
                 spans=[span],
                 text=doc.text[span.start : span.end],
             )
@@ -254,7 +266,7 @@ def load_annotated_document(
 
         medkit_entity = Entity(
             uid=entity_uid,
-            label="disorder",
+            label=CLINENTITY_LABEL,
             spans=[span],
             text=doc.text[span.start : span.end],
         )
