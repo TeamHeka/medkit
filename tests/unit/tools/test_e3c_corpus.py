@@ -34,11 +34,16 @@ def test_convert_data_collection_to_medkit(e3c_corpus_path, tmpdir):
 def test_convert_data_annotation_to_medkit(e3c_corpus_path, tmpdir):
     medkit_file = tmpdir / "medkit.jsonl"
     convert_data_annotation_to_medkit(
-        dir_path=e3c_corpus_path, output_file=medkit_file, keep_id=True
+        dir_path=e3c_corpus_path,
+        output_file=medkit_file,
+        keep_id=True,
+        keep_sentences=True,
     )
-    docs_from_corpus = load_data_annotation(dir_path=e3c_corpus_path, keep_id=True)
-    docs_from_medkit = load_text_documents(medkit_file)
+    docs_from_corpus = list(
+        load_data_annotation(
+            dir_path=e3c_corpus_path, keep_id=True, keep_sentences=True
+        )
+    )
+    docs_from_medkit = list(load_text_documents(medkit_file))
 
-    assert len(list(docs_from_corpus)[0].anns.entities) == len(
-        list(docs_from_medkit)[0].anns.entities
-    )
+    assert docs_from_corpus == docs_from_medkit

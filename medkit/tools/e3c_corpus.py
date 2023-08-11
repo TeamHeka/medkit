@@ -33,6 +33,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterator, Optional, List, Union
 
+from medkit.core import generate_deterministic_id
 from medkit.core.text import Entity, Segment, Span, TextDocument
 from medkit.io.medkit_json import save_text_documents
 from medkit.text.ner import UMLSNormAttribute
@@ -95,9 +96,9 @@ def load_document(
     """
     with open(filepath, encoding=encoding) as f:
         doc = E3CDocument(**json.load(f))
-    return TextDocument(
-        text=doc.text, uid=doc.id if keep_id else None, metadata=doc.extract_metadata()
-    )
+
+        uid = doc.id if keep_id else generate_deterministic_id(doc.id)
+        return TextDocument(text=doc.text, uid=uid, metadata=doc.extract_metadata())
 
 
 def load_data_collection(
@@ -218,17 +219,24 @@ def load_annotated_document(
     )
 
     # create medkit text document
-    medkit_doc = TextDocument(
-        text=doc.text, uid=doc.id if keep_id else None, metadata=doc.extract_metadata()
-    )
+    uid = doc.id if keep_id else generate_deterministic_id(doc.id)
+    medkit_doc = TextDocument(text=doc.text, uid=uid, metadata=doc.extract_metadata())
 
     # parse sentences if wanted by user
     if keep_sentences:
         for elem in root.findall("type4:Sentence", ns):
             sentence = elem.attrib
             span = Span(int(sentence["begin"]), int(sentence["end"]))
+            sentence_uid = sentence["{http://www.omg.org/XMI}id"]
+
+            if not keep_id:
+                sentence_uid = generate_deterministic_id(sentence_uid)
+
             medkit_sentence = Segment(
-                label="sentence", spans=[span], text=doc.text[span.start : span.end]
+                uid=sentence_uid,
+                label="sentence",
+                spans=[span],
+                text=doc.text[span.start : span.end],
             )
 
             # attach medkit sentence to medkit document
@@ -238,19 +246,31 @@ def load_annotated_document(
     for elem in root.findall("custom:CLINENTITY", ns):
         clin_entity = elem.attrib
         span = Span(int(clin_entity["begin"]), int(clin_entity["end"]))
+        entity_uid = clin_entity[
+            "{http://www.omg.org/XMI}id"
+        ]  # retrieve xmi:id from attributes
+        if not keep_id:
+            entity_uid = generate_deterministic_id(entity_uid)
+
         medkit_entity = Entity(
-            label="disorder", spans=[span], text=doc.text[span.start : span.end]
+            uid=entity_uid,
+            label="disorder",
+            spans=[span],
+            text=doc.text[span.start : span.end],
         )
         # add normalization attribute to medkit entity
         cui = clin_entity.get("entityID")
         if cui is not None:
             metadata = {
-                "id": clin_entity.get("id"),
+                "id": clin_entity.get("{http://www.omg.org/XMI}id"),
                 "entityIDEN": clin_entity.get("entityIDEN"),
                 "discontinuous": clin_entity.get("discontinuous"),
                 "xtra": clin_entity.get("xtra"),
             }
-            attr = UMLSNormAttribute(cui=cui, umls_version="", metadata=metadata)
+            attr_uid = generate_deterministic_id("norm" + entity_uid)
+            attr = UMLSNormAttribute(
+                cui=cui, umls_version="", metadata=metadata, uid=str(attr_uid)
+            )
             medkit_entity.attrs.add(attr)
 
         else:
