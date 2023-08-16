@@ -38,7 +38,7 @@ docs = load_mtsamples(nb_max=10)
 ## e3c corpus utils
 
 :::{note}
-For more details about mtsamples data, refer to {mod}`medkit.tools.e3c_corpus`
+For more details about e3c corpus data, refer to {mod}`medkit.tools.e3c_corpus`
 :::
 
 The E3C corpus is available for download on:

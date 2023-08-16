@@ -98,7 +98,7 @@ def load_document(
         The encoding of the file. Default: 'utf-8'
     keep_id
         Whether to set medkit text document uid to the document id.
-        Whatever this boolean value, the document id is always kept i medkit document
+        Whatever this boolean value, the document id is always kept in medkit document
         metadata.
 
     Returns
@@ -109,7 +109,7 @@ def load_document(
     with open(filepath, encoding=encoding) as f:
         doc = E3CDocument(**json.load(f))
 
-        uid = doc.id if keep_id else generate_deterministic_id(doc.id)
+        uid = doc.id if keep_id else str(generate_deterministic_id(doc.id))
         return TextDocument(text=doc.text, uid=uid, metadata=doc.extract_metadata())
 
 
@@ -130,7 +130,7 @@ def load_data_collection(
         The encoding of the files. Default: 'utf-8'
     keep_id
         Whether to set medkit text document uid to the document id.
-        Whatever this boolean value, the document id is always kept i medkit document
+        Whatever this boolean value, the document id is always kept in medkit document
         metadata.
 
     Returns
@@ -142,8 +142,7 @@ def load_data_collection(
     if not dir_path.exists() or not dir_path.is_dir():
         raise FileNotFoundError("%s is not a directory or does not exist", dir_path)
 
-    for filename in dir_path.glob("*.json"):
-        filepath = dir_path / filename
+    for filepath in dir_path.glob("*.json"):
         yield load_document(filepath, keep_id=keep_id, encoding=encoding)
 
 
@@ -231,7 +230,7 @@ def load_annotated_document(
     )
 
     # create medkit text document
-    uid = doc.id if keep_id else generate_deterministic_id(doc.id)
+    uid = doc.id if keep_id else str(generate_deterministic_id(doc.id))
     medkit_doc = TextDocument(text=doc.text, uid=uid, metadata=doc.extract_metadata())
 
     # parse sentences if wanted by user
@@ -242,7 +241,7 @@ def load_annotated_document(
             sentence_uid = sentence["{http://www.omg.org/XMI}id"]
 
             if not keep_id:
-                sentence_uid = generate_deterministic_id(sentence_uid)
+                sentence_uid = str(generate_deterministic_id(sentence_uid))
 
             medkit_sentence = Segment(
                 uid=sentence_uid,
@@ -262,7 +261,7 @@ def load_annotated_document(
             "{http://www.omg.org/XMI}id"
         ]  # retrieve xmi:id from attributes
         if not keep_id:
-            entity_uid = generate_deterministic_id(entity_uid)
+            entity_uid = str(generate_deterministic_id(entity_uid))
 
         medkit_entity = Entity(
             uid=entity_uid,
@@ -279,7 +278,7 @@ def load_annotated_document(
                 "discontinuous": clin_entity.get("discontinuous"),
                 "xtra": clin_entity.get("xtra"),
             }
-            attr_uid = generate_deterministic_id("norm" + entity_uid)
+            attr_uid = str(generate_deterministic_id("norm" + entity_uid))
             attr = UMLSNormAttribute(
                 cui=cui, umls_version="", metadata=metadata, uid=str(attr_uid)
             )
@@ -327,8 +326,7 @@ def load_data_annotation(
     if not dir_path.exists() or not dir_path.is_dir():
         raise FileNotFoundError("%s is not a directory or does not exist", dir_path)
 
-    for filename in dir_path.glob("*.xml"):
-        filepath = dir_path / filename
+    for filepath in dir_path.glob("*.xml"):
         yield load_annotated_document(
             filepath, keep_id=keep_id, encoding=encoding, keep_sentences=keep_sentences
         )

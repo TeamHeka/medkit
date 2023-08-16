@@ -16,11 +16,6 @@ def e3c_corpus_path():
     return PATH_E3C_CORPUS_FILES
 
 
-@pytest.fixture(scope="module")
-def e3c_doc_path():
-    return PATH_E3C_CORPUS_FILES / "FR100003.json"
-
-
 def test_convert_data_collection_to_medkit(e3c_corpus_path, tmpdir):
     medkit_file = tmpdir / "medkit.jsonl"
     convert_data_collection_to_medkit(
