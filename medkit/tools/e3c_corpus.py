@@ -84,11 +84,11 @@ class E3CDocument:
 def load_document(
     filepath: Union[str, Path],
     encoding: str = "utf-8",
-    keep_id: bool = False,
 ) -> TextDocument:
     """
     Load a E3C corpus document (json document) as medkit text document.
     For example, one in data collection folder.
+    Document id is always kept in medkit document metadata.
 
     Parameters
     ----------
@@ -96,10 +96,6 @@ def load_document(
         The path to the json file of the E3C corpus
     encoding
         The encoding of the file. Default: 'utf-8'
-    keep_id
-        Whether to set medkit text document uid to the document id.
-        Whatever this boolean value, the document id is always kept in medkit document
-        metadata.
 
     Returns
     -------
@@ -109,14 +105,13 @@ def load_document(
     with open(filepath, encoding=encoding) as f:
         doc = E3CDocument(**json.load(f))
 
-        uid = doc.id if keep_id else str(generate_deterministic_id(doc.id))
+        uid = str(generate_deterministic_id(doc.id))
         return TextDocument(text=doc.text, uid=uid, metadata=doc.extract_metadata())
 
 
 def load_data_collection(
     dir_path: Union[Path, str],
     encoding: str = "utf-8",
-    keep_id: bool = False,
 ) -> Iterator[TextDocument]:
     """
     Load the E3C corpus data collection as medkit text documents
@@ -128,10 +123,6 @@ def load_data_collection(
         (e.g., /tmp/E3C-Corpus-2.0.0/data_collection/French/layer1)
     encoding
         The encoding of the files. Default: 'utf-8'
-    keep_id
-        Whether to set medkit text document uid to the document id.
-        Whatever this boolean value, the document id is always kept in medkit document
-        metadata.
 
     Returns
     -------
@@ -143,14 +134,13 @@ def load_data_collection(
         raise FileNotFoundError("%s is not a directory or does not exist", dir_path)
 
     for filepath in dir_path.glob("*.json"):
-        yield load_document(filepath, keep_id=keep_id, encoding=encoding)
+        yield load_document(filepath, encoding=encoding)
 
 
 def convert_data_collection_to_medkit(
     dir_path: Union[Path, str],
     output_file: Union[str, Path],
     encoding: Optional[str] = "utf-8",
-    keep_id: bool = False,
 ):
     """
     Convert E3C corpus data collection to medkit jsonl file
@@ -164,24 +154,20 @@ def convert_data_collection_to_medkit(
         The medkit jsonl output file which will contain medkit text documents
     encoding
         The encoding of the files. Default: 'utf-8'
-    keep_id
-        Whether to set medkit text document uid to the document id.
-        Whatever this boolean value, the document id is always kept in medkit document
-        metadata.
     """
-    docs = load_data_collection(dir_path=dir_path, encoding=encoding, keep_id=keep_id)
+    docs = load_data_collection(dir_path=dir_path, encoding=encoding)
     save_text_documents(docs=docs, output_file=output_file, encoding=encoding)
 
 
 def load_annotated_document(
     filepath: Union[str, Path],
     encoding: str = "utf-8",
-    keep_id: bool = False,
     keep_sentences=False,
 ) -> TextDocument:
     """
     Load a E3C corpus annotated document (xml document) as medkit text document.
     For example, one in data annotation folder.
+    Each annotation id is always kept in corresponding medkit element metadata.
 
     For the time being, only supports 'CLINENTITY' annotations.
     'SENTENCE' annotations may be also loaded.
@@ -192,10 +178,6 @@ def load_annotated_document(
         The path to the xml file of the E3C corpus
     encoding
         The encoding of the file. Default: 'utf-8'
-    keep_id
-        Whether to set medkit text document uid to the document id.
-        Whatever this boolean value, the document id is always kept in medkit document
-        metadata.
     keep_sentences
         Whether to load sentences into medkit documents.
 
@@ -230,8 +212,10 @@ def load_annotated_document(
     )
 
     # create medkit text document
-    uid = doc.id if keep_id else str(generate_deterministic_id(doc.id))
-    medkit_doc = TextDocument(text=doc.text, uid=uid, metadata=doc.extract_metadata())
+    doc_uid = str(generate_deterministic_id(doc.id))
+    medkit_doc = TextDocument(
+        text=doc.text, uid=doc_uid, metadata=doc.extract_metadata()
+    )
 
     # parse sentences if wanted by user
     if keep_sentences:
@@ -241,9 +225,7 @@ def load_annotated_document(
             sentence_uid = sentence["{http://www.omg.org/XMI}id"]
 
             medkit_sentence = Segment(
-                uid=sentence_uid
-                if keep_id
-                else str(generate_deterministic_id(sentence_uid)),
+                uid=str(generate_deterministic_id(doc_uid + sentence_uid)),
                 label=SENTENCE_LABEL,
                 spans=[span],
                 text=doc.text[span.start : span.end],
@@ -262,7 +244,7 @@ def load_annotated_document(
         ]  # retrieve xmi:id from attributes
 
         medkit_entity = Entity(
-            uid=entity_uid if keep_id else str(generate_deterministic_id(entity_uid)),
+            uid=str(generate_deterministic_id(doc_uid + entity_uid)),
             label=CLINENTITY_LABEL,
             spans=[span],
             text=doc.text[span.start : span.end],
@@ -277,7 +259,7 @@ def load_annotated_document(
                 "discontinuous": clin_entity.get("discontinuous"),
                 "xtra": clin_entity.get("xtra"),
             }
-            attr_uid = str(generate_deterministic_id("norm" + entity_uid))
+            attr_uid = str(generate_deterministic_id("norm" + doc_uid + entity_uid))
             attr = UMLSNormAttribute(
                 cui=cui, umls_version="", metadata=metadata, uid=str(attr_uid)
             )
@@ -295,11 +277,10 @@ def load_annotated_document(
 def load_data_annotation(
     dir_path: Union[Path, str],
     encoding: str = "utf-8",
-    keep_id: bool = False,
     keep_sentences: bool = False,
 ) -> Iterator[TextDocument]:
     """
-    Load the E3C corpus data annotation as medkit text documents
+    Load the E3C corpus data annotation as medkit text documents.
 
     Parameters
     ----------
@@ -308,10 +289,6 @@ def load_data_annotation(
         (e.g., /tmp/E3C-Corpus-2.0.0/data_annotation/French/layer1)
     encoding
         The encoding of the files. Default: 'utf-8'
-    keep_id
-        Whether to set medkit text document uid to the document id.
-        Whatever this boolean value, the document id is always kept in medkit document
-        metadata.
     keep_sentences
         Whether to load sentences into medkit documents.
 
@@ -327,7 +304,7 @@ def load_data_annotation(
 
     for filepath in dir_path.glob("*.xml"):
         yield load_annotated_document(
-            filepath, keep_id=keep_id, encoding=encoding, keep_sentences=keep_sentences
+            filepath, encoding=encoding, keep_sentences=keep_sentences
         )
 
 
@@ -335,11 +312,10 @@ def convert_data_annotation_to_medkit(
     dir_path: Union[Path, str],
     output_file: Union[str, Path],
     encoding: Optional[str] = "utf-8",
-    keep_id: bool = False,
     keep_sentences: bool = False,
 ):
     """
-    Convert E3C corpus data annotation to medkit jsonl file
+    Convert E3C corpus data annotation to medkit jsonl file.
 
     Parameters
     ----------
@@ -350,17 +326,12 @@ def convert_data_annotation_to_medkit(
         The medkit jsonl output file which will contain medkit text documents
     encoding
         The encoding of the files. Default: 'utf-8'
-    keep_id
-        Whether to set medkit text document uid to the document id.
-        Whatever this boolean value, the document id is always kept in medkit document
-        metadata.
     keep_sentences
         Whether to load sentences into medkit documents.
     """
     docs = load_data_annotation(
         dir_path=dir_path,
         encoding=encoding,
-        keep_id=keep_id,
         keep_sentences=keep_sentences,
     )
     save_text_documents(docs=docs, output_file=output_file, encoding=encoding)

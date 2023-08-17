@@ -71,7 +71,7 @@ for layer in layers:
     dir_path = data_collection / layer
     medkit_file = f"medkit_e3c_{layer}.jsonl"
     convert_data_collection_to_medkit(
-        dir_path=dir_path, output_file=medkit_file, keep_id=True
+        dir_path=dir_path, output_file=medkit_file
     )
 ```
 
@@ -99,6 +99,6 @@ for layer in layers:
     dir_path = data_annotation / layer
     medkit_file = f"medkit_e3c_annotated_{layer}.jsonl"
     convert_data_annotation_to_medkit(
-        dir_path=dir_path, output_file=medkit_file, keep_id=True
+        dir_path=dir_path, output_file=medkit_file
     )
 ```
