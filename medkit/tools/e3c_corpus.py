@@ -240,14 +240,14 @@ def load_annotated_document(
             span = Span(int(sentence["begin"]), int(sentence["end"]))
             sentence_uid = sentence["{http://www.omg.org/XMI}id"]
 
-            if not keep_id:
-                sentence_uid = str(generate_deterministic_id(sentence_uid))
-
             medkit_sentence = Segment(
-                uid=sentence_uid,
+                uid=sentence_uid
+                if keep_id
+                else str(generate_deterministic_id(sentence_uid)),
                 label=SENTENCE_LABEL,
                 spans=[span],
                 text=doc.text[span.start : span.end],
+                metadata={"id": sentence_uid},
             )
 
             # attach medkit sentence to medkit document
@@ -260,14 +260,13 @@ def load_annotated_document(
         entity_uid = clin_entity[
             "{http://www.omg.org/XMI}id"
         ]  # retrieve xmi:id from attributes
-        if not keep_id:
-            entity_uid = str(generate_deterministic_id(entity_uid))
 
         medkit_entity = Entity(
-            uid=entity_uid,
+            uid=entity_uid if keep_id else str(generate_deterministic_id(entity_uid)),
             label=CLINENTITY_LABEL,
             spans=[span],
             text=doc.text[span.start : span.end],
+            metadata={"id": entity_uid},
         )
         # add normalization attribute to medkit entity
         cui = clin_entity.get("entityID")
