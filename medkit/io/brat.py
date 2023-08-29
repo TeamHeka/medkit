@@ -33,6 +33,7 @@ from medkit.core.text import (
 )
 
 from medkit.io._common import get_anns_by_type
+from medkit.text.segmentation import tokenizer_utils
 
 
 TEXT_EXT = ".txt"
@@ -462,16 +463,44 @@ class BratOutputConverter(OutputConverter):
     @staticmethod
     def _ensure_text_and_spans(
         segment: Segment, raw_text: str
-    ) -> Tuple[str, List[Span]]:
-        """Ensure consistency between `raw_text` and `segment.text`"""
-        # normalize and extract from raw_text
+    ) -> Tuple[str, List[Tuple[int, int]]]:
+        """Ensure consistency between the segment and the raw text.
+        The text of a BRAT annotation can't contain multiple white spaces (including a newline character).
+        This method clean the text of the fragments and adjust its spans to point to the same
+        location in the raw text.
+
+        Parameters
+        ----------
+        segment:
+            Segment to ensure
+        raw_text:
+            Text of reference
+
+        Returns
+        -------
+        Tuple[str, List[Tuple[int, int]]]
+            A tuple with the text cleaned and its spans
+        """
+        pattern_to_clean = r"(\s*\n+\s*)"
         segment_spans = span_utils.normalize_spans(segment.spans)
-        text = "".join(raw_text[sp.start : sp.end] for sp in segment_spans)
-        # remove multiple whitespaces because they are not supported by Brat
-        pattern = r"[ \t](?P<blanks>\s{2,})"
-        ranges = [(match.span("blanks")) for match in re.finditer(pattern, text)]
-        text, spans = span_utils.remove(text, segment_spans, ranges)
-        return text, spans
+        texts_brat, spans_brat = [], []
+
+        for fragment in segment_spans:
+            # remove leading spaces from text or multiple spaces
+            text = raw_text[fragment.start : fragment.end]
+            offset = fragment.start
+            text_cleaned, start, end = tokenizer_utils.strip(text, offset)
+            text_cleaned = re.sub(pattern_to_clean, " ", text_cleaned)
+            texts_brat.append(text_cleaned)
+
+            # create spans without blank regions
+            for match in re.finditer(pattern_to_clean, text):
+                spans_brat.append((start, start + match.start()))
+                start = match.end() + offset
+            spans_brat.append((start, end))
+
+        text_brat = " ".join(texts_brat)
+        return text_brat, spans_brat
 
     def _convert_segment_to_brat(
         self, segment: Segment, nb_segment: int, raw_text: str
@@ -496,8 +525,7 @@ class BratOutputConverter(OutputConverter):
         brat_id = f"T{nb_segment}"
         # brat does not support spaces in labels
         type = segment.label.replace(" ", "_")
-        text, _spans = self._ensure_text_and_spans(segment, raw_text)
-        spans = tuple((span.start, span.end) for span in _spans)
+        text, spans = self._ensure_text_and_spans(segment, raw_text)
         return BratEntity(brat_id, type, spans, text)
 
     @staticmethod

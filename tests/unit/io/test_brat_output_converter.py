@@ -74,6 +74,8 @@ def _get_medkit_doc():
     return doc
 
 
+# TBD: The white spaces can't be annotated in BRAT
+# T5 will be converted to point to char 42 instead of the whitespace 43
 TEST_DATA = [
     (
         None,
@@ -85,7 +87,7 @@ T2\tgrade 46 53\tgrade 4
 A1\tnormalized T2
 T3\tmaladie 58 76\tdouleur abdominale
 T4\tlevel 81 87\tsévère
-T5\tdiagnosis 0 43;81 87\tLe patient présente une douleur abdominale sévère
+T5\tdiagnosis 0 42;81 87\tLe patient présente une douleur abdominale sévère
 R1\trelated Arg1:T1 Arg2:T3
 A2\tfrom_umls R1
 """,
@@ -243,7 +245,7 @@ def test__convert_segment_to_brat():
     assert isinstance(brat_entity, BratEntity)
     assert brat_entity.uid == "T1"
     assert brat_entity.type == "label_segment"
-    assert brat_entity.span == ((0, 12),)
+    assert brat_entity.span == [(0, 12)]
     assert brat_entity.text == "segment_text"
 
 
@@ -336,7 +338,9 @@ def test_doc_names(tmp_path: Path):
 
 
 def _get_modified_medkit_doc():
-    text = "Douleur     abdominale de grade            4"
+    # Note: multiple spaces are supported but no newlines
+    # Only 'Douleur abdominale' should be discontinuous
+    text = "Douleur  \n  abdominale de grade            4"
     doc = TextDocument(uid="doc_brat_2", text=text)
     medkit_anns = [
         Entity(
@@ -365,8 +369,10 @@ def _get_modified_medkit_doc():
     return doc
 
 
-_EXPECTED_ANN = """T1\tmaladie 0 8;12 22\tDouleur abdominale
-T2\tgrade 26 32;43 44\tgrade 4
+# we split the annotation only if a newline exist in the
+# original annotation
+_EXPECTED_ANN = """T1\tmaladie 0 7;12 22\tDouleur abdominale
+T2\tgrade 26 44\tgrade            4
 """
 
 

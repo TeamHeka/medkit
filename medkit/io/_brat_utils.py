@@ -19,7 +19,7 @@ class BratEntity:
 
     uid: str
     type: str
-    span: Tuple[Tuple[int, int], ...]
+    span: List[Tuple[int, int]]
     text: str
 
     @property
