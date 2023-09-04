@@ -50,7 +50,7 @@ def _get_clean_text_segment(filepath):
 def test_run(filepath, expected_sections):
     clean_text_segment = _get_clean_text_segment(filepath)
 
-    section_tokenizer = SectionTokenizer.get_example()
+    section_tokenizer = SectionTokenizer()
     sections = section_tokenizer.run([clean_text_segment])
 
     assert len(sections) == len(expected_sections)

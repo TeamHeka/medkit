@@ -38,7 +38,7 @@ class SectionTokenizer(SegmentationOperation):
 
     def __init__(
         self,
-        section_dict: Dict[str, List[str]],
+        section_dict: Dict[str, List[str]] = None,
         output_label: str = DefaultConfig.output_label,
         section_rules: Iterable[SectionModificationRule] = (),
         strip_chars: str = DefaultConfig.strip_chars,
@@ -50,13 +50,14 @@ class SectionTokenizer(SegmentationOperation):
         Parameters
         ----------
         section_dict
-            Dictionary containing the section name as key and the list of mappings
-            as value (cf. content of default_section_dict.yml as example)
+            Dictionary containing the section name as key and the list of mappings as
+            value. If None, the content of default_section_definition.yml will be used.
         output_label
             Segment label to use for annotation output. Default is SECTION.
         section_rules
             List of rules for modifying a section name according its order to the other
-            sections.
+            sections. If section_dict is None, the content of
+            default_section_definition.yml will be used.
         strip_chars
             The list of characters to strip at the beginning of the returned segment.
             Default: '.;,?! \n\r\t' (cf. DefaultConfig)
@@ -69,9 +70,16 @@ class SectionTokenizer(SegmentationOperation):
         super().__init__(**init_args)
 
         self.output_label = output_label
+        self.strip_chars = strip_chars
+
+        if section_dict is None:
+            section_dict, section_rules = self.load_section_definition(
+                _DEFAULT_SECTION_DEFINITION_RULES, encoding="utf-8"
+            )
+
         self.section_dict = section_dict
         self.section_rules = tuple(section_rules)
-        self.strip_chars = strip_chars
+
         self.keyword_processor = KeywordProcessor(case_sensitive=True)
         self.keyword_processor.add_keywords_from_dict(section_dict)
 
