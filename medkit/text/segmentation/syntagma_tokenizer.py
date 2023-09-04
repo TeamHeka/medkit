@@ -12,7 +12,7 @@ import yaml
 from medkit.core.text import Segment, SegmentationOperation, span_utils
 from medkit.text.segmentation.tokenizer_utils import lstrip, rstrip
 
-_DEFAULT_SYNTAGMA_DEFINITION_RULES = (
+_PATH_TO_DEFAULT_RULES = (
     pathlib.Path(__file__).parent / "default_syntagma_definition.yml"
 )
 
@@ -60,7 +60,7 @@ class SyntagmaTokenizer(SegmentationOperation):
         self.strip_chars = strip_chars
         if separators is None:
             self.separators = self.load_syntagma_definition(
-                _DEFAULT_SYNTAGMA_DEFINITION_RULES, encoding="utf-8"
+                _PATH_TO_DEFAULT_RULES, encoding="utf-8"
             )
 
     def run(self, segments: List[Segment]) -> List[Segment]:
@@ -136,7 +136,7 @@ class SyntagmaTokenizer(SegmentationOperation):
 
     @classmethod
     def get_example(cls):
-        config_path = _DEFAULT_SYNTAGMA_DEFINITION_RULES
+        config_path = _PATH_TO_DEFAULT_RULES
         separators = cls.load_syntagma_definition(config_path, encoding="utf-8")
         syntagma_tokenizer = cls(separators=separators)
         return syntagma_tokenizer
