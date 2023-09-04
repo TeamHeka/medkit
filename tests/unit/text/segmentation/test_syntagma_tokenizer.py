@@ -15,7 +15,7 @@ _TEXT = (
 TEST_CONFIG = [
     # basic
     (
-        SyntagmaTokenizer.get_example(),
+        SyntagmaTokenizer(),
         _TEXT,
         [
             {
@@ -75,7 +75,7 @@ def test_run(syntagma_tokenizer, text, expected_syntagmas):
 def test_prov():
     segment = _get_segment_from_text(_TEXT)
 
-    tokenizer = SyntagmaTokenizer.get_example()
+    tokenizer = SyntagmaTokenizer()
     prov_tracer = ProvTracer()
     tokenizer.set_prov_tracer(prov_tracer)
     syntagmas = tokenizer.run([segment])
