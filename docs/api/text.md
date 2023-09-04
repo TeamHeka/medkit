@@ -169,7 +169,7 @@ reference of the file.
   to rename) to use with the order condition
 
 :::{note}
-You may test an example using `section_tokenizer = SectionTokenizer.get_example()`.
+You may test French default rules using `section_tokenizer = SectionTokenizer()`.
 The corresponding file content is available
 [here](https://raw.githubusercontent.com/TeamHeka/medkit/develop/medkit/text/segmentation/default_section_definition.yml).
 :::

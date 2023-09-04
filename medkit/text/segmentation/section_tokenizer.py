@@ -14,7 +14,7 @@ from medkit.core.text import Segment, SegmentationOperation, span_utils
 from medkit.text.segmentation.tokenizer_utils import lstrip, rstrip
 
 
-_DEFAULT_SECTION_DEFINITION_RULES = (
+_PATH_TO_DEFAULT_RULES = (
     pathlib.Path(__file__).parent / "default_section_definition.yml"
 )
 
@@ -74,7 +74,7 @@ class SectionTokenizer(SegmentationOperation):
 
         if section_dict is None:
             section_dict, section_rules = self.load_section_definition(
-                _DEFAULT_SECTION_DEFINITION_RULES, encoding="utf-8"
+                _PATH_TO_DEFAULT_RULES, encoding="utf-8"
             )
 
         self.section_dict = section_dict
@@ -186,7 +186,7 @@ class SectionTokenizer(SegmentationOperation):
 
     @classmethod
     def get_example(cls):
-        config_path = _DEFAULT_SECTION_DEFINITION_RULES
+        config_path = _PATH_TO_DEFAULT_RULES
         section_dict, section_rules = cls.load_section_definition(
             config_path, encoding="utf-8"
         )
