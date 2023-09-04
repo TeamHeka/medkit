@@ -181,7 +181,7 @@ reference of the file.
 start of a new syntagma.
 
 :::{note}
-You may test an example using `syntagma_tokenizer = SyntagmaTokenizer.get_example()`.
+You may test default French rules using `syntagma_tokenizer = SyntagmaTokenizer()`.
 The corresponding file content is available
 [here](https://raw.githubusercontent.com/TeamHeka/medkit/develop/medkit/text/segmentation/default_syntagma_definition.yml).
 :::
