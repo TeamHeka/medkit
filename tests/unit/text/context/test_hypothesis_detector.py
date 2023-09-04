@@ -7,8 +7,8 @@ from medkit.core.text import Segment, Span
 from medkit.text.context.hypothesis_detector import (
     HypothesisDetector,
     HypothesisDetectorRule,
-    _PATH_TO_EXAMPLE_RULES,
-    _PATH_TO_EXAMPLE_VERBS,
+    _PATH_TO_DEFAULT_RULES,
+    _PATH_TO_DEFAULT_VERBS,
 )
 
 
@@ -229,11 +229,11 @@ _TEST_DATA = [
 # fmt: on
 
 
-def test_example_rules_and_verbs():
+def test_default_rules_and_verbs():
     syntagma_texts = [d[0] for d in _TEST_DATA]
     syntagmas = _get_syntagma_segments(syntagma_texts)
 
-    detector = HypothesisDetector.get_example()
+    detector = HypothesisDetector()
     detector.run(syntagmas)
 
     for i in range(len(_TEST_DATA)):
@@ -271,10 +271,10 @@ def test_load_save_rules(tmpdir):
 def test_rules_and_verbs_file_encoding_error():
     with pytest.raises(UnicodeError):
         HypothesisDetector.load_rules(
-            path_to_rules=_PATH_TO_EXAMPLE_RULES, encoding="utf-16"
+            path_to_rules=_PATH_TO_DEFAULT_RULES, encoding="utf-16"
         )
 
     with pytest.raises(UnicodeError):
         HypothesisDetector.load_verbs(
-            path_to_verbs=_PATH_TO_EXAMPLE_VERBS, encoding="utf-32"
+            path_to_verbs=_PATH_TO_DEFAULT_VERBS, encoding="utf-32"
         )

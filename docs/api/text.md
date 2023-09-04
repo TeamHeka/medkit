@@ -202,10 +202,10 @@ This section lists text annotators for detecting context. They are part of
 
 ### Hypothesis
 
-If you want to test an example of {class}`~.text.context.HypothesisDetector`,
+If you want to test default French rules of {class}`~.text.context.HypothesisDetector`,
 you may use :
 ```
-detector = HypothesisDetector.get_example()
+detector = HypothesisDetector()
 detector.run(syntagmas)
 ```
 
