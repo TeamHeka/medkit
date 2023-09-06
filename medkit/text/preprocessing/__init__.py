@@ -3,7 +3,6 @@ __all__ = [
     "DuplicateFinder",
     "DuplicationAttribute",
     "RegexpReplacer",
-    "RegexpReplacerRule",
     "EDSCleaner",
     "ALL_CHAR_RULES",
     "DOT_RULES",
@@ -16,7 +15,7 @@ __all__ = [
 
 from .char_replacer import CharReplacer
 from .duplicate_finder import DuplicateFinder, DuplicationAttribute
-from .regexp_replacer import RegexpReplacer, RegexpReplacerRule
+from .regexp_replacer import RegexpReplacer
 from .eds_cleaner import EDSCleaner
 from .char_rules import (
     ALL_CHAR_RULES,

@@ -3,7 +3,6 @@ from medkit.core.text import ModifiedSpan, Span
 from medkit.core.text import Segment
 from medkit.text.preprocessing import (
     RegexpReplacer,
-    RegexpReplacerRule,
     LIGATURE_RULES,
     DOT_RULES,
     SIGN_RULES,
@@ -23,7 +22,7 @@ def _get_segment_from_text(text):
 
 TEST_PARAMS_CONFIG = [
     (
-        [RegexpReplacerRule(r"n\s*°", "number")],
+        [(r"n\s*°", "number")],
         "À l'aide d'une canule n ° 3,",
         "À l'aide d'une canule number 3,",
         [

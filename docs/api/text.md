@@ -109,11 +109,11 @@ For example, if you want to replace `n°` by `numéro`:
 
 ```
 from medkit.core.text import TextDocument
-from medkit.text.preprocessing import RegexpReplacer, RegexpReplacerRule
+from medkit.text.preprocessing import RegexpReplacer
 
 doc = TextDocument(text="À l'aide d'une canule n ° 3,")
 
-rule = RegexpReplacerRule(r"n\s*°", "numéro")
+rule = (r"n\s*°", "numéro")
 op = RegexpReplacer(output_label="preprocessed_text", rules=[rule])
 new_segment = op.run([doc.raw_segment])[0]
 print(new_segment.text)

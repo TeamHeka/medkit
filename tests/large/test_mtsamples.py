@@ -5,7 +5,7 @@ from pathlib import Path
 from medkit.core.doc_pipeline import DocPipeline
 from medkit.core.pipeline import Pipeline, PipelineStep
 from medkit.core.text import TextDocument
-from medkit.text.preprocessing import RegexpReplacer, RegexpReplacerRule
+from medkit.text.preprocessing import RegexpReplacer
 from medkit.text.segmentation import SentenceTokenizer
 from medkit.text.ner import RegexpMatcher
 from medkit.text.context import NegationDetector
@@ -44,21 +44,18 @@ def test_mt_samples_without_pipeline(caplog):
 
     # init and configure operations
     rules = [
-        RegexpReplacerRule(*rule)
-        for rule in [
-            (r"[nN]\s*°", "numéro"),
-            (r"(?<=[0-9]\s)°", " degrés"),
-            (r"(?<=[0-9])°", " degrés"),
-            ("\u00c6", "AE"),  # ascii
-            ("\u00E6", "ae"),  # ascii
-            ("\u0152", "OE"),  # ascii
-            ("\u0153", "oe"),  # ascii
-            (r"«|»", '"'),
-            ("®|©", ""),
-            ("½", "1/2"),  # ascii
-            ("…", "..."),  # ascii
-            ("¼", "1/4"),  # ascii
-        ]
+        (r"[nN]\s*°", "numéro"),
+        (r"(?<=[0-9]\s)°", " degrés"),
+        (r"(?<=[0-9])°", " degrés"),
+        ("\u00c6", "AE"),  # ascii
+        ("\u00E6", "ae"),  # ascii
+        ("\u0152", "OE"),  # ascii
+        ("\u0153", "oe"),  # ascii
+        (r"«|»", '"'),
+        ("®|©", ""),
+        ("½", "1/2"),  # ascii
+        ("…", "..."),  # ascii
+        ("¼", "1/4"),  # ascii
     ]
     regexp_replacer = RegexpReplacer(output_label="norm_text", rules=rules)
     sentence_tokenizer = SentenceTokenizer()
@@ -96,21 +93,18 @@ def test_mt_samples_with_doc_pipeline():
 
     # init and configure operations
     rules = [
-        RegexpReplacerRule(*rule)
-        for rule in [
-            (r"[nN]\s*°", "numéro"),
-            (r"(?<=[0-9]\s)°", " degrés"),
-            (r"(?<=[0-9])°", " degrés"),
-            ("\u00c6", "AE"),  # ascii
-            ("\u00E6", "ae"),  # ascii
-            ("\u0152", "OE"),  # ascii
-            ("\u0153", "oe"),  # ascii
-            (r"«|»", '"'),
-            ("®|©", ""),
-            ("½", "1/2"),  # ascii
-            ("…", "..."),  # ascii
-            ("¼", "1/4"),  # ascii
-        ]
+        (r"[nN]\s*°", "numéro"),
+        (r"(?<=[0-9]\s)°", " degrés"),
+        (r"(?<=[0-9])°", " degrés"),
+        ("\u00c6", "AE"),  # ascii
+        ("\u00E6", "ae"),  # ascii
+        ("\u0152", "OE"),  # ascii
+        ("\u0153", "oe"),  # ascii
+        (r"«|»", '"'),
+        ("®|©", ""),
+        ("½", "1/2"),  # ascii
+        ("…", "..."),  # ascii
+        ("¼", "1/4"),  # ascii
     ]
 
     char_replacer = PipelineStep(

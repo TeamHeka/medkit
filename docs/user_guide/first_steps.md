@@ -104,10 +104,10 @@ For this, we can use the
 with a set of user-determined rules:
 
 ```{code-cell} ipython3
-from medkit.text.preprocessing import RegexpReplacer, RegexpReplacerRule
+from medkit.text.preprocessing import RegexpReplacer
 
-regexp_replacer_rule = RegexpReplacerRule(pattern_to_replace=r"(?<=\d)\.(?=\d)", new_text=",")
-regexp_replacer = RegexpReplacer(output_label="clean_text", rules=[norm_rule])
+rule = (r"(?<=\d)\.(?=\d)", ",") # => (pattern to replace, new text)
+regexp_replacer = RegexpReplacer(output_label="clean_text", rules=[rule])
 ```
 
 The `run()` method of the normalizer takes a list of `Segment` objects and
