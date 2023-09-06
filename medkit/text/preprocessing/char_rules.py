@@ -73,7 +73,7 @@ DOT_RULES = [
     ("\u22EF", "..."),
 ]
 
-#: Normalizer quotation marks: replace double and single quotation marks
+#: RegexpReplacer quotation marks: replace double and single quotation marks
 QUOTATION_RULES = [
     ("»", '"'),  # normalize double quotation marks
     ("«", '"'),  # replace double quotation marks

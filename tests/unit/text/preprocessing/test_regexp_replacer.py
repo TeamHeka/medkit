@@ -2,8 +2,8 @@ import pytest
 from medkit.core.text import ModifiedSpan, Span
 from medkit.core.text import Segment
 from medkit.text.preprocessing import (
-    Normalizer,
-    NormalizerRule,
+    RegexpReplacer,
+    RegexpReplacerRule,
     LIGATURE_RULES,
     DOT_RULES,
     SIGN_RULES,
@@ -23,7 +23,7 @@ def _get_segment_from_text(text):
 
 TEST_PARAMS_CONFIG = [
     (
-        [NormalizerRule(r"n\s*°", "number")],
+        [RegexpReplacerRule(r"n\s*°", "number")],
         "À l'aide d'une canule n ° 3,",
         "À l'aide d'une canule number 3,",
         [
@@ -119,9 +119,9 @@ TEST_PARAMS_CONFIG = [
         "special_chars",
     ],
 )
-def test_normalizer(rules, text, expected_text, expected_spans):
+def test_regexp_replacer(rules, text, expected_text, expected_spans):
     segment = _get_segment_from_text(text)
-    norm_segment = Normalizer(output_label="NORMALIZED_TEXT", rules=rules).run(
+    norm_segment = RegexpReplacer(output_label="NORMALIZED_TEXT", rules=rules).run(
         [segment]
     )[0]
 
