@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["Normalizer", "NormalizerRule"]
+__all__ = ["RegexpReplacer"]
 
 import re
 from typing import List, NamedTuple, Optional, Tuple
@@ -9,17 +9,17 @@ from medkit.core.operation import Operation
 from medkit.core.text import Segment, span_utils
 
 
-class NormalizerRule(NamedTuple):
+class _Rule(NamedTuple):
     pattern_to_replace: str
     new_text: str
 
 
-class Normalizer(Operation):
+class RegexpReplacer(Operation):
     """
-    Generic normalizer to be used as pre-processing module
+    Generic pattern replacer to be used as pre-processing module
 
-    This module is a non-destructive module allowing to replace selected characters
-    with the wanted characters.
+    This module is a non-destructive module allowing to replace a regex pattern
+    by a new text.
     It respects the span modification by creating a new text-bound annotation containing
     the span modification information from input text.
     """
@@ -37,7 +37,7 @@ class Normalizer(Operation):
         output_label
             The output label of the created annotations
         rules
-            The list of replacement rules
+            The list of replacement rules [(pattern_to_replace, new_text)]
         name:
             Name describing the pre-processing module (defaults to the class name)
         uid
@@ -51,7 +51,7 @@ class Normalizer(Operation):
         self.output_label = output_label
         if rules is None:
             rules = []
-        self.rules = [NormalizerRule(*rule) for rule in rules]
+        self.rules = [_Rule(*rule) for rule in rules]
 
         regex_rules = ["(" + rule.pattern_to_replace + ")" for rule in self.rules]
         regex_rule = r"|".join(regex_rules)

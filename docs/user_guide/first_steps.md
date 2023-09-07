@@ -99,15 +99,15 @@ tokenizer, but instead, for the sake of learning, let's fix this with a
 pre-processing step that replaces dots by commas in decimal numbers.
 
 For this, we can use the
-{class}`~medkit.text.preprocessing.normalizer.Normalizer` class, a regexp-based
+{class}`~medkit.text.preprocessing.RegexpReplacer` class, a regexp-based
 "search-and-replace" operation. As many medkit operations, it can be configured
 with a set of user-determined rules:
 
 ```{code-cell} ipython3
-from medkit.text.preprocessing import Normalizer, NormalizerRule
+from medkit.text.preprocessing import RegexpReplacer
 
-norm_rule = NormalizerRule(pattern_to_replace=r"(?<=\d)\.(?=\d)", new_text=",")
-normalizer = Normalizer(output_label="clean_text", rules=[norm_rule])
+rule = (r"(?<=\d)\.(?=\d)", ",") # => (pattern to replace, new text)
+regexp_replacer = RegexpReplacer(output_label="clean_text", rules=[rule])
 ```
 
 The `run()` method of the normalizer takes a list of `Segment` objects and
@@ -116,7 +116,7 @@ case we only want to preprocess the full raw text segment and we will only
 receive one preprocessed segment, so we can call it with:
 
 ```{code-cell} ipython3
-clean_segment = normalizer.run([doc.raw_segment])[0]
+clean_segment = regexp_replacer.run([doc.raw_segment])[0]
 print(clean_segment.text)
 ```
 

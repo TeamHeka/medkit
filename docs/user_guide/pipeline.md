@@ -23,14 +23,14 @@ and entity recognition operations that we want to use. We are simply going to
 reuse the ones from the [First steps](first_steps.md) tutorial:
 
 ```{code-cell} ipython3
-from medkit.text.preprocessing import Normalizer, NormalizerRule
+from medkit.text.preprocessing import RegexpReplacer
 from medkit.text.segmentation import SentenceTokenizer, SyntagmaTokenizer
 from medkit.text.context import NegationDetector, NegationDetectorRule
 from medkit.text.ner import RegexpMatcher, RegexpMatcherRule
 
 # preprocessing
-norm_rule = NormalizerRule(pattern_to_replace=r"(?<=\d)\.(?=\d)", new_text=",")
-normalizer = Normalizer(output_label="clean_text", rules=[norm_rule])
+rule = (r"(?<=\d)\.(?=\d)", ",")
+normalizer = RegexpReplacer(output_label="clean_text", rules=[rule])
 
 # segmentation
 sent_tokenizer = SentenceTokenizer(

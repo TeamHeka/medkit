@@ -5,7 +5,7 @@ from pathlib import Path
 from medkit.core.doc_pipeline import DocPipeline
 from medkit.core.pipeline import Pipeline, PipelineStep
 from medkit.core.text import TextDocument
-from medkit.text.preprocessing import Normalizer, NormalizerRule
+from medkit.text.preprocessing import RegexpReplacer
 from medkit.text.segmentation import SentenceTokenizer
 from medkit.text.ner import RegexpMatcher
 from medkit.text.context import NegationDetector
@@ -44,23 +44,20 @@ def test_mt_samples_without_pipeline(caplog):
 
     # init and configure operations
     rules = [
-        NormalizerRule(*rule)
-        for rule in [
-            (r"[nN]\s*°", "numéro"),
-            (r"(?<=[0-9]\s)°", " degrés"),
-            (r"(?<=[0-9])°", " degrés"),
-            ("\u00c6", "AE"),  # ascii
-            ("\u00E6", "ae"),  # ascii
-            ("\u0152", "OE"),  # ascii
-            ("\u0153", "oe"),  # ascii
-            (r"«|»", '"'),
-            ("®|©", ""),
-            ("½", "1/2"),  # ascii
-            ("…", "..."),  # ascii
-            ("¼", "1/4"),  # ascii
-        ]
+        (r"[nN]\s*°", "numéro"),
+        (r"(?<=[0-9]\s)°", " degrés"),
+        (r"(?<=[0-9])°", " degrés"),
+        ("\u00c6", "AE"),  # ascii
+        ("\u00E6", "ae"),  # ascii
+        ("\u0152", "OE"),  # ascii
+        ("\u0153", "oe"),  # ascii
+        (r"«|»", '"'),
+        ("®|©", ""),
+        ("½", "1/2"),  # ascii
+        ("…", "..."),  # ascii
+        ("¼", "1/4"),  # ascii
     ]
-    normalizer = Normalizer(output_label="norm_text", rules=rules)
+    regexp_replacer = RegexpReplacer(output_label="norm_text", rules=rules)
     sentence_tokenizer = SentenceTokenizer()
     negation_detector = NegationDetector(output_label="negation")
     regexp_matcher = RegexpMatcher(attrs_to_copy=["negation"])
@@ -69,7 +66,7 @@ def test_mt_samples_without_pipeline(caplog):
     nb_tot_anns = 0
     for index, doc in enumerate(docs):
         anns = [doc.raw_segment]
-        anns = normalizer.run(anns)
+        anns = regexp_replacer.run(anns)
         anns = sentence_tokenizer.run(anns)
         with caplog.at_level(
             logging.WARNING, logger="medkit.text.context.negation_detector"
@@ -96,25 +93,22 @@ def test_mt_samples_with_doc_pipeline():
 
     # init and configure operations
     rules = [
-        NormalizerRule(*rule)
-        for rule in [
-            (r"[nN]\s*°", "numéro"),
-            (r"(?<=[0-9]\s)°", " degrés"),
-            (r"(?<=[0-9])°", " degrés"),
-            ("\u00c6", "AE"),  # ascii
-            ("\u00E6", "ae"),  # ascii
-            ("\u0152", "OE"),  # ascii
-            ("\u0153", "oe"),  # ascii
-            (r"«|»", '"'),
-            ("®|©", ""),
-            ("½", "1/2"),  # ascii
-            ("…", "..."),  # ascii
-            ("¼", "1/4"),  # ascii
-        ]
+        (r"[nN]\s*°", "numéro"),
+        (r"(?<=[0-9]\s)°", " degrés"),
+        (r"(?<=[0-9])°", " degrés"),
+        ("\u00c6", "AE"),  # ascii
+        ("\u00E6", "ae"),  # ascii
+        ("\u0152", "OE"),  # ascii
+        ("\u0153", "oe"),  # ascii
+        (r"«|»", '"'),
+        ("®|©", ""),
+        ("½", "1/2"),  # ascii
+        ("…", "..."),  # ascii
+        ("¼", "1/4"),  # ascii
     ]
 
-    normalizer = PipelineStep(
-        operation=Normalizer(output_label="norm_text", rules=rules),
+    char_replacer = PipelineStep(
+        operation=RegexpReplacer(output_label="norm_text", rules=rules),
         input_keys=["full_text"],
         output_keys=["norm_text"],
     )
@@ -136,8 +130,8 @@ def test_mt_samples_with_doc_pipeline():
     )
 
     pipeline = Pipeline(
-        steps=[normalizer, sentence_tokenizer, negation_detector, regexp_matcher],
-        input_keys=normalizer.input_keys,
+        steps=[char_replacer, sentence_tokenizer, negation_detector, regexp_matcher],
+        input_keys=char_replacer.input_keys,
         output_keys=regexp_matcher.output_keys,
     )
 

@@ -36,7 +36,7 @@ For example, concerning the {class}`~.text.ner.RegexpMatcher`:
 
 {class}`~.text.preprocessing.CharReplacer` is a pre-processing operation allowing
 to replace one character by another one.
-It is faster than {class}`~.text.preprocessing.Normalizer` but is limited to
+It is faster than {class}`~.text.preprocessing.RegexpReplacer` but is limited to
 character replacement and does not support pattern replacement.
 
 For example, if you want to replace some special characters like `+`:
@@ -97,9 +97,9 @@ all pre-defined rules (i.e., ALL_RULES) are used.
 :::
 
 
-### Normalizer
+### RegexpReplacer
 
-The {class}`~.text.preprocessing.Normalizer` operation uses an algorithm based
+The {class}`~.text.preprocessing.RegexpReplacer` operation uses an algorithm based
 on regular expressions for detecting patterns in the text and replace them by
 the new text, and all that with preserving span information.
 So, it may be useful if you need to replace sub-text or text with a context by
@@ -109,12 +109,12 @@ For example, if you want to replace `n°` by `numéro`:
 
 ```
 from medkit.core.text import TextDocument
-from medkit.text.preprocessing import Normalizer, NormalizerRule
+from medkit.text.preprocessing import RegexpReplacer
 
 doc = TextDocument(text="À l'aide d'une canule n ° 3,")
 
-rule = NormalizerRule(r"n\s*°", "numéro")
-op = Normalizer(output_label="preprocessed_text", rules=[rule])
+rule = (r"n\s*°", "numéro")
+op = RegexpReplacer(output_label="preprocessed_text", rules=[rule])
 new_segment = op.run([doc.raw_segment])[0]
 print(new_segment.text)
 ```
