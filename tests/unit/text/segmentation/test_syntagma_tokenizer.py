@@ -4,7 +4,7 @@ from medkit.core import ProvTracer
 from medkit.core.text import Segment, Span
 from medkit.text.segmentation.syntagma_tokenizer import (
     SyntagmaTokenizer,
-    _DEFAULT_SYNTAGMA_DEFINITION_RULES,
+    _PATH_TO_DEFAULT_RULES,
 )
 
 _TEXT = (
@@ -15,7 +15,7 @@ _TEXT = (
 TEST_CONFIG = [
     # basic
     (
-        SyntagmaTokenizer.get_example(),
+        SyntagmaTokenizer(),
         _TEXT,
         [
             {
@@ -75,7 +75,7 @@ def test_run(syntagma_tokenizer, text, expected_syntagmas):
 def test_prov():
     segment = _get_segment_from_text(_TEXT)
 
-    tokenizer = SyntagmaTokenizer.get_example()
+    tokenizer = SyntagmaTokenizer()
     prov_tracer = ProvTracer()
     tokenizer.set_prov_tracer(prov_tracer)
     syntagmas = tokenizer.run([segment])
@@ -96,7 +96,7 @@ def test_prov():
 def test_syntagma_def_file_encoding_error():
     with pytest.raises(UnicodeError):
         SyntagmaTokenizer.load_syntagma_definition(
-            filepath=_DEFAULT_SYNTAGMA_DEFINITION_RULES, encoding="utf-16"
+            filepath=_PATH_TO_DEFAULT_RULES, encoding="utf-16"
         )
 
 

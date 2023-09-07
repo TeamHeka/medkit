@@ -22,8 +22,8 @@ from medkit.text.utils.decoding import get_ascii_from_unicode
 
 logger = logging.getLogger(__name__)
 
-_PATH_TO_EXAMPLE_RULES = Path(__file__).parent / "hypothesis_detector_example_rules.yml"
-_PATH_TO_EXAMPLE_VERBS = Path(__file__).parent / "hypothesis_detector_example_verbs.yml"
+_PATH_TO_DEFAULT_RULES = Path(__file__).parent / "hypothesis_detector_default_rules.yml"
+_PATH_TO_DEFAULT_VERBS = Path(__file__).parent / "hypothesis_detector_default_verbs.yml"
 
 
 @dataclasses.dataclass
@@ -137,11 +137,13 @@ class HypothesisDetector(ContextOperation):
             For instance verb["aller"]["indicatif]["présent"] would hold the list
             ["vais", "vas", "va", "allons", aller", "vont"]
             When `verbs` is provided, `modes_and_tenses` must also be provided.
+            If none provided, the rules in "hypothesis_detector_default_verbs.yml" will
+            be used.
         modes_and_tenses:
             List of tuples of all modes and tenses associated with hypothesis.
             Will be used to select conjugated forms in `verbs` that denote hypothesis.
         max_length:
-            Maximum number of characters in an hypothesis segment. Segments longer than
+            Maximum number of characters in a hypothesis segment. Segments longer than
             this will never be considered as hypothesis
         uid:
             Identifier of the detector
@@ -151,20 +153,23 @@ class HypothesisDetector(ContextOperation):
         init_args.pop("self")
         super().__init__(**init_args)
 
-        if rules is None:
-            rules = []
-        if verbs is None:
-            verbs = {}
-        if modes_and_tenses is None:
-            modes_and_tenses = []
-
-        self.check_rules_sanity(rules)
-
         if (verbs is None) != (modes_and_tenses is None):
             raise ValueError(
                 "'verbs' and 'modes_and_tenses' must be either both provided or both"
                 " left empty"
             )
+
+        if rules is None:
+            rules = self.load_rules(_PATH_TO_DEFAULT_RULES, encoding="utf-8")
+
+        if verbs is None:
+            verbs = self.load_verbs(_PATH_TO_DEFAULT_VERBS, encoding="utf-8")
+            modes_and_tenses = [
+                ("conditionnel", "présent"),
+                ("indicatif", "futur simple"),
+            ]
+
+        self.check_rules_sanity(rules)
 
         self.output_label: str = output_label
         self.rules: List[HypothesisDetectorRule] = rules
@@ -349,8 +354,8 @@ class HypothesisDetector(ContextOperation):
         """Instantiate an HypothesisDetector with example rules and verbs,
         designed for usage with EDS documents
         """
-        rules = cls.load_rules(_PATH_TO_EXAMPLE_RULES, encoding="utf-8")
-        verbs = cls.load_verbs(_PATH_TO_EXAMPLE_VERBS, encoding="utf-8")
+        rules = cls.load_rules(_PATH_TO_DEFAULT_RULES, encoding="utf-8")
+        verbs = cls.load_verbs(_PATH_TO_DEFAULT_VERBS, encoding="utf-8")
         modes_and_tenses = [
             ("conditionnel", "présent"),
             ("indicatif", "futur simple"),

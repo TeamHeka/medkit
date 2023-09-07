@@ -169,7 +169,7 @@ reference of the file.
   to rename) to use with the order condition
 
 :::{note}
-You may test an example using `section_tokenizer = SectionTokenizer.get_example()`.
+You may test French default rules using `section_tokenizer = SectionTokenizer()`.
 The corresponding file content is available
 [here](https://raw.githubusercontent.com/TeamHeka/medkit/develop/medkit/text/segmentation/default_section_definition.yml).
 :::
@@ -181,7 +181,7 @@ reference of the file.
 start of a new syntagma.
 
 :::{note}
-You may test an example using `syntagma_tokenizer = SyntagmaTokenizer.get_example()`.
+You may test default French rules using `syntagma_tokenizer = SyntagmaTokenizer()`.
 The corresponding file content is available
 [here](https://raw.githubusercontent.com/TeamHeka/medkit/develop/medkit/text/segmentation/default_syntagma_definition.yml).
 :::
@@ -202,10 +202,10 @@ This section lists text annotators for detecting context. They are part of
 
 ### Hypothesis
 
-If you want to test an example of {class}`~.text.context.HypothesisDetector`,
+If you want to test default French rules of {class}`~.text.context.HypothesisDetector`,
 you may use :
 ```
-detector = HypothesisDetector.get_example()
+detector = HypothesisDetector()
 detector.run(syntagmas)
 ```
 

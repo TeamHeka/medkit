@@ -12,7 +12,7 @@ import yaml
 from medkit.core.text import Segment, SegmentationOperation, span_utils
 from medkit.text.segmentation.tokenizer_utils import lstrip, rstrip
 
-_DEFAULT_SYNTAGMA_DEFINITION_RULES = (
+_PATH_TO_DEFAULT_RULES = (
     pathlib.Path(__file__).parent / "default_syntagma_definition.yml"
 )
 
@@ -28,7 +28,7 @@ class SyntagmaTokenizer(SegmentationOperation):
 
     def __init__(
         self,
-        separators: Tuple[str, ...],
+        separators: Tuple[str, ...] = None,
         output_label: str = DefaultConfig.output_label,
         strip_chars: str = DefaultConfig.strip_chars,
         uid: Optional[str] = None,
@@ -39,7 +39,8 @@ class SyntagmaTokenizer(SegmentationOperation):
         Parameters
         ----------
         separators: Tuple[str, ...]
-            The tuple of regular expressions corresponding to separators.
+            The tuple of regular expressions corresponding to separators. If None
+            provided, the rules in "default_syntagma_definitiion.yml" will be used.
         output_label: str, Optional
             The output label of the created annotations.
             Default: "SYNTAGMA" (cf. DefaultConfig)
@@ -57,6 +58,10 @@ class SyntagmaTokenizer(SegmentationOperation):
         self.output_label = output_label
         self.separators = separators
         self.strip_chars = strip_chars
+        if separators is None:
+            self.separators = self.load_syntagma_definition(
+                _PATH_TO_DEFAULT_RULES, encoding="utf-8"
+            )
 
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
@@ -131,7 +136,7 @@ class SyntagmaTokenizer(SegmentationOperation):
 
     @classmethod
     def get_example(cls):
-        config_path = _DEFAULT_SYNTAGMA_DEFINITION_RULES
+        config_path = _PATH_TO_DEFAULT_RULES
         separators = cls.load_syntagma_definition(config_path, encoding="utf-8")
         syntagma_tokenizer = cls(separators=separators)
         return syntagma_tokenizer
