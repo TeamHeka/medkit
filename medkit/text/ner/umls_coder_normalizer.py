@@ -206,6 +206,9 @@ class UMLSCoderNormalizer(Operation):
             List of entities to add normalization attributes to
         """
 
+        if len(entities) == 0:
+            return
+
         # find best matches and assocatied score for all entities
         all_match_indices, all_match_scores = self._find_best_matches(entities)
 
