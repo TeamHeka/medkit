@@ -340,24 +340,24 @@ def test_doc_names(tmp_path: Path):
 def _get_modified_medkit_doc():
     # Note: multiple spaces are supported but no newlines
     # Only 'Douleur abdominale' should be discontinuous
-    text = "Douleur  \n  abdominale de grade            4"
+    text = "  Douleur  \n  abdominale  de grade            4"
     doc = TextDocument(uid="doc_brat_2", text=text)
     medkit_anns = [
         Entity(
             spans=[
-                Span(0, 7),
-                ModifiedSpan(length=1, replaced_spans=[Span(7, 12)]),
-                Span(12, 22),
+                Span(0, 9),
+                ModifiedSpan(length=1, replaced_spans=[Span(9, 14)]),
+                Span(14, 26),
             ],
             label="maladie",
-            text="Douleur abdominale",
+            text="  Douleur abdominale  ",
             uid="e1",
         ),
         Entity(
             spans=[
-                Span(26, 31),
-                ModifiedSpan(length=1, replaced_spans=[Span(31, 43)]),
-                Span(43, 44),
+                Span(29, 34),
+                ModifiedSpan(length=1, replaced_spans=[Span(34, 46)]),
+                Span(46, 47),
             ],
             label="grade",
             text="grade 4",
@@ -371,8 +371,8 @@ def _get_modified_medkit_doc():
 
 # we split the annotation only if a newline exist in the
 # original annotation
-_EXPECTED_ANN = """T1\tmaladie 0 7;12 22\tDouleur abdominale
-T2\tgrade 26 44\tgrade            4
+_EXPECTED_ANN = """T1\tmaladie 2 9;14 24\tDouleur abdominale
+T2\tgrade 29 47\tgrade            4
 """
 
 

@@ -421,7 +421,7 @@ def _parse_entity(entity_id: str, entity_content: str) -> BratEntity:
             start_s, end_s = span.split()
             start, end = int(start_s), int(end_s)
             spans.append((start, end))
-        return BratEntity(entity_id.strip(), tag.strip(), tuple(spans), text.strip())
+        return BratEntity(entity_id.strip(), tag.strip(), spans, text.strip())
     except Exception as err:
         raise ValueError("Impossible to parse entity. Reason : %s" % err)
 

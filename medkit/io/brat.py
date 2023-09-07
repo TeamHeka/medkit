@@ -486,18 +486,22 @@ class BratOutputConverter(OutputConverter):
         texts_brat, spans_brat = [], []
 
         for fragment in segment_spans:
-            # remove leading spaces from text or multiple spaces
             text = raw_text[fragment.start : fragment.end]
             offset = fragment.start
-            text_cleaned, start, end = tokenizer_utils.strip(text, offset)
-            text_cleaned = re.sub(pattern_to_clean, " ", text_cleaned)
-            texts_brat.append(text_cleaned)
+            # remove leading spaces from text or multiple spaces
+            text_stripped, start_text, end_text = tokenizer_utils.strip(text, offset)
+            real_offset = offset + start_text
 
-            # create spans without blank regions
-            for match in re.finditer(pattern_to_clean, text):
-                spans_brat.append((start, start + match.start()))
-                start = match.end() + offset
-            spans_brat.append((start, end))
+            # create text and spans without blank regions
+            for match in re.finditer(pattern_to_clean, text_stripped):
+                end_fragment = start_text + match.start()
+                texts_brat.append(raw_text[start_text:end_fragment])
+                spans_brat.append((start_text, end_fragment))
+                start_text = match.end() + real_offset
+
+            # add last fragment
+            texts_brat.append(raw_text[start_text:end_text])
+            spans_brat.append((start_text, end_text))
 
         text_brat = " ".join(texts_brat)
         return text_brat, spans_brat
