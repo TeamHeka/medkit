@@ -118,7 +118,6 @@ trainer_config = TrainerConfig(
     learning_rate=5e-6,
     nb_training_epochs=5,
     seed=0,
-    log_step_interval=100,
 )
 
 trainer = Trainer(

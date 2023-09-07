@@ -154,7 +154,9 @@ class Trainer:
         data_for_metrics = defaultdict(list)
 
         for step, input_batch in enumerate(self.train_dataloader):
-            self.callback.on_step_begin(step)
+            self.callback.on_step_begin(
+                step, nb_batches=len(self.train_dataloader), phase="train"
+            )
 
             model_output, loss = self.make_forward_pass(input_batch, eval_mode=False)
 
@@ -202,7 +204,7 @@ class Trainer:
 
         with torch.no_grad():
             for step, input_batch in enumerate(eval_dataloader):
-                self.callback.on_step_begin(step)
+                self.callback.on_step_begin(step, nb_batches=len(eval_dataloader), phase="eval")
 
                 model_output, loss = self.make_forward_pass(input_batch, eval_mode=True)
                 total_loss_epoch += loss.item()
@@ -267,7 +269,7 @@ class Trainer:
 
         for epoch in range(1, self.nb_training_epochs + 1):
             epoch_start_time = time.time()
-            self.callback.on_epoch_begin()
+            self.callback.on_epoch_begin(epoch=epoch)
 
             train_metrics = self.training_epoch()
 
