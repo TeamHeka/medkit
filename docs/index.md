@@ -1,4 +1,4 @@
-# Medkit Documentation
+# medkit - documentation
 
 ***medkit*** is a Python library for facilitating the **extraction of features** from various modalities of patient data: text, audio for now - relational, image, genetic, and others soon. To this end, medkit offers to compose pipelines with modules, developed by us, yourself or others.
 
