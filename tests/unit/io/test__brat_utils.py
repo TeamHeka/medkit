@@ -22,7 +22,7 @@ def test__parse_entity():
     entity = _parse_entity(entity_id, entity_content)
     assert entity.uid == "T1"
     assert entity.type == "medication"
-    assert entity.span == ((36, 46),)
+    assert entity.span == [(36, 46)]
     assert entity.text == "Lisinopril"
 
 
@@ -30,7 +30,7 @@ def test__parse__entity_discontinued_span():
     brat_entity = "T6	vitamin 251 260;263 264	vitamins D"
     entity_id, entity_content = brat_entity.split("\t", maxsplit=1)
     entity = _parse_entity(entity_id, entity_content)
-    assert entity.span == ((251, 260), (263, 264))
+    assert entity.span == [(251, 260), (263, 264)]
 
 
 def test__parse_entity_error():
@@ -84,7 +84,10 @@ def test_parse_file():
     test_file = pathlib.Path("tests/data/brat/1_example.ann")
     doc = parse_file(str(test_file))
     entity = BratEntity(
-        uid="T1", type="medication", span=((36, 46),), text="Lisinopril"
+        uid="T1",
+        type="medication",
+        span=[(36, 46)],
+        text="Lisinopril",
     )
     assert entity in doc.entities.values()
     relation = BratRelation(uid="R1", type="treats", subj="T1", obj="T3")
@@ -101,7 +104,7 @@ def test_document_get_augmented_entities():
     entity = augmented_entities["T4"]
     assert entity.text == "entity1 entity2"
     assert entity.type == "And-Group"
-    assert entity.span == ((30, 37), (120, 127))
+    assert entity.span == [(30, 37), (120, 127)]
     relation1 = BratRelation(uid="R1", type="And", subj="T4", obj="T1")
     relation2 = BratRelation(uid="R3", type="Or", subj="T5", obj="T4")
     assert relation1 in entity.relations_from_me
@@ -118,13 +121,13 @@ def test_document_grouping():
     assert "T4" in doc.groups.keys()
     and_group = doc.groups["T4"]
     assert and_group.type == "And-Group"
-    entity1 = BratEntity(uid="T1", type="label1", span=((30, 37),), text="entity1")
+    entity1 = BratEntity(uid="T1", type="label1", span=[(30, 37)], text="entity1")
     assert entity1 in and_group.items
     # Test Or-Group
     assert "T5" in doc.groups.keys()
     or_group = doc.groups["T5"]
     assert or_group.type == "Or-Group"
-    entity3 = BratEntity(uid="T3", type="label3", span=((140, 147),), text="entity3")
+    entity3 = BratEntity(uid="T3", type="label3", span=[(140, 147)], text="entity3")
     assert entity3 in or_group.items
 
 
