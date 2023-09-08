@@ -223,7 +223,13 @@ class BratInputConverter(InputConverter):
 
 class BratOutputConverter(OutputConverter):
     """Class in charge of converting a list of TextDocuments into a
-    brat collection file"""
+    brat collection file.
+
+    .. hint::
+        BRAT checks the coherence between span and text for each annotation.
+        This converter adjusts the text and spans to get the right visualization
+        and ensure compatibility.
+    """
 
     def __init__(
         self,
