@@ -33,7 +33,7 @@ from medkit.core.text import (
 )
 
 from medkit.io._common import get_anns_by_type
-from medkit.text.segmentation import tokenizer_utils
+from medkit.core.text import tokenizer_utils
 
 
 TEXT_EXT = ".txt"
