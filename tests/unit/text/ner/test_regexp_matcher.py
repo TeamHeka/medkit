@@ -145,7 +145,7 @@ def test_exclusion_regex():
 def test_case_sensitivity_off():
     sentence = _get_sentence_segment()
 
-    rule = RegexpMatcherRule(label="Diabetes", regexp="DIABETES")
+    rule = RegexpMatcherRule(label="Diabetes", regexp="DIABETES", case_sensitive=False)
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 
@@ -157,7 +157,7 @@ def test_case_sensitivity_off():
 def test_case_sensitivity_on():
     sentence = _get_sentence_segment()
 
-    rule = RegexpMatcherRule(label="Diabetes", regexp="DIABETES", case_sensitive=True)
+    rule = RegexpMatcherRule(label="Diabetes", regexp="DIABETES")
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 
@@ -246,7 +246,7 @@ def test_match_at_start_of_segment():
     text = "Diabetes and asthma"
     sentence = Segment(label="sentence", text=text, spans=[Span(0, len(text))])
 
-    rule = RegexpMatcherRule(label="Diabetes", regexp="diabetes")
+    rule = RegexpMatcherRule(label="Diabetes", regexp="diabetes", case_sensitive=False)
     matcher = RegexpMatcher(rules=[rule])
     entities = matcher.run([sentence])
 

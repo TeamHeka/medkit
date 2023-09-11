@@ -73,8 +73,8 @@ class RegexpMatcherRule:
     id: Optional[str] = None
     version: Optional[str] = None
     index_extract: int = 0
-    case_sensitive: bool = False
-    unicode_sensitive: bool = False
+    case_sensitive: bool = True
+    unicode_sensitive: bool = True
     exclusion_regexp: Optional[str] = None
     normalizations: List[RegexpMatcherNormalization] = dataclasses.field(
         default_factory=list

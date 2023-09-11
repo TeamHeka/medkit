@@ -55,10 +55,10 @@ neg_detector = NegationDetector(output_label="is_negated", rules=neg_rules)
 regexp_rules = [
     RegexpMatcherRule(regexp=r"\ballergies?\b", label="problem"),
     RegexpMatcherRule(regexp=r"\basthme\b", label="problem"),
-    RegexpMatcherRule(regexp=r"\ballegra?\b", label="treatment"),
+    RegexpMatcherRule(regexp=r"\ballegra?\b", label="treatment", case_sensitive=False),
     RegexpMatcherRule(regexp=r"\bvaporisateurs?\b", label="treatment"),
-    RegexpMatcherRule(regexp=r"\bloratadine?\b", label="treatment"),
-    RegexpMatcherRule(regexp=r"\bnasonex?\b", label="treatment"),
+    RegexpMatcherRule(regexp=r"\bloratadine?\b", label="treatment", case_sensitive=False),
+    RegexpMatcherRule(regexp=r"\bnasonex?\b", label="treatment", case_sensitive=False),
 ]
 regexp_matcher = RegexpMatcher(rules=regexp_rules, attrs_to_copy=["is_negated"])
 ```

@@ -300,7 +300,7 @@ neg_detector = NegationDetector(output_label="is_negated")
 # entity recognition
 regexp_rules = [
     RegexpMatcherRule(regexp=r"\basthme\b", label="problem"),
-    RegexpMatcherRule(regexp=r"\bdiabete\b", label="problem"),
+    RegexpMatcherRule(regexp=r"\bdiabète\b", label="problem"),
 ]
 regexp_matcher = RegexpMatcher(rules=regexp_rules, attrs_to_copy=["is_negated"])
 

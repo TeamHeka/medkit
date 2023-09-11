@@ -132,7 +132,7 @@ Problem fixed!
 
 ## Finding entities
 
-Medkit also comes with operations to perform NER (named entity recognition), for
+the medkit library also comes with operations to perform NER (named entity recognition), for
 instance {class}`~medkit.text.ner.regexp_matcher.RegexpMatcher`. Let's
 instantiate one with a few simple rules:
 
@@ -142,13 +142,17 @@ from medkit.text.ner import RegexpMatcher, RegexpMatcherRule
 regexp_rules = [
     RegexpMatcherRule(regexp=r"\ballergies?\b", label="problem"),
     RegexpMatcherRule(regexp=r"\basthme\b", label="problem"),
-    RegexpMatcherRule(regexp=r"\ballegra?\b", label="treatment"),
+    RegexpMatcherRule(regexp=r"\ballegra?\b", label="treatment", case_sensitive=False),
     RegexpMatcherRule(regexp=r"\bvaporisateurs?\b", label="treatment"),
-    RegexpMatcherRule(regexp=r"\bloratadine?\b", label="treatment"),
-    RegexpMatcherRule(regexp=r"\bnasonex?\b", label="treatment"),
+    RegexpMatcherRule(regexp=r"\bloratadine?\b", label="treatment", case_sensitive=False),
+    RegexpMatcherRule(regexp=r"\bnasonex?\b", label="treatment", case_sensitive=False),
 ]
 regexp_matcher = RegexpMatcher(rules=regexp_rules)
 ```
+
+As you can see, you can also define some rules that ignore case distinctions by 
+setting `case-sensitive` parameter to `False`.
+In this example, we decide to make it for drugs (Allegra, Nasonex and Loratadine).
 
 ```{note}
 When `RegexpMatcher` is instantiated without any rules, it will use a set of
