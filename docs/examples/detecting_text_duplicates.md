@@ -170,7 +170,7 @@ dup_finder = DuplicateFinder(
 
 # create a minimalistic NER pipeline
 sentence_tok = SentenceTokenizer(output_label="sentence")
-matcher = RegexpMatcher(rules=[RegexpMatcherRule(regexp=r"\binsuffisance\s*renale\b", label="problem")])
+matcher = RegexpMatcher(rules=[RegexpMatcherRule(regexp=r"\binsuffisance\s*rénale\b", label="problem")])
 pipeline = Pipeline(
     steps=[
         PipelineStep(sentence_tok, input_keys=["raw_text"], output_keys=["sentences"]),
