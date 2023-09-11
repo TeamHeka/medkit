@@ -91,7 +91,7 @@ class DefaultPrinterCallback(TrainerCallback):
         eval_metrics = metrics.get("eval", None)
         if eval_metrics is not None:
             message += (
-                "Evaluation metrics:\n  "
+                "Evaluation metrics:\n "
                 + "\n ".join(
                     f"{metric_key}:{value:8.3f}"
                     for metric_key, value in eval_metrics.items()
