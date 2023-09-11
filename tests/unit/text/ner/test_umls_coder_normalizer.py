@@ -238,6 +238,12 @@ def test_inconsistent_params(module_tmp_dir):
         )
 
 
+def test_empty_list(normalizer):
+    """Pass empty list of entities"""
+
+    normalizer.run([])
+
+
 def test_prov(normalizer):
     """Generated provenance"""
 
