@@ -204,7 +204,9 @@ class Trainer:
 
         with torch.no_grad():
             for step, input_batch in enumerate(eval_dataloader):
-                self.callback.on_step_begin(step, nb_batches=len(eval_dataloader), phase="eval")
+                self.callback.on_step_begin(
+                    step, nb_batches=len(eval_dataloader), phase="eval"
+                )
 
                 model_output, loss = self.make_forward_pass(input_batch, eval_mode=True)
                 total_loss_epoch += loss.item()
