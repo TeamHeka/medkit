@@ -8,18 +8,26 @@ This python library aims at:
 
 ## Getting started
 
-To get started with medkit, follow the installation instructions described in our [documentation website](https://medkit.readthedocs.io/en/latest/).
+To get started with medkit, follow the installation instructions described in our [documentation website](https://medkit.readthedocs.io/).
 This website also contains tutorials and examples that you can use for starting with medkit. 
 
 ## Contributing
 
-We're still working for stabilizing source code and completing documentation, so that we'll be able to open it soon 
+Thank you for your interest into medkit !
 
-However, we would already be happy to get your inputs ! 
+We'll be happy to get your inputs !
 
-Please contact us if you want to contribute, whether it's:
+If your issue has not been reported by another user, please, open a 
+[github issue](https://github.com/TeamHeka/medkit/issues), whether it's for:
+
 * reporting a bug, 
 * discussing the current state of the code, 
 * submitting a fix, 
 * proposing new features, 
 * or contributing to documentation, ...
+
+If you want to propose a pull request, you can read [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## Contact
+
+You can directly contact us by mailing to [medkit-maintainers@inria.fr](mailto:medkit-maintainers@inria.fr).
