@@ -5,6 +5,8 @@ __all__ = ["TrainerCallback", "DefaultPrinterCallback"]
 import logging
 from typing import Dict
 
+from tqdm import tqdm
+
 from medkit.training.trainer_config import TrainerConfig
 
 
@@ -19,7 +21,7 @@ class TrainerCallback:
         """Event called at the end of training"""
         pass
 
-    def on_epoch_begin(self):
+    def on_epoch_begin(self, epoch: int):
         """Event called at the beginning of an epoch"""
         pass
 
@@ -27,7 +29,7 @@ class TrainerCallback:
         """Event called at the end of an epoch"""
         pass
 
-    def on_step_begin(self, step_idx: int):
+    def on_step_begin(self, step_idx: int, nb_batches: int, phase: str):
         """Event called at the beginning of a step in training"""
         pass
 
@@ -61,43 +63,42 @@ class DefaultPrinterCallback(TrainerCallback):
             self.logger.removeHandler(handler)
         self.logger.addHandler(console_handler)
 
-        self.log_step_interval = None
+        self._progress_bar = None
 
     def on_train_begin(self, config):
-        self.logger.info("---Running training---")
-        self.logger.info(f" Num epochs = {config.nb_training_epochs}")
-        self.logger.info(f" Train batch size = {config.batch_size}")
-        self.logger.info(
-            f" Gradient Accum steps = {config.gradient_accumulation_steps}"
+        message = (
+            "Running training:\n"
+            + f" Num epochs: {config.nb_training_epochs}\n"
+            + f" Train batch size:{config.batch_size}\n"
+            + f" Gradient accum steps: {config.gradient_accumulation_steps}\n"
         )
-        self.log_step_interval = config.log_step_interval
+        self.logger.info(message)
 
     def on_epoch_end(self, metrics, epoch, epoch_duration):
-        logger = self.logger
+        message = f"Epoch {epoch} ended (duration: {epoch_duration:.2f}s)\n"
 
         train_metrics = metrics.get("train", None)
         if train_metrics is not None:
-            logger.info("-" * 59)
-            msg = "|".join(
-                f"{metric_key}:{value:8.3f}"
-                for metric_key, value in train_metrics.items()
+            message += (
+                "Training metrics:\n "
+                + "\n ".join(
+                    f"{metric_key}:{value:8.3f}"
+                    for metric_key, value in train_metrics.items()
+                )
+                + "\n"
             )
-            logger.info(f"Training metrics : {msg}")
 
         eval_metrics = metrics.get("eval", None)
         if eval_metrics is not None:
-            msg = "|".join(
-                f"{metric_key}:{value:8.3f}"
-                for metric_key, value in eval_metrics.items()
+            message += (
+                "Evaluation metrics:\n "
+                + "\n ".join(
+                    f"{metric_key}:{value:8.3f}"
+                    for metric_key, value in eval_metrics.items()
+                )
+                + "\n"
             )
-            logger.info(f"Evaluation metrics : {msg}")
-            logger.info("-" * 59)
-
-        logger.info(
-            "Epoch state: |epoch_id: {:3d} | time: {:5.2f}s".format(
-                epoch, epoch_duration
-            )
-        )
+        self.logger.info(message)
 
     def on_train_end(self):
         self.logger.info("Training is completed")
@@ -105,15 +106,15 @@ class DefaultPrinterCallback(TrainerCallback):
     def on_save(self, checkpoint_dir):
         self.logger.info(f"Saving checkpoint in {checkpoint_dir}")
 
-    def on_step_end(self, step_idx: int, nb_batches: int, phase: str):
-        if self.log_step_interval is None:
-            return
+    def on_step_begin(self, step_idx: int, nb_batches: int, phase: str):
+        if step_idx == 0:
+            assert self._progress_bar is None
+            self._progress_bar = tqdm(total=nb_batches)
+            self._progress_bar.set_description(phase)
 
-        if step_idx % self.log_step_interval == 0 and step_idx > 0:
-            print(
-                "| {} | {:5d} / {:5d} batches".format(
-                    "Train" if phase == "train" else "Evaluate",
-                    step_idx,
-                    nb_batches,
-                )
-            )
+    def on_step_end(self, step_idx: int, nb_batches: int, phase: str):
+        self._progress_bar.update()
+
+        if step_idx + 1 == nb_batches:
+            self._progress_bar.close()
+            self._progress_bar = None

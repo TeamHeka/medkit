@@ -35,8 +35,6 @@ class TrainerConfig:
     metric_to_track_lr:
         Name of the eval metric to be tracked for updating the learning rate.
         By default, eval `loss` is tracked.
-    log_step_interval:
-        Number of steps before showing information within the training/evaluation loop
     """
 
     output_dir: str
@@ -48,7 +46,6 @@ class TrainerConfig:
     gradient_accumulation_steps: int = 1
     do_metrics_in_training: bool = False
     metric_to_track_lr: str = "loss"
-    log_step_interval: Optional[int] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
