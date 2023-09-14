@@ -6,7 +6,6 @@ To install them, use `pip install medkit-lib[syntactic-relation-extractor]`.
 
 __all__ = ["SyntacticRelationExtractor"]
 import logging
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
@@ -18,12 +17,6 @@ from medkit.core.text import Relation, TextDocument
 from medkit.text.spacy import spacy_utils
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class DefaultConfig:
-    name_spacy_model = "fr_core_news_sm"
-    relation_label = "has_syntactic_rel"
 
 
 class SyntacticRelationExtractor(DocOperation):
@@ -43,10 +36,13 @@ class SyntacticRelationExtractor(DocOperation):
     will be the syntactic order.
     """
 
+    _DEFAULT_NAME_SPACY_MODEL = "fr_core_news_sm"
+    _DEFAULT_LABEL = "has_syntactic_rel"
+
     def __init__(
         self,
-        name_spacy_model: Union[str, Path] = DefaultConfig.name_spacy_model,
-        relation_label: str = DefaultConfig.relation_label,
+        name_spacy_model: Union[str, Path] = _DEFAULT_NAME_SPACY_MODEL,
+        relation_label: str = _DEFAULT_LABEL,
         entities_source: Optional[List[str]] = None,
         entities_target: Optional[List[str]] = None,
         name: Optional[str] = None,
