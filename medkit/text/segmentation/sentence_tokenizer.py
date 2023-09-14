@@ -2,30 +2,24 @@ from __future__ import annotations
 
 __all__ = ["SentenceTokenizer"]
 
-import dataclasses
 import re
 from typing import Iterator, List, Optional, Tuple
 
 from medkit.core.text import Segment, SegmentationOperation, span_utils
 
 
-@dataclasses.dataclass(frozen=True)
-class DefaultConfig:
-    output_label = "SENTENCE"
-    punct_chars = (".", ";", "?", "!")
-    keep_punct = False
-    split_on_newlines = True
-
-
 class SentenceTokenizer(SegmentationOperation):
     """Sentence segmentation annotator based on end punctuation rules"""
 
+    _DEFAULT_LABEL = "SENTENCE"
+    _DEFAULT_PUNCT_CHARS = (".", ";", "?", "!")
+
     def __init__(
         self,
-        output_label: str = DefaultConfig.output_label,
-        punct_chars: Tuple[str] = DefaultConfig.punct_chars,
-        keep_punct: bool = DefaultConfig.keep_punct,
-        split_on_newlines: bool = DefaultConfig.split_on_newlines,
+        output_label: str = _DEFAULT_LABEL,
+        punct_chars: Tuple[str] = _DEFAULT_PUNCT_CHARS,
+        keep_punct: bool = False,
+        split_on_newlines: bool = True,
         uid: Optional[str] = None,
     ):
         """
