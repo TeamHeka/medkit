@@ -10,6 +10,7 @@ import yaml
 
 from flashtext import KeywordProcessor
 
+from medkit.core import Attribute
 from medkit.core.text import Segment, SegmentationOperation, span_utils
 from medkit.text.segmentation.tokenizer_utils import lstrip, rstrip
 
@@ -82,6 +83,9 @@ class SectionTokenizer(SegmentationOperation):
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
         Return sections detected in `segments`.
+        Each section is a segment with an attached attribute
+        (label: <same as self.output_label>, value: <the name of the section>).
+
 
         Parameters
         ----------
@@ -149,9 +153,16 @@ class SectionTokenizer(SegmentationOperation):
                 metadata=metadata,
             )
 
+            # add section name in section attribute
+            attr = Attribute(label=self.output_label, value=name)
+            section.attrs.add(attr)
+
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     section, self.description, source_data_items=[segment]
+                )
+                self._prov_tracer.add_prov(
+                    attr, self.description, source_data_items=[segment]
                 )
 
             yield section
