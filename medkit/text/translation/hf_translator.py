@@ -7,7 +7,6 @@ from __future__ import annotations
 __all__ = ["HFTranslator"]
 
 from collections import defaultdict
-import dataclasses
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Tuple, Union
 
@@ -18,17 +17,6 @@ from transformers import TranslationPipeline, BertModel, BertTokenizerFast
 from medkit.core import Operation
 from medkit.core.text import Segment, ModifiedSpan, span_utils
 import medkit.core.utils
-
-
-@dataclasses.dataclass(frozen=True)
-class DefaultConfig:
-    output_label: str = "translation"
-    translation_model: str = "Helsinki-NLP/opus-mt-fr-en"
-    alignment_model: str = "bert-base-multilingual-cased"
-    alignment_layer: int = 8
-    alignment_threshold: float = 1e-3
-    device: int = -1  # -1 corresponds to the cpu else device number
-    batch_size: int = 1
 
 
 class HFTranslator(Operation):
@@ -48,15 +36,19 @@ class HFTranslator(Operation):
     maximum token length (typically 512) so there is a hard limit on the length of each segment anyway.
     """
 
+    _DEFAULT_LABEL = "translation"
+    _DEFAULT_TRANSLATION_MODEL = "Helsinki-NLP/opus-mt-fr-en"
+    _DEFAULT_ALIGNMENT_MODEL = "bert-base-multilingual-cased"
+
     def __init__(
         self,
-        output_label: str = DefaultConfig.output_label,
-        translation_model: Union[str, Path] = DefaultConfig.translation_model,
-        alignment_model: Union[str, Path] = DefaultConfig.alignment_model,
-        alignment_layer: int = DefaultConfig.alignment_layer,
-        alignment_threshold: float = DefaultConfig.alignment_threshold,
-        device: int = DefaultConfig.device,
-        batch_size: int = DefaultConfig.batch_size,
+        output_label: str = _DEFAULT_LABEL,
+        translation_model: Union[str, Path] = _DEFAULT_TRANSLATION_MODEL,
+        alignment_model: Union[str, Path] = _DEFAULT_ALIGNMENT_MODEL,
+        alignment_layer: int = 8,
+        alignment_threshold: float = 1e-3,
+        device: int = -1,  # -1 corresponds to the cpu else device number
+        batch_size: int = 1,
         cache_dir: Optional[Union[str, Path]] = None,
         uid: str = None,
     ):
