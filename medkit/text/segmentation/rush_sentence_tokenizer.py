@@ -24,7 +24,7 @@ _PATH_TO_DEFAULT_RULES = (
 class RushSentenceTokenizer(SegmentationOperation):
     """Sentence segmentation annotator based on PyRuSH."""
 
-    _DEFAULT_LABEL = "SENTENCE"
+    _DEFAULT_LABEL = "sentence"
 
     def __init__(
         self,

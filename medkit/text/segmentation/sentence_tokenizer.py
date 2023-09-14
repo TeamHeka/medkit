@@ -11,7 +11,7 @@ from medkit.core.text import Segment, SegmentationOperation, span_utils
 class SentenceTokenizer(SegmentationOperation):
     """Sentence segmentation annotator based on end punctuation rules"""
 
-    _DEFAULT_LABEL = "SENTENCE"
+    _DEFAULT_LABEL = "sentence"
     _DEFAULT_PUNCT_CHARS = (".", ";", "?", "!")
 
     def __init__(

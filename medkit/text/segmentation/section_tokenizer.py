@@ -30,7 +30,7 @@ class SectionModificationRule:
 class SectionTokenizer(SegmentationOperation):
     """Section segmentation annotator based on keyword rules"""
 
-    _DEFAULT_LABEL: str = "SECTION"
+    _DEFAULT_LABEL: str = "section"
     _DEFAULT_STRIP_CHARS: str = ".;,?! \n\r\t"
 
     def __init__(

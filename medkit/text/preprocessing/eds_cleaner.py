@@ -34,7 +34,7 @@ class EDSCleaner(Operation):
 
     """
 
-    _DEFAULT_LABEL = "CLEAN_TEXT"
+    _DEFAULT_LABEL = "clean_text"
 
     def __init__(
         self,

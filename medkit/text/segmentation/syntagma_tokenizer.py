@@ -19,7 +19,7 @@ _PATH_TO_DEFAULT_RULES = (
 class SyntagmaTokenizer(SegmentationOperation):
     """Syntagma segmentation annotator based on provided separators"""
 
-    _DEFAULT_LABEL = "SYNTAGMA"
+    _DEFAULT_LABEL = "syntagma"
     _DEFAULT_STRIP_CHARS = ".;,?! \n\r\t"
 
     def __init__(
