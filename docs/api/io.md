@@ -7,6 +7,30 @@ For more details about public APIs, refer to
 {mod}`medkit.io`.
 :::
 
+## medkit-json
+
+medkit has some utilities to export and import medkit documents to json format.
+
+You can use {mod}`medkit.io.medkit_json.save_text_documents` to save a list of documents, and then {mod}`medkit.io.medkit_json.load_text_documents` to load them in medkit.
+
+:::{warning}
+`load_text_documents` is a generator function that returns a generator iterator.
+That avoids keeping data in memory.
+
+Pay attention that the generator variable becomes empty after the first iteration.
+
+However, if you need to keep all the list in memory, you may cast it to a list:
+```python
+from medkit.io.medkit_json import load_text_documents
+
+MEDKIT_JSONL_PATH = "path_to_medkit_jsonl_file"
+
+docs = list(load_text_documents(MEDKIT_JSONL_PATH))
+```
+:::
+
+For more details, refer to {mod}`medkit.io.medkit_json`.
+
 (api:io:brat)=
 ## Brat
 
@@ -63,13 +87,7 @@ You may refer to this [example](../examples/spacy_io.md) for more information.
 
 For more details, refer to {mod}`medkit.io.spacy`.
 
-## medkit-json
 
-medkit has some utilities to export and import medkit documents to json format.
-
-You can use {mod}`medkit.io.medkit_json.save_text_documents` to save a list of documents, and then {mod}`medkit.io.medkit_json.load_text_documents` to load them in medkit.
-
-For more details, refer to {mod}`medkit.io.medkit_json`.
 
 ## RTTM
 

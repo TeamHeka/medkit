@@ -62,7 +62,7 @@ def load_text_documents(
     input_file: Union[str, Path], encoding: Optional[str] = "utf-8"
 ) -> Iterator[TextDocument]:
     """
-    Load text documents from a medkit-json file generated with
+    Returns an iterator on text documents loaded from a medkit-json file generated with
     :func:`~medkit.io.medkit_json.save_text_documents`
 
     Parameters
@@ -95,8 +95,8 @@ def load_text_anns(
     input_file: Union[str, Path], encoding: Optional[str] = "utf-8"
 ) -> Iterator[TextAnnotation]:
     """
-    Load text annotations from a medkit-json file generated with
-    :func:`~medkit.io.medkit_json.save_audio_anns`
+    Return an iterator on text annotations loaded from a medkit-json file generated with
+    :func:`~medkit.io.medkit_json.save_text_anns`
 
     Parameters
     ----------
