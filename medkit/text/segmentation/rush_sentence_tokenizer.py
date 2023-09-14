@@ -95,7 +95,7 @@ class RushSentenceTokenizer(SegmentationOperation):
 
             if not self.keep_newlines:
                 ranges = [m.span() for m in re.finditer(r"\n", text)]
-                replacements = " " * len(ranges)
+                replacements = [" " for _ in ranges]
                 text, spans = span_utils.replace(text, spans, ranges, replacements)
 
             sentence = Segment(
