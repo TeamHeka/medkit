@@ -2,7 +2,6 @@ from __future__ import annotations
 
 __all__ = ["SyntagmaTokenizer"]
 
-import dataclasses
 import pathlib
 import re
 from typing import Iterator, List, Optional, Tuple
@@ -17,20 +16,17 @@ _PATH_TO_DEFAULT_RULES = (
 )
 
 
-@dataclasses.dataclass
-class DefaultConfig:
-    output_label = "SYNTAGMA"
-    strip_chars = ".;,?! \n\r\t"
-
-
 class SyntagmaTokenizer(SegmentationOperation):
     """Syntagma segmentation annotator based on provided separators"""
+
+    _DEFAULT_LABEL = "SYNTAGMA"
+    _DEFAULT_STRIP_CHARS = ".;,?! \n\r\t"
 
     def __init__(
         self,
         separators: Tuple[str, ...] = None,
-        output_label: str = DefaultConfig.output_label,
-        strip_chars: str = DefaultConfig.strip_chars,
+        output_label: str = _DEFAULT_LABEL,
+        strip_chars: str = _DEFAULT_STRIP_CHARS,
         uid: Optional[str] = None,
     ):
         """
@@ -43,10 +39,8 @@ class SyntagmaTokenizer(SegmentationOperation):
             provided, the rules in "default_syntagma_definitiion.yml" will be used.
         output_label: str, Optional
             The output label of the created annotations.
-            Default: "SYNTAGMA" (cf. DefaultConfig)
         strip_chars
             The list of characters to strip at the beginning of the returned segment.
-            Default: '.;,?! \n\r\t' (cf. DefaultConfig)
         uid: str, Optional
             Identifier of the tokenizer
         """
