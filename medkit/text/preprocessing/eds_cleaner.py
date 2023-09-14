@@ -1,6 +1,5 @@
 __all__ = ["EDSCleaner"]
 
-import dataclasses
 from typing import List
 
 from medkit.core import Operation
@@ -25,14 +24,6 @@ _FR_PREPOSITIONS_AFTER = [
 _FR_KEYWORDS_BEFORE = ["pour", "avec", "et"]
 
 
-@dataclasses.dataclass(frozen=True)
-class DefaultConfig:
-    output_label = "CLEAN_TEXT"
-    keep_endlines = False
-    handle_parentheses_eds = True
-    handle_points_eds = True
-
-
 class EDSCleaner(Operation):
     """
     EDS pre-processing annotation module
@@ -43,12 +34,14 @@ class EDSCleaner(Operation):
 
     """
 
+    _DEFAULT_LABEL = "CLEAN_TEXT"
+
     def __init__(
         self,
-        output_label: str = DefaultConfig.output_label,
-        keep_endlines: bool = DefaultConfig.keep_endlines,
-        handle_parentheses_eds: bool = DefaultConfig.handle_parentheses_eds,
-        handle_points_eds: bool = DefaultConfig.handle_points_eds,
+        output_label: str = _DEFAULT_LABEL,
+        keep_endlines: bool = False,
+        handle_parentheses_eds: bool = True,
+        handle_points_eds: bool = True,
         uid: str = None,
     ):
         """
@@ -58,7 +51,6 @@ class EDSCleaner(Operation):
         ----------
         output_label
             The output label of the created annotations.
-            Default: "CLEAN_TEXT" (cf.DefaultConfig)
         keep_endlines:
             If True, modify multiple endlines using `.\\n` as a replacement.
             If False (default), modify multiple endlines using whitespaces (`.\\s`) as a replacement.
