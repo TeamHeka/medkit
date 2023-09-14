@@ -19,12 +19,6 @@ _PATH_TO_DEFAULT_RULES = (
 )
 
 
-@dataclasses.dataclass(frozen=True)
-class DefaultConfig:
-    output_label: str = "SECTION"
-    strip_chars: str = ".;,?! \n\r\t"
-
-
 @dataclasses.dataclass
 class SectionModificationRule:
     section_name: str
@@ -36,12 +30,15 @@ class SectionModificationRule:
 class SectionTokenizer(SegmentationOperation):
     """Section segmentation annotator based on keyword rules"""
 
+    _DEFAULT_LABEL: str = "SECTION"
+    _DEFAULT_STRIP_CHARS: str = ".;,?! \n\r\t"
+
     def __init__(
         self,
         section_dict: Dict[str, List[str]] = None,
-        output_label: str = DefaultConfig.output_label,
+        output_label: str = _DEFAULT_LABEL,
         section_rules: Iterable[SectionModificationRule] = (),
-        strip_chars: str = DefaultConfig.strip_chars,
+        strip_chars: str = _DEFAULT_STRIP_CHARS,
         uid: Optional[str] = None,
     ):
         """
@@ -53,14 +50,13 @@ class SectionTokenizer(SegmentationOperation):
             Dictionary containing the section name as key and the list of mappings as
             value. If None, the content of default_section_definition.yml will be used.
         output_label
-            Segment label to use for annotation output. Default is SECTION.
+            Segment label to use for annotation output.
         section_rules
             List of rules for modifying a section name according its order to the other
             sections. If section_dict is None, the content of
             default_section_definition.yml will be used.
         strip_chars
             The list of characters to strip at the beginning of the returned segment.
-            Default: '.;,?! \n\r\t' (cf. DefaultConfig)
         uid: str, Optional
             Identifier of the tokenizer
         """
