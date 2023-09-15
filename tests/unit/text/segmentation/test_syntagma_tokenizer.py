@@ -67,7 +67,7 @@ def test_run(syntagma_tokenizer, text, expected_syntagmas):
     syntagmas = syntagma_tokenizer.run([segment])
     assert len(syntagmas) == len(expected_syntagmas)
     for i, expected in enumerate(expected_syntagmas):
-        assert syntagmas[i].label == "SYNTAGMA"
+        assert syntagmas[i].label == syntagma_tokenizer._DEFAULT_LABEL
         assert syntagmas[i].spans == expected["spans"]
         assert syntagmas[i].text == expected["text"]
 

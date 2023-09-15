@@ -7,7 +7,6 @@ from __future__ import annotations
 
 __all__ = ["RushSentenceTokenizer"]
 
-import dataclasses
 from pathlib import Path
 import re
 from typing import Iterator, List, Optional, Union
@@ -15,13 +14,6 @@ from typing import Iterator, List, Optional, Union
 from PyRuSH import RuSH
 
 from medkit.core.text import Segment, SegmentationOperation, span_utils
-
-
-@dataclasses.dataclass(frozen=True)
-class DefaultConfig:
-    output_label = "SENTENCE"
-    path_to_rules = None
-    keep_newlines = True
 
 
 _PATH_TO_DEFAULT_RULES = (
@@ -32,11 +24,13 @@ _PATH_TO_DEFAULT_RULES = (
 class RushSentenceTokenizer(SegmentationOperation):
     """Sentence segmentation annotator based on PyRuSH."""
 
+    _DEFAULT_LABEL = "sentence"
+
     def __init__(
         self,
-        output_label: str = DefaultConfig.output_label,
-        path_to_rules: Union[str, Path] = DefaultConfig.path_to_rules,
-        keep_newlines: bool = DefaultConfig.keep_newlines,
+        output_label: str = _DEFAULT_LABEL,
+        path_to_rules: Optional[Union[str, Path]] = None,
+        keep_newlines: bool = True,
         uid: Optional[str] = None,
     ):
         """
@@ -46,7 +40,6 @@ class RushSentenceTokenizer(SegmentationOperation):
         ----------
         output_label:
             The output label of the created annotations.
-            Default: "SENTENCE" (cf.DefaultConfig)
         path_to_rules:
             Path to csv or tsv file to provide to PyRuSH. If none provided,
             "rush_tokenizer_default_rules.tsv" will be used
@@ -102,7 +95,7 @@ class RushSentenceTokenizer(SegmentationOperation):
 
             if not self.keep_newlines:
                 ranges = [m.span() for m in re.finditer(r"\n", text)]
-                replacements = " " * len(ranges)
+                replacements = [" " for _ in ranges]
                 text, spans = span_utils.replace(text, spans, ranges, replacements)
 
             sentence = Segment(

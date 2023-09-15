@@ -10,6 +10,7 @@ import yaml
 
 from flashtext import KeywordProcessor
 
+from medkit.core import Attribute
 from medkit.core.text import Segment, SegmentationOperation, span_utils
 from medkit.text.segmentation.tokenizer_utils import lstrip, rstrip
 
@@ -17,12 +18,6 @@ from medkit.text.segmentation.tokenizer_utils import lstrip, rstrip
 _PATH_TO_DEFAULT_RULES = (
     pathlib.Path(__file__).parent / "default_section_definition.yml"
 )
-
-
-@dataclasses.dataclass(frozen=True)
-class DefaultConfig:
-    output_label: str = "SECTION"
-    strip_chars: str = ".;,?! \n\r\t"
 
 
 @dataclasses.dataclass
@@ -36,12 +31,15 @@ class SectionModificationRule:
 class SectionTokenizer(SegmentationOperation):
     """Section segmentation annotator based on keyword rules"""
 
+    _DEFAULT_LABEL: str = "section"
+    _DEFAULT_STRIP_CHARS: str = ".;,?! \n\r\t"
+
     def __init__(
         self,
         section_dict: Dict[str, List[str]] = None,
-        output_label: str = DefaultConfig.output_label,
+        output_label: str = _DEFAULT_LABEL,
         section_rules: Iterable[SectionModificationRule] = (),
-        strip_chars: str = DefaultConfig.strip_chars,
+        strip_chars: str = _DEFAULT_STRIP_CHARS,
         uid: Optional[str] = None,
     ):
         """
@@ -53,14 +51,13 @@ class SectionTokenizer(SegmentationOperation):
             Dictionary containing the section name as key and the list of mappings as
             value. If None, the content of default_section_definition.yml will be used.
         output_label
-            Segment label to use for annotation output. Default is SECTION.
+            Segment label to use for annotation output.
         section_rules
             List of rules for modifying a section name according its order to the other
             sections. If section_dict is None, the content of
             default_section_definition.yml will be used.
         strip_chars
             The list of characters to strip at the beginning of the returned segment.
-            Default: '.;,?! \n\r\t' (cf. DefaultConfig)
         uid: str, Optional
             Identifier of the tokenizer
         """
@@ -86,6 +83,9 @@ class SectionTokenizer(SegmentationOperation):
     def run(self, segments: List[Segment]) -> List[Segment]:
         """
         Return sections detected in `segments`.
+        Each section is a segment with an attached attribute
+        (label: <same as self.output_label>, value: <the name of the section>).
+
 
         Parameters
         ----------
@@ -153,9 +153,16 @@ class SectionTokenizer(SegmentationOperation):
                 metadata=metadata,
             )
 
+            # add section name in section attribute
+            attr = Attribute(label=self.output_label, value=name)
+            section.attrs.add(attr)
+
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
                     section, self.description, source_data_items=[segment]
+                )
+                self._prov_tracer.add_prov(
+                    attr, self.description, source_data_items=[segment]
                 )
 
             yield section

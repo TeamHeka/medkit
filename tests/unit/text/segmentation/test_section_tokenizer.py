@@ -57,6 +57,10 @@ def test_run(filepath, expected_sections):
     for i, (spans, attr_value) in enumerate(expected_sections):
         assert sections[i].spans == spans
         assert sections[i].metadata["name"] == attr_value
+        assert (
+            sections[i].attrs.get(label=section_tokenizer.output_label)[0].value
+            == attr_value
+        )
 
 
 def test_run_with_rules():
