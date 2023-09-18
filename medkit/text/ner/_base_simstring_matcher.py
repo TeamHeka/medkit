@@ -91,8 +91,8 @@ class BaseSimstringMatcherNormalization:
     """
 
     kb_name: str
-    kb_version: str
     kb_id: Union[int, str]
+    kb_version: Optional[str] = None
     term: Optional[str] = None
 
     def to_attribute(

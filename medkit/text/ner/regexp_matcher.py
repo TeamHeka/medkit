@@ -107,8 +107,8 @@ class RegexpMatcherNormalization:
     """
 
     kb_name: str
-    kb_version: str
     kb_id: Any
+    kb_version: Optional[str] = None
 
 
 class RegexpMetadata(TypedDict):
