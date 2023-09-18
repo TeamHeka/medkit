@@ -5,7 +5,7 @@ import re
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Literal, Self
 
-import duptextfinder
+import duptextfinder  # type: ignore
 
 from medkit.core import Collection, Attribute, Operation, dict_conv
 from medkit.core.text import TextDocument, Segment, AnySpan, span_utils
@@ -34,8 +34,8 @@ class DuplicationAttribute(Attribute):
         Date of the source document, if known
     """
 
-    source_doc_id: str
-    source_spans: List[AnySpan]
+    source_doc_id: Optional[str]
+    source_spans: Optional[List[AnySpan]]
     # TODO do we need to duplicate this info for convenience,
     # or should source_doc_id be enough?
     source_doc_date: Optional[Any]
@@ -63,7 +63,10 @@ class DuplicationAttribute(Attribute):
     def to_dict(self) -> Dict[str, Any]:
         attr_dict = dict(
             uid=self.uid,
-            prefix=self.prefix,
+            value=self.value,
+            source_doc_id=self.source_doc_id,
+            source_spans=self.source_spans,
+            source_doc_date=self.source_doc_date,
             metadata=self.metadata,
         )
         dict_conv.add_class_name_to_data_dict(self, attr_dict)
@@ -104,7 +107,7 @@ class DuplicateFinder(Operation):
     package, which will then be used by `duptextfinder` library.
     """
 
-    _NON_EMPTY_REGEXP = re.compile(r"[\w\d]")
+    _NON_EMPTY_REGEXP = re.compile(r"\w")
 
     def __init__(
         self,
@@ -219,7 +222,7 @@ class DuplicateFinder(Operation):
         self,
         doc: TextDocument,
         duplicate_finder: duptextfinder.DuplicateFinder,
-        docs_by_id: Dict[str, Segment],
+        docs_by_id: Dict[str, TextDocument],
     ):
         """
         Find duplicates between a document and previously processed documents

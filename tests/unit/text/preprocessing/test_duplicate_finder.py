@@ -234,3 +234,15 @@ def test_prov():
     assert prov.data_item == nondup_attr
     assert prov.op_desc == detector.description
     assert prov.source_data_items == [doc_2.raw_segment]
+
+
+def test_dict():
+    docs = _get_docs()
+    collection = Collection(text_docs=docs)
+    detector = DuplicateFinder(output_label="deduplicated", segments_to_output="both")
+    detector.run([collection])
+
+    seg_attr = (
+        docs[1].anns.get(label="deduplicated")[0].attrs.get(label="is_duplicate")[0]
+    )
+    assert seg_attr == DuplicationAttribute.from_dict(seg_attr.to_dict())
