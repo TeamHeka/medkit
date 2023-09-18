@@ -45,6 +45,9 @@ class SimstringMatcherRule(BaseSimstringMatcherRule):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> SimstringMatcherRule:
+        """
+        Creates a SimStringMatcherRule from a dict.
+        """
         return SimstringMatcherRule(
             term=data["term"],
             label=data["label"],
@@ -76,6 +79,7 @@ class SimstringMatcherNormalization(BaseSimstringMatcherNormalization):
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> SimstringMatcherNormalization:
+        """Creates a SimstringMatcherNormalization object from a dict"""
         return SimstringMatcherNormalization(
             kb_name=data["kb_name"],
             kb_version=data["kb_version"],
@@ -124,13 +128,8 @@ class SimstringMatcher(BaseSimstringMatcher):
             text of an entity matched on that rule.
         similarity:
             Similarity metric to use.
-        lowercase:
-            Whether to use lowercased versions of rule terms and input entities.
-        normalize_unicode:
-            Whether to use ASCII-only versions of rules terms and input entities
-            (non-ASCII chars replaced by closest ASCII chars).
         spacy_tokenization_language:
-            2-letter code (ex: "fr", "en", etc) designating the language of the
+            2-letter code (ex: "fr", "en", etc.) designating the language of the
             spacy model to use for tokenization. If provided, spacy will be used
             to tokenize input segments and filter out some tokens based on their
             part-of-speech tags, such as determinants, conjunctions and
@@ -147,7 +146,7 @@ class SimstringMatcher(BaseSimstringMatcher):
         attrs_to_copy:
             Labels of the attributes that should be copied from the source
             segment to the created entity. Useful for propagating context
-            attributes (negation, antecedent, etc).
+            attributes (negation, antecedent, etc.).
         name:
             Name describing the matcher (defaults to the class name).
         uid:
@@ -189,10 +188,10 @@ class SimstringMatcher(BaseSimstringMatcher):
         Parameters
         ----------
         path_to_rules
-            Path to a yml file containing a list of mappings with the same
+            The path to a yml file containing a list of mappings with the same
             structure as :class:`~.SimstringMatcherRule`
         encoding
-            Encoding of the file to open
+            The encoding of the file to open
 
         Returns
         -------
@@ -201,22 +200,22 @@ class SimstringMatcher(BaseSimstringMatcher):
             :class:`~.SimstringMatcher`
         """
 
-        class Loader(yaml.Loader):
+        class _Loader(yaml.Loader):
             pass
 
-        def construct_mapping(loader, node):
+        def _construct_mapping(loader, node):
             data = loader.construct_mapping(node)
             if "kb_name" in data:
                 return SimstringMatcherNormalization(**data)
             else:
                 return SimstringMatcherRule(**data)
 
-        Loader.add_constructor(
-            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping
+        _Loader.add_constructor(
+            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _construct_mapping
         )
 
         with open(path_to_rules, encoding=encoding) as f:
-            rules = yaml.load(f, Loader=Loader)
+            rules = yaml.load(f, Loader=_Loader)
         return rules
 
     @staticmethod
@@ -233,11 +232,11 @@ class SimstringMatcher(BaseSimstringMatcher):
         rules
             The rules to save
         path_to_rules
-            Path to a yml file that will contain the rules
+            The path to a yml file that will contain the rules
         encoding
-            Encoding of the yml file
+            The encoding of the yml file
         """
 
         with open(path_to_rules, mode="w", encoding=encoding) as f:
             rules_data = [dataclasses.asdict(r) for r in rules]
-            rules = yaml.safe_dump(rules_data, f)
+            yaml.safe_dump(rules_data, f)
