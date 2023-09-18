@@ -102,13 +102,13 @@ class RegexpMatcherNormalization:
         The name of the knowledge base we are referencing. Ex: "umls"
     kb_version:
         The name of the knowledge base we are referencing. Ex: "202AB"
-    id:
+    kb_id:
         The id of the entity in the knowledge base, for instance a CUI
     """
 
     kb_name: str
     kb_version: str
-    id: Any
+    kb_id: Any
 
 
 class RegexpMetadata(TypedDict):
@@ -302,10 +302,10 @@ class RegexpMatcher(NEROperation):
     @staticmethod
     def _create_norm_attr(norm: RegexpMatcherNormalization) -> EntityNormAttribute:
         if norm.kb_name == "umls":
-            norm_attr = UMLSNormAttribute(cui=norm.id, umls_version=norm.kb_version)
+            norm_attr = UMLSNormAttribute(cui=norm.kb_id, umls_version=norm.kb_version)
         else:
             norm_attr = EntityNormAttribute(
-                kb_name=norm.kb_name, kb_id=norm.id, kb_version=norm.kb_version
+                kb_name=norm.kb_name, kb_id=norm.kb_id, kb_version=norm.kb_version
             )
         return norm_attr
 
@@ -337,7 +337,11 @@ class RegexpMatcher(NEROperation):
         def construct_mapping(loader, node):
             data = loader.construct_mapping(node)
             if "kb_name" in data:
-                return RegexpMatcherNormalization(**data)
+                if "id" in data:  # keep id for retro-compatibility
+                    kb_id = data.pop("id")
+                    return RegexpMatcherNormalization(kb_id=kb_id, **data)
+                else:
+                    return RegexpMatcherNormalization(**data)
             else:
                 return RegexpMatcherRule(**data)
 
