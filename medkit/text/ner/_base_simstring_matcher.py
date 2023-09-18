@@ -84,7 +84,7 @@ class BaseSimstringMatcherNormalization:
         The name of the knowledge base we are referencing. Ex: "umls"
     kb_version:
         The name of the knowledge base we are referencing. Ex: "202AB"
-    id:
+    kb_id:
         The id of the entity in the knowledge base, for instance a CUI
     term:
         Optional normalized version of the entity text in the knowledge base
@@ -92,7 +92,7 @@ class BaseSimstringMatcherNormalization:
 
     kb_name: str
     kb_version: str
-    id: Union[int, str]
+    kb_id: Union[int, str]
     term: Optional[str] = None
 
     def to_attribute(
@@ -114,7 +114,7 @@ class BaseSimstringMatcherNormalization:
 
         if self.kb_name == "umls":
             norm_attr = UMLSNormAttribute(
-                cui=self.id,
+                cui=self.kb_id,
                 umls_version=self.kb_version,
                 term=self.term,
                 score=score,
@@ -122,7 +122,7 @@ class BaseSimstringMatcherNormalization:
         else:
             norm_attr = EntityNormAttribute(
                 kb_name=self.kb_name,
-                kb_id=self.id,
+                kb_id=self.kb_id,
                 kb_version=self.kb_version,
                 term=self.term,
                 score=score,

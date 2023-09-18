@@ -68,7 +68,7 @@ class SimstringMatcherNormalization(BaseSimstringMatcherNormalization):
         The name of the knowledge base we are referencing. Ex: "umls"
     kb_version:
         The name of the knowledge base we are referencing. Ex: "202AB"
-    id:
+    kb_id:
         The id of the entity in the knowledge base, for instance a CUI
     term:
         Optional normalized version of the entity text in the knowledge base
@@ -79,7 +79,7 @@ class SimstringMatcherNormalization(BaseSimstringMatcherNormalization):
         return SimstringMatcherNormalization(
             kb_name=data["kb_name"],
             kb_version=data["kb_version"],
-            id=data["id"],
+            kb_id=data["id"],
             term=data["term"],
         )
 

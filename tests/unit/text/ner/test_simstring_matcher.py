@@ -117,7 +117,7 @@ def test_normalization():
         label="problem",
         normalizations=[
             SimstringMatcherNormalization(
-                kb_name="umls", kb_version="2021AB", id="C0011849"
+                kb_name="umls", kb_version="2021AB", kb_id="C0011849"
             )
         ],
     )
@@ -313,7 +313,7 @@ def test_prov():
         label="problem",
         normalizations=[
             SimstringMatcherNormalization(
-                kb_name="umls", kb_version="2021AB", id="C0011849"
+                kb_name="umls", kb_version="2021AB", kb_id="C0011849"
             )
         ],
     )
@@ -347,7 +347,7 @@ def test_load_save_rules(tmpdir):
             unicode_sensitive=True,
             normalizations=[
                 SimstringMatcherNormalization(
-                    kb_name="umls", kb_version="2021AB", id="C0011849"
+                    kb_name="umls", kb_version="2021AB", kb_id="C0011849"
                 )
             ],
         ),
