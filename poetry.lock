@@ -8464,7 +8464,7 @@ hf-transcriber-function = ["torchaudio", "transformers"]
 hf-translator = ["sacremoses", "sentencepiece", "torch", "transformers"]
 hf-utils = ["transformers"]
 metrics-ner = ["seqeval", "torch", "transformers"]
-optional = ["PyRuSH", "feather-format", "packaging", "pandas", "quickumls", "resampy", "sacremoses", "sentencepiece", "seqeval", "spacy", "torch", "torchaudio", "transformers", "webrtcvad"]
+optional = ["PyRuSH", "feather-format", "packaging", "pandas", "pyannote-audio", "quickumls", "resampy", "sacremoses", "sentencepiece", "seqeval", "spacy", "speechbrain", "torch", "torchaudio", "transformers", "unqlite", "webrtcvad"]
 pa-speaker-detector = ["pyannote-audio", "torch"]
 quick-umls = ["packaging", "quickumls", "unqlite"]
 resampler = ["resampy"]
@@ -8479,4 +8479,4 @@ webrtc-voice-detector = ["webrtcvad"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4.0"
-content-hash = "f42c6e01626900540a212dbe86b27e08f696e5c227c04b4253b166de0deb1cdb"
+content-hash = "0a38d96eecd041f24c7bbf6971513b34aad7dd2c79662a8cd701976d0e690154"

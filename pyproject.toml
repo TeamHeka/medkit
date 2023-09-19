@@ -52,6 +52,7 @@ quickumls = {version = "^1.4", optional = true}
 resampy = {version = "^0.4", optional = true}
 sacremoses = {version = "*", optional = true}
 sentencepiece = {version = "*", optional = true}
+seqeval = {version = "^1.2.2", optional = true}
 spacy = {version = "^3.4", optional = true}
 speechbrain = {version = "^0.5", optional = true}
 torch = {version ="^2.0, !=2.0.1", optional = true} # bug https://github.com/pytorch/pytorch/issues/100974
@@ -60,7 +61,7 @@ transformers = {version = "^4.21", optional = true}
 # workaround bug with cython >= 3.0 and unqlite < 0.9.6
 unqlite =  {version = "^0.9.6", optional = true}
 webrtcvad = {version = "^2.0", optional = true}
-seqeval = {version = "^1.2.2", optional = true}
+
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
@@ -133,19 +134,23 @@ webrtc-voice-detector = ["webrtcvad"]
 ## for poetry, you can use `poetry install --all-extras`
 
 optional = [
+    "eds-nlp",
     "feather-format",
     "packaging",
     "pandas",
+    "pyannote-audio",
     "PyRuSH",
     "quickumls",
     "resampy",
     "sacremoses",
     "sentencepiece",
-    "spacy",
     "seqeval",
+    "spacy",
+    "speechbrain",
     "torch",
     "torchaudio",
     "transformers",
+    "unqlite",
     "webrtcvad",
 ]
 
