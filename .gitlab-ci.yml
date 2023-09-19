@@ -1,4 +1,4 @@
-image: python:3.7
+image: python:3.8
 
 variables:
   POETRY_HOME: /etc/poetry
@@ -30,7 +30,7 @@ cache: &default_cache
   - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
   - export PATH=$PATH:$POETRY_HOME/bin
   - poetry --version
-  - poetry env use python3.7
+  - poetry env use python3.8
   - poetry env info
 
 .install_test_packages: &install_test_packages
@@ -78,9 +78,10 @@ setup_cache:
 
 linting:
   stage: test
-  extends: .use_cache
   before_script:
-    - source .venv/bin/activate
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install pre-commit
     - pre-commit install
   script:
     - echo "Executing linting..."
