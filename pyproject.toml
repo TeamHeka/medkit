@@ -161,10 +161,13 @@ optional = [
 ]
 
 [[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[[tool.poetry.source]]
 name = "torch-linux-cpu"
 url = "https://download.pytorch.org/whl/cpu"
-default = false
-secondary = true
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
