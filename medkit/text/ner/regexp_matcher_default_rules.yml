@@ -10,16 +10,16 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "I25"
+      kb_id: "I25"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0027051"
+      kb_id: "C0027051"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0349782"
+      kb_id: "C0349782"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0340288"
+      kb_id: "C0340288"
 
 - id: "id_regexp_kawasaki"
   label: "disorder"
@@ -88,10 +88,10 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "E10-E14"
+      kb_id: "E10-E14"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0011849"
+      kb_id: "C0011849"
 
 - id: "id_regexp_hta"
   label: "disorder"
@@ -103,7 +103,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C1305855"
+      kb_id: "C1305855"
 
 - id: "id_regexp_dyslipidemie"
   label: "disorder"
@@ -114,13 +114,13 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0242339"
+      kb_id: "C0242339"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0020473"
+      kb_id: "C0020473"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0020443"
+      kb_id: "C0020443"
 
 - id: "id_regexp_hypertriglyceridemie"
   label: "disorder"
@@ -131,7 +131,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0020557"
+      kb_id: "C0020557"
 
 - id: "id_regexp_imc"
   index_extract: 4
@@ -143,7 +143,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C1305855"
+      kb_id: "C1305855"
 
 - id: "id_regexp_surpoids"
   label: "disorder"
@@ -154,7 +154,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0497406"
+      kb_id: "C0497406"
 
 - id: "id_regexp_obesite"
   label: "disorder"
@@ -165,10 +165,10 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "E66"
+      kb_id: "E66"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0028754"
+      kb_id: "C0028754"
 
 - id: "id_regexp_stent"
   label: "procedure"
@@ -179,13 +179,13 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "Z95"
+      kb_id: "Z95"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0162577"
+      kb_id: "C0162577"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0190211"
+      kb_id: "C0190211"
 
 - id: "id_regexp_troublerythme"
   label: "disorder"
@@ -196,16 +196,16 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "I44-I49"
+      kb_id: "I44-I49"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0004238"
+      kb_id: "C0004238"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0004239"
+      kb_id: "C0004239"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0003811"
+      kb_id: "C0003811"
 
 - id: "id_regexp_arythmie"
   label: "disorder"
@@ -216,13 +216,13 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0004238"
+      kb_id: "C0004238"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0004239"
+      kb_id: "C0004239"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0003811"
+      kb_id: "C0003811"
 
 - id: "id_regexp_arret"
   label: "disorder"
@@ -233,13 +233,13 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "I46"
+      kb_id: "I46"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0018790"
+      kb_id: "C0018790"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0162297"
+      kb_id: "C0162297"
 
 - id: "id_regexp_insfugcardiaque"
   label: "disorder"
@@ -250,10 +250,10 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "I5"
+      kb_id: "I5"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0018801"
+      kb_id: "C0018801"
 
 - id: "id_regexp_avc"
   label: "disorder"
@@ -265,13 +265,13 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "I6"
+      kb_id: "I6"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0038454"
+      kb_id: "C0038454"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0948008"
+      kb_id: "C0948008"
 
 - id: "id_regexp_hemormening"
   label: "disorder"
@@ -282,10 +282,10 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "I60"
+      kb_id: "I60"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0038525"
+      kb_id: "C0038525"
 
 - id: "id_regexp_bpco"
   label: "disorder"
@@ -296,34 +296,34 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "J40-J44"
+      kb_id: "J40-J44"
     - kb_name: "icd"
       kb_version: "10"
-      id: "J47"
+      kb_id: "J47"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0024117"
+      kb_id: "C0024117"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0024115"
+      kb_id: "C0024115"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0032285"
+      kb_id: "C0032285"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0020542"
+      kb_id: "C0020542"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0004096"
+      kb_id: "C0004096"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0006266"
+      kb_id: "C0006266"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0264492"
+      kb_id: "C0264492"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0034067"
+      kb_id: "C0034067"
 
 - id: "id_regexp_asthme"
   label: "disorder"
@@ -334,13 +334,13 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "J56-J46"
+      kb_id: "J56-J46"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0004096"
+      kb_id: "C0004096"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0006266"
+      kb_id: "C0006266"
 
 - id: "id_regexp_insrespchronique"
   label: "disorder"
@@ -351,10 +351,10 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "J96"
+      kb_id: "J96"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0264492"
+      kb_id: "C0264492"
 
 - id: "id_regexp_emphyseme"
   label: "disorder"
@@ -365,10 +365,10 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "J41"
+      kb_id: "J41"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0034067"
+      kb_id: "C0034067"
 
 - id: "id_regexp_malrenale"
   label: "disorder"
@@ -379,19 +379,19 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "J18-J17"
+      kb_id: "J18-J17"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0035078"
+      kb_id: "C0035078"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0022661"
+      kb_id: "C0022661"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0022658"
+      kb_id: "C0022658"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0022660"
+      kb_id: "C0022660"
 
 - id: "id_regexp_somnolence"
   label: "disorder"
@@ -403,7 +403,7 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "R40"
+      kb_id: "R40"
 
 - id: "id_regexp_debito2"
   index_extract: 1
@@ -445,10 +445,10 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "G35"
+      kb_id: "G35"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0026769"
+      kb_id: "C0026769"
 
 - id: "id_regexp_cancer"
   label: "disorder"
@@ -459,13 +459,13 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0027651"
+      kb_id: "C0027651"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C1882062"
+      kb_id: "C1882062"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0006826"
+      kb_id: "C0006826"
 
 # on supprime \\bVI\\b, trop de faux positifs
 - id: "id_regexp_ventilation"
@@ -485,10 +485,10 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "K70"
+      kb_id: "K70"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0023890"
+      kb_id: "C0023890"
 
 - id: "id_regexp_lymphome"
   label: "disorder"
@@ -499,10 +499,10 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "C80-C89"
+      kb_id: "C80-C89"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0024299"
+      kb_id: "C0024299"
 
 - id: "id_regexp_leucemie"
   label: "disorder"
@@ -513,13 +513,13 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "C90-C97"
+      kb_id: "C90-C97"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0686584"
+      kb_id: "C0686584"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0023418"
+      kb_id: "C0023418"
 
 - id: "id_regexp_hemopathie"
   label: "disorder"
@@ -530,16 +530,16 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "C80-C97"
+      kb_id: "C80-C97"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0686584"
+      kb_id: "C0686584"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0023418"
+      kb_id: "C0023418"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0024299"
+      kb_id: "C0024299"
 
 - id: "id_regexp_defimmun"
   label: "disorder"
@@ -551,10 +551,10 @@
   normalizations:
     - kb_name: "icd"
       kb_version: "10"
-      id: "D87"
+      kb_id: "D87"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0021051"
+      kb_id: "C0021051"
 
 # Trop de faux positifs... developper une méthode spécifique
 - id: "id_regexp_vih"
@@ -567,10 +567,10 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0019693"
+      kb_id: "C0019693"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0001175"
+      kb_id: "C0001175"
 
 - id: "id_regexp_hepb"
   label: "disorder"
@@ -582,7 +582,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0019163"
+      kb_id: "C0019163"
 
 - id: "id_regexp_aomi"
   label: "disorder"
@@ -593,7 +593,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C1306889"
+      kb_id: "C1306889"
 
 - id: "id_regexp_sdra"
   label: "disorder"
@@ -604,7 +604,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0035222"
+      kb_id: "C0035222"
 
 - id: "id_regexp_sepsis"
   label: "disorder"
@@ -615,7 +615,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0243026"
+      kb_id: "C0243026"
 
 # on supprime, utiliser les mouvements des patients
 - id: "id_regexp_chir"
@@ -627,7 +627,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0543467"
+      kb_id: "C0543467"
 
 - id: "id_regexp_grossesse"
   label: "physiology"
@@ -639,7 +639,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0032961"
+      kb_id: "C0032961"
 
 - id: "id_regexp_sla"
   label: "disorder"
@@ -650,7 +650,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0002736"
+      kb_id: "C0002736"
 
 - id: "id_regexp_taille"
   index_extract: 2
@@ -686,13 +686,13 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C1868758"
+      kb_id: "C1868758"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0004623"
+      kb_id: "C0004623"
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0729518"
+      kb_id: "C0729518"
 
 - id: "id_regexp_candida"
   label: "disorder"
@@ -704,7 +704,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0006840"
+      kb_id: "C0006840"
 
 - id: "id_regexp_fumeur"
   label: "activity"
@@ -716,7 +716,7 @@
   normalizations:
     - kb_name: "umls"
       kb_version: "202AB"
-      id: "C0453996"
+      kb_id: "C0453996"
 
 - id: "id_regexp_paquetannee"
   index_extract: 1

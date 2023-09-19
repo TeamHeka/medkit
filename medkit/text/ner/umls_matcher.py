@@ -319,7 +319,7 @@ class UMLSMatcher(BaseSimstringMatcher):
             label = labels_by_semgroup[semgroup]
 
             norm = BaseSimstringMatcherNormalization(
-                kb_name="umls", kb_version=version, id=entry.cui, term=entry.term
+                kb_name="umls", kb_version=version, kb_id=entry.cui, term=entry.term
             )
 
             # acronym detection

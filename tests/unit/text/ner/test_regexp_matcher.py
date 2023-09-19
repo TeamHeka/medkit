@@ -104,8 +104,10 @@ def test_normalization():
         label="Diabetes",
         regexp="diabetes",
         normalizations=[
-            RegexpMatcherNormalization("icd", "10", "E10-E14"),
-            RegexpMatcherNormalization("umls", "2020AB", "C0011849"),
+            RegexpMatcherNormalization(kb_name="icd", kb_version="10", kb_id="E10-E14"),
+            RegexpMatcherNormalization(
+                kb_name="umls", kb_version="2020AB", kb_id="C0011849"
+            ),
         ],
     )
     matcher = RegexpMatcher(rules=[rule])
