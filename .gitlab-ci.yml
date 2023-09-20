@@ -79,6 +79,7 @@ setup_cache:
 linting:
   stage: test
   before_script:
+    - pip install virtualenv
     - virtualenv venv
     - source venv/bin/activate
     - pip install pre-commit
@@ -102,8 +103,8 @@ unit_tests:
   script:
     - echo "Executing unit tests..."
     - coverage run -m pytest -rsv --junit-xml=report.xml tests/unit
-    - coverage report
-    - coverage xml
+    - coverage report -i
+    - coverage xml -i
   coverage: '/^TOTAL.+?(\d+\%)$/'
   artifacts:
     reports:
