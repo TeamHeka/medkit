@@ -1,22 +1,24 @@
 ---
 syntagmas:
   separators:
-    - '(?<=\s)mais\s+'
-    - '(?<=\s)pour\s+qu\s+'
-    - '(?<=\s)qui\s+'
-    - '(?<=\s)entre\s+'
-    - '(?<=\s)car\s+'
-    - '(?<=\s)sans\s+'
-    - '(?<=\s)puis\s+'
-    - '(?<=\s)lequel\s+'
-    - '(?<=\s)laquelle\s+'
-    - '(?<=\s)hormis\s+'
-    - '(?<=\s)parce\s+qu\s+'
-    - '(?<=\s)bien\s+qu\s+'
-    - '(?<=\s)et\s+qu\s+'
-    - '(?<=\s)alors\s+qu\s+'
-    - '(?<=\s)en\s+dehors\s+(?=d)'
-    - '(?<=\s)malgr[ée]\s+'
-    - '(?<=\s)en\s+raison\s+de\s+'
-    - '(?<=[\r\n;\?!\(\):])[\w\d]'     # lettre ou chiffre après un ensemble de caractères
-    - '(?<=\D[,\.])\s+[\w\d]' # lettre ou chiffre après une virgule ou un point s'il n'est pas précédé par un chiffre
+    - \bmais\b
+    - \bpour\s+qu(e\b|')
+    - \bqui\b
+    - \bentre\b
+    - \bcar\b
+    - \bsans\b
+    - \bpuis\b
+    - \blequel\b
+    - \blaquelle\b
+    - \bhormis\b
+    - \bparce\s+qu(e\b|')
+    - \bbien\s+qu(e\b|')
+    - \bet\s+qu(e\b|')
+    - \balors\s+qu(e\b|')
+    - \blorsqu(e\b|')
+    - \ben\s+dehors\s+(?=d)
+    - \bmalgr[ée]\b
+    - \ben\s+raison\s+de\b
+    - (?<=[\r\n;\?!\(\):])[\w\d]     # lettre ou chiffre après un ensemble de caractères
+    - (?<=\D\.)\s+[\w\d] # lettre ou chiffre un point s'il n'est pas précédé par un chiffre
+    - (?<=\D,)\s+[\w\d](?!.*(et|ou|ni)) # lettre ou chiffre après une virgule si elle n'est pas précédée par un chiffre et si elle ne semble pas faire partie d'une énumération

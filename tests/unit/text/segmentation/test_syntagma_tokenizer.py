@@ -121,3 +121,49 @@ def test_syntagma_def_file(tmp_path):
         filepath=filepath, encoding="utf-8"
     )
     assert loaded_seps == separators
+
+
+def test_tokenizer_behavior():
+    syntagma_tokenizer = SyntagmaTokenizer()
+
+    # use cases with '*qu'il/qu'elle/que'
+    segment = _get_segment_from_text(
+        "J'ai recommandé environ six à huit semaines de Medifast pour que le patient"
+        " obtienne une perte de poids préopératoire de 10 %. "  # pour que
+        "Elle a récemment eu des travaux de laboratoire et du cholestérol pour une"
+        " demande d'assurance-vie et va m'envoyer ces résultats lorsqu'ils seront"
+        " disponibles."  # lorsqu
+        "Cet après-midi, elle m'a appelé parce que la fréquence cardiaque était entre"
+        " 120 et 140. "  # parce que
+        "Elle souffre également d'une maladie de la thyroïde dans le passé bien que"
+        " cela ne soit pas clair. "  # bien que
+        "La patiente déclare qu'elle est en surpoids depuis environ 35 ans et qu'elle a"
+        " essayé plusieurs modalités de perte de poids dans le passé. "  # et qu
+        "Cet après-midi, alors que je vois le patient, l'infirmière m'informe que le"
+        " rythme a finalement été contrôlé avec de l'esmolol. "  # alors qu
+        "Alternativement, je pourrais l'amener à l'hôpital pour quatre jours de"
+        " drainage du LCR. "  # pour quatre - no match
+    )
+
+    syntagmas = syntagma_tokenizer.run([segment])
+    assert any([syntagma.text.startswith("pour qu") for syntagma in syntagmas])
+    assert any([syntagma.text.startswith("lorsqu") for syntagma in syntagmas])
+    assert any([syntagma.text.startswith("parce que") for syntagma in syntagmas])
+    assert any([syntagma.text.startswith("bien qu") for syntagma in syntagmas])
+    assert any([syntagma.text.startswith("et qu") for syntagma in syntagmas])
+    assert any([syntagma.text.startswith("alors qu") for syntagma in syntagmas])
+    assert not all([syntagma.text.startswith("quatre jours") for syntagma in syntagmas])
+
+    # use cases with '.'
+
+    segment = _get_segment_from_text(
+        "Repos à domicile. Absence de fièvre, frissons, hallucinations ou sueurs"
+        " nocturnes"
+    )
+
+    syntagmas = syntagma_tokenizer.run([segment])
+    assert syntagmas[0].text == "Repos à domicile."
+    assert (
+        syntagmas[1].text
+        == "Absence de fièvre, frissons, hallucinations ou sueurs nocturnes"
+    )
