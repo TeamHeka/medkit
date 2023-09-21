@@ -31,6 +31,7 @@ class RushSentenceTokenizer(SegmentationOperation):
         output_label: str = _DEFAULT_LABEL,
         path_to_rules: Optional[Union[str, Path]] = None,
         keep_newlines: bool = True,
+        attrs_to_copy: Optional[List[str]] = None,
         uid: Optional[str] = None,
     ):
         """
@@ -48,6 +49,10 @@ class RushSentenceTokenizer(SegmentationOperation):
             With the default rules, newline chars are not used to split
             sentences, therefore a sentence maybe contain one or more newline chars.
             If `keep_newlines` is False, newlines will be replaced by spaces.
+        attrs_to_copy:
+            Labels of the attributes that should be copied from the input segment
+            to the derived segment. For example, useful for propagating section name.
+
         uid:
             Identifier of the tokenizer
         """
@@ -56,12 +61,16 @@ class RushSentenceTokenizer(SegmentationOperation):
         init_args.pop("self")
         super().__init__(**init_args)
 
+        if attrs_to_copy is None:
+            attrs_to_copy = []
+
         if path_to_rules is None:
             path_to_rules = _PATH_TO_DEFAULT_RULES
 
         self.output_label = output_label
         self.path_to_rules = path_to_rules
         self.keep_newlines = keep_newlines
+        self.attrs_to_copy = attrs_to_copy
         self._rush = RuSH(str(path_to_rules))
 
     def run(self, segments: List[Segment]) -> List[Segment]:
@@ -103,6 +112,17 @@ class RushSentenceTokenizer(SegmentationOperation):
                 spans=spans,
                 text=text,
             )
+
+            # Copy inherited attributes
+            for label in self.attrs_to_copy:
+                for attr in segment.attrs.get(label=label):
+                    copied_attr = attr.copy()
+                    sentence.attrs.add(copied_attr)
+                    # handle provenance
+                    if self._prov_tracer is not None:
+                        self._prov_tracer.add_prov(
+                            copied_attr, self.description, [attr]
+                        )
 
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(

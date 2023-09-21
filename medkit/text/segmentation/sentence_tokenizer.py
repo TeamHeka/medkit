@@ -20,6 +20,7 @@ class SentenceTokenizer(SegmentationOperation):
         punct_chars: Tuple[str] = _DEFAULT_PUNCT_CHARS,
         keep_punct: bool = False,
         split_on_newlines: bool = True,
+        attrs_to_copy: Optional[List[str]] = None,
         uid: Optional[str] = None,
     ):
         """
@@ -36,6 +37,9 @@ class SentenceTokenizer(SegmentationOperation):
             If False, the sentence text does not include the end punctuations.
         split_on_newlines:
             Whether to consider that newlines characters are sentence boundaries or not.
+        attrs_to_copy:
+            Labels of the attributes that should be copied from the input segment
+            to the derived segment. For example, useful for propagating section name.
         uid: str, Optional
             Identifier of the tokenizer
         """
@@ -44,10 +48,14 @@ class SentenceTokenizer(SegmentationOperation):
         init_args.pop("self")
         super().__init__(**init_args)
 
+        if attrs_to_copy is None:
+            attrs_to_copy = []
+
         self.output_label = output_label
         self.punct_chars = punct_chars
         self.keep_punct = keep_punct
         self.split_on_newlines = split_on_newlines
+        self.attrs_to_copy = attrs_to_copy
 
         # pre-compile patterns
         self._newline_pattern = re.compile(
@@ -124,6 +132,15 @@ class SentenceTokenizer(SegmentationOperation):
             spans=spans,
             text=text,
         )
+
+        # Copy inherited attributes
+        for label in self.attrs_to_copy:
+            for attr in source_segment.attrs.get(label=label):
+                copied_attr = attr.copy()
+                sentence.attrs.add(copied_attr)
+                # handle provenance
+                if self._prov_tracer is not None:
+                    self._prov_tracer.add_prov(copied_attr, self.description, [attr])
 
         if self._prov_tracer is not None:
             self._prov_tracer.add_prov(
