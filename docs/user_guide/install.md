@@ -1,6 +1,6 @@
 # Installation
 
-The medkit package supports a version of python >= 3.7.
+The medkit package supports a version of python >= 3.8.
 
 ## Install an official version
 

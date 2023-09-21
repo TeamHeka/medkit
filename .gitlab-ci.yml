@@ -1,4 +1,4 @@
-image: python:3.7
+image: python:3.8
 
 variables:
   POETRY_HOME: /etc/poetry
@@ -27,10 +27,10 @@ cache: &default_cache
 
 # Define reusable scripts
 .prepare_poetry_env: &prepare_poetry_env
-  - curl -sSL https://install.python-poetry.org | python3 - --version 1.4.0
+  - curl -sSL https://install.python-poetry.org | python3 - --version 1.6.1
   - export PATH=$PATH:$POETRY_HOME/bin
   - poetry --version
-  - poetry env use python3.7
+  - poetry env use python3.8
   - poetry env info
 
 .install_test_packages: &install_test_packages
@@ -78,9 +78,11 @@ setup_cache:
 
 linting:
   stage: test
-  extends: .use_cache
   before_script:
-    - source .venv/bin/activate
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
+    - pip install pre-commit
     - pre-commit install
   script:
     - echo "Executing linting..."
@@ -101,8 +103,8 @@ unit_tests:
   script:
     - echo "Executing unit tests..."
     - coverage run -m pytest -rsv --junit-xml=report.xml tests/unit
-    - coverage report
-    - coverage xml
+    - coverage report -i
+    - coverage xml -i
   coverage: '/^TOTAL.+?(\d+\%)$/'
   artifacts:
     reports:
