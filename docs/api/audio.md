@@ -2,6 +2,8 @@
 
 This page lists all components related to audio processing.
 
+
+
 :::{note}
 For more details about all sub-packages, refer to
 {mod}`medkit.audio`.
@@ -47,10 +49,15 @@ For more details, refer to
 ### Pyannote speaker detector
 
 :::{important}
-{class}`~.audio.segmentation.pa_speaker_detector.PASpeakerDetector` needs
-additional dependencies that can be installed with `pip install
-medkit-lib[pa-speaker-detector]`
+{class}`~.audio.segmentation.pa_speaker_detector.PASpeakerDetector` is an experimental feature.
+It depends on a version of pyannote-audio that [is not released yet](https://github.com/pyannote/pyannote-audio/issues/1460) on PyPI.
 :::
+
+To install it, you may use the `JSALT2023` tag :
+
+```
+pip install https://github.com/pyannote/pyannote-audio/archive/refs/tags/JSALT2023.tar.gz
+```
 
 For more details, refer to {mod}`medkit.audio.segmentation.pa_speaker_detector`.
 
