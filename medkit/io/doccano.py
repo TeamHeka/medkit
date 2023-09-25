@@ -268,19 +268,36 @@ class DoccanoInputConverter:
             A list of TextDocuments
         """
         documents = []
-        with tempfile.TemporaryDirectory() as tmpdir:
-            for i, path_zip in enumerate(sorted(Path(dir_path).glob("*.zip"))):
-                with ZipFile(path_zip, mode="r") as zip_file:
-                    filename = zip_file.namelist()[0]
-                    zip_file.extract(filename, Path(f"{tmpdir}/tmpfile_{i}"))
-
-            for input_file in sorted(Path(tmpdir).rglob("*.jsonl")):
-                documents.extend(self.load_from_file(input_file))
+        for path_zip in sorted(Path(dir_path).glob("*.zip")):
+            documents = self.load_from_zip(path_zip)
 
         if len(documents) == 0:
             logger.warning(f"No .zip nor .jsonl found in '{dir_path}'")
 
         return documents
+
+    def load_from_zip(self, input_file: Union[str, Path]) -> List[TextDocument]:
+        """
+        Create a list of TextDocuments from a zip file containing a JSONL file
+        coming from doccano.
+
+        Parameters
+        ----------
+        input_file:
+            The path to the zip file containing a docanno JSONL file
+
+        Returns
+        -------
+        List[TextDocument]
+            A list of TextDocuments
+        """
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with ZipFile(input_file, mode="r") as zip_file:
+                filename = zip_file.namelist()[0]
+                unzipped_file = Path(tmpdir) / filename
+                zip_file.extract(filename, tmpdir)
+            return self.load_from_file(unzipped_file)
 
     def load_from_file(self, input_file: Union[str, Path]) -> List[TextDocument]:
         """Create a list of TextDocuments from a doccano JSONL file.
