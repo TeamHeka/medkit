@@ -14,7 +14,7 @@ from medkit.core.text import (
 )
 from medkit.text.spacy.displacy_utils import (
     medkit_doc_to_displacy,
-    segments_to_displacy,
+    entities_to_displacy,
 )
 
 _TEXT = "The patient has asthma and a diabetes of type 1."
@@ -110,11 +110,11 @@ _TEST_DATA = [
 
 
 @pytest.mark.parametrize(
-    "segments,segment_formatter,expected_displacy_data",
+    "entities,entity_formatter,expected_displacy_data",
     _TEST_DATA,
 )
-def test_segments_to_displacy(segments, segment_formatter, expected_displacy_data):
-    displacy_data = segments_to_displacy(segments, _TEXT, segment_formatter)
+def test_entities_to_displacy(entities, entity_formatter, expected_displacy_data):
+    displacy_data = entities_to_displacy(entities, _TEXT, entity_formatter)
 
     assert displacy_data == expected_displacy_data
     displacy.render(displacy_data, manual=True, style="ent")
@@ -141,9 +141,9 @@ def test_medkit_doc_to_displacy_default():
     # by default, display all entities but not segments
     displacy_data = medkit_doc_to_displacy(doc)
 
-    # should have same result as directly calling segments_to_displacy() with all entities
+    # should have same result as directly calling entities_to_displacy() with all entities
     entities = doc.anns.get_entities()
-    expected_displacy_data = segments_to_displacy(entities, _TEXT)
+    expected_displacy_data = entities_to_displacy(entities, _TEXT)
     assert displacy_data == expected_displacy_data
 
 
@@ -151,9 +151,9 @@ def test_medkit_doc_to_displacy_filtered():
     doc = _get_doc()
 
     # keep only entities with "disease" label
-    displacy_data = medkit_doc_to_displacy(doc, segment_labels=["disease"])
+    displacy_data = medkit_doc_to_displacy(doc, entity_labels=["disease"])
 
-    # should have same result as directly calling segments_to_displacy() with selected entities
+    # should have same result as directly calling entities_to_displacy() with selected entities
     entities = doc.anns.get(label="disease")
-    expected_displacy_data = segments_to_displacy(entities, _TEXT)
+    expected_displacy_data = entities_to_displacy(entities, _TEXT)
     assert displacy_data == expected_displacy_data
