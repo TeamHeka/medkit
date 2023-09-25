@@ -1,6 +1,7 @@
 """
-This module needs extra-dependencies not installed as core dependencies of medkit.
-To install them, use `pip install medkit-lib[pa-speaker-detector]`.
+This module needs extra-dependencies that are not installed with medkit.
+To install them, use :
+`pip install torch https://github.com/pyannote/pyannote-audio/archive/refs/tags/JSALT2023.tar.gz`.
 """
 
 __all__ = ["PASpeakerDetector"]
