@@ -40,7 +40,9 @@ def medkit_doc_to_displacy(
 
     if entity_labels:
         entities = [
-            e for label in entity_labels for e in medkit_doc.anns.get_entities(label=label)
+            e
+            for label in entity_labels
+            for e in medkit_doc.anns.get_entities(label=label)
         ]
     else:
         entities = medkit_doc.anns.get_entities()
