@@ -288,7 +288,7 @@ class DoccanoInputConverter:
         Parameters
         ----------
         input_file:
-            The path to the JSON file containing doccano annotations
+            The path to the JSONL file containing doccano annotations
 
         Returns
         -------
