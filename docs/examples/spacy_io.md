@@ -141,11 +141,8 @@ print(attributes)
 ```
 **Visualizing Medkit annotations**
 
-As explained in other tutorials, we can display medkit annotations using `displacy`, a visualizer developed by Spacy. You can use the {func}`~medkit.text.spacy.displacy_utils.medkit_doc_to_displacy` function to format medkit annotations.
+As explained in other tutorials, we can display medkit entities using `displacy`, a visualizer developed by Spacy. You can use the {func}`~medkit.text.spacy.displacy_utils.medkit_doc_to_displacy` function to format medkit entities.
 
----
-* Entities loaded from spacy in medkit
----
 
 ```{code-cell} ipython3
 from medkit.text.spacy.displacy_utils import medkit_doc_to_displacy
@@ -153,22 +150,6 @@ from medkit.text.spacy.displacy_utils import medkit_doc_to_displacy
 # getting entities in displacy format (default config) 
 entities_data = medkit_doc_to_displacy(medkit_doc)
 displacy.render(entities_data, style="ent",manual=True)
-```
-
----
-* Spans loaded from spacy in medkit
----
-
-```{code-cell} ipython3
-
-# getting spans from 'SECTION' in displacy format
-# In this case, we display the 'name' of the segment
-section_data = medkit_doc_to_displacy(
-  medkit_doc,
-  segment_labels=["SECTION"],
-  segment_formatter=lambda sp: sp.metadata["name"]
-)
-displacy.render(section_data, style="ent",manual=True)
 ```
 
 ## Convert TextDocuments to SpacyDocs
