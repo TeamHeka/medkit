@@ -1,5 +1,5 @@
 from medkit.core import ProvTracer
-from medkit.core.text import Span
+from medkit.core.text import Span, UMLSNormAttribute
 from medkit.io.brat import BratInputConverter
 
 
@@ -56,6 +56,19 @@ def test_load():
     # check multi-span entity
     entity_2 = doc.anns.get(label="vitamin")[1]
     assert entity_2.spans == [Span(251, 260), Span(263, 264)]
+
+
+def test_load_cuis_in_notes():
+    brat_converter = BratInputConverter(cuis_in_notes=True)
+    docs = brat_converter.load(dir_path="tests/data/brat/")
+    # retrieve entity with CUI in note
+    doc = docs[0]
+    entity = doc.anns.get(label="medication")[0]
+    # check umls norm attribute
+    assert len(entity.attrs.norms) == 1
+    norm_attr = entity.attrs.norms[0]
+    assert isinstance(norm_attr, UMLSNormAttribute)
+    assert norm_attr.cui == "C0011849"
 
 
 def test_relations():

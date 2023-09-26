@@ -1,4 +1,5 @@
 T1	medication 36 46	Lisinopril
+#1	AnnotatorNotes T1	C0011849
 T2	medication 120 133	Levothyroxine
 T3	disease 84 96	hypertension
 T4	disease 147 161	Hypothyroidism

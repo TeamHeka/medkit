@@ -3,11 +3,14 @@ from __future__ import annotations
 __all__ = ["UMLSNormAttribute"]
 
 import dataclasses
+import re
 from typing import Any, Dict, List, Optional
 from typing_extensions import Self
 
 from medkit.core import dict_conv
 from medkit.core.text import EntityNormAttribute
+
+_CUI_PATTERN = re.compile(r"[Cc]\d{7}")
 
 
 @dataclasses.dataclass(init=False)
@@ -99,3 +102,7 @@ class UMLSNormAttribute(EntityNormAttribute):
             sem_types=data["sem_types"],
             metadata=data["metadata"],
         )
+
+    @staticmethod
+    def is_valid_cui(value: str) -> bool:
+        return _CUI_PATTERN.match(value) is not None

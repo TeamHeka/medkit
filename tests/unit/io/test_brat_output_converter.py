@@ -10,9 +10,11 @@ from medkit.core.text import (
     ModifiedSpan,
     TextDocument,
     EntityNormAttribute,
+    UMLSNormAttribute,
 )
 from medkit.io._brat_utils import (
     BratAttribute,
+    BratNote,
     BratEntity,
     BratRelation,
     BratAnnConfiguration,
@@ -273,6 +275,17 @@ def test__convert_attribute_to_brat():
     assert brat_attribute.target == "T1"
 
 
+def test__convert_umls_attribute_to_brat_note():
+    brat_note = BratOutputConverter._convert_umls_attribute_to_brat_note(
+        cui="C0011849", nb_note=1, target_brat_id="T1"
+    )
+    assert isinstance(brat_note, BratNote)
+    assert brat_note.uid == "#1"
+    assert brat_note.type == "AnnotatorNotes"
+    assert brat_note.value == "C0011849"
+    assert brat_note.target == "T1"
+
+
 def test__convert_relation():
     brat_converter = BratOutputConverter()
     ent_1 = Entity(uid="id_1", label="ent_suj", spans=[Span(0, 10)], text="ent_1_text")
@@ -411,3 +424,20 @@ def test_normalization_attr(tmp_path: Path):
     output_path = tmp_path / f"{doc.uid}.ann"
     ann_lines = output_path.read_text().split("\n")
     assert ann_lines[1] == "A1\tNORMALIZATION T1 umls:C0004096"
+
+
+def test_umls_in_notes(tmp_path: Path):
+    """Conversion of umls normalization attributes to notes"""
+
+    text = "Le patient souffre d'asthme"
+    doc = TextDocument(text=text)
+    entity = Entity(label="maladie", text="asthme", spans=[Span(21, 27)])
+    entity.attrs.add(UMLSNormAttribute(cui="C0004096", umls_version="2021AB"))
+    doc.anns.add(entity)
+
+    brat_converter = BratOutputConverter(cuis_in_notes=True)
+    brat_converter.save([doc], tmp_path)
+
+    output_path = tmp_path / f"{doc.uid}.ann"
+    ann_lines = output_path.read_text().split("\n")
+    assert ann_lines[1] == "#1\tAnnotatorNotes T1\tC0004096"
