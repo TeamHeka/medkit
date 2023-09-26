@@ -1,7 +1,7 @@
 __all__ = ["AttributeContainer"]
 
 import typing
-from typing import Dict, List, Optional, Iterator
+from typing import Dict, List, Optional, Union, Iterator
 
 from medkit.core.attribute import Attribute
 from medkit.core.store import Store, GlobalStore
@@ -37,6 +37,16 @@ class AttributeContainer:
         attribute)
         """
         return iter(self.get_by_id(uid) for uid in self._attr_ids)
+
+    def __getitem__(self, key: Union[int, slice]) -> Union[Attribute, List[Attribute]]:
+        """
+        Add support for subscript access
+        """
+
+        if isinstance(key, slice):
+            return [self.get_by_id(uid) for uid in self._attr_ids[key]]
+        else:
+            return self.get_by_id(self._attr_ids[key])
 
     def get(self, *, label: Optional[str] = None) -> List[Attribute]:
         """

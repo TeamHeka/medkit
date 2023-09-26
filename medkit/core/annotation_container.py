@@ -1,7 +1,7 @@
 __all__ = ["AnnotationContainer"]
 
 import typing
-from typing import Dict, Iterator, Generic, List, Optional
+from typing import Dict, Iterator, Generic, List, Optional, Union
 
 from medkit.core.annotation import AnnotationType
 from medkit.core.store import Store, GlobalStore
@@ -86,6 +86,18 @@ class AnnotationContainer(Generic[AnnotationType]):
         """
 
         return iter(self.get_by_id(uid) for uid in self._ann_ids)
+
+    def __getitem__(
+        self, key: Union[int, slice]
+    ) -> Union[AnnotationType, List[AnnotationType]]:
+        """
+        Add support for subscript access
+        """
+
+        if isinstance(key, slice):
+            return [self.get_by_id(uid) for uid in self._ann_ids[key]]
+        else:
+            return self.get_by_id(self._ann_ids[key])
 
     def get(
         self, *, label: Optional[str] = None, key: Optional[str] = None
