@@ -12,7 +12,7 @@ from flashtext import KeywordProcessor
 
 from medkit.core import Attribute
 from medkit.core.text import Segment, SegmentationOperation, span_utils
-from medkit.core.text.tokenizer_utils import lstrip, rstrip
+from medkit.core.text.utils import lstrip, rstrip
 
 
 _PATH_TO_DEFAULT_RULES = (

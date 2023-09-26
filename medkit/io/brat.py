@@ -30,10 +30,10 @@ from medkit.core.text import (
     Span,
     TextDocument,
     span_utils,
+    utils,
 )
 
 from medkit.io._common import get_anns_by_type
-from medkit.core.text import tokenizer_utils
 
 
 TEXT_EXT = ".txt"
@@ -495,7 +495,7 @@ class BratOutputConverter(OutputConverter):
             text = raw_text[fragment.start : fragment.end]
             offset = fragment.start
             # remove leading spaces from text or multiple spaces
-            text_stripped, start_text, end_text = tokenizer_utils.strip(text, offset)
+            text_stripped, start_text, end_text = utils.strip(text, offset)
             real_offset = offset + start_text
 
             # create text and spans without blank regions
