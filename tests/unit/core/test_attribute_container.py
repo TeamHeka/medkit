@@ -24,6 +24,8 @@ def test_basic():
     assert attrs.get(label="cui") == [attr_2, attr_3]
     assert len(attrs) == 3  # _len__()
     assert list(iter(attrs)) == attrs.get()  # __iter__()
+    assert attrs[0] is attr_1  # __getitem__()
+    assert attrs[1:3] == [attr_2, attr_3]  # __getitem__()
 
 
 def test_add_same_attr():

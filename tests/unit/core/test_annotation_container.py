@@ -45,5 +45,7 @@ def test_basic():
 
     assert len(anns) == 3  # _len__()
     assert list(iter(anns)) == anns.get()  # __iter__()
+    assert anns[0] is ann_1  # __getitem__()
+    assert anns[1:3] == [ann_2, ann_3]  # __getitem__()
 
     assert anns.get_by_id(ann_1.uid) == ann_1
