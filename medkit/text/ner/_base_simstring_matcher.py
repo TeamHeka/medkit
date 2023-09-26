@@ -29,10 +29,9 @@ from medkit.core.text import (
     NEROperation,
     Segment,
     EntityNormAttribute,
+    UMLSNormAttribute,
     span_utils,
 )
-from medkit.text.ner import UMLSNormAttribute
-
 
 _SIMILARITY_MAP = {
     "cosine": simstring.cosine,

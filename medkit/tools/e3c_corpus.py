@@ -36,9 +36,8 @@ from pathlib import Path
 from typing import Dict, Iterator, Optional, List, Union
 
 from medkit.core import generate_deterministic_id
-from medkit.core.text import Entity, Segment, Span, TextDocument
+from medkit.core.text import Entity, Segment, Span, TextDocument, UMLSNormAttribute
 from medkit.io.medkit_json import save_text_documents
-from medkit.text.ner import UMLSNormAttribute
 
 
 logger = logging.getLogger(__name__)

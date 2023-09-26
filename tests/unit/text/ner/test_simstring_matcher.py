@@ -9,7 +9,7 @@ except ImportError:
 import pytest
 
 from medkit.core import Attribute, ProvTracer
-from medkit.core.text import Segment, Span
+from medkit.core.text import Segment, Span, UMLSNormAttribute
 from medkit.text.ner.simstring_matcher import (
     SimstringMatcher,
     SimstringMatcherRule,
@@ -19,7 +19,6 @@ from medkit.text.ner._base_simstring_matcher import (
     _build_candidate_ranges_with_regexp,
     _build_candidate_ranges_with_spacy,
 )
-from medkit.text.ner import UMLSNormAttribute
 
 
 _TEXT = "Le patient souffre de diabète et d'asthme."

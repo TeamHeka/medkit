@@ -15,6 +15,7 @@ __all__ = [
     "Span",
     "ModifiedSpan",
     "AnySpan",
+    "UMLSNormAttribute",
     # not imported
     "utils",
     "span_utils",
@@ -33,3 +34,4 @@ from .operation import (
     create_text_operation,
 )
 from .span import Span, ModifiedSpan, AnySpan
+from .umls_norm_attribute import UMLSNormAttribute

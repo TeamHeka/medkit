@@ -261,8 +261,7 @@ Our custom operation allows to retrieve only attributes from entity with `disord
 ```{code-cell} ipython3
 import re
 from typing import List
-from medkit.core.text import Entity
-from medkit.text.ner import UMLSNormAttribute
+from medkit.core.text import Entity, UMLSNormAttribute
 
 # Defining custom function for extracting umls normalization attributes from entity
 def extract_umls_attributes_from_entity(entity, label):

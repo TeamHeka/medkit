@@ -21,9 +21,9 @@ from medkit.core.text import (
     NEROperation,
     Segment,
     EntityNormAttribute,
+    UMLSNormAttribute,
     span_utils,
 )
-from medkit.text.ner.umls_norm_attribute import UMLSNormAttribute
 from medkit.text.utils.decoding import get_ascii_from_unicode
 
 logger = logging.getLogger(__name__)

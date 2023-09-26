@@ -3,8 +3,7 @@ from pathlib import Path
 import pytest
 
 from medkit.core import Attribute, ProvTracer  # noqa: E402
-from medkit.core.text import Segment, Span  # noqa: E402
-from medkit.text.ner import UMLSNormAttribute  # noqa: E402
+from medkit.core.text import Segment, Span, UMLSNormAttribute  # noqa: E402
 from medkit.text.ner.umls_matcher import UMLSMatcher  # noqa: E402
 
 _UMLS_DIR = Path(__file__).parent / "sample_umls_data/2021AB"

@@ -14,9 +14,14 @@ import quickumls.about
 import quickumls.constants
 from quickumls import QuickUMLS
 
-from medkit.core.text import Entity, NEROperation, Segment, span_utils
+from medkit.core.text import (
+    Entity,
+    NEROperation,
+    Segment,
+    UMLSNormAttribute,
+    span_utils,
+)
 from medkit.text.ner import umls_utils
-from medkit.text.ner.umls_norm_attribute import UMLSNormAttribute
 
 # workaround for https://github.com/Georgetown-IR-Lab/QuickUMLS/issues/68
 _spacy_language_map_fixed = False

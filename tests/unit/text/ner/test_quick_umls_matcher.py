@@ -12,8 +12,7 @@ quickumls = pytest.importorskip(
 import spacy.cli  # noqa: E402
 
 from medkit.core import Attribute, ProvTracer  # noqa: E402
-from medkit.core.text import Segment, Span  # noqa: E402
-from medkit.text.ner import UMLSNormAttribute  # noqa: E402
+from medkit.core.text import Segment, Span, UMLSNormAttribute  # noqa: E402
 from medkit.text.ner.quick_umls_matcher import QuickUMLSMatcher  # noqa: E402
 
 # QuickUMLSMatcher is a wrapper around 3d-party quickumls.core.QuickUMLS,
