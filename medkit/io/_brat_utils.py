@@ -63,6 +63,19 @@ class BratAttribute:
         return f"{self.uid}\t{self.type} {self.target}{value_str}\n"
 
 
+@dataclass
+class BratNote:
+    """A simple note data structure."""
+
+    uid: str
+    target: str
+    value: str
+    type: str = "AnnotatorNotes"
+
+    def to_str(self) -> str:
+        return f"{self.uid}\t{self.type} {self.target}\t{self.value}\n"
+
+
 def ensure_attr_value(attr_value: Any) -> str:
     """
     Ensure that `attr_value` is a string. If it's not, the
@@ -117,6 +130,7 @@ class BratDocument:
     entities: Dict[str, BratEntity]
     relations: Dict[str, BratRelation]
     attributes: Dict[str, BratAttribute]
+    notes: Dict[str, BratNote]
     groups: Dict[str, Grouping] = None
 
     def get_augmented_entities(self) -> Dict[str, BratAugmentedEntity]:
@@ -345,11 +359,12 @@ def parse_string(ann_string: str, detect_groups: bool = False) -> BratDocument:
     entities = dict()
     relations = dict()
     attributes = dict()
+    notes = dict()
 
     annotations = ann_string.split("\n")
     for i, ann in enumerate(annotations):
         line_number = i + 1
-        if len(ann) == 0 or ann[0] not in ("T", "R", "A"):
+        if len(ann) == 0 or ann[0] not in ("T", "R", "A", "#"):
             logger.info(
                 f"Ignoring empty line or unsupported annotation {ann} on {line_number}"
             )
@@ -365,6 +380,9 @@ def parse_string(ann_string: str, detect_groups: bool = False) -> BratDocument:
             elif ann.startswith("A"):
                 attribute = _parse_attribute(ann_id, ann_content)
                 attributes[attribute.uid] = attribute
+            elif ann.startswith("#"):
+                note = _parse_note(ann_id, ann_content)
+                notes[note.uid] = note
         except ValueError as err:
             logger.warning(err)
             logger.warning(f"Ignore annotation {ann_id} at line {line_number}")
@@ -385,7 +403,7 @@ def parse_string(ann_string: str, detect_groups: bool = False) -> BratDocument:
                         items.append(entities[relation.obj])
                 groups[entity.uid] = Grouping(entity.uid, entity.type, items)
 
-    return BratDocument(entities, relations, attributes, groups)
+    return BratDocument(entities, relations, attributes, notes, groups)
 
 
 def _parse_entity(entity_id: str, entity_content: str) -> BratEntity:
@@ -497,4 +515,43 @@ def _parse_attribute(attribute_id: str, attribute_content: str) -> BratAttribute
         attribute_name.strip(),
         attribute_target.strip(),
         attribute_value,
+    )
+
+
+def _parse_note(note_id: str, note_content: str) -> BratNote:
+    """
+    Parse the annotation string into an Note structure.
+
+    Parameters
+    ----------
+    note_id : str
+        The note ID defined in the annotation. (e.g., `#1`)
+    note_content: str
+        The note text content. (e.g., `AnnotatorNotes T10	C0011849`)
+
+    Returns
+    -------
+    BratNote:
+        The dataclass object representing the note
+
+    Raises
+    ------
+    ValueError
+        Raises when the note can't be parsed
+    """
+    parts = note_content.split("\t", maxsplit=1)
+    if len(parts) != 2:
+        raise ValueError("Impossible to parse the input note")
+    note_arguments, note_value = parts
+
+    parts = note_arguments.split(" ", maxsplit=1)
+    if len(parts) != 2:
+        raise ValueError("Impossible to parse the input note")
+    note_type, note_target = parts
+
+    return BratNote(
+        uid=note_id.strip(),
+        target=note_target.strip(),
+        value=note_value.strip(),
+        type=note_type.strip(),
     )

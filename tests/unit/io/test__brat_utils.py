@@ -12,6 +12,7 @@ from medkit.io._brat_utils import (
     _parse_entity,
     _parse_relation,
     _parse_attribute,
+    _parse_note,
     parse_file,
 )
 
@@ -78,6 +79,15 @@ def test__parse_attribute_error():
     attribute_id, attribute_content = brat_attribute.split("\t", maxsplit=1)
     with pytest.raises(ValueError):
         _parse_attribute(attribute_id, attribute_content)
+
+
+def test__parse_note():
+    brat_note = "#1	AnnotatorNotes T20	C0011849"
+    note_id, note_content = brat_note.split("\t", maxsplit=1)
+    note = _parse_note(note_id, note_content)
+    assert note.uid == "#1"
+    assert note.type == "AnnotatorNotes"
+    assert note.target == "T20"
 
 
 def test_parse_file():
