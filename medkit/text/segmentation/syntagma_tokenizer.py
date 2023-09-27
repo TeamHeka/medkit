@@ -9,7 +9,7 @@ from typing import Iterator, List, Optional, Tuple
 import yaml
 
 from medkit.core.text import Segment, SegmentationOperation, span_utils
-from medkit.text.segmentation.tokenizer_utils import lstrip, rstrip
+from medkit.core.text.utils import lstrip, rstrip
 
 _PATH_TO_DEFAULT_RULES = (
     pathlib.Path(__file__).parent / "default_syntagma_definition.yml"
