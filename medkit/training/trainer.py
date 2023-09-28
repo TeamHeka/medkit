@@ -287,19 +287,26 @@ class Trainer:
                 epoch=epoch,
                 epoch_duration=time.time() - epoch_start_time,
             )
-        self.save()
+        self.save(epoch)
         self.callback.on_train_end()
         return log_history
 
     def save(self):
-        """Save a final checkpoint and the trainer configuration"""
+        """
+        Save a checkpoint (trainer configuration, model weights, optimizer and
+        scheduler)
+        """
+
         current_date = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M")
         name = f"checkpoint_{current_date}"
 
-        self.save_checkpoint(name)
+        checkpoint_dir = os.path.join(self.output_dir, name)
+        self.callback.on_save(checkpoint_dir=checkpoint_dir)
+
+        os.makedirs(checkpoint_dir)
 
         # save config
-        config_path = os.path.join(self.output_dir, name, CONFIG_NAME)
+        config_path = os.path.join(checkpoint_dir, CONFIG_NAME)
         with open(str(config_path), mode="w") as fp:
             yaml.safe_dump(
                 self.config.to_dict(),
@@ -309,13 +316,6 @@ class Trainer:
                 sort_keys=False,
             )
 
-    def save_checkpoint(self, name):
-        """Save a trainer state. It saves the optimizer, scheduler"""
-
-        checkpoint_dir = os.path.join(self.output_dir, name)
-        self.callback.on_save(checkpoint_dir=checkpoint_dir)
-
-        os.makedirs(checkpoint_dir, exist_ok=True)
         torch.save(
             self.optimizer.state_dict(), os.path.join(checkpoint_dir, OPTIMIZER_NAME)
         )
