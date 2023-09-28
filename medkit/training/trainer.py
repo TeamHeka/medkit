@@ -122,7 +122,8 @@ class Trainer:
         self.metrics_computer = metrics_computer
 
         if callback is None:
-            self.callback = DefaultPrinterCallback()
+            callback = DefaultPrinterCallback()
+        self.callback = callback
 
     def get_dataloader(self, data: any, shuffle: bool) -> DataLoader:
         """Return a DataLoader with transformations defined
