@@ -291,14 +291,20 @@ class Trainer:
         self.callback.on_train_end()
         return log_history
 
-    def save(self):
+    def save(self, epoch: int):
         """
         Save a checkpoint (trainer configuration, model weights, optimizer and
         scheduler)
+
+        Parameters
+        ----------
+        epoch:
+            Epoch corresponding of the current training state (will be included
+            in the checkpoint name)
         """
 
         current_date = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M")
-        name = f"checkpoint_{current_date}"
+        name = f"checkpoint_{epoch:3d}_{current_date}"
 
         checkpoint_dir = os.path.join(self.output_dir, name)
         self.callback.on_save(checkpoint_dir=checkpoint_dir)
