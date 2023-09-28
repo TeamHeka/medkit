@@ -5,6 +5,7 @@ __all__ = ["Trainer"]
 import datetime
 import os
 import random
+import shutil
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -269,6 +270,9 @@ class Trainer:
         """
         self.callback.on_train_begin(config=self.config)
         log_history = []
+        last_checkpoint_dir = None
+        best_checkpoint_dir = None
+        best_checkpoint_metric = None
 
         for epoch in range(1, self.nb_training_epochs + 1):
             epoch_start_time = time.time()
@@ -287,11 +291,28 @@ class Trainer:
                 epoch=epoch,
                 epoch_duration=time.time() - epoch_start_time,
             )
-        self.save(epoch)
+
+            # save last checkpoint
+            last_checkpoint_dir = self.save(epoch)
+            # track best checkpoint, and remove former best checkpoint if last
+            # checkpoint is the new best
+            last_checkpoint_metric = metrics["eval"][self.config.checkpoint_metric]
+            if best_checkpoint_dir is None:
+                best_checkpoint_dir = last_checkpoint_dir
+                best_checkpoint_metric = last_checkpoint_metric
+            else:
+                if (
+                    self.config.minimize_checkpoint_metric
+                    and last_checkpoint_metric < best_checkpoint_metric
+                ) or last_checkpoint_metric > best_checkpoint_metric:
+                    shutil.rmtree(best_checkpoint_dir)
+                    best_checkpoint_dir = last_checkpoint_dir
+                    best_checkpoint_metric = last_checkpoint_metric
+
         self.callback.on_train_end()
         return log_history
 
-    def save(self, epoch: int):
+    def save(self, epoch: int) -> str:
         """
         Save a checkpoint (trainer configuration, model weights, optimizer and
         scheduler)
@@ -301,6 +322,11 @@ class Trainer:
         epoch:
             Epoch corresponding of the current training state (will be included
             in the checkpoint name)
+
+        Returns
+        -------
+        Path:
+            Path of the checkpoint saved
         """
 
         current_date = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M")
@@ -333,3 +359,5 @@ class Trainer:
             )
 
         self.component.save(checkpoint_dir)
+
+        return checkpoint_dir

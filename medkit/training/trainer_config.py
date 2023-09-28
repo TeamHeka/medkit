@@ -35,6 +35,12 @@ class TrainerConfig:
     metric_to_track_lr:
         Name of the eval metric to be tracked for updating the learning rate.
         By default, eval `loss` is tracked.
+    checkpoint_metric:
+        Name of the eval metric to be tracked for selecting the best checkpoint.
+        By default, eval `loss` is tracked.
+    minimize_checkpoint_metric:
+        If `True`, the checkpoint with the lowest metric value will be selected
+        as best, otherwise the checkpoint with the highest metric value.
     """
 
     output_dir: str
@@ -46,6 +52,8 @@ class TrainerConfig:
     gradient_accumulation_steps: int = 1
     do_metrics_in_training: bool = False
     metric_to_track_lr: str = "loss"
+    checkpoint_metric: str = "loss"
+    minimize_checkpoint_metric: bool = True
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(
