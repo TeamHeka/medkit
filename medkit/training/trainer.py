@@ -300,14 +300,13 @@ class Trainer:
             if best_checkpoint_dir is None:
                 best_checkpoint_dir = last_checkpoint_dir
                 best_checkpoint_metric = last_checkpoint_metric
-            else:
-                if (
-                    self.config.minimize_checkpoint_metric
-                    and last_checkpoint_metric < best_checkpoint_metric
-                ) or last_checkpoint_metric > best_checkpoint_metric:
-                    shutil.rmtree(best_checkpoint_dir)
-                    best_checkpoint_dir = last_checkpoint_dir
-                    best_checkpoint_metric = last_checkpoint_metric
+            elif (
+                self.config.minimize_checkpoint_metric
+                and last_checkpoint_metric < best_checkpoint_metric
+            ) or last_checkpoint_metric > best_checkpoint_metric:
+                shutil.rmtree(best_checkpoint_dir)
+                best_checkpoint_dir = last_checkpoint_dir
+                best_checkpoint_metric = last_checkpoint_metric
 
         self.callback.on_train_end()
         return log_history
