@@ -329,7 +329,7 @@ class Trainer:
         """
 
         current_date = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M")
-        name = f"checkpoint_{epoch:3d}_{current_date}"
+        name = f"checkpoint_{epoch:03d}_{current_date}"
 
         checkpoint_dir = os.path.join(self.output_dir, name)
         self.callback.on_save(checkpoint_dir=checkpoint_dir)
