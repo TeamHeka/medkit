@@ -303,7 +303,10 @@ class Trainer:
             elif (
                 self.config.minimize_checkpoint_metric
                 and last_checkpoint_metric < best_checkpoint_metric
-            ) or last_checkpoint_metric > best_checkpoint_metric:
+            ) or (
+                not self.config.minimize_checkpoint_metric
+                and last_checkpoint_metric > best_checkpoint_metric
+            ):
                 shutil.rmtree(best_checkpoint_dir)
                 best_checkpoint_dir = last_checkpoint_dir
                 best_checkpoint_metric = last_checkpoint_metric
