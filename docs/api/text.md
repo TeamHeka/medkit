@@ -7,6 +7,89 @@ For more details about all sub-packages, refer to
 {mod}`medkit.text`.
 :::
 
+## Summary
+
+Here is a list of all the medkit text operations with a direct link to the corresponding API docs. Scrolling down this page, you will find more details about the components of `medkit.text`.
+
+**Preprocessing:**
+:::{list-table}
+*   - {mod}`CharReplacer<medkit.text.preprocessing.char_replacer>`
+    - Fast replacement of 1-char string by n-char strings
+*   - {mod}`RegexpReplacer<medkit.text.preprocessing.regexp_replacer>`
+    - Patterns replacement
+*   - {mod}`EDSCleaner<medkit.text.preprocessing.eds_cleaner>`
+    - Cleaning of texts extracted from the APHP EDS
+*   - {mod}`DuplicateFinder<medkit.text.preprocessing.duplicate_finder>`
+    - Detection of duplicated parts across documents based on [duptextfinder](https://github.com/equipe22/duplicatedZoneInClinicalText/)
+:::
+
+**Segmentation:**
+:::{list-table}
+*   - {mod}`SectionTokenizer<medkit.text.segmentation.section_tokenizer>`
+    - Rule-based detection of sections
+*   - {mod}`SentenceTokenizer<medkit.text.segmentation.sentence_tokenizer>`
+    - Rule-based sentence splitting
+*   - {mod}`RushSentenceTokenizer<medkit.text.segmentation.rush_sentence_tokenizer>`
+    - Sentence splitting based on [PyRuSH](https://github.com/jianlins/PyRuSH/)
+*   - {mod}`SyntagmaTokenizer<medkit.text.segmentation.syntagma_tokenizer>`
+    - Rule-based sub-sentence splitting
+:::
+
+**Context:**
+:::{list-table}
+*   - {mod}`NegationDetector<medkit.text.context.negation_detector>`
+    - Detection of negation
+*   - {mod}`HypothesisDetector<medkit.text.context.hypothesis_detector>`
+    - Detection of hypothesis
+*   - {mod}`FamilyDetector<medkit.text.context.family_detector>`
+    - Detection of family antecedents
+:::
+
+**Named Entity Recognition:**
+:::{list-table}
+*   - {mod}`RegexpMatcher<medkit.text.ner.regexp_matcher>`
+    - Regexp-based entity matching
+*   - {mod}`SimstringMatcher<medkit.text.ner.simstring_matcher>`
+    - Fast fuzzy matching based on [simstring](http://chokkan.org/software/simstring/)
+*   - {mod}`IAMSystemMatcher<medkit.text.ner.iamsystem_matcher>`
+    - Advanced entity matching based on [IAMSystem](https://github.com/scossin/iamsystem_python)
+*   - {mod}`UMLSMatcher<medkit.text.ner.umls_matcher>`
+    - Matching of [UMLS](https://www.nlm.nih.gov/research/umls) terms based on [simstring](http://chokkan.org/software/simstring/)
+*   - {mod}`QuickUMLSMatcher<medkit.text.ner.quick_umls_matcher>`
+    - Matching of [UMLS](https://www.nlm.nih.gov/research/umls/) terms based on [QuickUMLS](https://github.com/Georgetown-IR-Lab/QuickUMLS)
+*   - {mod}`HFEntityMatcher<medkit.text.ner.hf_entity_matcher>`
+    - Entity matcher relying on [HuggingFace transformers](https://huggingface.co/docs/transformers/) models
+*   - {mod}`DucklingMatcher<medkit.text.ner.duckling_matcher>`
+    - General matcher (dates, quantities, etc) relying on [Duckling](https://github.com/facebook/duckling)
+coder normalizer
+*   - {mod}`EDSNLPDateMatcher<medkit.text.ner.edsnlp_date_matcher>`
+    - Date/time matching based on [EDS-NLP](https://aphp.github.io/edsnlp/)
+*   - {mod}`UMLSCoderNormalizer<medkit.text.ner.umls_coder_normalizer>`
+    - Normalization of pre-existing entities to [UMLS](https://www.nlm.nih.gov/research/umls/) CUIs relying on a [CODER model](https://github.com/GanjinZero/CODER)
+:::
+
+**spaCy:**
+:::{list-table}
+*   - {mod}`SpacyPipeline<medkit.text.spacy.pipeline>`
+    - Operation wrapping a [spaCy](https://spacy.io/) pipeline to work at the annotation level
+*   - {mod}`SpacyDocPipeline<medkit.text.spacy.doc_pipeline>`
+    - Operation wrapping a [spaCy](https://spacy.io/) pipeline to work at the document level
+*   - {class}`~medkit.text.spacy.edsnlp.EDSNLPPipeline`
+    - Operation wrapping an [EDS-NLP](https://aphp.github.io/edsnlp/) pipeline to work at the annotation level
+*   - {class}`~medkit.text.spacy.edsnlp.EDSNLPDocPipeline`
+    - Operation wrapping an [EDS-NLP](https://aphp.github.io/edsnlp/) pipeline to work at the document level
+:::
+
+**Misc:**
+:::{list-table}
+*   - {mod}`SyntaticRelationExtractor<medkit.text.relations.syntactic_relation_extractor>`
+    - Relation detector relying on [spaCy](https://spacy.io/)'s dependency parser
+*   - {mod}`HFTranslator<medkit.text.translation.hf_translator>`
+    - Translation operation relying on [HuggingFace transformers](https://huggingface.co/docs/transformers/) models
+*   - {mod}`AttributeDuplicator<medkit.text.postprocessing.attribute_duplicator>`
+    - Propagation of attributes based on annotation spans
+:::
+
 ## Pre-processing modules
 
 This section provides some information about how to use preprocessing modules.
