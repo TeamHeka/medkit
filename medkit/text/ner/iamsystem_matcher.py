@@ -36,9 +36,9 @@ class MedkitKeyword:
     def __init__(
         self,
         label: str,  # String to search in text
-        kb_id: Optional[Any],
-        kb_name: Optional[str],
-        ent_label: Optional[str],  # Output label for the detected entity
+        kb_id: Optional[Any] = None,
+        kb_name: Optional[str] = None,
+        ent_label: Optional[str] = None,  # Output label for the detected entity
     ):
         self.label = label
         self.kb_id = kb_id
