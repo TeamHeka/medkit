@@ -64,6 +64,8 @@ Here is a list of all the medkit text operations with a direct link to the corre
 coder normalizer
 *   - {mod}`EDSNLPDateMatcher<medkit.text.ner.edsnlp_date_matcher>`
     - Date/time matching based on [EDS-NLP](https://aphp.github.io/edsnlp/)
+*   - {mod}`EDSNLPTNMMatcher<medkit.text.ner.edsnlp_tnm_matcher>`
+    - TNM (Tumour/Node/Metastasis) matching based on [EDS-NLP](https://aphp.github.io/edsnlp/)
 *   - {mod}`UMLSCoderNormalizer<medkit.text.ner.umls_coder_normalizer>`
     - Normalization of pre-existing entities to [UMLS](https://www.nlm.nih.gov/research/umls/) CUIs relying on a [CODER model](https://github.com/GanjinZero/CODER)
 :::
