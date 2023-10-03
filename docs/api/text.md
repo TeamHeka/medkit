@@ -82,7 +82,7 @@ coder normalizer
 
 **Misc:**
 :::{list-table}
-*   - {mod}`SyntaticRelationExtractor<medkit.text.relations.syntactic_relation_extractor>`
+*   - {mod}`SyntacticRelationExtractor<medkit.text.relations.syntactic_relation_extractor>`
     - Relation detector relying on [spaCy](https://spacy.io/)'s dependency parser
 *   - {mod}`HFTranslator<medkit.text.translation.hf_translator>`
     - Translation operation relying on [HuggingFace transformers](https://huggingface.co/docs/transformers/) models
