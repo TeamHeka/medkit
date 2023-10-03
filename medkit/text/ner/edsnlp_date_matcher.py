@@ -26,7 +26,7 @@ class EDSNLPDateMatcher(NEROperation):
     dernière") and durations (ex: "pendant quatre jours") will be matched.
 
     For each date that is found, an entity will be created with an attribute
-    attached to it containing normalized values if the date components. The
+    attached to it containing normalized values of the date components. The
     attribute label will always be "date", and the class of the attribute will
     be either class :class:`~medkit.text.ner.DateAttribute`,
     :class:`~medkit.text.ner.RelativeDateAttribute` or
