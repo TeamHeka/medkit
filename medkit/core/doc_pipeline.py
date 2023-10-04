@@ -18,7 +18,7 @@ class DocPipeline(DocOperation, Generic[AnnotationType]):
     def __init__(
         self,
         pipeline: Pipeline,
-        labels_by_input_key: Dict[str, List[str]],
+        labels_by_input_key: Optional[Dict[str, List[str]]] = None,
         uid: Optional[str] = None,
     ):
         """Initialize the pipeline
@@ -32,16 +32,20 @@ class DocPipeline(DocOperation, Generic[AnnotationType]):
             Annotations returned by `pipeline` (corresponding to its `output_keys`)
             will be added to documents.
         labels_by_input_key:
-            Labels of existing annotations that should be retrieved from
+            Optional Labels of existing annotations that should be retrieved from
             documents and passed to the pipeline as input. One list of labels
             per input key.
 
-            For the typical use case where the pipeline takes a text document
-            raw segment as input with key "full_text":
+            When `labels_by_input_key` is not provided, it is assumed that the
+            `pipeline` just expects the document raw segments as input.
+
+            For the use case where the documents contain pre-existing sentence segments
+            labelled as "SENTENCE", that we want to pass the "sentences" input
+            key of the pipeline:
 
             >>> doc_pipeline = DocPipeline(
             >>>     pipeline,
-            >>>     labels_by_input={"full_text": [TextDocument.RAW_SEGMENT]},
+            >>>     labels_by_input={"sentences": ["SENTENCE"]},
             >>> )
 
             Because the values of `labels_by_input_key` are lists (one per
@@ -55,7 +59,7 @@ class DocPipeline(DocOperation, Generic[AnnotationType]):
         super().__init__(**init_args)
 
         self.pipeline = pipeline
-        self.labels_by_input_key: Dict[str, List[str]] = labels_by_input_key
+        self.labels_by_input_key: Optional[Dict[str, List[str]]] = labels_by_input_key
 
     def set_prov_tracer(self, prov_tracer: ProvTracer):
         self.pipeline.set_prov_tracer(prov_tracer)
@@ -78,10 +82,24 @@ class DocPipeline(DocOperation, Generic[AnnotationType]):
 
     def _process_doc(self, doc: Document[AnnotationType]):
         all_input_anns = []
-        for input_key in self.pipeline.input_keys:
-            labels = self.labels_by_input_key[input_key]
-            input_anns = [ann for label in labels for ann in doc.anns.get(label=label)]
-            all_input_anns.append(input_anns)
+
+        if self.labels_by_input_key is None:
+            # default to raw segment if no labels_by_input_key provided
+            if len(self.pipeline.input_keys) > 1:
+                raise Exception(
+                    "Pipeline expects more than 1 input, you must provide a"
+                    " labels_by_input_key mapping to the DocPipeline"
+                )
+            all_input_anns = [[doc.raw_segment]]
+        else:
+            # retrieve annotations by their label(s) for each input key
+            for input_key in self.pipeline.input_keys:
+                labels = self.labels_by_input_key[input_key]
+                input_anns = [
+                    ann for label in labels for ann in doc.anns.get(label=label)
+                ]
+                all_input_anns.append(input_anns)
+
         all_output_anns = self.pipeline.run(*all_input_anns)
 
         # wrap output in tuple if necessary

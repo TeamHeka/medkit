@@ -10,7 +10,11 @@ from medkit.core import (
 )
 from medkit.core.doc_pipeline import DocPipeline
 
-
+_FULL_TEXT = (
+    "This is a sentence. This is another sentence. This is the last sentence.\nThis is"
+    " a sentence with a different label. This is another sentence with a different"
+    " label."
+)
 _SENTENCES = [
     "This is a sentence",
     "This is another sentence",
@@ -21,14 +25,6 @@ _ALT_SENTENCES = [
     "This is another sentence with a different label",
 ]
 _ENTITIES = ["Entity1", "Entity2"]
-
-
-class _TextDocument:
-    """Mock text document"""
-
-    def __init__(self):
-        self.uid = generate_id()
-        self.anns = AnnotationContainer(doc_id=self.uid)
 
 
 class _TextAnnotation:
@@ -42,8 +38,17 @@ class _TextAnnotation:
         self.attrs = AttributeContainer(ann_id=self.uid)
 
 
+class _TextDocument:
+    """Mock text document"""
+
+    def __init__(self, text):
+        self.uid = generate_id()
+        self.anns = AnnotationContainer(doc_id=self.uid)
+        self.raw_segment = _TextAnnotation(label="raw", text=text)
+
+
 def _get_doc():
-    doc = _TextDocument()
+    doc = _TextDocument(text=_FULL_TEXT)
     for text in _SENTENCES:
         ann = _TextAnnotation(label="sentence", text=text)
         doc.anns.add(ann)
@@ -104,8 +109,7 @@ class _AttributeAdder:
 
 
 def test_single_step():
-    """Minimalist doc pipeline with only one step, retrieving input annotations from doc
-    """
+    """Minimalist doc pipeline with only one step, retrieving input annotations from doc"""
     uppercaser = _Uppercaser(output_label="uppercased_sentence")
     step = PipelineStep(
         operation=uppercaser,
@@ -337,6 +341,30 @@ def test_labels_for_input_key_different_order():
     prefixed_entity_anns = doc.anns.get(label="prefixed_entity")
     expected_texts = [prefix + a.text for a in entity_anns]
     assert [a.text for a in prefixed_entity_anns] == expected_texts
+
+
+def test_no_labels_for_input_key():
+    """DocPipeline defaulting to raw_segment for the unique input_key of the underlying pipeline"""
+    uppercaser = _Uppercaser(output_label="uppercased_full_text")
+    step = PipelineStep(
+        operation=uppercaser,
+        input_keys=["FULL_TEXT"],
+        output_keys=["UPPERCASE"],
+    )
+    pipeline = Pipeline(
+        steps=[step],
+        input_keys=["FULL_TEXT"],
+        output_keys=["UPPERCASE"],
+    )
+    doc_pipeline = DocPipeline(pipeline=pipeline)
+
+    doc = _get_doc()
+    doc_pipeline.run([doc])
+
+    # new annotation was added to the document
+    uppercased_ann = doc.anns.get(label="uppercased_full_text")[0]
+    # operation was properly called to generate new annotation
+    assert uppercased_ann.text == doc.raw_segment.text.upper()
 
 
 def test_nested_pipeline():
