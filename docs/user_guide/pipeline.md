@@ -327,39 +327,10 @@ To handle this common use case, medkit provides a
 ```{code-cell} ipython3
 from medkit.core import DocPipeline
 
-doc_pipeline = DocPipeline(
-    pipeline=pipeline,
-    labels_by_input_key={"full_text": [TextDocument.RAW_LABEL]},
-)
+doc_pipeline = DocPipeline(pipeline=pipeline)
 
 docs = load_docs()
 doc_pipeline.run(docs)
-```
-
-The tricky part is the `labels_by_input_key` parameter. Our `DocPipeline` object
-is wrapping a `Pipeline` instance and it is responsible of calling its `run()`
-method, with the proper arguments. This implies that it needs to find, for each
-`input_key`, the corresponding annotations on the document, in order to pass
-them to `run()`. The `labels_by_input_key` mapping indicates which labels to use
-to retrieve the corresponding annotations.
-
-So here, `labels_by_input_key={"full_text": [TextDocument.RAW_LABEL]}` is
-basically telling to `DocPipeline` that, for each document, it needs to call
-`get(label=TextDocument.RAW_LABEL)` and pass the results to `pipeline.run()`.
-
-```{note}
-As we already know, the `TextDocument.raw_segment` annotation is a little bit
-special:
- - it is automatically created by `TextDocument`, and its label is always the
-   string held by the constant `TextDocument.RAW_LABEL`;
- - it is not part of the annotations returned by the various methods of
-   `TextDocument.anns`, except when calling
-   `get()` with `TextDocument.RAW_LABEL` as label.
-
-```python
-assert doc.raw_segment.label == TextDocument.RAW_LABEL
-assert doc.raw_segment not in doc.anns
-assert doc.anns.get(label=TextDocument.RAW_LABEL) == [doc.raw_segment]
 ```
 
 ## Wrapping it up
