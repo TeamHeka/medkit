@@ -22,7 +22,10 @@ class Document(Protocol[AnnotationType]):
         Annotations of the document, stored in an
         :class:`~medkit.core.annotation_container.AnnotationContainer` for
         easier access (can be subclassed to add modality-specific features).
+    raw_segment:
+        Auto-generated segment containing the full unprocessed document.
     """
 
     uid: str
     anns: AnnotationContainer[AnnotationType]
+    raw_segment: AnnotationType
