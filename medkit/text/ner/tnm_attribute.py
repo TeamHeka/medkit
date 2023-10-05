@@ -37,8 +37,6 @@ class TNMAttribute(Attribute):
         Identifier of the attribute
     label:
         The attribute label, always set to :attr:`TNMAttribute.LABEL`
-    value:
-        TNM string (ex: "pTx N1 M1")
     tumour:
         Tumour score
     tumour_specification:
