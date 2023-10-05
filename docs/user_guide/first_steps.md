@@ -260,7 +260,7 @@ for syntagma in syntagmas:
 
 That's a little better. We now have some information about negation attached to
 syntagmas, but our end goal is really to know, for each entity, whether it
-should be considered as negated or not. In more practical terms, we know have
+should be considered as negated or not. In more practical terms, we now have
 negation attributes attached to our syntagmas, but what we really want is to
 have negation attributes attached to entities.
 
@@ -287,7 +287,7 @@ We now have a negation `Attribute` for each entity!
 
 ## Augmenting a document
 
-We know have an interesting set of annotations. We might want to process them
+We now have an interesting set of annotations. We might want to process them
 directly, for instance to generate table-like data about patient treatment in
 order to compute some statistics. But we could also want to attach them back to
 our document in order to save them or export them to some format.

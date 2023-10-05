@@ -32,7 +32,7 @@ class DocPipeline(DocOperation, Generic[AnnotationType]):
             Annotations returned by `pipeline` (corresponding to its `output_keys`)
             will be added to documents.
         labels_by_input_key:
-            Optional Labels of existing annotations that should be retrieved from
+            Optional labels of existing annotations that should be retrieved from
             documents and passed to the pipeline as input. One list of labels
             per input key.
 
