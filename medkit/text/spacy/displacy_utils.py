@@ -2,13 +2,13 @@ __all__ = ["medkit_doc_to_displacy", "entities_to_displacy"]
 
 from typing import Any, Callable, Dict, List, Optional
 
-from medkit.core.text import TextDocument, Segment, span_utils
+from medkit.core.text import TextDocument, Entity, span_utils
 
 
 def medkit_doc_to_displacy(
     medkit_doc: TextDocument,
     entity_labels: Optional[List[str]] = None,
-    entity_formatter: Optional[Callable[[Segment], str]] = None,
+    entity_formatter: Optional[Callable[[Entity], str]] = None,
     max_gap_length: int = 3,
 ) -> Dict[str, Any]:
     """Build data dict that can be passed to `displacy.render()`
@@ -53,9 +53,9 @@ def medkit_doc_to_displacy(
 
 
 def entities_to_displacy(
-    entities: List[Segment],
+    entities: List[Entity],
     raw_text: str,
-    entity_formatter: Optional[Callable[[Segment], str]] = None,
+    entity_formatter: Optional[Callable[[Entity], str]] = None,
     max_gap_length: int = 3,
 ) -> Dict[str, Any]:
     """Build data dict that can be passed to `displacy.render()`
