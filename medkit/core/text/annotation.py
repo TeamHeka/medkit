@@ -236,6 +236,10 @@ class Relation(TextAnnotation):
         The identifier of the relation
     label:
         The relation label
+    source_entity:
+        The entity from which the relation is defined
+    target_entity:
+        The entity to which the relation is defined
     source_id:
         The identifier of the entity from which the relation is defined
     target_id:
@@ -254,8 +258,10 @@ class Relation(TextAnnotation):
     def __init__(
         self,
         label: str,
-        source_id: str,
-        target_id: str,
+        source_entity: Optional[Entity] = None,
+        target_entity: Optional[Entity] = None,
+        source_id: Optional[str] = None,
+        target_id: Optional[str] = None,
         attrs: Optional[List[Attribute]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
@@ -270,8 +276,9 @@ class Relation(TextAnnotation):
             attr_container_class=attr_container_class,
         )
 
-        self.source_id = source_id
-        self.target_id = target_id
+        # Fallback to explicit source and target IDs for backward compatibility.
+        self.source_id = source_entity.uid if source_entity else source_id
+        self.target_id = target_entity.uid if target_entity else target_id
 
     def to_dict(self) -> Dict[str, Any]:
         attrs = [a.to_dict() for a in self.attrs]
