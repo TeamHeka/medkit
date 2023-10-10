@@ -28,7 +28,13 @@ class SupportEntLabel(IS_IKeyword, Protocol):
 
 class MedkitKeyword:
     """
-    A recommended iamsystem's IEntity implementation
+    A recommended iamsystem's IEntity implementation.
+
+    This class is implemented to allow user to define one of both values of `kb_id`
+    or `kb_name` with its iamsystem keyword.
+    The entity label may be also provided if the user wants to define a category for
+    the searched keyword (e.g., "drug" label for "Vicodin" keyword)
+
 
     Also implements :class:`~.SupportEntLabel`, :class:`~.SupportKBName` protocols
     """
@@ -175,12 +181,13 @@ class IAMSystemMatcher(NEROperation):
             if isinstance(kw, SupportKBName) and kw.kb_name is not None:
                 kb_name = kw.kb_name
             term = kw.label
-            norm_attr = EntityNormAttribute(kb_name=kb_name, kb_id=kb_id, term=term)
-            norm_attr = entity.attrs.add(norm_attr)
+            if any([kb_name, kb_id]):
+                norm_attr = EntityNormAttribute(kb_name=kb_name, kb_id=kb_id, term=term)
+                norm_attr = entity.attrs.add(norm_attr)
 
-            if self._prov_tracer is not None:
-                self._prov_tracer.add_prov(
-                    norm_attr, self.description, source_data_items=[segment]
-                )
+                if self._prov_tracer is not None:
+                    self._prov_tracer.add_prov(
+                        norm_attr, self.description, source_data_items=[segment]
+                    )
 
         return entity

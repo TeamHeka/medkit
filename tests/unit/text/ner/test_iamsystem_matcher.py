@@ -17,8 +17,8 @@ def test_simple_matcher():
     for entity in entities:
         assert len(entity.text) == sum(sp.length for sp in entity.spans)
     assert entities[0].label == labels[0]
-    assert entities[0].attrs.get_norms()[1].kb_id == "test"
-    assert entities[1].attrs.get_norms()[0].kb_id is None
+    assert entities[0].attrs.get_norms()[0].kb_id == "test"
+    assert entities[1].attrs.get_norms() == []
     assert entities[1].label == labels[1]
 
 
@@ -133,7 +133,8 @@ def test_matcher_userkw_ent_label_none():
 
 def test_matcher_userkw_len_norm_attr():
     """When one iamsystem's annotation has 4 keywords (e.g. Keywords have the
-    same label), IAMSystemMatcher create 4 norm attributes."""
+    same label), IAMSystemMatcher create 3 norm attributes
+    because first one do not have kb_id or kb_name values."""
     matcher = Matcher.build(
         keywords=[
             "calcium",
@@ -147,7 +148,7 @@ def test_matcher_userkw_len_norm_attr():
         ]
     )
     entity = _get_first_entity(matcher)
-    assert len(entity.attrs.get_norms()) == 4
+    assert len(entity.attrs.get_norms()) == 3
 
 
 def test_matcher_kb_name_kb_id():
@@ -166,13 +167,11 @@ def test_matcher_kb_name_kb_id():
         ]
     )
     entity = _get_first_entity(matcher)
-    assert len(entity.attrs.get_norms()) == 3
+    assert len(entity.attrs.get_norms()) == 2
     assert entity.attrs.get_norms()[0].kb_name == "UMLS"
     assert entity.attrs.get_norms()[0].kb_id == "LOINC-2"
     assert entity.attrs.get_norms()[1].kb_name == "WIKIPEDIA"
     assert entity.attrs.get_norms()[1].kb_id is None
-    assert entity.attrs.get_norms()[2].kb_name is None
-    assert entity.attrs.get_norms()[2].kb_id is None
 
 
 def provide_umls_label(keywords):
