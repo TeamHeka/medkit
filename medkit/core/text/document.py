@@ -3,10 +3,10 @@ from __future__ import annotations
 __all__ = ["TextDocument"]
 
 import dataclasses
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, ClassVar, Dict, Optional, Sequence
 from typing_extensions import Self
 
-from medkit.core import dict_conv
+from medkit.core import dict_conv, Attribute, AttributeContainer
 from medkit.core.id import generate_id, generate_deterministic_id
 from medkit.core.text.annotation import TextAnnotation, Segment
 from medkit.core.text.annotation_container import TextAnnotationContainer
@@ -30,6 +30,9 @@ class TextDocument(dict_conv.SubclassMapping):
     anns:
         Annotations of the document. Stored in an
         :class:`~.text.TextAnnotationContainer` but can be passed as a list at init.
+    attrs:
+        Attributes of the document. Stored in an
+        :class:`~.core.AttributeContainer` but can be passed as a list at init
     metadata:
         Document metadata.
     raw_segment:
@@ -44,18 +47,22 @@ class TextDocument(dict_conv.SubclassMapping):
 
     uid: str
     anns: TextAnnotationContainer
+    attrs: AttributeContainer
     metadata: Dict[str, Any]
     raw_segment: Segment
 
     def __init__(
         self,
         text: str,
-        anns: Optional[List[TextAnnotation]] = None,
+        anns: Optional[Sequence[TextAnnotation]] = None,
+        attrs: Optional[Sequence[Attribute]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
     ):
         if anns is None:
             anns = []
+        if attrs is None:
+            attrs = []
         if metadata is None:
             metadata = {}
         if uid is None:
@@ -72,6 +79,13 @@ class TextDocument(dict_conv.SubclassMapping):
         )
         for ann in anns:
             self.anns.add(ann)
+
+        self.attrs = AttributeContainer(
+            owner_id=self.uid,
+        )
+
+        for attr in attrs:
+            self.attrs.add(attr)
 
     @classmethod
     def _generate_raw_segment(cls, text: str, doc_id: str) -> Segment:
@@ -101,6 +115,9 @@ class TextDocument(dict_conv.SubclassMapping):
         if with_anns:
             doc_dict["anns"] = [a.to_dict() for a in self.anns]
 
+        if self.attrs:
+            doc_dict["attrs"] = [a.to_dict() for a in self.attrs]
+
         dict_conv.add_class_name_to_data_dict(self, doc_dict)
         return doc_dict
 
@@ -122,10 +139,12 @@ class TextDocument(dict_conv.SubclassMapping):
             return subclass.from_dict(doc_dict)
 
         anns = [TextAnnotation.from_dict(a) for a in doc_dict.get("anns", [])]
+        attrs = [Attribute.from_dict(a) for a in doc_dict.get("attrs", [])]
         return cls(
             uid=doc_dict["uid"],
             text=doc_dict["text"],
             anns=anns,
+            attrs=attrs,
             metadata=doc_dict["metadata"],
         )
 
