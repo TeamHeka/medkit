@@ -3,10 +3,10 @@ from __future__ import annotations
 __all__ = ["AudioDocument"]
 
 import dataclasses
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, ClassVar, Dict, Optional, Sequence
 from typing_extensions import Self
 
-from medkit.core import dict_conv
+from medkit.core import dict_conv, Attribute, AttributeContainer
 from medkit.core.audio.annotation import Segment
 from medkit.core.audio.annotation_container import AudioAnnotationContainer
 from medkit.core.audio.span import Span
@@ -32,6 +32,9 @@ class AudioDocument(dict_conv.SubclassMapping):
     anns: :class:`~.audio.AudioAnnotationContainer`
         Annotations of the document. Stored in an
         :class:`~.audio.AudioAnnotationContainer` but can be passed as a list at init.
+    attrs: :class:`~.core.AttributeContainer`
+        Attributes of the document. Stored in an
+        :class:`~.core.AttributeContainer` but can be passed as a list at init
     metadata:
         Document metadata.
     raw_segment: :class:`~.audio.Segment`
@@ -43,18 +46,22 @@ class AudioDocument(dict_conv.SubclassMapping):
 
     uid: str
     anns: AudioAnnotationContainer
+    attrs: AttributeContainer
     metadata: Dict[str, Any]
     raw_segment: Segment
 
     def __init__(
         self,
         audio: AudioBuffer,
-        anns: Optional[List[Segment]] = None,
+        anns: Optional[Sequence[Segment]] = None,
+        attrs: Optional[Sequence[Attribute]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
     ):
         if anns is None:
             anns = []
+        if attrs is None:
+            attrs = []
         if metadata is None:
             metadata = {}
         if uid is None:
@@ -71,6 +78,10 @@ class AudioDocument(dict_conv.SubclassMapping):
         )
         for ann in anns:
             self.anns.add(ann)
+
+        self.attrs = AttributeContainer(owner_id=self.uid)
+        for attr in attrs:
+            self.attrs.add(attr)
 
     @classmethod
     def _generate_raw_segment(cls, audio: AudioBuffer, doc_id: str) -> Segment:
@@ -106,6 +117,8 @@ class AudioDocument(dict_conv.SubclassMapping):
         )
         if with_anns:
             doc_dict["anns"] = [a.to_dict() for a in self.anns]
+        if self.attrs:
+            doc_dict["attrs"] = [a.to_dict() for a in self.attrs]
 
         dict_conv.add_class_name_to_data_dict(self, doc_dict)
         return doc_dict
@@ -118,9 +131,11 @@ class AudioDocument(dict_conv.SubclassMapping):
 
         audio = AudioBuffer.from_dict(data["audio"])
         anns = [Segment.from_dict(a) for a in data.get("anns", [])]
+        attrs = [Attribute.from_dict(a) for a in data.get("attrs", [])]
         return cls(
             uid=data["uid"],
             audio=audio,
             anns=anns,
+            attrs=attrs,
             metadata=data["metadata"],
         )
