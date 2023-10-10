@@ -76,7 +76,7 @@ class Segment(dict_conv.SubclassMapping):
         self.keys = set()
         self.uid = uid
 
-        self.attrs = AttributeContainer(ann_id=self.uid)
+        self.attrs = AttributeContainer(owner_id=self.uid)
         for attr in attrs:
             self.attrs.add(attr)
 
