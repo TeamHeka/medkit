@@ -53,6 +53,11 @@ def test_load():
     assert attr.value is None
     assert attr.metadata.get("brat_id") == "A3"
 
+    # check attribute from note
+    note_attrs = entity_t3.attrs.get(label="brat_note")
+    assert len(note_attrs) == 1
+    assert note_attrs[0].value == "To be reviewed"
+
     # check multi-span entity
     entity_2 = doc.anns.get(label="vitamin")[1]
     assert entity_2.spans == [Span(251, 260), Span(263, 264)]

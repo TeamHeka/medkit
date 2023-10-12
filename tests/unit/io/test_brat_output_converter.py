@@ -286,6 +286,19 @@ def test__convert_umls_attribute_to_brat_note():
     assert brat_note.target == "T1"
 
 
+def test__convert_attributes_to_brat_note():
+    brat_note = BratOutputConverter._convert_attributes_to_brat_note(
+        values=["Première hospitalisation", "antécédents", None],
+        nb_note=1,
+        target_brat_id="T1",
+    )
+    assert isinstance(brat_note, BratNote)
+    assert brat_note.uid == "#1"
+    assert brat_note.type == "AnnotatorNotes"
+    assert brat_note.value == "Première hospitalisation\nantécédents"
+    assert brat_note.target == "T1"
+
+
 def test__convert_relation():
     brat_converter = BratOutputConverter()
     ent_1 = Entity(uid="id_1", label="ent_suj", spans=[Span(0, 10)], text="ent_1_text")
@@ -460,3 +473,20 @@ def test_convert_cuis_to_notes(tmp_path: Path):
     output_path = tmp_path / f"{doc.uid}.ann"
     ann_lines = output_path.read_text().split("\n")
     assert "#1\tAnnotatorNotes T1\tC0004096" not in ann_lines
+
+
+def test_convert_attrs_to_notes(tmp_path: Path):
+    """Conversion of n attributes to notes"""
+
+    text = "Le patient souffre d'asthme"
+    doc = TextDocument(text=text)
+
+    entity = Entity(label="maladie", text="asthme", spans=[Span(21, 27)])
+    entity.attrs.add(Attribute(label="note", value="To be reviewed"))
+    doc.anns.add(entity)
+    brat_converter = BratOutputConverter(notes_label="note")
+    brat_converter.save([doc], tmp_path)
+
+    output_path = tmp_path / f"{doc.uid}.ann"
+    ann_lines = output_path.read_text().split("\n")
+    assert "#1\tAnnotatorNotes T1\tTo be reviewed" in ann_lines
