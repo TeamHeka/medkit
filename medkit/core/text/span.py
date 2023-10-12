@@ -15,6 +15,8 @@ from medkit.core import dict_conv
 
 
 class AnySpan(abc.ABC, dict_conv.SubclassMapping):
+    length: int
+
     def __init_subclass__(cls):
         AnySpan.register_subclass(cls)
         super().__init_subclass__()
