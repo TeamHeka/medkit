@@ -306,7 +306,7 @@ class Trainer:
             last_checkpoint_metric = metrics["eval"].get(self.config.checkpoint_metric)
             if last_checkpoint_metric is None:
                 raise ValueError(
-                    "Checkpoint metric '{self.config.checkpoint_metric}' not found"
+                    f"Checkpoint metric '{self.config.checkpoint_metric}' not found"
                 )
             if best_checkpoint_dir is None:
                 best_checkpoint_dir = last_checkpoint_dir
