@@ -35,6 +35,9 @@ class TrainerConfig:
     metric_to_track_lr:
         Name of the eval metric to be tracked for updating the learning rate.
         By default, eval `loss` is tracked.
+    checkpoint_period:
+        How often, in number of epochs, should we save a checkpoint. Use 0 to
+        only save last checkpoint.
     checkpoint_metric:
         Name of the eval metric to be tracked for selecting the best checkpoint.
         By default, eval `loss` is tracked.
@@ -52,6 +55,7 @@ class TrainerConfig:
     gradient_accumulation_steps: int = 1
     do_metrics_in_training: bool = False
     metric_to_track_lr: str = "loss"
+    checkpoint_period: int = 1
     checkpoint_metric: str = "loss"
     minimize_checkpoint_metric: bool = True
 

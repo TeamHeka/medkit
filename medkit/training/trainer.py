@@ -292,6 +292,13 @@ class Trainer:
                 epoch_duration=time.time() - epoch_start_time,
             )
 
+            # save checkpoint every N epochs if N != 0, or at last epoch
+            if epoch != self.nb_training_epochs and (
+                self.config.checkpoint_period == 0
+                or epoch % self.config.checkpoint_period != 0
+            ):
+                continue
+
             # save last checkpoint
             last_checkpoint_dir = self.save(epoch)
             # track best checkpoint, and remove former best checkpoint if last
