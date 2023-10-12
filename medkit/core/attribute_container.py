@@ -9,7 +9,8 @@ from medkit.core.store import Store, GlobalStore
 
 class AttributeContainer:
     """
-    Manage a list of attributes attached to an annotation.
+    Manage a list of attributes attached to another data structure.
+    For example, it may be a document or an annotation.
 
     This behaves more or less like a list: calling `len()` and iterating are
     supported. Additional filtering is available through the `get()` method.
@@ -21,9 +22,9 @@ class AttributeContainer:
     Otherwise, a default one (i.e. dict store) is used.
     """
 
-    def __init__(self, ann_id: str):
+    def __init__(self, owner_id: str):
         self._store: Store = GlobalStore.get_store()
-        self._ann_id = ann_id
+        self._owner_id = owner_id
         self._attr_ids: List[str] = []
         self._attr_ids_by_label: Dict[str, List[str]] = {}
 
@@ -86,7 +87,7 @@ class AttributeContainer:
             raise ValueError(f"Attribute with uid {uid} already attached to annotation")
 
         self._attr_ids.append(uid)
-        self._store.store_data_item(data_item=attr, parent_id=self._ann_id)
+        self._store.store_data_item(data_item=attr, parent_id=self._owner_id)
 
         # update label index
         label = attr.label
@@ -105,4 +106,4 @@ class AttributeContainer:
 
     def __repr__(self) -> str:
         attrs = self.get()
-        return f"{self.__class__.__name__}(ann_id={self._ann_id!r}, attrs={attrs!r})"
+        return f"{self.__class__.__name__}(ann_id={self._owner_id!r}, attrs={attrs!r})"

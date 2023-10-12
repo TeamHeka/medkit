@@ -35,7 +35,7 @@ class _TextAnnotation:
         self.label = label
         self.text = text
         self.keys = set()
-        self.attrs = AttributeContainer(ann_id=self.uid)
+        self.attrs = AttributeContainer(owner_id=self.uid)
 
 
 class _TextDocument:

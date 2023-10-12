@@ -18,8 +18,8 @@ class EntityAttributeContainer(AttributeContainer):
     Also provides retrieval of normalization attributes.
     """
 
-    def __init__(self, ann_id: str):
-        super().__init__(ann_id=ann_id)
+    def __init__(self, owner_id: str):
+        super().__init__(owner_id=owner_id)
 
         self._norm_ids: List[str] = []
 

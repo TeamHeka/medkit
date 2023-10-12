@@ -94,6 +94,13 @@ def test_raw_segment():
         doc.anns.add(seg)
 
 
+def test_add_attribute():
+    doc = TextDocument("Les patients présentant un asthme chronique.")
+    attr = Attribute(label="article", value=True)
+    doc.attrs.add(attr)
+    assert doc.attrs.get(label="article")[0].value is True
+
+
 def test_snippet():
     doc = get_text_document("doc1")
     entity = Segment(

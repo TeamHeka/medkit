@@ -3,10 +3,10 @@ from __future__ import annotations
 __all__ = ["TranscribedDocument"]
 
 import dataclasses
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 from typing_extensions import Self
 
-from medkit.core import dict_conv
+from medkit.core import dict_conv, Attribute
 from medkit.core.audio import Span as AudioSpan
 from medkit.core.text import (
     TextDocument,
@@ -38,6 +38,8 @@ class TranscribedDocument(TextDocument):
         transcribed, if known.
     anns:
         Annotations of the document.
+    attrs:
+        Attributes of the document.
     metadata:
         Document metadata.
     raw_segment:
@@ -52,13 +54,14 @@ class TranscribedDocument(TextDocument):
         text: str,
         text_spans_to_audio_spans: Dict[TextSpan, AudioSpan],
         audio_doc_id: Optional[str],
-        anns: Optional[List[TextAnnotation]] = None,
+        anns: Optional[Sequence[TextAnnotation]] = None,
+        attrs: Optional[Sequence[Attribute]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
     ):
         assert all(s.end <= len(text) for s in text_spans_to_audio_spans)
 
-        super().__init__(text=text, anns=anns, metadata=metadata, uid=uid)
+        super().__init__(text=text, anns=anns, attrs=attrs, metadata=metadata, uid=uid)
 
         self.audio_doc_id = audio_doc_id
         self.text_spans_to_audio_spans = text_spans_to_audio_spans
@@ -113,6 +116,8 @@ class TranscribedDocument(TextDocument):
         if with_anns:
             doc_dict["anns"] = [a.to_dict() for a in self.anns]
 
+        if self.attrs:
+            doc_dict["attrs"] = [a.to_dict() for a in self.attrs]
         dict_conv.add_class_name_to_data_dict(self, doc_dict)
         return doc_dict
 
@@ -130,11 +135,13 @@ class TranscribedDocument(TextDocument):
         audio_spans = [AudioSpan.from_dict(s) for s in doc_dict["audio_spans"]]
         text_spans_to_audio_spans = dict(zip(text_spans, audio_spans))
         anns = [TextSegment.from_dict(a) for a in doc_dict["anns"]]
+        attrs = [Attribute.from_dict(a) for a in doc_dict.get("attrs", [])]
         return cls(
             uid=doc_dict["uid"],
             text=doc_dict["text"],
             text_spans_to_audio_spans=text_spans_to_audio_spans,
             audio_doc_id=doc_dict["audio_doc_id"],
             anns=anns,
+            attrs=attrs,
             metadata=doc_dict["metadata"],
         )

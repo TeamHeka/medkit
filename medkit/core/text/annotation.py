@@ -70,7 +70,7 @@ class TextAnnotation(abc.ABC, dict_conv.SubclassMapping):
         self.metadata = metadata
         self.keys = set()
 
-        self.attrs = attr_container_class(ann_id=self.uid)
+        self.attrs = attr_container_class(owner_id=self.uid)
         for attr in attrs:
             self.attrs.add(attr)
 
