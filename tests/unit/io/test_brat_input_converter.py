@@ -77,6 +77,14 @@ def test_detect_cuis_in_notes():
     assert entity.attrs.norms[0].cui == "C3021755"
     assert entity.attrs.norms[1].cui == "C3021757"
 
+    # disable CUI detection
+    brat_converter = BratInputConverter(detect_cuis_in_notes=False)
+    docs = brat_converter.load(dir_path="tests/data/brat/")
+    doc = docs[0]
+    # retrieve entity with CUI in note
+    entity = doc.anns.get(label="medication")[0]
+    assert len(entity.attrs.norms) == 0
+
 
 def test_relations():
     brat_converter = BratInputConverter()

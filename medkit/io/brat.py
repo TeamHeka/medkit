@@ -51,7 +51,7 @@ _CUI_PATTERN = re.compile(r"\b[Cc]\d{7}\b")
 class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
 
-    def __init__(self, detect_cuis_in_notes: bool = False, uid: Optional[str] = None):
+    def __init__(self, detect_cuis_in_notes: bool = True, uid: Optional[str] = None):
         """
         Parameters
         ----------
@@ -262,7 +262,7 @@ class BratOutputConverter(OutputConverter):
         anns_labels: Optional[List[str]] = None,
         attrs: Optional[List[str]] = None,
         ignore_segments: bool = True,
-        convert_cuis_to_notes: bool = False,
+        convert_cuis_to_notes: bool = True,
         create_config: bool = True,
         top_values_by_attr: int = 50,
         uid: Optional[str] = None,

@@ -445,10 +445,18 @@ def test_convert_cuis_to_notes(tmp_path: Path):
     entity_2.attrs.add(UMLSNormAttribute(cui="C2631237", umls_version="2021AB"))
     doc.anns.add(entity_2)
 
-    brat_converter = BratOutputConverter(convert_cuis_to_notes=True)
+    brat_converter = BratOutputConverter()
     brat_converter.save([doc], tmp_path)
 
     output_path = tmp_path / f"{doc.uid}.ann"
     ann_lines = output_path.read_text().split("\n")
     assert "#1\tAnnotatorNotes T1\tC0004096" in ann_lines
     assert "#2\tAnnotatorNotes T2\tC2631234 C2631237" in ann_lines
+
+    # disable CUI export in notes
+    brat_converter = BratOutputConverter(convert_cuis_to_notes=False)
+    brat_converter.save([doc], tmp_path)
+
+    output_path = tmp_path / f"{doc.uid}.ann"
+    ann_lines = output_path.read_text().split("\n")
+    assert "#1\tAnnotatorNotes T1\tC0004096" not in ann_lines
