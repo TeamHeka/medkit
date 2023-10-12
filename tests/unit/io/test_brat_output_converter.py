@@ -276,13 +276,13 @@ def test__convert_attribute_to_brat():
 
 
 def test__convert_umls_attribute_to_brat_note():
-    brat_note = BratOutputConverter._convert_umls_attribute_to_brat_note(
-        cui="C0011849", nb_note=1, target_brat_id="T1"
+    brat_note = BratOutputConverter._convert_umls_attributes_to_brat_note(
+        cuis=["C0011849", "C0004096"], nb_note=1, target_brat_id="T1"
     )
     assert isinstance(brat_note, BratNote)
     assert brat_note.uid == "#1"
     assert brat_note.type == "AnnotatorNotes"
-    assert brat_note.value == "C0011849"
+    assert brat_note.value == "C0011849 C0004096"
     assert brat_note.target == "T1"
 
 
@@ -433,13 +433,22 @@ def test_convert_cuis_to_notes(tmp_path: Path):
 
     text = "Le patient souffre d'asthme"
     doc = TextDocument(text=text)
-    entity = Entity(label="maladie", text="asthme", spans=[Span(21, 27)])
-    entity.attrs.add(UMLSNormAttribute(cui="C0004096", umls_version="2021AB"))
-    doc.anns.add(entity)
+
+    # 1st entity with 1 norm attribute
+    entity_1 = Entity(label="maladie", text="asthme", spans=[Span(21, 27)])
+    entity_1.attrs.add(UMLSNormAttribute(cui="C0004096", umls_version="2021AB"))
+    doc.anns.add(entity_1)
+
+    # 2st entity with multiple norm attributes
+    entity_2 = Entity(label="maladie", text="asthme", spans=[Span(21, 27)])
+    entity_2.attrs.add(UMLSNormAttribute(cui="C2631234", umls_version="2021AB"))
+    entity_2.attrs.add(UMLSNormAttribute(cui="C2631237", umls_version="2021AB"))
+    doc.anns.add(entity_2)
 
     brat_converter = BratOutputConverter(convert_cuis_to_notes=True)
     brat_converter.save([doc], tmp_path)
 
     output_path = tmp_path / f"{doc.uid}.ann"
     ann_lines = output_path.read_text().split("\n")
-    assert ann_lines[1] == "#1\tAnnotatorNotes T1\tC0004096"
+    assert "#1\tAnnotatorNotes T1\tC0004096" in ann_lines
+    assert "#2\tAnnotatorNotes T2\tC2631234 C2631237" in ann_lines

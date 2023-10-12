@@ -61,14 +61,21 @@ def test_load():
 def test_detect_cuis_in_notes():
     brat_converter = BratInputConverter(detect_cuis_in_notes=True)
     docs = brat_converter.load(dir_path="tests/data/brat/")
-    # retrieve entity with CUI in note
     doc = docs[0]
+    # retrieve entity with CUI in note
     entity = doc.anns.get(label="medication")[0]
     # check umls norm attribute
     assert len(entity.attrs.norms) == 1
     norm_attr = entity.attrs.norms[0]
     assert isinstance(norm_attr, UMLSNormAttribute)
     assert norm_attr.cui == "C0011849"
+
+    # retrieve entity with multiple CUIs in note
+    entity = doc.anns.get(label="medication")[1]
+    # check umls norm attribute
+    assert len(entity.attrs.norms) == 2
+    assert entity.attrs.norms[0].cui == "C3021755"
+    assert entity.attrs.norms[1].cui == "C3021757"
 
 
 def test_relations():
