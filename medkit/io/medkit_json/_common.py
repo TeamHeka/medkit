@@ -9,7 +9,7 @@ import enum
 from typing import Any, Dict
 
 
-MEDKIT_JSON_VERSION = "0.1"
+MEDKIT_JSON_VERSION = "0.2"
 
 
 class ContentType(enum.Enum):
