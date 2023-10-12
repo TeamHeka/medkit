@@ -426,7 +426,7 @@ def test_normalization_attr(tmp_path: Path):
     assert ann_lines[1] == "A1\tNORMALIZATION T1 umls:C0004096"
 
 
-def test_umls_in_notes(tmp_path: Path):
+def test_convert_cuis_to_notes(tmp_path: Path):
     """Conversion of umls normalization attributes to notes"""
 
     text = "Le patient souffre d'asthme"
@@ -435,7 +435,7 @@ def test_umls_in_notes(tmp_path: Path):
     entity.attrs.add(UMLSNormAttribute(cui="C0004096", umls_version="2021AB"))
     doc.anns.add(entity)
 
-    brat_converter = BratOutputConverter(cuis_in_notes=True)
+    brat_converter = BratOutputConverter(convert_cuis_to_notes=True)
     brat_converter.save([doc], tmp_path)
 
     output_path = tmp_path / f"{doc.uid}.ann"

@@ -58,8 +58,8 @@ def test_load():
     assert entity_2.spans == [Span(251, 260), Span(263, 264)]
 
 
-def test_load_cuis_in_notes():
-    brat_converter = BratInputConverter(cuis_in_notes=True)
+def test_detect_cuis_in_notes():
+    brat_converter = BratInputConverter(detect_cuis_in_notes=True)
     docs = brat_converter.load(dir_path="tests/data/brat/")
     # retrieve entity with CUI in note
     doc = docs[0]
