@@ -1,6 +1,24 @@
+import pytest
+
 from medkit.core.text.annotation import Entity
-from medkit.core.text.span import Span
+from medkit.core.text.span import Span, ModifiedSpan
 from medkit.core.text.entity_norm_attribute import EntityNormAttribute
+
+
+def test_spans_for_segment():
+    Entity(label="disease", text="asthme", spans=[Span(0, 6)])  # correct span
+    Entity(
+        label="disease",
+        text="asthme",
+        spans=[Span(0, 1), ModifiedSpan(length=5, replaced_spans=[Span(1, 6)])],
+    )  # correct mixed spans
+    with pytest.raises(AssertionError):  # wrong spans
+        Entity(label="disease", text="asthme", spans=[Span(0, 1)])  # wrong span
+        Entity(
+            label="disease",
+            text="asthme",
+            spans=[Span(0, 1), ModifiedSpan(length=1, replaced_spans=[Span(1, 3)])],
+        )  # wrong mixed span
 
 
 def test_normalization():

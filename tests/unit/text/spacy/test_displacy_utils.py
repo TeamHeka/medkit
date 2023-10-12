@@ -71,7 +71,7 @@ _TEST_DATA = [
             Entity(
                 label="disease",
                 spans=[
-                    ModifiedSpan(length=18, replaced_spans=[Span(29, 37), Span(41, 47)])
+                    ModifiedSpan(length=15, replaced_spans=[Span(29, 36), Span(39, 47)])
                 ],
                 text="type 1 diabetes",
             )

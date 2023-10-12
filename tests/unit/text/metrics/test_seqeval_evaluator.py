@@ -33,7 +33,7 @@ _PREDICTED_ENTS_BY_CASE = {
         Entity(label="language", spans=[Span(start=10, end=16)], text="a pyth"),
     ],
     "incorrect_prediction": [
-        Entity(label="misc", spans=[Span(start=19, end=23)], text="lib"),
+        Entity(label="misc", spans=[Span(start=19, end=23)], text="lib "),
     ],
 }
 

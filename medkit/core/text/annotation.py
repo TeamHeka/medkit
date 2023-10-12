@@ -144,6 +144,10 @@ class Segment(TextAnnotation):
         self.text = text
         self.spans = spans
 
+        # check if spans length is equal to text length
+        length = sum(s.length for s in self.spans)
+        assert len(self.text) == length, "Spans length does not match text length"
+
     def to_dict(self) -> Dict[str, Any]:
         spans = [s.to_dict() for s in self.spans]
         attrs = [a.to_dict() for a in self.attrs]
