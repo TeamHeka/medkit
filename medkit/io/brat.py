@@ -2,7 +2,7 @@ __all__ = ["BratInputConverter", "BratOutputConverter"]
 import re
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, Union, ValuesView, Dict
+from typing import List, Optional, Tuple, Union, Dict
 
 from smart_open import open
 import medkit.io._brat_utils as brat_utils
@@ -395,7 +395,7 @@ class BratOutputConverter(OutputConverter):
         relations: List[Relation],
         config: BratAnnConfiguration,
         raw_text: str,
-    ) -> Tuple[ValuesView[Union[BratEntity, BratAttribute, BratRelation]]]:
+    ) -> List[Union[BratEntity, BratAttribute, BratRelation, BratNote]]:
         """
         Convert Segments, Relations and Attributes into brat data structures
 
@@ -412,18 +412,22 @@ class BratOutputConverter(OutputConverter):
             Text of reference to get the original text of the annotations
         Returns
         -------
-        BratAnnotations
+        List[Union[BratEntity, BratAttribute, BratRelation, BratNote]]
             A list of brat annotations
         """
         nb_segment, nb_relation, nb_attribute, nb_note = 1, 1, 1, 1
-        anns_by_medkit_id = dict()
+        brat_entities_by_medkit_id = dict()
+        brat_anns = []
 
         # First convert segments then relations including its attributes
         for medkit_segment in segments:
             brat_entity = self._convert_segment_to_brat(
                 medkit_segment, nb_segment, raw_text
             )
-            anns_by_medkit_id[medkit_segment.uid] = brat_entity
+            brat_anns.append(brat_entity)
+            # store link between medkit id and brat entities
+            # (needed for relations)
+            brat_entities_by_medkit_id[medkit_segment.uid] = brat_entity
             config.add_entity_type(brat_entity.type)
             nb_segment += 1
 
@@ -444,7 +448,7 @@ class BratOutputConverter(OutputConverter):
                         nb_note=nb_note,
                         target_brat_id=brat_entity.uid,
                     )
-                    anns_by_medkit_id[attr.uid] = brat_note
+                    brat_anns.append(brat_note)
                     nb_note += 1
                     continue
 
@@ -462,7 +466,7 @@ class BratOutputConverter(OutputConverter):
                         target_brat_id=brat_entity.uid,
                         is_from_entity=True,
                     )
-                    anns_by_medkit_id[attr.uid] = brat_attr
+                    brat_anns.append(brat_attr)
                     config.add_attribute_type(attr_config)
                     nb_attribute += 1
 
@@ -472,9 +476,9 @@ class BratOutputConverter(OutputConverter):
         for medkit_relation in relations:
             try:
                 brat_relation, relation_config = self._convert_relation_to_brat(
-                    medkit_relation, nb_relation, anns_by_medkit_id
+                    medkit_relation, nb_relation, brat_entities_by_medkit_id
                 )
-                anns_by_medkit_id[medkit_relation.uid] = brat_relation
+                brat_anns.append(brat_relation)
                 config.add_relation_type(relation_config)
                 nb_relation += 1
             except ValueError as err:
@@ -505,13 +509,13 @@ class BratOutputConverter(OutputConverter):
                         target_brat_id=brat_relation.uid,
                         is_from_entity=False,
                     )
-                    anns_by_medkit_id[attr.uid] = brat_attr
+                    brat_anns.append(brat_attr)
                     config.add_attribute_type(attr_config)
                     nb_attribute += 1
                 except TypeError as err:
                     logger.warning(f"Ignore attribute {attr.uid}. {err}")
 
-        return anns_by_medkit_id.values()
+        return brat_anns
 
     @staticmethod
     def _ensure_text_and_spans(
@@ -589,7 +593,7 @@ class BratOutputConverter(OutputConverter):
     def _convert_relation_to_brat(
         relation: Relation,
         nb_relation: int,
-        brat_anns_by_segment_id: Dict[str, BratEntity],
+        brat_entities_by_segment_id: Dict[str, BratEntity],
     ) -> Tuple[BratRelation, RelationConf]:
         """
         Get a brat relation from a medkit relation
@@ -600,7 +604,7 @@ class BratOutputConverter(OutputConverter):
             A medkit relation to convert into brat format
         nb_relation:
             The current counter of brat relations
-        brat_anns_by_segment_id:
+        brat_entities_by_segment_id:
             A dict to map medkit ID to brat annotation
 
         Returns
@@ -619,8 +623,8 @@ class BratOutputConverter(OutputConverter):
         brat_id = f"R{nb_relation}"
         # brat does not support spaces in labels
         type = relation.label.replace(" ", "_")
-        subj = brat_anns_by_segment_id.get(relation.source_id)
-        obj = brat_anns_by_segment_id.get(relation.target_id)
+        subj = brat_entities_by_segment_id.get(relation.source_id)
+        obj = brat_entities_by_segment_id.get(relation.target_id)
 
         if subj is None or obj is None:
             raise ValueError("Entity target/source was not found.")

@@ -293,21 +293,23 @@ def test__convert_relation():
     relation = Relation(label="rel1", source_id=ent_1.uid, target_id=ent_2.uid)
 
     # create entities brat and save them in a dict
-    anns_by_medkit_id = dict()
-    anns_by_medkit_id[ent_1.uid] = brat_converter._convert_segment_to_brat(
+    entities_by_medkit_id = dict()
+    entities_by_medkit_id[ent_1.uid] = brat_converter._convert_segment_to_brat(
         ent_1, nb_segment=1, raw_text=ent_1.text
     )
-    anns_by_medkit_id[ent_2.uid] = brat_converter._convert_segment_to_brat(
+    entities_by_medkit_id[ent_2.uid] = brat_converter._convert_segment_to_brat(
         ent_2, nb_segment=2, raw_text=ent_2.text
     )
 
     brat_relation, _ = brat_converter._convert_relation_to_brat(
-        relation=relation, nb_relation=1, brat_anns_by_segment_id=anns_by_medkit_id
+        relation=relation,
+        nb_relation=1,
+        brat_entities_by_segment_id=entities_by_medkit_id,
     )
     assert isinstance(brat_relation, BratRelation)
     assert brat_relation.uid == "R1"
-    assert brat_relation.subj == anns_by_medkit_id[ent_1.uid].uid
-    assert brat_relation.obj == anns_by_medkit_id[ent_2.uid].uid
+    assert brat_relation.subj == entities_by_medkit_id[ent_1.uid].uid
+    assert brat_relation.obj == entities_by_medkit_id[ent_2.uid].uid
     assert brat_relation.type == "rel1"
     assert brat_relation.to_str() == "R1\trel1 Arg1:T1 Arg2:T2\n"
 
