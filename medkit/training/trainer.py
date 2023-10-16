@@ -5,6 +5,7 @@ __all__ = ["Trainer"]
 import datetime
 import os
 import random
+import shutil
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -122,7 +123,8 @@ class Trainer:
         self.metrics_computer = metrics_computer
 
         if callback is None:
-            self.callback = DefaultPrinterCallback()
+            callback = DefaultPrinterCallback()
+        self.callback = callback
 
     def get_dataloader(self, data: any, shuffle: bool) -> DataLoader:
         """Return a DataLoader with transformations defined
@@ -268,6 +270,9 @@ class Trainer:
         """
         self.callback.on_train_begin(config=self.config)
         log_history = []
+        last_checkpoint_dir = None
+        best_checkpoint_dir = None
+        best_checkpoint_metric = None
 
         for epoch in range(1, self.nb_training_epochs + 1):
             epoch_start_time = time.time()
@@ -286,19 +291,67 @@ class Trainer:
                 epoch=epoch,
                 epoch_duration=time.time() - epoch_start_time,
             )
-        self.save()
+
+            # save checkpoint every N epochs if N != 0, or at last epoch
+            if epoch != self.nb_training_epochs and (
+                self.config.checkpoint_period == 0
+                or epoch % self.config.checkpoint_period != 0
+            ):
+                continue
+
+            # save last checkpoint
+            last_checkpoint_dir = self.save(epoch)
+            # track best checkpoint, and remove former best checkpoint if last
+            # checkpoint is the new best
+            last_checkpoint_metric = metrics["eval"].get(self.config.checkpoint_metric)
+            if last_checkpoint_metric is None:
+                raise ValueError(
+                    f"Checkpoint metric '{self.config.checkpoint_metric}' not found"
+                )
+            if best_checkpoint_dir is None:
+                best_checkpoint_dir = last_checkpoint_dir
+                best_checkpoint_metric = last_checkpoint_metric
+            elif (
+                self.config.minimize_checkpoint_metric
+                and last_checkpoint_metric < best_checkpoint_metric
+            ) or (
+                not self.config.minimize_checkpoint_metric
+                and last_checkpoint_metric > best_checkpoint_metric
+            ):
+                shutil.rmtree(best_checkpoint_dir)
+                best_checkpoint_dir = last_checkpoint_dir
+                best_checkpoint_metric = last_checkpoint_metric
+
         self.callback.on_train_end()
         return log_history
 
-    def save(self):
-        """Save a final checkpoint and the trainer configuration"""
-        current_date = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M")
-        name = f"checkpoint_{current_date}"
+    def save(self, epoch: int) -> str:
+        """
+        Save a checkpoint (trainer configuration, model weights, optimizer and
+        scheduler)
 
-        self.save_checkpoint(name)
+        Parameters
+        ----------
+        epoch:
+            Epoch corresponding of the current training state (will be included
+            in the checkpoint name)
+
+        Returns
+        -------
+        Path:
+            Path of the checkpoint saved
+        """
+
+        current_date = datetime.datetime.now().strftime("%d-%m-%Y_%H:%M")
+        name = f"checkpoint_{epoch:03d}_{current_date}"
+
+        checkpoint_dir = os.path.join(self.output_dir, name)
+        self.callback.on_save(checkpoint_dir=checkpoint_dir)
+
+        os.makedirs(checkpoint_dir)
 
         # save config
-        config_path = os.path.join(self.output_dir, name, CONFIG_NAME)
+        config_path = os.path.join(checkpoint_dir, CONFIG_NAME)
         with open(str(config_path), mode="w") as fp:
             yaml.safe_dump(
                 self.config.to_dict(),
@@ -308,13 +361,6 @@ class Trainer:
                 sort_keys=False,
             )
 
-    def save_checkpoint(self, name):
-        """Save a trainer state. It saves the optimizer, scheduler"""
-
-        checkpoint_dir = os.path.join(self.output_dir, name)
-        self.callback.on_save(checkpoint_dir=checkpoint_dir)
-
-        os.makedirs(checkpoint_dir, exist_ok=True)
         torch.save(
             self.optimizer.state_dict(), os.path.join(checkpoint_dir, OPTIMIZER_NAME)
         )
@@ -326,3 +372,5 @@ class Trainer:
             )
 
         self.component.save(checkpoint_dir)
+
+        return checkpoint_dir
