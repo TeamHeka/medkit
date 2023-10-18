@@ -123,7 +123,7 @@ class HFTranslator(Operation):
             threshold=self.alignment_threshold,
             device=self.device,
             batch_size=self.batch_size,
-            token=hf_auth_token,
+            hf_auth_token=hf_auth_token,
             cache_dir=cache_dir,
         )
 
