@@ -86,6 +86,7 @@ class UMLSCoderNormalizer(Operation):
         max_nb_matches: int = 1,
         device: int = -1,
         batch_size: int = 128,
+        hf_auth_token: Optional[str] = None,
         nb_umls_embeddings_chunks: Optional[int] = None,
         hf_cache_dir: Optional[Union[str, Path]] = None,
         name: Optional[str] = None,
@@ -127,6 +128,9 @@ class UMLSCoderNormalizer(Operation):
             (-1 for "cpu" and device number for gpu, for instance 0 for "cuda:0").
         batch_size:
             Number of entities in batches processed by the embeddings extraction pipeline.
+        hf_auth_token:
+            HuggingFace Authentication token (to access private models on the
+            hub)
         hf_cache_dir:
             Directory where to store downloaded models. If not set, the default
             HuggingFace cache dir is used.
@@ -144,9 +148,10 @@ class UMLSCoderNormalizer(Operation):
         uid:
             Identifier of the normalizer.
         """
-        # Pass all arguments to super (remove self)
+        # Pass all arguments to super (remove self and confidential hf_auth_token)
         init_args = locals()
         init_args.pop("self")
+        init_args.pop("hf_auth_token")
         super().__init__(**init_args)
 
         self.umls_mrconso_file = Path(umls_mrconso_file)
@@ -170,6 +175,7 @@ class UMLSCoderNormalizer(Operation):
             normalize=normalize_embeddings,
             device=device,
             batch_size=batch_size,
+            token=hf_auth_token,
             model_kwargs={"cache_dir": hf_cache_dir},
         )
 
