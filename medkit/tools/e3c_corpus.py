@@ -133,7 +133,14 @@ def load_data_collection(
     if not dir_path.exists() or not dir_path.is_dir():
         raise FileNotFoundError("%s is not a directory or does not exist", dir_path)
 
-    for filepath in dir_path.glob("*.json"):
+    filepaths = sorted(dir_path.glob("*.json"))
+    if not filepaths:
+        logger.warning(
+            "No .json document found inside '%s', make sure you are passing a layer"
+            " subdirectory inside data_collection",
+            dir_path,
+        )
+    for filepath in filepaths:
         yield load_document(filepath, encoding=encoding)
 
 
@@ -302,7 +309,14 @@ def load_data_annotation(
     if not dir_path.exists() or not dir_path.is_dir():
         raise FileNotFoundError("%s is not a directory or does not exist", dir_path)
 
-    for filepath in dir_path.glob("*.xml"):
+    filepaths = sorted(dir_path.glob("*.xml"))
+    if not filepaths:
+        logger.warning(
+            "No .xml document found inside '%s', make sure your are passing a layer"
+            " subdirectory inside data_annotation",
+            dir_path,
+        )
+    for filepath in filepaths:
         yield load_annotated_document(
             filepath, encoding=encoding, keep_sentences=keep_sentences
         )
