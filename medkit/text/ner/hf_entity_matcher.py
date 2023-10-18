@@ -34,6 +34,7 @@ class HFEntityMatcher(NEROperation):
         attrs_to_copy: Optional[List[str]] = None,
         device: int = -1,
         batch_size: int = 1,
+        hf_auth_token: Optional[str] = None,
         cache_dir: Optional[Union[str, Path]] = None,
         name: Optional[str] = None,
         uid: Optional[str] = None,
@@ -57,6 +58,9 @@ class HFEntityMatcher(NEROperation):
             (-1 for "cpu" and device number for gpu, for instance 0 for "cuda:0").
         batch_size:
             Number of segments in batches processed by the transformer model.
+        hf_auth_token:
+            HuggingFace Authentication token (to access private models on the
+            hub)
         cache_dir:
             Directory where to store downloaded models. If not set, the default
             HuggingFace cache dir is used.
@@ -65,9 +69,10 @@ class HFEntityMatcher(NEROperation):
         uid:
             Identifier of the matcher.
         """
-        # Pass all arguments to super (remove self)
+        # Pass all arguments to super (remove self and confidential hf_auth_token)
         init_args = locals()
         init_args.pop("self")
+        init_args.pop("hf_auth_token")
         super().__init__(**init_args)
 
         if attrs_to_copy is None:
@@ -77,7 +82,7 @@ class HFEntityMatcher(NEROperation):
         self.attrs_to_copy = attrs_to_copy
 
         valid_model = hf_utils.check_model_for_task_HF(
-            self.model, "token-classification"
+            self.model, "token-classification", hf_auth_token=hf_auth_token
         )
 
         if not valid_model:
@@ -94,6 +99,7 @@ class HFEntityMatcher(NEROperation):
             pipeline_class=TokenClassificationPipeline,
             device=device,
             batch_size=batch_size,
+            token=hf_auth_token,
             model_kwargs={"cache_dir": cache_dir},
         )
 
