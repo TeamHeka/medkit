@@ -133,7 +133,7 @@ def load_data_collection(
     if not dir_path.exists() or not dir_path.is_dir():
         raise FileNotFoundError("%s is not a directory or does not exist", dir_path)
 
-    for filepath in dir_path.glob("*.json"):
+    for filepath in sorted(dir_path.glob("*.json")):
         yield load_document(filepath, encoding=encoding)
 
 
@@ -302,7 +302,7 @@ def load_data_annotation(
     if not dir_path.exists() or not dir_path.is_dir():
         raise FileNotFoundError("%s is not a directory or does not exist", dir_path)
 
-    for filepath in dir_path.glob("*.xml"):
+    for filepath in sorted(dir_path.glob("*.xml")):
         yield load_annotated_document(
             filepath, encoding=encoding, keep_sentences=keep_sentences
         )
