@@ -173,6 +173,7 @@ class HFEntityMatcher(NEROperation):
         tagging_scheme: Literal["bilou", "iob2"],
         tag_subtokens: bool = False,
         tokenizer_max_length: Optional[int] = None,
+        hf_auth_token: Optional[str] = None,
         device: int = -1,
     ):
         """
@@ -186,5 +187,6 @@ class HFEntityMatcher(NEROperation):
             tagging_scheme=tagging_scheme,
             tokenizer_max_length=tokenizer_max_length,
             tag_subtokens=tag_subtokens,
+            hf_auth_token=hf_auth_token,
             device=device,
         )

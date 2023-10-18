@@ -33,6 +33,7 @@ class HFEntityMatcherTrainable:
         tagging_scheme: Literal["bilou", "iob2"],
         tag_subtokens: bool = False,
         tokenizer_max_length: Optional[int] = None,
+        hf_auth_token: Optional[str] = None,
         device: int = -1,
     ):
         """
@@ -53,13 +54,16 @@ class HFEntityMatcherTrainable:
             by setting this value to `True`. It could influence the time and results of fine-tunning.
         tokenizer_max_length:
             Optional max length for the tokenizer, by default the `model_max_length` will be used.
+        hf_auth_token:
+            HuggingFace Authentication token (to access private models on the
+            hub)
         device:
             Device to use for the transformer model. Follows the HuggingFace convention
             (-1 for "cpu" and device number for gpu, for instance 0 for "cuda:0").
         """
 
         valid_model = hf_utils.check_model_for_task_HF(
-            model_name_or_path, "token-classification"
+            model_name_or_path, "token-classification", hf_auth_token=hf_auth_token
         )
         if not valid_model:
             raise ValueError(
@@ -79,7 +83,7 @@ class HFEntityMatcherTrainable:
         self.id_to_label = self.model_config.id2label
 
         # load tokenizer and model using the model path
-        self.load(self.model_name_or_path)
+        self.load(self.model_name_or_path, hf_auth_token=hf_auth_token)
         self.device = torch.device("cpu" if device < 0 else f"cuda:{device}")
         self._model.to(self.device)
 
@@ -161,9 +165,12 @@ class HFEntityMatcherTrainable:
         self._model.save_pretrained(path, state_dict=state_dict)
         self._tokenizer.save_pretrained(path)
 
-    def load(self, path: Union[str, Path]):
+    def load(self, path: Union[str, Path], hf_auth_token: Optional[str] = None):
         tokenizer = transformers.AutoTokenizer.from_pretrained(
-            path, use_fast=True, model_max_length=self.tokenizer_max_length
+            path,
+            use_fast=True,
+            model_max_length=self.tokenizer_max_length,
+            token=hf_auth_token,
         )
 
         if not isinstance(tokenizer, transformers.PreTrainedTokenizerFast):
@@ -180,12 +187,15 @@ class HFEntityMatcherTrainable:
             path,
             config=self.model_config,
             ignore_mismatched_sizes=True,
+            token=hf_auth_token,
         )
 
         self._tokenizer = tokenizer
         self._model = model
 
-    def _get_valid_model_config(self, labels: List[str]):
+    def _get_valid_model_config(
+        self, labels: List[str], hf_auth_token: Optional[str] = None
+    ):
         """Return a config file with the correct mapping of labels"""
         # get possible tags from labels list
         label_to_id = hf_tokenization_utils.convert_labels_to_tags(
@@ -195,7 +205,7 @@ class HFEntityMatcherTrainable:
 
         # load configuration with the correct number of NER labels
         config = transformers.AutoConfig.from_pretrained(
-            self.model_name_or_path, num_labels=nb_labels
+            self.model_name_or_path, num_labels=nb_labels, token=hf_auth_token
         )
 
         # If the model has the same labels, we kept the original mapping
