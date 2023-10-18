@@ -60,7 +60,7 @@ def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
 
     _check_len_labels(y1, y2)
 
-    labels = set(y1 + y2)
+    labels = set(y1).union(set(y2))
     label_to_int = {label: i for i, label in enumerate(labels)}
     y1 = np.array([label_to_int[x] for x in y1])
     y2 = np.array([label_to_int[x] for x in y2])
