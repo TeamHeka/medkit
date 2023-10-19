@@ -494,7 +494,7 @@ This modules provides a subclass of
 the handling of UMLS information.
 
 :::{note}
-For more details, refer to {mod}`~.text.ner.umls_norm_attribute`.
+For more details, refer to {mod}`~umls_norm_attribute`.
 :::
 
 (api:text:spacy)=

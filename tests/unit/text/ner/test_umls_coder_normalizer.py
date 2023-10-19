@@ -7,8 +7,7 @@ pytest.importorskip(modname="torch", reason="torch is not installed")
 pytest.importorskip(modname="transformers", reason="transformers is not installed")
 
 from medkit.core import ProvTracer
-from medkit.core.text import Entity, Span
-from medkit.text.ner import UMLSNormAttribute
+from medkit.core.text import Entity, Span, UMLSNormAttribute
 from medkit.text.ner.umls_coder_normalizer import UMLSCoderNormalizer
 
 

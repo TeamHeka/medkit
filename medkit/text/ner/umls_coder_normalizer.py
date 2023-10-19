@@ -16,9 +16,8 @@ from transformers import PreTrainedModel, PreTrainedTokenizer, FeatureExtraction
 import yaml
 
 from medkit.core import Operation
-from medkit.core.text import Entity
+from medkit.core.text import Entity, UMLSNormAttribute
 import medkit.core.utils
-from medkit.text.ner.umls_norm_attribute import UMLSNormAttribute
 from medkit.text.ner.umls_utils import (
     load_umls_entries,
     preprocess_term_to_match,

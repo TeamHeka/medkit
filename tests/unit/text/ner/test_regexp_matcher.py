@@ -2,8 +2,7 @@ import logging
 import pytest
 
 from medkit.core import Attribute, ProvTracer
-from medkit.core.text import Segment, Span, EntityNormAttribute
-from medkit.text.ner import UMLSNormAttribute
+from medkit.core.text import Segment, Span, EntityNormAttribute, UMLSNormAttribute
 from medkit.text.ner.regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,

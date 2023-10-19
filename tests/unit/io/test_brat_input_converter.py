@@ -1,5 +1,5 @@
 from medkit.core import ProvTracer
-from medkit.core.text import Span
+from medkit.core.text import Span, UMLSNormAttribute
 from medkit.io.brat import BratInputConverter
 
 
@@ -53,9 +53,42 @@ def test_load():
     assert attr.value is None
     assert attr.metadata.get("brat_id") == "A3"
 
+    # check attribute from note
+    note_attrs = entity_t3.attrs.get(label="brat_note")
+    assert len(note_attrs) == 1
+    assert note_attrs[0].value == "To be reviewed"
+
     # check multi-span entity
     entity_2 = doc.anns.get(label="vitamin")[1]
     assert entity_2.spans == [Span(251, 260), Span(263, 264)]
+
+
+def test_detect_cuis_in_notes():
+    brat_converter = BratInputConverter(detect_cuis_in_notes=True)
+    docs = brat_converter.load(dir_path="tests/data/brat/")
+    doc = docs[0]
+    # retrieve entity with CUI in note
+    entity = doc.anns.get(label="medication")[0]
+    # check umls norm attribute
+    assert len(entity.attrs.norms) == 1
+    norm_attr = entity.attrs.norms[0]
+    assert isinstance(norm_attr, UMLSNormAttribute)
+    assert norm_attr.cui == "C0011849"
+
+    # retrieve entity with multiple CUIs in note
+    entity = doc.anns.get(label="medication")[1]
+    # check umls norm attribute
+    assert len(entity.attrs.norms) == 2
+    assert entity.attrs.norms[0].cui == "C3021755"
+    assert entity.attrs.norms[1].cui == "C3021757"
+
+    # disable CUI detection
+    brat_converter = BratInputConverter(detect_cuis_in_notes=False)
+    docs = brat_converter.load(dir_path="tests/data/brat/")
+    doc = docs[0]
+    # retrieve entity with CUI in note
+    entity = doc.anns.get(label="medication")[0]
+    assert len(entity.attrs.norms) == 0
 
 
 def test_relations():

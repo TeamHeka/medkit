@@ -1,6 +1,5 @@
 __all__ = [
     "ADICAPNormAttribute",
-    "UMLSNormAttribute",
     "DucklingMatcher",
     "RegexpMatcher",
     "RegexpMatcherRule",
@@ -22,7 +21,6 @@ from medkit.core.utils import modules_are_available
 
 from .adicap_norm_attribute import ADICAPNormAttribute
 from .duckling_matcher import DucklingMatcher
-from .umls_norm_attribute import UMLSNormAttribute
 from .regexp_matcher import (
     RegexpMatcher,
     RegexpMatcherRule,

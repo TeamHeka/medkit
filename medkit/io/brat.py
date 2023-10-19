@@ -2,13 +2,14 @@ __all__ = ["BratInputConverter", "BratOutputConverter"]
 import re
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple, Union, ValuesView, Dict
+from typing import Any, List, Optional, Tuple, Union, Dict
 
 from smart_open import open
 import medkit.io._brat_utils as brat_utils
 from medkit.io._brat_utils import (
     BratAnnConfiguration,
     BratAttribute,
+    BratNote,
     BratEntity,
     BratRelation,
     RelationConf,
@@ -29,6 +30,7 @@ from medkit.core.text import (
     Segment,
     Span,
     TextDocument,
+    UMLSNormAttribute,
     span_utils,
     utils,
 )
@@ -43,13 +45,35 @@ ANN_CONF_FILE = "annotation.conf"
 logger = logging.getLogger(__name__)
 
 
+_CUI_PATTERN = re.compile(r"\b[Cc]\d{7}\b")
+
+
 class BratInputConverter(InputConverter):
     """Class in charge of converting brat annotations"""
 
-    def __init__(self, uid: Optional[str] = None):
+    def __init__(
+        self,
+        detect_cuis_in_notes: bool = True,
+        notes_label: str = "brat_note",
+        uid: Optional[str] = None,
+    ):
+        """
+        Parameters
+        ----------
+        notes_label:
+            Label to use for attributes created from annotator notes.
+        detect_cuis_in_notes:
+            If `True`, strings looking like CUIs in annotator notes of entities
+            will be converted to UMLS normalization attributes rather than creating
+            an :class:`~.core.Attribute` with the whole note text as value.
+        uid:
+            Identifier of the converter.
+        """
         if uid is None:
             uid = generate_id()
 
+        self.notes_label = notes_label
+        self.detect_cuis_in_notes = detect_cuis_in_notes
         self.uid = uid
         self._prov_tracer: Optional[ProvTracer] = None
 
@@ -218,6 +242,28 @@ class BratInputConverter(InputConverter):
                     attribute, self.description, source_data_items=[]
                 )
 
+        for brat_note in brat_doc.notes.values():
+            # try to detect CUI in notes and recreate normalization attrs
+            if self.detect_cuis_in_notes:
+                cuis = _CUI_PATTERN.findall(brat_note.value)
+                if cuis:
+                    for cui in cuis:
+                        attribute = UMLSNormAttribute(cui=cui, umls_version=None)
+                        anns_by_brat_id[brat_note.target].attrs.add(attribute)
+                        if self._prov_tracer is not None:
+                            self._prov_tracer.add_prov(
+                                attribute, self.description, source_data_items=[]
+                            )
+                    continue
+
+            # if no CUI detected, store note contents in plain attribute
+            attribute = Attribute(label=self.notes_label, value=brat_note.value)
+            anns_by_brat_id[brat_note.target].attrs.add(attribute)
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(
+                    attribute, self.description, source_data_items=[]
+                )
+
         return list(anns_by_brat_id.values())
 
 
@@ -235,7 +281,9 @@ class BratOutputConverter(OutputConverter):
         self,
         anns_labels: Optional[List[str]] = None,
         attrs: Optional[List[str]] = None,
+        notes_label: str = "brat_note",
         ignore_segments: bool = True,
+        convert_cuis_to_notes: bool = True,
         create_config: bool = True,
         top_values_by_attr: int = 50,
         uid: Optional[str] = None,
@@ -252,10 +300,16 @@ class BratOutputConverter(OutputConverter):
             Labels of medkit attributes to add in the annotations that will be included.
             If `None` (default) all medkit attributes found in the segments or relations
             will be converted to Brat attributes
+        notes_label:
+            Label of attributes that will be converted to annotator notes.
         ignore_segments:
             If `True` medkit segments will be ignored. Only entities, attributes and relations
             will be converted to Brat annotations.  If `False` the medkit segments will be
             converted to Brat annotations as well.
+        convert_cuis_to_notes:
+            If `True`, UMLS normalization attributes will be converted to
+            annotator notes rather than attributes. For entities with multiple
+            UMLS attributes, CUIs will be separated by spaces (ex: "C0011849 C0004096").
         create_config:
             Whether to create a configuration file for the generated collection.
             This file defines the types of annotations generated, it is necessary for the correct
@@ -273,7 +327,9 @@ class BratOutputConverter(OutputConverter):
         self.uid = uid
         self.anns_labels = anns_labels
         self.attrs = attrs
+        self.notes_label = notes_label
         self.ignore_segments = ignore_segments
+        self.convert_cuis_to_notes = convert_cuis_to_notes
         self.create_config = create_config
         self.top_values_by_attr = top_values_by_attr
 
@@ -359,7 +415,7 @@ class BratOutputConverter(OutputConverter):
         relations: List[Relation],
         config: BratAnnConfiguration,
         raw_text: str,
-    ) -> Tuple[ValuesView[Union[BratEntity, BratAttribute, BratRelation]]]:
+    ) -> List[Union[BratEntity, BratAttribute, BratRelation, BratNote]]:
         """
         Convert Segments, Relations and Attributes into brat data structures
 
@@ -376,18 +432,22 @@ class BratOutputConverter(OutputConverter):
             Text of reference to get the original text of the annotations
         Returns
         -------
-        BratAnnotations
+        List[Union[BratEntity, BratAttribute, BratRelation, BratNote]]
             A list of brat annotations
         """
-        nb_segment, nb_relation, nb_attribute = 1, 1, 1
-        anns_by_medkit_id = dict()
+        nb_segment, nb_relation, nb_attribute, nb_note = 1, 1, 1, 1
+        brat_entities_by_medkit_id = dict()
+        brat_anns = []
 
         # First convert segments then relations including its attributes
         for medkit_segment in segments:
             brat_entity = self._convert_segment_to_brat(
                 medkit_segment, nb_segment, raw_text
             )
-            anns_by_medkit_id[medkit_segment.uid] = brat_entity
+            brat_anns.append(brat_entity)
+            # store link between medkit id and brat entities
+            # (needed for relations)
+            brat_entities_by_medkit_id[medkit_segment.uid] = brat_entity
             config.add_entity_type(brat_entity.type)
             nb_segment += 1
 
@@ -401,6 +461,13 @@ class BratOutputConverter(OutputConverter):
                     for a in medkit_segment.attrs.get(label=label)
                 ]
             for attr in attrs:
+                # skip UMLS attributes that will be converted to notes
+                if self.convert_cuis_to_notes and isinstance(attr, UMLSNormAttribute):
+                    continue
+                # skip attributes that will be converted to notes
+                if attr.label == self.notes_label:
+                    continue
+
                 value = attr.to_brat()
 
                 if isinstance(value, bool) and not value:
@@ -415,19 +482,43 @@ class BratOutputConverter(OutputConverter):
                         target_brat_id=brat_entity.uid,
                         is_from_entity=True,
                     )
-                    anns_by_medkit_id[attr.uid] = brat_attr
+                    brat_anns.append(brat_attr)
                     config.add_attribute_type(attr_config)
                     nb_attribute += 1
 
                 except TypeError as err:
                     logger.warning(f"Ignore attribute {attr.uid}. {err}")
 
+            if self.convert_cuis_to_notes:
+                cuis = [
+                    attr.kb_id for attr in attrs if isinstance(attr, UMLSNormAttribute)
+                ]
+                if len(cuis):
+                    brat_note = self._convert_umls_attributes_to_brat_note(
+                        cuis=cuis,
+                        nb_note=nb_note,
+                        target_brat_id=brat_entity.uid,
+                    )
+                    brat_anns.append(brat_note)
+                    nb_note += 1
+
+            note_attrs = medkit_segment.attrs.get(label=self.notes_label)
+            if note_attrs:
+                values = [a.to_brat() for a in note_attrs]
+                brat_note = self._convert_attributes_to_brat_note(
+                    values=values,
+                    nb_note=nb_note,
+                    target_brat_id=brat_entity.uid,
+                )
+                brat_anns.append(brat_note)
+                nb_note += 1
+
         for medkit_relation in relations:
             try:
                 brat_relation, relation_config = self._convert_relation_to_brat(
-                    medkit_relation, nb_relation, anns_by_medkit_id
+                    medkit_relation, nb_relation, brat_entities_by_medkit_id
                 )
-                anns_by_medkit_id[medkit_relation.uid] = brat_relation
+                brat_anns.append(brat_relation)
                 config.add_relation_type(relation_config)
                 nb_relation += 1
             except ValueError as err:
@@ -458,13 +549,13 @@ class BratOutputConverter(OutputConverter):
                         target_brat_id=brat_relation.uid,
                         is_from_entity=False,
                     )
-                    anns_by_medkit_id[attr.uid] = brat_attr
+                    brat_anns.append(brat_attr)
                     config.add_attribute_type(attr_config)
                     nb_attribute += 1
                 except TypeError as err:
                     logger.warning(f"Ignore attribute {attr.uid}. {err}")
 
-        return anns_by_medkit_id.values()
+        return brat_anns
 
     @staticmethod
     def _ensure_text_and_spans(
@@ -542,7 +633,7 @@ class BratOutputConverter(OutputConverter):
     def _convert_relation_to_brat(
         relation: Relation,
         nb_relation: int,
-        brat_anns_by_segment_id: Dict[str, BratEntity],
+        brat_entities_by_segment_id: Dict[str, BratEntity],
     ) -> Tuple[BratRelation, RelationConf]:
         """
         Get a brat relation from a medkit relation
@@ -553,7 +644,7 @@ class BratOutputConverter(OutputConverter):
             A medkit relation to convert into brat format
         nb_relation:
             The current counter of brat relations
-        brat_anns_by_segment_id:
+        brat_entities_by_segment_id:
             A dict to map medkit ID to brat annotation
 
         Returns
@@ -572,8 +663,8 @@ class BratOutputConverter(OutputConverter):
         brat_id = f"R{nb_relation}"
         # brat does not support spaces in labels
         type = relation.label.replace(" ", "_")
-        subj = brat_anns_by_segment_id.get(relation.source_id)
-        obj = brat_anns_by_segment_id.get(relation.target_id)
+        subj = brat_entities_by_segment_id.get(relation.source_id)
+        obj = brat_entities_by_segment_id.get(relation.target_id)
 
         if subj is None or obj is None:
             raise ValueError("Entity target/source was not found.")
@@ -617,3 +708,58 @@ class BratOutputConverter(OutputConverter):
         value: str = brat_utils.ensure_attr_value(value)
         attr_conf = AttributeConf(from_entity=is_from_entity, type=type, value=value)
         return BratAttribute(brat_id, type, target_brat_id, value), attr_conf
+
+    @staticmethod
+    def _convert_umls_attributes_to_brat_note(
+        cuis: List[str],
+        nb_note: int,
+        target_brat_id: str,
+    ) -> BratNote:
+        """
+        Get a brat note from a medkit umls norm attribute
+
+        Parameters
+        ----------
+        cui:
+            CUI to convert to brat note
+        nb_note:
+            The current counter of brat notes
+        target_brat_id:
+            Corresponding target brat ID
+
+        Returns
+        -------
+        BratNote:
+            The equivalent brat note of the medkit umls attribute
+        """
+        assert nb_note != 0
+        brat_id = f"#{nb_note}"
+        return BratNote(uid=brat_id, target=target_brat_id, value=" ".join(cuis))
+
+    @staticmethod
+    def _convert_attributes_to_brat_note(
+        values: List[Any],
+        nb_note: int,
+        target_brat_id: str,
+    ) -> BratNote:
+        """
+        Get a brat note from medkit attribute values
+
+        Parameters
+        ----------
+        values:
+            Attribute values
+        nb_note:
+            The current counter of brat notes
+        target_brat_id:
+            Corresponding target brat ID
+
+        Returns
+        -------
+        BratNote:
+            The equivalent brat note of the medkit attribute values
+        """
+        assert nb_note != 0
+        brat_id = f"#{nb_note}"
+        value = "\n".join(str(v) for v in values if v is not None)
+        return BratNote(uid=brat_id, target=target_brat_id, value=value)
