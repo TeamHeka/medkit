@@ -49,6 +49,7 @@ class HFTranslator(Operation):
         alignment_threshold: float = 1e-3,
         device: int = -1,  # -1 corresponds to the cpu else device number
         batch_size: int = 1,
+        hf_auth_token: Optional[str] = None,
         cache_dir: Optional[Union[str, Path]] = None,
         uid: str = None,
     ):
@@ -73,6 +74,9 @@ class HFTranslator(Operation):
             (-1 for "cpu" and device number for gpu, for instance 0 for "cuda:0")
         batch_size:
             Number of segments in batches processed by translation and alignment models
+        hf_auth_token:
+            HuggingFace Authentication token (to access private models on the
+            hub)
         cache_dir:
             Directory where to store downloaded models. If not set, the default
             HuggingFace cache dir is used.
@@ -80,9 +84,10 @@ class HFTranslator(Operation):
             Identifier of the translator
         """
 
-        # Pass all arguments to super (remove self)
+        # Pass all arguments to super (remove self and confidential hf_auth_token)
         init_args = locals()
         init_args.pop("self")
+        init_args.pop("hf_auth_token")
         super().__init__(**init_args)
 
         self.output_label = output_label
@@ -94,7 +99,9 @@ class HFTranslator(Operation):
         self.batch_size = batch_size
 
         if isinstance(self.translation_model, str):
-            task = transformers.pipelines.get_task(translation_model)
+            task = transformers.pipelines.get_task(
+                translation_model, token=hf_auth_token
+            )
             if not task.startswith("translation"):
                 raise ValueError(
                     f"Model {self.translation_model} is not associated to a translation"
@@ -107,6 +114,7 @@ class HFTranslator(Operation):
             pipeline_class=TranslationPipeline,
             device=self.device,
             batch_size=self.batch_size,
+            token=hf_auth_token,
             model_kwargs={"cache_dir": cache_dir},
         )
         self._aligner = _Aligner(
@@ -115,6 +123,7 @@ class HFTranslator(Operation):
             threshold=self.alignment_threshold,
             device=self.device,
             batch_size=self.batch_size,
+            hf_auth_token=hf_auth_token,
             cache_dir=cache_dir,
         )
 
@@ -240,6 +249,7 @@ class _Aligner:
         threshold: float = 1e-3,
         device: int = -1,
         batch_size: int = 1,
+        hf_auth_token: Optional[str] = None,
         cache_dir: Optional[Union[str, Path]] = None,
     ):
         self._device = torch.device("cpu" if device < 0 else f"cuda:{device}")
@@ -247,11 +257,12 @@ class _Aligner:
         self._model = BertModel.from_pretrained(
             model,
             output_hidden_states=True,
+            token=hf_auth_token,
             cache_dir=cache_dir,
         ).to(self._device)
         self._layer_index = layer_index
         self._threshold: float = threshold
-        self._tokenizer = BertTokenizerFast.from_pretrained(model)
+        self._tokenizer = BertTokenizerFast.from_pretrained(model, token=hf_auth_token)
 
     def align(
         self, source_texts: List[str], target_texts: List[str]

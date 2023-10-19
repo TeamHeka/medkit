@@ -6,11 +6,13 @@ To install them, use `pip install medkit-lib[hf-utils]`.
 __all__ = ["check_model_for_task_HF"]
 
 from pathlib import Path
-from typing import Union
+from typing import Optional, Union
 import transformers
 
 
-def check_model_for_task_HF(model: Union[str, Path], task: str) -> bool:
+def check_model_for_task_HF(
+    model: Union[str, Path], task: str, hf_auth_token: Optional[str] = None
+) -> bool:
     """Check compatibility of a model with a task HuggingFace.
     The model could be in the HuggingFace hub or in local files.
 
@@ -22,13 +24,17 @@ def check_model_for_task_HF(model: Union[str, Path], task: str) -> bool:
     task:
         A string representing the HF task to check i.e : 'token-classification'
 
+    hf_auth_token:
+        HuggingFace Authentication token (to access private models on the
+        hub)
+
     Returns
     -------
     bool
         Model compatibility with the task
     """
     try:
-        config = transformers.AutoConfig.from_pretrained(model)
+        config = transformers.AutoConfig.from_pretrained(model, token=hf_auth_token)
     except Exception as err:
         raise ValueError("Impossible to get the task from model") from err
 

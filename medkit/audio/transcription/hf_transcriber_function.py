@@ -29,6 +29,7 @@ class HFTranscriberFunction:
         capitalize: bool = True,
         device: int = -1,
         batch_size: int = 1,
+        hf_auth_token: Optional[str] = None,
         cache_dir: Optional[Union[str, Path]] = None,
     ):
         """
@@ -48,6 +49,9 @@ class HFTranscriberFunction:
             (`-1` for cpu and device number for gpu, for instance `0` for "cuda:0")
         batch_size:
             Size of batches processed by ASR pipeline.
+        hf_auth_token:
+            HuggingFace Authentication token (to access private models on the
+            hub)
         cache_dir:
             Directory where to store downloaded models. If not set, the default
             HuggingFace cache dir is used.
@@ -57,7 +61,7 @@ class HFTranscriberFunction:
         self.capitalize = capitalize
         self.device = device
 
-        task = transformers.pipelines.get_task(self.model_name)
+        task = transformers.pipelines.get_task(self.model_name, token=hf_auth_token)
         if not task == "automatic-speech-recognition":
             raise ValueError(
                 f"Model {self.model_name} is not associated to a speech"
@@ -71,6 +75,7 @@ class HFTranscriberFunction:
             pipeline_class=AutomaticSpeechRecognitionPipeline,
             device=self.device,
             batch_size=batch_size,
+            token=hf_auth_token,
             model_kwargs={"cache_dir": cache_dir},
         )
 

@@ -35,7 +35,8 @@ class _MockPipeline:
 @pytest.fixture(scope="module", autouse=True)
 def _mocked_pipeline(module_mocker):
     module_mocker.patch(
-        "transformers.pipelines.get_task", lambda m: "automatic-speech-recognition"
+        "transformers.pipelines.get_task",
+        lambda m, token=None: "automatic-speech-recognition",
     )
     module_mocker.patch("transformers.pipeline", _MockPipeline)
 
