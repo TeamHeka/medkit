@@ -1,4 +1,5 @@
 """Metrics to assess inter-annotator agreement"""
+__all__ = ["cohen_kappa", "krippendorff_alpha"]
 from typing import List, Union
 import numpy as np
 
@@ -16,7 +17,7 @@ def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
     """
     Compute Cohen's kappa: a coefficient of agreement between two annotators.
 
-    This function computes Cohen's kappa [1] for qualitative data. It measures
+    This function computes Cohen's kappa [1]_ for qualitative data. It measures
     the agreement between two annotators who classify `n` items in `n_labels`.
 
     It could be defined in terms of numbers of agreements and number of classified items.
@@ -25,7 +26,7 @@ def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
         \\kappa = \\frac{n_a - n_e}{n - n_e}
 
     where :math:`n_a` is the number of agreements, :math:`n_e` is the sum of
-    agreements by chance and :math:`n` is the number of classified items [2].
+    agreements by chance and :math:`n` is the number of classified items [2]_.
 
     Parameters
     ----------
@@ -174,10 +175,8 @@ def krippendorff_alpha(all_annotators_data: List[List[Union[None, str, int]]]) -
     attributable to chance. The arguments of the disagreement measures are values
     in coincidence matrices.
 
-    This function implements the general computational form proposed in [3],
+    This function implements the general computational form proposed in [3]_,
     but only supports binaire or nominal labels.
-
-    #TODO: fix link to references section
 
     Parameters
     ----------

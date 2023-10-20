@@ -566,6 +566,26 @@ This module provides components to evaluate annotations as well as some implemen
 :::{note}
 For more details about public APIs, refer to {mod}`~.text.metrics`
 :::
+
+## Attribute Classification
+
+Medkit provides some evaluators for document and entity attributes classification. 
+The evaluators compute the **classification report** using [sklearn](https://scikit-learn.org/stable/index.html) as backend.
+
+:::{note}
+For more details about public API, refer to {mod}`~.text.metrics.classification`.
+:::
+
+## Inter-rated agreement
+
+This metric represents the degree of agreement between annotators.
+Medkit implements **Cohen's Kappa** for two annotators and **Krippendorff Alpha** for 
+multiple annotators. 
+
+:::{note}
+For more details about public API, refer to {mod}`~.text.metrics.irr`.
+:::
+
 ## NER Evaluation
 
 Medkit uses [seqeval](https://github.com/chakki-works/seqeval) as backend of evaluation.

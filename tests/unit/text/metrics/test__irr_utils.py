@@ -1,7 +1,7 @@
 import pytest
 from numpy.testing import assert_almost_equal
 
-from medkit.text.metrics._irr_utils import krippendorff_alpha, cohen_kappa
+from medkit.text.metrics.irr_utils import krippendorff_alpha, cohen_kappa
 
 
 def test_krippendorff_alpha():
