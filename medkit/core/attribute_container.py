@@ -105,6 +105,8 @@ class AttributeContainer:
         """
 
         attr = self._store.get_data_item(uid)
+        if attr is None:
+            raise ValueError(f"No known attribute with uid '{uid}'")
         return typing.cast(Attribute, attr)
 
     def __eq__(self, other: object) -> bool:

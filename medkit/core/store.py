@@ -13,7 +13,7 @@ class Store(Protocol):
     def store_data_item(self, data_item: IdentifiableDataItem, parent_id: str):
         pass
 
-    def get_data_item(self, data_item_id: str) -> IdentifiableDataItem:
+    def get_data_item(self, data_item_id: str) -> Optional[IdentifiableDataItem]:
         pass
 
     def get_parent_item(self, data_item) -> Optional[IdentifiableDataItem]:
@@ -29,8 +29,8 @@ class _DictStore:
         self._data_items_by_id[data_item.uid] = data_item
         self._parent_ids_by_id[data_item.uid] = parent_id
 
-    def get_data_item(self, data_item_id: str) -> IdentifiableDataItem:
-        return self._data_items_by_id[data_item_id]
+    def get_data_item(self, data_item_id: str) -> Optional[IdentifiableDataItem]:
+        return self._data_items_by_id.get(data_item_id)
 
     def get_parent_item(self, data_item_id: str) -> Optional[IdentifiableDataItem]:
         parent_id = self._parent_ids_by_id[data_item_id]
