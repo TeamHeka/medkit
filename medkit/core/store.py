@@ -34,7 +34,7 @@ class _DictStore:
 
     def get_parent_item(self, data_item_id: str) -> IdentifiableDataItem:
         parent_id = self._parent_ids_by_id[data_item_id]
-        return self._data_items_by_id.get(parent_id, None)
+        return self._data_items_by_id.get(parent_id)
 
 
 class GlobalStore:
