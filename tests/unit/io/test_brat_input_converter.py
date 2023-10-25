@@ -1,5 +1,5 @@
 from medkit.core import ProvTracer
-from medkit.core.text import Span, UMLSNormAttribute
+from medkit.core.text import Span, ModifiedSpan, UMLSNormAttribute
 from medkit.io.brat import BratInputConverter
 
 
@@ -60,7 +60,12 @@ def test_load():
 
     # check multi-span entity
     entity_2 = doc.anns.get(label="vitamin")[1]
-    assert entity_2.spans == [Span(251, 260), Span(263, 264)]
+    assert entity_2.spans == [
+        Span(251, 259),
+        # brat inserts a with space between discountinuous spans
+        ModifiedSpan(length=1, replaced_spans=[]),
+        Span(263, 264),
+    ]
 
 
 def test_detect_cuis_in_notes():

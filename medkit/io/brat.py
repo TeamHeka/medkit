@@ -29,6 +29,7 @@ from medkit.core.text import (
     Relation,
     Segment,
     Span,
+    ModifiedSpan,
     TextDocument,
     UMLSNormAttribute,
     span_utils,
@@ -205,9 +206,17 @@ class BratInputConverter(InputConverter):
         # First convert entities, then relations, finally attributes
         # because new annotation identifier is needed
         for brat_entity in brat_doc.entities.values():
+            # Rebuild spans, taking into account that Brat inserts a space
+            # between each discontinuous span, and we need to account for it
+            # with a ModifiedSpan
+            spans = []
+            for brat_span in brat_entity.span:
+                if spans:
+                    spans.append(ModifiedSpan(length=1, replaced_spans=[]))
+                spans.append(Span(*brat_span))
             entity = Entity(
                 label=brat_entity.type,
-                spans=[Span(*brat_span) for brat_span in brat_entity.span],
+                spans=spans,
                 text=brat_entity.text,
                 metadata=dict(brat_id=brat_entity.uid),
             )
