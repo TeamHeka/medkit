@@ -94,7 +94,7 @@ class TextClassificationEvaluator:
         # add overall_metrics
         # return 'attr_value'_'metric'
         scores = {f"overall_{key}": value for key, value in report["macro avg"].items()}
-        scores["overall_accuracy"] = report.pop("accuracy")
+        scores["overall_acc"] = report.pop("accuracy")
 
         if metrics_by_attr_value:
             values_keys = [key for key in report.keys() if not key.endswith("avg")]
