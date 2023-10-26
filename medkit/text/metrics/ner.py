@@ -143,6 +143,11 @@ class SeqEvalEvaluator:
         for ent in entities:
             label = ent.label
             ent_spans = span_utils.normalize_spans(ent.spans)
+            # skip if all spans were ModifiedSpans and we are
+            # not able to refer back to text
+            if not ent_spans:
+                continue
+
             start_char = ent_spans[0].start
             end_char = ent_spans[-1].end
             chars_entity = list(range(start_char, end_char))

@@ -6,7 +6,7 @@ pytest.importorskip(modname="transformers", reason="transformers is not installe
 
 from transformers import BertTokenizerFast  # noqa: E402
 
-from medkit.core.text import Entity, TextDocument, Span  # noqa: E402
+from medkit.core.text import Entity, TextDocument, Span, ModifiedSpan  # noqa: E402
 from medkit.text.metrics.ner import SeqEvalEvaluator  # noqa: E402
 from tests.data_utils import get_path_hf_dummy_vocab  # noqa: E402
 
@@ -65,7 +65,9 @@ TEST_DATA = [
             "overall_precision": 0.0,
             "overall_recall": 0.0,
             "overall_f1-score": 0.0,
-            "overall_acc": 0.38,  # there is 14 'O' in GT, 4 were tagged with 'misc' so, 10/26
+            "overall_acc": (
+                0.38
+            ),  # there is 14 'O' in GT, 4 were tagged with 'misc' so, 10/26
             "overall_support": 2,
         },
     ),
@@ -169,3 +171,34 @@ def test_evaluator_with_bert_tokenizer(document, tagging_scheme, expected_accura
     for metric_key, value in expected_metrics.items():
         assert metric_key in metrics
         assert_almost_equal(metrics[metric_key], value, decimal=2)
+
+
+def test_modified_spans():
+    """
+    Behavior when encountering predicted entities with only modified spans
+    No tag can be added to the document's raw text in that case
+    """
+
+    doc = TextDocument(text="Je souffre d'asthme.")
+    entity = Entity(label="disorder", text="asthme", spans=[Span(13, 19)])
+    doc.anns.add(entity)
+    # entity on ModifiedSpan not referring to any spans in raw text
+    # (can happen when using a translator and the alignment model fails to realign
+    # some words)
+    predicted_entity = Entity(
+        label="disorder",
+        text="asthma",
+        spans=[ModifiedSpan(length=6, replaced_spans=[])],
+    )
+    evaluator = SeqEvalEvaluator(return_metrics_by_label=False)
+    # should not crash
+    metrics = evaluator.compute(
+        documents=[doc], predicted_entities=[[predicted_entity]]
+    )
+    assert metrics == {
+        "overall_precision": 0.0,
+        "overall_recall": 0.0,
+        "overall_f1-score": 0.0,
+        "overall_support": 1,
+        "overall_acc": 0.7,
+    }
