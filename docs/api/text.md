@@ -561,29 +561,28 @@ For more details about public API, refer to {mod}`~.text.postprocessing`.
 
 # Metrics
 
-This module provides components to evaluate annotations as well as some implementations of {class}`~.training.utils.MetricsComputer` to monitor the training of components in medkit.
+This module provides components to evaluate annotations as well as some implementations of {class}`~.training.utils.MetricsComputer` to monitor the training of components in medkit. 
+
+The components inside metrics are also known as **evaluators**. An evaluator allows you to assess performance by task.
 
 :::{note}
 For more details about public APIs, refer to {mod}`~.text.metrics`
 :::
 
-## Attribute Classification
+## Text Classification Evaluation
 
-Medkit provides some evaluators for document and entity attributes classification. 
-The evaluators compute the **classification report** using [sklearn](https://scikit-learn.org/stable/index.html) as backend.
+Medkit provides {class}`~.metrics.classification.TextClassificationEvaluator`, an evaluator for document attributes. You can compute the following metrics depending on your use-case:
 
-:::{note}
-For more details about public API, refer to {mod}`~.text.metrics.classification`.
-:::
+### Classification repport
+-  `compute_classification_report`: To compare a list of reference and predicted documents. This method uses [sklearn](https://scikit-learn.org/stable/index.html) as backend to compute precision, recall, and F1-score.
 
-## Inter-rated agreement
+### Inter-rated agreement
+-  `compute_cohen_kappa`: To compare the degree of agreement between lists of documents made by two annotators.
 
-This metric represents the degree of agreement between annotators.
-Medkit implements **Cohen's Kappa** for two annotators and **Krippendorff Alpha** for 
-multiple annotators. 
+-  `compute_krippendorff_alpha`: To compare the degree of agreement between lists of documents made by multiple annotators.
 
 :::{note}
-For more details about public API, refer to {mod}`~.text.metrics.irr`.
+For more details about public API, refer to {class}`~.metrics.classification.TextClassificationEvaluator` or {mod}`~.text.metrics.irr_utils`.
 :::
 
 ## NER Evaluation
