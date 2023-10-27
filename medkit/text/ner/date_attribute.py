@@ -232,22 +232,24 @@ class DurationAttribute(Attribute):
 
         parts = []
         if self.years:
-            parts.append(str(self.years) + " year" if self.years == 1 else " years")
+            parts.append(str(self.years) + (" year" if self.years == 1 else " years"))
         if self.months:
-            parts.append(str(self.months) + " month" if self.months == 1 else " months")
+            parts.append(
+                str(self.months) + (" month" if self.months == 1 else " months")
+            )
         if self.weeks:
-            parts.append(str(self.weeks) + " week" if self.weeks == 1 else " weeks")
+            parts.append(str(self.weeks) + (" week" if self.weeks == 1 else " weeks"))
         if self.days:
-            parts.append(str(self.days) + " day" if self.days == 1 else " days")
+            parts.append(str(self.days) + (" day" if self.days == 1 else " days"))
         if self.hours:
-            parts.append(str(self.hours) + " hour" if self.hours == 1 else " hours")
+            parts.append(str(self.hours) + (" hour" if self.hours == 1 else " hours"))
         if self.minutes:
             parts.append(
-                str(self.minutes) + " minute" if self.minutes == 1 else " minutes"
+                str(self.minutes) + (" minute" if self.minutes == 1 else " minutes")
             )
         if self.seconds:
             parts.append(
-                str(self.seconds) + " second" if self.seconds == 1 else " seconds"
+                str(self.seconds) + (" second" if self.seconds == 1 else " seconds")
             )
 
         return " ".join(parts)
