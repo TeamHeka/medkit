@@ -49,6 +49,7 @@ def test_dates_pipeline():
     assert len(date_attrs) == 1
     date_attr = date_attrs[0]
     assert isinstance(date_attr, DateAttribute)
+    assert date_attr.value == "2012-10-25"
     assert date_attr.year == 2012 and date_attr.month == 10 and date_attr.day == 25
 
     # relative date
@@ -63,6 +64,7 @@ def test_dates_pipeline():
     assert len(date_attrs) == 1
     date_attr = date_attrs[0]
     assert isinstance(date_attr, RelativeDateAttribute)
+    assert date_attr.value == "- 2 months"
     assert date_attr.direction == RelativeDateDirection.PAST
     assert date_attr.months == 2
 
@@ -78,6 +80,7 @@ def test_dates_pipeline():
     assert len(date_attrs) == 1
     date_attr = date_attrs[0]
     assert isinstance(date_attr, DurationAttribute)
+    assert date_attr.value == "2 months"
     assert date_attr.months == 2
 
 

@@ -52,6 +52,7 @@ def test_absolute_date():
     assert len(attrs) == 1
     attr = attrs[0]
     assert isinstance(attr, DateAttribute)
+    assert attr.value == "2012-10-25"
     assert attr.year == 2012 and attr.month == 10 and attr.day == 25
 
 
@@ -71,6 +72,7 @@ def test_relative_date():
     attr = attrs[0]
     assert isinstance(attr, RelativeDateAttribute)
     assert attr.direction == RelativeDateDirection.PAST
+    assert attr.value == "- 2 months"
     assert attr.months == 2
 
 
@@ -89,6 +91,7 @@ def test_duration():
     assert len(attrs) == 1
     attr = attrs[0]
     assert isinstance(attr, DurationAttribute)
+    assert attr.value == "2 months"
     assert attr.months == 2
 
 
