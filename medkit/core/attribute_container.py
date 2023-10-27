@@ -96,7 +96,17 @@ class AttributeContainer:
         self._attr_ids_by_label[label].append(uid)
 
     def get_by_id(self, uid: str) -> Attribute:
+        """Return the attribute corresponding to a specific identifier.
+
+        Parameters
+        ----------
+        uid:
+            Identifier of the attribute to return.
+        """
+
         attr = self._store.get_data_item(uid)
+        if attr is None:
+            raise ValueError(f"No known attribute with uid '{uid}'")
         return typing.cast(Attribute, attr)
 
     def __eq__(self, other: object) -> bool:

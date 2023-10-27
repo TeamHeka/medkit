@@ -155,6 +155,8 @@ class AnnotationContainer(Generic[AnnotationType]):
         """
 
         ann = self._store.get_data_item(uid)
+        if ann is None:
+            raise ValueError(f"No known annotation with uid '{uid}'")
         return typing.cast(AnnotationType, ann)
 
     def __eq__(self, other: object) -> bool:
