@@ -122,6 +122,7 @@ def test_tnm_pipeline():
     assert len(tnm_attrs) == 1
     tnm_attr = tnm_attrs[0]
     assert isinstance(tnm_attr, TNMAttribute)
+    assert tnm_attr.value == "pTxN1M1"
     assert tnm_attr.tumour_specification.value == "x"
 
 
