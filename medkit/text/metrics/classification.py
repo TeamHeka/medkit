@@ -129,8 +129,8 @@ class TextClassificationEvaluator:
         ann2_tags = self._format_docs_for_evaluation(docs_annotator_2)
 
         scores = {
-            "cohen_kappa": cohen_kappa(y1=ann1_tags, y2=ann2_tags),
-            "docs_support": len(ann1_tags),
+            "cohen_kappa": cohen_kappa(tags_rater1=ann1_tags, tags_rater2=ann2_tags),
+            "support": len(ann1_tags),
         }
 
         return scores
@@ -166,10 +166,9 @@ class TextClassificationEvaluator:
         for docs in docs_annotators:
             annotator_tags = self._format_docs_for_evaluation(docs)
             all_annotators_data.append(annotator_tags)
-
         scores = {
             "krippendorff_alpha": krippendorff_alpha(all_annotators_data),
-            "docs_support": len(all_annotators_data[0]),
+            "support": len(all_annotators_data[0]),
         }
 
         return scores

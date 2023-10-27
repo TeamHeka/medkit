@@ -13,7 +13,9 @@ def _check_len_labels(*all_labels):
         )
 
 
-def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
+def cohen_kappa(
+    tags_rater1: List[Union[str, int]], tags_rater2: List[Union[str, int]]
+) -> float:
     """
     Compute Cohen's kappa: a coefficient of agreement between two annotators.
 
@@ -30,10 +32,10 @@ def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
 
     Parameters
     ----------
-    y1 : list of (n_samples,)
+    tags_rater1 : list of (n_samples,)
         Labels assigned by the first annotator
 
-    y2 : list of (n_samples,)
+    tags_rater2 : list of (n_samples,)
         Labels assigned by the second annotator
 
     Returns
@@ -47,7 +49,7 @@ def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
     Raises
     ------
     ValueError
-        Raise if `y1` or `y2` differs in size
+        Raise if `tags_rater1` or `tags_rater2` differs in size
 
     References
     ----------
@@ -59,12 +61,12 @@ def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
             The WAC Clearinghouse University Press of Colorado, 2019,
             pp. 162-164. doi: 10.37514/pra-b.2019.0230."""
 
-    _check_len_labels(y1, y2)
+    _check_len_labels(tags_rater1, tags_rater2)
 
-    labels = set(y1).union(set(y2))
+    labels = set(tags_rater1).union(set(tags_rater2))
     label_to_int = {label: i for i, label in enumerate(labels)}
-    y1 = np.array([label_to_int[x] for x in y1])
-    y2 = np.array([label_to_int[x] for x in y2])
+    y1 = np.array([label_to_int[x] for x in tags_rater1])
+    y2 = np.array([label_to_int[x] for x in tags_rater2])
 
     n_items = len(y1)
     n_agreements = np.sum(y1 == y2)
@@ -73,8 +75,7 @@ def cohen_kappa(y1: List[Union[str, int]], y2: List[Union[str, int]]) -> float:
     n1_by_label = np.bincount(y1)
     n2_by_label = np.bincount(y2)
     n_expected = np.sum(n1_by_label * n2_by_label) / n_items
-
-    kappa = (n_agreements - n_expected) / (n_items - n_expected)
+    kappa = np.clip((n_agreements - n_expected) / (n_items - n_expected), -1, 1)
     return kappa
 
 
