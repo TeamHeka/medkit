@@ -102,6 +102,8 @@ def test_adicap_pipeline():
     assert len(norm_attrs) == 1
     adicap_attr = norm_attrs[0]
     assert isinstance(adicap_attr, ADICAPNormAttribute)
+    assert adicap_attr.value == "adicap:BHGS0040"
+    assert adicap_attr.code == "BHGS0040"
     assert adicap_attr.sampling_mode == "BIOPSIE CHIRURGICALE"
 
 
