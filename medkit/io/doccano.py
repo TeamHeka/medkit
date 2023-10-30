@@ -527,6 +527,7 @@ class DoccanoOutputConverter:
         task: DoccanoTask,
         anns_labels: Optional[List[str]] = None,
         attr_label: Optional[str] = None,
+        ignore_segments: bool = True,
         include_metadata: Optional[bool] = True,
         uid: Optional[str] = None,
     ):
@@ -543,6 +544,12 @@ class DoccanoOutputConverter:
         attr_label:
             The label of the medkit attribute that represents the text category.
             Useful for :class:`~.io.DoccanoTask.TEXT_CLASSIFICATION` converters.
+        ignore_segments:
+            If `True` medkit segments will be ignored. Only entities will be
+            converted to Doccano entities.  If `False` the medkit segments will
+            be converted to Doccano entities as well.
+            Useful for :class:`~.io.DoccanoTask.SEQUENCE_LABELING` or
+            :class:`~.io.DoccanoTask.RELATION_EXTRACTION` converters.
         include_metadata:
             Whether include medkit metadata in the converted documents
         uid:
@@ -555,6 +562,7 @@ class DoccanoOutputConverter:
         self.task = task
         self.anns_labels = anns_labels
         self.attr_label = attr_label
+        self.ignore_segments = ignore_segments
         self.include_metadata = include_metadata
 
     @property
@@ -625,17 +633,20 @@ class DoccanoOutputConverter:
         doccano_relations = []
 
         anns_by_type = get_anns_by_type(medkit_doc, self.anns_labels)
+        medkit_segments = anns_by_type["entities"]
+        if not self.ignore_segments:
+            medkit_segments += anns_by_type["segments"]
 
-        for medkit_entity in anns_by_type["entities"]:
-            spans = span_utils.normalize_spans(medkit_entity.spans)
-            ann_id = generate_deterministic_id(medkit_entity.uid)
+        for medkit_segment in medkit_segments:
+            spans = span_utils.normalize_spans(medkit_segment.spans)
+            ann_id = generate_deterministic_id(medkit_segment.uid)
             entity = _DoccanoEntity(
                 id=ann_id.int,
                 start_offset=spans[0].start,
                 end_offset=spans[-1].end,
-                label=medkit_entity.label,
+                label=medkit_segment.label,
             )
-            doccano_ents_by_medkit_uid[medkit_entity.uid] = entity
+            doccano_ents_by_medkit_uid[medkit_segment.uid] = entity
 
         for medkit_relation in anns_by_type["relations"]:
             subj = doccano_ents_by_medkit_uid.get(medkit_relation.source_id)
@@ -684,13 +695,16 @@ class DoccanoOutputConverter:
             text ans its label (a list of tuples representing entities)
         """
         anns_by_type = get_anns_by_type(medkit_doc, self.anns_labels)
+        medkit_segments = anns_by_type["entities"]
+        if not self.ignore_segments:
+            medkit_segments += anns_by_type["segments"]
         doccano_entities = []
-        for medkit_entity in anns_by_type["entities"]:
-            spans = span_utils.normalize_spans(medkit_entity.spans)
+        for medkit_segment in medkit_segments:
+            spans = span_utils.normalize_spans(medkit_segment.spans)
             entity = _DoccanoEntityTuple(
                 start_offset=spans[0].start,
                 end_offset=spans[-1].end,
-                label=medkit_entity.label,
+                label=medkit_segment.label,
             )
             doccano_entities.append(entity)
 
