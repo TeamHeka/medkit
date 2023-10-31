@@ -122,7 +122,7 @@ class TextClassificationEvaluator:
         -------
         Dict[str, float]:
             A dictionary with cohen's kappa score and support (number of annotated docs).
-            Tha value is a number between -1 and 1, where 1 indicates perfect agreement; zero
+            The value is a number between -1 and 1, where 1 indicates perfect agreement; zero
             or lower indicates chance agreement.
         """
         ann1_tags = self._format_docs_for_evaluation(docs_annotator_1)
