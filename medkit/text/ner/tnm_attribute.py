@@ -37,6 +37,8 @@ class TNMAttribute(Attribute):
         Identifier of the attribute
     label:
         The attribute label, always set to :attr:`TNMAttribute.LABEL`
+    value:
+        Normalized string representation of the TNM (ex: "pTxN1M1")
     tumour:
         Tumour score
     tumour_specification:
@@ -92,7 +94,22 @@ class TNMAttribute(Attribute):
         metadata: Optional[Dict[str, Any]] = None,
         uid: Optional[str] = None,
     ):
-        super().__init__(label=self.LABEL, metadata=metadata, uid=uid)
+        # use EDS-NLP's TNM class to build string representation
+        value = TNM(
+            prefix=prefix,
+            tumour=tumour,
+            tumour_specification=tumour_specification,
+            tumour_suffix=tumour_suffix,
+            node=node,
+            node_specification=node_specification,
+            node_suffix=node_suffix,
+            metastasis=metastasis,
+            resection_completeness=resection_completeness,
+            version=version,
+            version_year=version_year,
+        ).norm()
+
+        super().__init__(label=self.LABEL, value=value, metadata=metadata, uid=uid)
 
         self.prefix = prefix
         self.tumour = tumour
@@ -107,23 +124,10 @@ class TNMAttribute(Attribute):
         self.version_year = version_year
 
     def to_brat(self) -> str:
-        # use EDS-NLP's TNM class to build string representation
-        return TNM(
-            prefix=self.prefix,
-            tumour=self.tumour,
-            tumour_specification=self.tumour_specification,
-            tumour_suffix=self.tumour_suffix,
-            node=self.node,
-            node_specification=self.node_specification,
-            node_suffix=self.node_suffix,
-            metastasis=self.metastasis,
-            resection_completeness=self.resection_completeness,
-            version=self.version,
-            version_year=self.version_year,
-        ).norm()
+        return self.value
 
     def to_spacy(self) -> str:
-        return self.to_brat()
+        return self.value
 
     def to_dict(self) -> Dict[str, Any]:
         tnm_dict = dict(

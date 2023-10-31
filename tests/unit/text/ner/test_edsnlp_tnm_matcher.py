@@ -47,7 +47,7 @@ def test_basic():
     assert len(attrs) == 1
     attr = attrs[0]
     assert isinstance(attr, TNMAttribute)
-    print(attr)
+    assert attr.value == "pTxN1M1"
     # testing for values shown at https://aphp.github.io/edsnlp/v0.9.1/pipelines/ner/tnm/
     assert (
         attr.prefix.value == "p"

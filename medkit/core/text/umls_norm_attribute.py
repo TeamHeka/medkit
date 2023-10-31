@@ -23,7 +23,7 @@ class UMLSNormAttribute(EntityNormAttribute):
         The attribute label, always set to :attr:`EntityNormAttribute.LABEL
         <.core.text.EntityNormAttribute.LABEL>`
     value:
-        Value of the attribute, built by prefixing the cui with "umls:"
+        CUI prefixed with "umls:" (ex: "umls:C0011849")
     kb_name:
         Name of the knowledge base. Always "umls"
     kb_id:

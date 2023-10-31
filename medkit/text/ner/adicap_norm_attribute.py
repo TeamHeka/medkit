@@ -31,6 +31,8 @@ class ADICAPNormAttribute(EntityNormAttribute):
     label:
         The attribute label, always set to :attr:`EntityNormAttribute.LABEL
         <.core.text.EntityNormAttribute.LABEL>`
+    value:
+        ADICAP code prefix with "adicap:" (ex: "adicap:BHGS0040")
     code:
         ADICAP code as a string (ex: "BHGS0040")
     kb_id:

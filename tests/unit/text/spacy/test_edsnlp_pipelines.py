@@ -49,6 +49,7 @@ def test_dates_pipeline():
     assert len(date_attrs) == 1
     date_attr = date_attrs[0]
     assert isinstance(date_attr, DateAttribute)
+    assert date_attr.value == "2012-10-25"
     assert date_attr.year == 2012 and date_attr.month == 10 and date_attr.day == 25
 
     # relative date
@@ -63,6 +64,7 @@ def test_dates_pipeline():
     assert len(date_attrs) == 1
     date_attr = date_attrs[0]
     assert isinstance(date_attr, RelativeDateAttribute)
+    assert date_attr.value == "- 2 months"
     assert date_attr.direction == RelativeDateDirection.PAST
     assert date_attr.months == 2
 
@@ -78,6 +80,7 @@ def test_dates_pipeline():
     assert len(date_attrs) == 1
     date_attr = date_attrs[0]
     assert isinstance(date_attr, DurationAttribute)
+    assert date_attr.value == "2 months"
     assert date_attr.months == 2
 
 
@@ -99,6 +102,8 @@ def test_adicap_pipeline():
     assert len(norm_attrs) == 1
     adicap_attr = norm_attrs[0]
     assert isinstance(adicap_attr, ADICAPNormAttribute)
+    assert adicap_attr.value == "adicap:BHGS0040"
+    assert adicap_attr.code == "BHGS0040"
     assert adicap_attr.sampling_mode == "BIOPSIE CHIRURGICALE"
 
 
@@ -119,6 +124,7 @@ def test_tnm_pipeline():
     assert len(tnm_attrs) == 1
     tnm_attr = tnm_attrs[0]
     assert isinstance(tnm_attr, TNMAttribute)
+    assert tnm_attr.value == "pTxN1M1"
     assert tnm_attr.tumour_specification.value == "x"
 
 
