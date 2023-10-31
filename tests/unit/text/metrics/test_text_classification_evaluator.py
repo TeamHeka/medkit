@@ -195,3 +195,48 @@ def test_cohen_kappa(
     for metric_key, value in expected_metrics.items():
         assert metric_key in metrics
         assert_almost_equal(metrics[metric_key], value, decimal=2)
+
+
+TEST_DATA_KA = [
+    (
+        _PREDICTED_VALUES_BY_CASE["perfect_prediction"],
+        {"krippendorff_alpha": 1, "nb_annotators": 2, "support": 2},
+    ),
+    (
+        _PREDICTED_VALUES_BY_CASE["one_missing"],
+        {"krippendorff_alpha": 0, "nb_annotators": 2, "support": 2},
+    ),
+    (
+        _PREDICTED_VALUES_BY_CASE["incorrect_prediction"],
+        {"krippendorff_alpha": -0.5, "nb_annotators": 2, "support": 2},
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "predicted_docs,expected_metrics",
+    TEST_DATA_KA,
+    ids=[
+        "total_agreement",
+        "partial_agreement",
+        "chance_agreement",
+    ],
+)
+def test_krippendorff_alpha(
+    evaluator: TextClassificationEvaluator,
+    true_documents,
+    predicted_docs,
+    expected_metrics,
+):
+    metrics = evaluator.compute_krippendorff_alpha([true_documents, predicted_docs])
+    assert len(metrics.keys()) == len(expected_metrics.keys())
+    for metric_key, value in expected_metrics.items():
+        assert metric_key in metrics
+        assert_almost_equal(metrics[metric_key], value, decimal=2)
+
+    # test number of annotators
+    with pytest.raises(ValueError, match="'docs_annotators' should contain .*"):
+        evaluator.compute_krippendorff_alpha([true_documents])
+
+    with pytest.raises(ValueError, match="'docs_annotators' should contain .*"):
+        evaluator.compute_krippendorff_alpha(true_documents)

@@ -1,5 +1,5 @@
 """Metrics to assess inter-annotator agreement"""
-__all__ = ["cohen_kappa", "krippendorff_alpha"]
+__all__ = ["krippendorff_alpha"]
 from typing import List, Union
 import numpy as np
 
@@ -11,72 +11,6 @@ def _check_len_labels(*all_labels):
             f"The lists have different sizes. The lists found have {lengths} as their"
             " lengths"
         )
-
-
-def cohen_kappa(
-    tags_rater1: List[Union[str, int]], tags_rater2: List[Union[str, int]]
-) -> float:
-    """
-    Compute Cohen's kappa: a coefficient of agreement between two annotators.
-
-    This function computes Cohen's kappa [1]_ for qualitative data. It measures
-    the agreement between two annotators who classify `n` items in `n_labels`.
-
-    It could be defined in terms of numbers of agreements and number of classified items.
-
-    .. math::
-        \\kappa = \\frac{n_a - n_e}{n - n_e}
-
-    where :math:`n_a` is the number of agreements, :math:`n_e` is the sum of
-    agreements by chance and :math:`n` is the number of classified items [2]_.
-
-    Parameters
-    ----------
-    tags_rater1 : list of (n_samples,)
-        Labels assigned by the first annotator
-
-    tags_rater2 : list of (n_samples,)
-        Labels assigned by the second annotator
-
-    Returns
-    -------
-    kappa : float
-        The kappa coefficient, a number between -1 and 1.
-        A value of 0 indicates no aggrement between annotators, and
-        a value of 1 indicates perfect agreement. This coefficient is
-        sensitive to imbalanced data.
-
-    Raises
-    ------
-    ValueError
-        Raise if `tags_rater1` or `tags_rater2` differs in size
-
-    References
-    ----------
-    .. [1] J. Cohen, "A Coefficient of Agreement for Nominal Scales",
-            Educational and Psychological Measurement, vol. 20, no. 1,
-            pp. 37-46, 1960, doi: 10.1177/001316446002000104.
-    .. [2] C. Geisler and J. Swarts, Coding Streams of Language: Techniques
-            for the Systematic Coding of Text, Talk, and Other Verbal Data.
-            The WAC Clearinghouse University Press of Colorado, 2019,
-            pp. 162-164. doi: 10.37514/pra-b.2019.0230."""
-
-    _check_len_labels(tags_rater1, tags_rater2)
-
-    labels = set(tags_rater1).union(set(tags_rater2))
-    label_to_int = {label: i for i, label in enumerate(labels)}
-    y1 = np.array([label_to_int[x] for x in tags_rater1])
-    y2 = np.array([label_to_int[x] for x in tags_rater2])
-
-    n_items = len(y1)
-    n_agreements = np.sum(y1 == y2)
-
-    # count number of occurrences of each label
-    n1_by_label = np.bincount(y1)
-    n2_by_label = np.bincount(y2)
-    n_expected = np.sum(n1_by_label * n2_by_label) / n_items
-    kappa = np.clip((n_agreements - n_expected) / (n_items - n_expected), -1, 1)
-    return kappa
 
 
 def _get_values_by_unit_matrix(
@@ -130,6 +64,7 @@ def _compute_observed_disagreement(values_by_unit_matrix: np.ndarray) -> float:
         unit = unit[unit > 0]
         for n in range(0, len(unit)):
             # only nominal weight is supported in this function
+            # perfect agreement seen as 0 disagreement
             p_unit = np.dot(unit[n], unit[n + 1 :]) / (total_by_unit[u] - 1)
             do += np.sum(p_unit)
     return do
@@ -176,7 +111,7 @@ def krippendorff_alpha(all_annotators_data: List[List[Union[None, str, int]]]) -
     attributable to chance. The arguments of the disagreement measures are values
     in coincidence matrices.
 
-    This function implements the general computational form proposed in [3]_,
+    This function implements the general computational form proposed in [1]_,
     but only supports binaire or nominal labels.
 
     Parameters
@@ -201,7 +136,7 @@ def krippendorff_alpha(all_annotators_data: List[List[Union[None, str, int]]]) -
 
     References
     ----------
-    .. [3] K. Krippendorff, “Computing Krippendorff's alpha-reliability,”
+    .. [1] K. Krippendorff, “Computing Krippendorff's alpha-reliability,”
             ScholarlyCommons, 25-Jan-2011, pp. 8-10. [Online].
             Available: https://repository.upenn.edu/asc_papers/43/
 

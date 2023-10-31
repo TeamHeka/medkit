@@ -3,10 +3,10 @@ __all__ = ["TextClassificationEvaluator"]
 import dataclasses
 from typing import Dict, List
 
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, cohen_kappa_score
 
 from medkit.core.text import TextDocument
-from medkit.text.metrics.irr_utils import cohen_kappa, krippendorff_alpha
+from medkit.text.metrics.irr_utils import krippendorff_alpha
 
 
 @dataclasses.dataclass()
@@ -108,9 +108,7 @@ class TextClassificationEvaluator:
         self, docs_annotator_1: List[TextDocument], docs_annotator_2: List[TextDocument]
     ) -> Dict[str, float]:
         """Compute the cohen's kappa score, an inter-rated agreement score between two annotators.
-
-        .. note::
-            See :mod:`medkit.text.metrics.irr_utils.cohen_kappa` for more information about the score
+        This method uses 'sklearn' as backend to compute the level of agreement.
 
         Parameters
         ----------
@@ -123,13 +121,15 @@ class TextClassificationEvaluator:
         Returns
         -------
         Dict[str, float]:
-            A dictionary with cohen's kappa score and support
+            A dictionary with cohen's kappa score and support (number of annotated docs).
+            Tha value is a number between -1 and 1, where 1 indicates perfect agreement; zero
+            or lower indicates chance agreement.
         """
         ann1_tags = self._format_docs_for_evaluation(docs_annotator_1)
         ann2_tags = self._format_docs_for_evaluation(docs_annotator_2)
 
         scores = {
-            "cohen_kappa": cohen_kappa(tags_rater1=ann1_tags, tags_rater2=ann2_tags),
+            "cohen_kappa": cohen_kappa_score(y1=ann1_tags, y2=ann2_tags),
             "support": len(ann1_tags),
         }
 
@@ -153,9 +153,11 @@ class TextClassificationEvaluator:
         Returns
         -------
         Dict[str, float]:
-            A dictionary with the krippendorff alpha score and support.
+            A dictionary with the krippendorff alpha score, number of annotators and support (number of documents).
+            A value of 1 indicates perfect reliability between annotators; zero or lower indicates
+            absence of reliability.
         """
-        if len(docs_annotators) < 2:
+        if len(docs_annotators) < 2 or not isinstance(docs_annotators[0], list):
             raise ValueError(
                 "'docs_annotators' should contain at least two list of TextDocuments to"
                 " compare"
@@ -168,6 +170,7 @@ class TextClassificationEvaluator:
             all_annotators_data.append(annotator_tags)
         scores = {
             "krippendorff_alpha": krippendorff_alpha(all_annotators_data),
+            "nb_annotators": len(all_annotators_data),
             "support": len(all_annotators_data[0]),
         }
 

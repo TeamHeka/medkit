@@ -1,7 +1,7 @@
 import pytest
 from numpy.testing import assert_almost_equal
 
-from medkit.text.metrics.irr_utils import krippendorff_alpha, cohen_kappa
+from medkit.text.metrics.irr_utils import krippendorff_alpha
 
 
 def test_krippendorff_alpha():
@@ -39,38 +39,3 @@ def test_krippendorff_alpha():
 
     with pytest.raises(AssertionError, match="There must be more than one .*"):
         krippendorff_alpha([[1, 1, 1], [1, 1, 1]])
-
-
-def test_cohen_kappa():
-    # data from C. Geisler and J. Swarts (2019)
-    # nominal data, two annotators
-    raw_y1 = (
-        "business user business "
-        + "system " * 3
-        + "team system business user system "
-        + "user " * 4
-        + "system"
-    )
-    raw_y2 = (
-        "business user business team system team team system business user system "
-        + "user " * 4
-        + "system"
-    )
-    y1 = raw_y1.split()
-    y2 = raw_y2.split()
-    kappa = cohen_kappa(y1, y2)
-    assert_almost_equal(kappa, 0.83, decimal=2)
-    assert kappa == cohen_kappa(y2, y1)
-
-    # data from sklearn
-    y_true = [2, 0, 2, 2, 0, 1]
-    y_pred = [0, 0, 2, 2, 0, 2]
-    kappa = cohen_kappa(y_true, y_pred)
-    assert_almost_equal(kappa, 0.428, decimal=3)
-    assert kappa == cohen_kappa(y_pred, y_true)
-
-    # testing exceptions
-    with pytest.raises(
-        ValueError, match="The lists have different sizes. The lists found have .*"
-    ):
-        cohen_kappa([1, 2], [1])
