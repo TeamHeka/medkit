@@ -4,7 +4,7 @@ import logging
 
 import pytest
 from medkit.core import Attribute
-from medkit.core.text import TextDocument, Entity, Relation, Span
+from medkit.core.text import TextDocument, Entity, Relation, Segment, Span
 from medkit.io import DoccanoTask, DoccanoOutputConverter
 
 from tests.data_utils import PATH_DOCCANO_FILES
@@ -37,6 +37,9 @@ def _get_doc_by_task(task: DoccanoTask):
             Entity(label="ORG", spans=[Span(0, 6)], text="medkit", uid="e0"),
             Entity(label="DATE", spans=[Span(22, 26)], text="2022", uid="e1"),
             Relation(label="created_in", source_id="e0", target_id="e1", uid="r0"),
+            Segment(
+                label="sentence", text="medkit was created in 2022", spans=[Span(0, 26)]
+            ),
         ]
 
         for ann in medkit_anns:
@@ -78,6 +81,23 @@ def test_save_by_task_with_metadat(tmp_path, task):
     # check generated data
     data = _load_json_file(output_file)
     expected_data = _load_json_file(PATH_DOCCANO_FILES / f"{task.value}.jsonl")
+    assert data == expected_data
+
+
+def test_save_segments(tmp_path):
+    medkit_docs = [_get_doc_by_task(DoccanoTask.SEQUENCE_LABELING)]
+    converter = DoccanoOutputConverter(
+        task=DoccanoTask.SEQUENCE_LABELING,
+        anns_labels="sentence",
+        ignore_segments=False,
+    )
+
+    output_file = tmp_path / "segments.jsonl"
+    converter.save(medkit_docs, output_file=output_file)
+
+    # check generated data
+    data = _load_json_file(output_file)
+    expected_data = _load_json_file(PATH_DOCCANO_FILES / "segments.jsonl")
     assert data == expected_data
 
 
