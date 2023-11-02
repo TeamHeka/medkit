@@ -269,7 +269,7 @@ class DoccanoInputConverter:
         """
         documents = []
         for path_zip in sorted(Path(dir_path).glob("*.zip")):
-            documents = self.load_from_zip(path_zip)
+            documents.extend(self.load_from_zip(path_zip))
 
         if len(documents) == 0:
             logger.warning(f"No .zip nor .jsonl found in '{dir_path}'")
