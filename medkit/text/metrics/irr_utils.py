@@ -4,15 +4,6 @@ from typing import List, Union
 import numpy as np
 
 
-def _check_len_labels(*all_labels):
-    lengths = set(len(labels) for labels in all_labels)
-    if len(lengths) > 1:
-        raise ValueError(
-            f"The lists have different sizes. The lists found have {lengths} as their"
-            " lengths"
-        )
-
-
 def _get_values_by_unit_matrix(
     reliability_data: np.ndarray, labels_set: np.ndarray
 ) -> np.ndarray:
@@ -129,10 +120,9 @@ def krippendorff_alpha(all_annotators_data: List[List[Union[None, str, int]]]) -
 
     Raises
     ------
-    ValueError
-        Raise if any list of labels within `all_annotators_data` differs in size
     AssertionError
-        Raise if `all_annotators_data` has only one label to be compared
+        Raise if any list of labels within `all_annotators_data` differs in size or
+        if there is only one label to be compared.
 
     References
     ----------
@@ -150,10 +140,12 @@ def krippendorff_alpha(all_annotators_data: List[List[Union[None, str, int]]]) -
     >>> krippendorff_alpha([annotator_A,annotator_B,annotator_C])
     0.42222222222222217
     """
-    _check_len_labels(*all_annotators_data)
+    assert all(
+        len(d) == len(all_annotators_data[0]) for d in all_annotators_data
+    ), "Number of labels should be the same for all annotators"
 
     all_annotators_data = np.asarray(all_annotators_data)
-    labels_set = [cat for cat in set(all_annotators_data.flatten()) if cat is not None]
+    labels_set = list(set(all_annotators_data.flatten()) - set([None]))
 
     assert len(labels_set) > 1, "There must be more than one label in annotators data"
 

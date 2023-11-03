@@ -8,68 +8,33 @@ from medkit.text.metrics.classification import TextClassificationEvaluator
 _TXT_1 = "Compte de rendu"
 _TXT_2 = "Report d'urgences"
 _LABEL_ATTR = "type_note"
-_METADATA_KEY = "file_id"
 
 
 @pytest.fixture()
 def true_documents():
     return [
-        TextDocument(
-            _TXT_1,
-            attrs=[Attribute(label=_LABEL_ATTR, value="CR")],
-            metadata={_METADATA_KEY: "DOC0"},
-        ),
-        TextDocument(
-            _TXT_2,
-            attrs=[Attribute(label=_LABEL_ATTR, value="URG")],
-            metadata={_METADATA_KEY: "DOC1"},
-        ),
+        TextDocument(_TXT_1, attrs=[Attribute(label=_LABEL_ATTR, value="CR")]),
+        TextDocument(_TXT_2, attrs=[Attribute(label=_LABEL_ATTR, value="URG")]),
     ]
 
 
 @pytest.fixture()
 def evaluator():
-    return TextClassificationEvaluator(
-        attr_label=_LABEL_ATTR, metadata_key=_METADATA_KEY
-    )
+    return TextClassificationEvaluator(attr_label=_LABEL_ATTR)
 
 
 _PREDICTED_VALUES_BY_CASE = {
     "perfect_prediction": [
-        TextDocument(
-            _TXT_1,
-            attrs=[Attribute(label=_LABEL_ATTR, value="CR")],
-            metadata={_METADATA_KEY: "DOC0"},
-        ),
-        TextDocument(
-            _TXT_2,
-            attrs=[Attribute(label=_LABEL_ATTR, value="URG")],
-            metadata={_METADATA_KEY: "DOC1"},
-        ),
+        TextDocument(_TXT_1, attrs=[Attribute(label=_LABEL_ATTR, value="CR")]),
+        TextDocument(_TXT_2, attrs=[Attribute(label=_LABEL_ATTR, value="URG")]),
     ],
     "one_missing": [
-        TextDocument(
-            _TXT_1,
-            attrs=[Attribute(label=_LABEL_ATTR, value="URG")],
-            metadata={_METADATA_KEY: "DOC0"},
-        ),
-        TextDocument(
-            _TXT_2,
-            attrs=[Attribute(label=_LABEL_ATTR, value="URG")],
-            metadata={_METADATA_KEY: "DOC1"},
-        ),
+        TextDocument(_TXT_1, attrs=[Attribute(label=_LABEL_ATTR, value="URG")]),
+        TextDocument(_TXT_2, attrs=[Attribute(label=_LABEL_ATTR, value="URG")]),
     ],
     "incorrect_prediction": [
-        TextDocument(
-            _TXT_1,
-            attrs=[Attribute(label=_LABEL_ATTR, value="URG")],
-            metadata={_METADATA_KEY: "DOC0"},
-        ),
-        TextDocument(
-            _TXT_2,
-            attrs=[Attribute(label=_LABEL_ATTR, value="CR")],
-            metadata={_METADATA_KEY: "DOC1"},
-        ),
+        TextDocument(_TXT_1, attrs=[Attribute(label=_LABEL_ATTR, value="URG")]),
+        TextDocument(_TXT_2, attrs=[Attribute(label=_LABEL_ATTR, value="CR")]),
     ],
 }
 
@@ -77,31 +42,31 @@ TEST_DATA = [
     (
         _PREDICTED_VALUES_BY_CASE["perfect_prediction"],
         {
-            "overall_precision": 1.0,
-            "overall_recall": 1.0,
-            "overall_f1-score": 1.0,
-            "overall_acc": 1.0,
-            "overall_support": 2,
+            "macro_precision": 1.0,
+            "macro_recall": 1.0,
+            "macro_f1-score": 1.0,
+            "accuracy": 1.0,
+            "macro_support": 2,
         },
     ),
     (
         _PREDICTED_VALUES_BY_CASE["one_missing"],
         {
-            "overall_precision": 0.25,
-            "overall_recall": 0.5,
-            "overall_f1-score": 0.33,
-            "overall_acc": 0.5,
-            "overall_support": 2,
+            "macro_precision": 0.25,
+            "macro_recall": 0.5,
+            "macro_f1-score": 0.33,
+            "accuracy": 0.5,
+            "macro_support": 2,
         },
     ),
     (
         _PREDICTED_VALUES_BY_CASE["incorrect_prediction"],
         {
-            "overall_precision": 0.0,
-            "overall_recall": 0.0,
-            "overall_f1-score": 0.0,
-            "overall_acc": 0.0,
-            "overall_support": 2,
+            "macro_precision": 0.0,
+            "macro_recall": 0.0,
+            "macro_f1-score": 0.0,
+            "accuracy": 0.0,
+            "macro_support": 2,
         },
     ),
 ]
@@ -122,7 +87,7 @@ def test_classification_report(
     predicted_docs,
     expected_metrics,
 ):
-    metrics = evaluator.compute_classification_repport(
+    metrics = evaluator.compute_classification_report(
         true_docs=true_documents,
         predicted_docs=predicted_docs,
         metrics_by_attr_value=False,
@@ -130,7 +95,6 @@ def test_classification_report(
 
     assert len(metrics.keys()) == len(expected_metrics.keys())
     for metric_key, value in expected_metrics.items():
-        assert metric_key in metrics
         assert_almost_equal(metrics[metric_key], value, decimal=2)
 
 
@@ -138,17 +102,17 @@ def test_classification_report_by_attr_value(
     evaluator: TextClassificationEvaluator, true_documents
 ):
     predicted_docs = _PREDICTED_VALUES_BY_CASE["one_missing"]
-    metrics = evaluator.compute_classification_repport(
+    metrics = evaluator.compute_classification_report(
         true_docs=true_documents,
         predicted_docs=predicted_docs,
         metrics_by_attr_value=True,
     )
     expected_metrics = {
-        "overall_precision": 0.25,
-        "overall_recall": 0.5,
-        "overall_f1-score": 0.33,
-        "overall_support": 2,
-        "overall_acc": 0.5,
+        "macro_precision": 0.25,
+        "macro_recall": 0.5,
+        "macro_f1-score": 0.33,
+        "macro_support": 2,
+        "accuracy": 0.5,
         "CR_precision": 0,
         "CR_recall": 0,
         "CR_f1-score": 0,
@@ -158,10 +122,9 @@ def test_classification_report_by_attr_value(
         "URG_f1-score": 0.67,
         "URG_support": 1,
     }
-
-    assert len(metrics.keys()) == len(expected_metrics.keys())
+    print(metrics.keys())
+    assert metrics.keys() == expected_metrics.keys()
     for metric_key, value in expected_metrics.items():
-        assert metric_key in metrics
         assert_almost_equal(metrics[metric_key], value, decimal=2)
 
 
@@ -191,9 +154,8 @@ def test_cohen_kappa(
     expected_metrics,
 ):
     metrics = evaluator.compute_cohen_kappa(true_documents, predicted_docs)
-    assert len(metrics.keys()) == len(expected_metrics.keys())
+    assert metrics.keys() == expected_metrics.keys()
     for metric_key, value in expected_metrics.items():
-        assert metric_key in metrics
         assert_almost_equal(metrics[metric_key], value, decimal=2)
 
 
@@ -229,14 +191,30 @@ def test_krippendorff_alpha(
     expected_metrics,
 ):
     metrics = evaluator.compute_krippendorff_alpha([true_documents, predicted_docs])
-    assert len(metrics.keys()) == len(expected_metrics.keys())
+    assert metrics.keys() == expected_metrics.keys()
     for metric_key, value in expected_metrics.items():
-        assert metric_key in metrics
         assert_almost_equal(metrics[metric_key], value, decimal=2)
 
+
+def test_assertions_krippendorff(
+    evaluator: TextClassificationEvaluator, true_documents
+):
     # test number of annotators
     with pytest.raises(ValueError, match="'docs_annotators' should contain .*"):
         evaluator.compute_krippendorff_alpha([true_documents])
 
     with pytest.raises(ValueError, match="'docs_annotators' should contain .*"):
         evaluator.compute_krippendorff_alpha(true_documents)
+
+
+def test_assertions_docs(true_documents):
+    # test number of annotators
+    with pytest.raises(ValueError, match="No attribute with label .*"):
+        evaluator = TextClassificationEvaluator(attr_label="other")
+        evaluator._extract_attr_values(true_documents)
+
+    doc_test = true_documents[0]
+    doc_test.attrs.add(Attribute(label="other", value=[0, 1, 2]))
+    with pytest.raises(ValueError, match="The type of the attr value .*"):
+        evaluator = TextClassificationEvaluator(attr_label="other")
+        evaluator._extract_attr_values([doc_test])

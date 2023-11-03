@@ -33,7 +33,7 @@ def test_krippendorff_alpha():
 
     # testing exceptions
     with pytest.raises(
-        ValueError, match="The lists have different sizes. The lists found have .*"
+        AssertionError, match="Number of labels should be the same for all .*"
     ):
         krippendorff_alpha([[1, 2, 1], [1, 2, 1] * 2])
 

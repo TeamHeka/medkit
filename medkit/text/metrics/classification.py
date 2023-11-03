@@ -1,7 +1,6 @@
 __all__ = ["TextClassificationEvaluator"]
-"""Metrics to assess classification of anns"""
-import dataclasses
-from typing import Dict, List
+"""Metrics to assess classification of documents"""
+from typing import Dict, List, Union
 
 from sklearn.metrics import classification_report, cohen_kappa_score
 
@@ -9,25 +8,23 @@ from medkit.core.text import TextDocument
 from medkit.text.metrics.irr_utils import krippendorff_alpha
 
 
-@dataclasses.dataclass()
 class TextClassificationEvaluator:
-    """An evaluator for attributes of TextDocuments.
+    """An evaluator for attributes of TextDocuments"""
 
-    Attributes
-    ----------
-    metadata_key:
-        Key to sorting each list of documents, it ensures the same order to compute the metric
-    attr_label:
-        Label of the attribute to evaluate.
-    """
+    def __init__(self, attr_label: str):
+        """Initialize the text classification evaluator
 
-    metadata_key: str
-    attr_label: str
+        Parameters
+        ----------
+        attr_label:
+            Label of the attribute to evaluate.
+        """
+        self.attr_label = attr_label
 
-    def _format_docs_for_evaluation(
+    def _extract_attr_values(
         self, docs: List[TextDocument]
-    ) -> Dict[str, List[str]]:
-        """Format docs attrs to compute the metric
+    ) -> List[Union[str, int, bool]]:
+        """Prepare docs attrs to compute the metric
 
         Parameters
         ----------
@@ -36,11 +33,9 @@ class TextClassificationEvaluator:
 
         Returns
         -------
-        attr_values :  List[str]
-            List with the str representation of the attribute by document
+        attr_values :  List[Union[str,int,bool]]
+            List with the representation of the attribute by document.
         """
-        # sort documents using the same metadata_key
-        docs = sorted(docs, key=lambda x: x.metadata[self.metadata_key])
         attr_values = []
         for doc in docs:
             attrs = doc.attrs.get(label=self.attr_label)
@@ -51,20 +46,29 @@ class TextClassificationEvaluator:
                     " document"
                 )
 
-            # TBD: attr.to_str() or attr.value, where value is
-            # the str representation of the attr
-            attr_values.append(attrs[0].to_brat())
+            attr_value = attrs[0].value
+            if not isinstance(attr_value, (str, int, bool)):
+                raise ValueError(
+                    "The type of the attr value is not supported by this evaluator."
+                    "Only str,int or bool are supported."
+                )
+
+            attr_values.append(attr_value)
         return attr_values
 
-    def compute_classification_repport(
+    def compute_classification_report(
         self,
         true_docs: List[TextDocument],
         predicted_docs: List[TextDocument],
         metrics_by_attr_value: bool = True,
-    ) -> Dict[str, float]:
+        macro_average: bool = True,
+    ) -> Dict[str, Union[float, int]]:
         """Compute classification metrics of document attributes giving annotated documents.
-        This method use `sklearn.metrics.classification_report` to compute
+        This method uses `sklearn.metrics.classification_report` to compute
         precision, recall and F1-score for value of the attribute.
+
+        .. warning::
+            The set of true and predicted documents must be sorted to calculate the metric
 
         Parameters
         ----------
@@ -74,15 +78,17 @@ class TextClassificationEvaluator:
             Text documents containing predicted attributes
         metrics_by_attr_value:
             Whether return metrics by attribute value.
-            If False, only overall metrics are returned
+            If False, only average metrics are returned
+        macro_average:
+            Whether return the macro average. If False, the weighted mean is returned.
 
         Returns
         -------
-        Dict[str,float]:
+        Dict[str,Union[float,int]]:
             A dictionary with the computed metrics
         """
-        true_tags = self._format_docs_for_evaluation(true_docs)
-        pred_tags = self._format_docs_for_evaluation(predicted_docs)
+        true_tags = self._extract_attr_values(true_docs)
+        pred_tags = self._extract_attr_values(predicted_docs)
 
         report = classification_report(
             y_true=true_tags,
@@ -91,14 +97,18 @@ class TextClassificationEvaluator:
             zero_division=0,
         )
 
-        # add overall_metrics
-        # return 'attr_value'_'metric'
-        scores = {f"overall_{key}": value for key, value in report["macro avg"].items()}
-        scores["overall_acc"] = report.pop("accuracy")
+        prefix_avg = "macro" if macro_average else "weighted"
+        scores = {
+            f"{prefix_avg}_{key}": value
+            for key, value in report[f"{prefix_avg} avg"].items()
+        }
+        scores["accuracy"] = report.pop("accuracy")
 
         if metrics_by_attr_value:
-            values_keys = [key for key in report.keys() if not key.endswith("avg")]
-            for value_key in values_keys:
+            for value_key in report:
+                if value_key.endswith("avg"):
+                    continue
+
                 for metric_key, metric_value in report[value_key].items():
                     scores[f"{value_key}_{metric_key}"] = metric_value
 
@@ -106,9 +116,12 @@ class TextClassificationEvaluator:
 
     def compute_cohen_kappa(
         self, docs_annotator_1: List[TextDocument], docs_annotator_2: List[TextDocument]
-    ) -> Dict[str, float]:
+    ) -> Dict[str, Union[float, int]]:
         """Compute the cohen's kappa score, an inter-rated agreement score between two annotators.
         This method uses 'sklearn' as backend to compute the level of agreement.
+
+        .. warning::
+            The set of documents must be sorted to calculate the metric
 
         Parameters
         ----------
@@ -120,13 +133,13 @@ class TextClassificationEvaluator:
 
         Returns
         -------
-        Dict[str, float]:
+        Dict[str, Union[float, int]]:
             A dictionary with cohen's kappa score and support (number of annotated docs).
             The value is a number between -1 and 1, where 1 indicates perfect agreement; zero
             or lower indicates chance agreement.
         """
-        ann1_tags = self._format_docs_for_evaluation(docs_annotator_1)
-        ann2_tags = self._format_docs_for_evaluation(docs_annotator_2)
+        ann1_tags = self._extract_attr_values(docs_annotator_1)
+        ann2_tags = self._extract_attr_values(docs_annotator_2)
 
         scores = {
             "cohen_kappa": cohen_kappa_score(y1=ann1_tags, y2=ann2_tags),
@@ -137,9 +150,12 @@ class TextClassificationEvaluator:
 
     def compute_krippendorff_alpha(
         self, docs_annotators: List[List[TextDocument]]
-    ) -> Dict[str, float]:
+    ) -> Dict[str, Union[float, int]]:
         """Compute the Krippendorff alpha score, an inter-rated agreement score between
         multiple annotators.
+
+        .. warning::
+            Documents must be sorted to calculate the metric.
 
         .. note::
             See :mod:`medkit.text.metrics.irr_utils.krippendorff_alpha` for more information about the score
@@ -147,12 +163,12 @@ class TextClassificationEvaluator:
         Parameters
         ----------
         docs_annotators:
-            A list of Text documents containing attributes.
+            A list of list of Text documents containing attributes.
             The size of the list is the number of annotators to compare.
 
         Returns
         -------
-        Dict[str, float]:
+        Dict[str, Union[float,int]]:
             A dictionary with the krippendorff alpha score, number of annotators and support (number of documents).
             A value of 1 indicates perfect reliability between annotators; zero or lower indicates
             absence of reliability.
@@ -166,7 +182,7 @@ class TextClassificationEvaluator:
         all_annotators_data = []
 
         for docs in docs_annotators:
-            annotator_tags = self._format_docs_for_evaluation(docs)
+            annotator_tags = self._extract_attr_values(docs)
             all_annotators_data.append(annotator_tags)
         scores = {
             "krippendorff_alpha": krippendorff_alpha(all_annotators_data),
