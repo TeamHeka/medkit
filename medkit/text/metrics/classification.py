@@ -1,6 +1,7 @@
 __all__ = ["TextClassificationEvaluator"]
 """Metrics to assess classification of documents"""
 from typing import Dict, List, Union
+from typing_extensions import Literal
 
 from sklearn.metrics import classification_report, cohen_kappa_score
 
@@ -61,7 +62,7 @@ class TextClassificationEvaluator:
         true_docs: List[TextDocument],
         predicted_docs: List[TextDocument],
         metrics_by_attr_value: bool = True,
-        macro_average: bool = True,
+        average: Literal["macro", "weighted"] = "macro",
     ) -> Dict[str, Union[float, int]]:
         """Compute classification metrics of document attributes giving annotated documents.
         This method uses `sklearn.metrics.classification_report` to compute
@@ -79,8 +80,8 @@ class TextClassificationEvaluator:
         metrics_by_attr_value:
             Whether return metrics by attribute value.
             If False, only average metrics are returned
-        macro_average:
-            Whether return the macro average. If False, the weighted mean is returned.
+        average:
+            Type of average to be performed in metrics, it can be `macro` or `weighted`.
 
         Returns
         -------
@@ -97,11 +98,10 @@ class TextClassificationEvaluator:
             zero_division=0,
         )
 
-        prefix_avg = "macro" if macro_average else "weighted"
         scores = {
-            f"{prefix_avg}_{key}": value
-            for key, value in report[f"{prefix_avg} avg"].items()
+            f"{average}_{key}": value for key, value in report[f"{average} avg"].items()
         }
+        scores["support"] = scores.pop(f"{average}_support")
         scores["accuracy"] = report.pop("accuracy")
 
         if metrics_by_attr_value:

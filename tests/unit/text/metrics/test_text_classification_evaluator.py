@@ -46,7 +46,7 @@ TEST_DATA = [
             "macro_recall": 1.0,
             "macro_f1-score": 1.0,
             "accuracy": 1.0,
-            "macro_support": 2,
+            "support": 2,
         },
     ),
     (
@@ -56,7 +56,7 @@ TEST_DATA = [
             "macro_recall": 0.5,
             "macro_f1-score": 0.33,
             "accuracy": 0.5,
-            "macro_support": 2,
+            "support": 2,
         },
     ),
     (
@@ -66,7 +66,7 @@ TEST_DATA = [
             "macro_recall": 0.0,
             "macro_f1-score": 0.0,
             "accuracy": 0.0,
-            "macro_support": 2,
+            "support": 2,
         },
     ),
 ]
@@ -111,7 +111,7 @@ def test_classification_report_by_attr_value(
         "macro_precision": 0.25,
         "macro_recall": 0.5,
         "macro_f1-score": 0.33,
-        "macro_support": 2,
+        "support": 2,
         "accuracy": 0.5,
         "CR_precision": 0,
         "CR_recall": 0,
