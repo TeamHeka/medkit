@@ -183,7 +183,7 @@ Custom metrics are in `history_with_metrics` and the logs looks like this:
 
 ```
 2023-05-04 20:33:59,128 - DefaultPrinterCallback - INFO - Training metrics : loss:   0.227
-2023-05-04 20:33:59,129 - DefaultPrinterCallback - INFO - Evaluation metrics : loss:   0.286|overall_precision:   0.626|overall_recall:   0.722|overall_f1-score:   0.670|overall_support:3542.000|overall_acc:   0.899|problem_precision:   0.609|problem_recall:   0.690|problem_f1-score:   0.647|problem_support:1812.000|test_precision:   0.667|test_recall:   0.780|test_f1-score:   0.719|test_support: 937.000|treatment_precision:   0.614|treatment_recall:   0.728|treatment_f1-score:   0.666|treatment_support: 793.000
+2023-05-04 20:33:59,129 - DefaultPrinterCallback - INFO - Evaluation metrics : loss:   0.286|macro_precision:   0.626|macro_recall:   0.722|macro_f1-score:   0.670|support:3542.000|accuracy:   0.899|problem_precision:   0.609|problem_recall:   0.690|problem_f1-score:   0.647|problem_support:1812.000|test_precision:   0.667|test_recall:   0.780|test_f1-score:   0.719|test_support: 937.000|treatment_precision:   0.614|treatment_recall:   0.728|treatment_f1-score:   0.666|treatment_support: 793.000
 ```
 ## Detecting entities in inference
 

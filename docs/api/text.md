@@ -613,11 +613,11 @@ pred_ents = [Entity(label="PER",spans=[Span(0,5)],text="Marie"),
 # define a evaluator using `iob2` as tagging scheme
 evaluator = SeqEvalEvaluator(tagging_scheme="iob2")
 metrics = evaluator.compute(documents=[document], predicted_entities=[pred_ents])
-assert metrics["overall_precision"] == 1.0
+assert metrics["macro_precision"] == 1.0
 print(metrics)
 ```
 ```
-{'overall_precision': 1.0, 'overall_recall': 1.0, 'overall_f1-score': 1.0, 'overall_support': 2, 'overall_acc': 1.0, 'GPE_precision': 1.0, 'GPE_recall': 1.0, 'GPE_f1-score': 1.0, 'GPE_support': 1, 'PER_precision': 1.0, 'PER_recall': 1.0, 'PER_f1-score': 1.0, 'PER_support': 1}
+{'macro_precision': 1.0, 'macro_recall': 1.0, 'macro_f1-score': 1.0, 'support': 2, 'accuracy': 1.0, 'GPE_precision': 1.0, 'GPE_recall': 1.0, 'GPE_f1-score': 1.0, 'GPE_support': 1, 'PER_precision': 1.0, 'PER_recall': 1.0, 'PER_f1-score': 1.0, 'PER_support': 1}
 ```
 :::{note}
 For more details about public APIs, refer to {class}`~.text.metrics.ner.SeqEvalEvaluator`
