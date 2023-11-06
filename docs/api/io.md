@@ -95,3 +95,7 @@ Rich Transcription Time Marked (.rttm) files contains diarization information.
 Medkit supports input and output conversion of audio documents.
 
 For more details, refer to {mod}`medkit.io.rttm`.
+
+## SRT
+
+For more details, refer to {mod}`medkit.io.srt`.

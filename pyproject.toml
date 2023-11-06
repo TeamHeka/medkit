@@ -67,7 +67,7 @@ transformers = {version = "^4.21", optional = true}
 # workaround bug with cython >= 3.0 and unqlite < 0.9.6
 unqlite =  {version = "^0.9.6", optional = true}
 webrtcvad = {version = "^2.0", optional = true}
-
+pysrt = "^1.1.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
@@ -108,7 +108,7 @@ hf-entity-matcher = [
     "torch",
     "transformers",
 ]
-hf-transcriber-function = [
+hf-transcriber = [
     "torchaudio",
     "transformers"
 ]
@@ -127,7 +127,7 @@ quick-umls = [
 ]
 resampler = ["resampy"]
 rush-sentence-tokenizer = ["PyRush"]
-sb-transcriber-function = [
+sb-transcriber = [
     "speechbrain",
     "torch",
     "transformers",

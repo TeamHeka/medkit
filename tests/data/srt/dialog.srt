@@ -1,0 +1,8 @@
+0
+00:00:00,161 --> 00:00:02,485
+Bonjour, excusez nous, on cherche la mairie d'Orléans
+
+1
+00:00:02,904 --> 00:00:05,056
+Ah la mairie d'Orléans ben il faut remonter la euh
+

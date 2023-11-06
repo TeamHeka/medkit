@@ -69,42 +69,42 @@ They are part of the {mod}`medkit.audio.transcription` module.
 
 {class}`~.audio.transcription.DocTranscriber` is the operation handling the
 transformation of {class}`~.core.audio.AudioDocument` instances into
-{class}`~.audio.transcription.TranscribedDocument` instances (subclass of
+{class}`~.audio.transcription.TranscribedTextDocument` instances (subclass of
 {class}`~.core.text.TextDocument`).
 
-The actual conversion from text to audio is delegated to components complying
-with the {class}`~.audio.transcription.TranscriberFunction` protocol.
-{class}`~.audio.transcription.HFTranscriberFunction` and
-{class}`~.audio.transcription.SBTranscriberFunction` are implementations of
-{class}`~.audio.transcription.TranscriberFunction`, allowing to use HuggingFace
-transformer models and speechbrain models respectively.
+The actual conversion from text to audio is delegated to operation complying
+with the {class}`~.audio.transcription.TranscriptionOperation` protocol.
+{class}`~.audio.transcription.hf_transcriber.HFTranscriber` and
+{class}`~.audio.transcription.sb_transcriber.SBTranscriber` are implementations
+of {class}`~.audio.transcription.TranscriptionOperation`, allowing to use
+HuggingFace transformer models and speechbrain models respectively.
 
 ### DocTranscriber
 
 For more details, refer to {mod}`medkit.audio.transcription.doc_transcriber`.
 
-### TranscribedDocument
+### TranscribedTextDocument
 
-For more details, refer to {mod}`medkit.audio.transcription.transcribed_document`.
+For more details, refer to {mod}`medkit.audio.transcription.transcribed_text_document`.
 
-### HFTranscriberFunction
+### HFTranscriber
 
 :::{important}
-{class}`~.audio.transcription.HFTranscriberFunction` needs additional
+{class}`~.audio.transcription.hf_transcriber.HFTranscriber` needs additional
 dependencies that can be installed with 
-`pip install medkit-lib[hf-transcriber-function]`
+`pip install medkit-lib[hf-transcriber]`
 :::
 
 For more details, refer to
-{mod}`medkit.audio.transcription.hf_transcriber_function`.
+{mod}`medkit.audio.transcription.hf_transcriber`.
 
-### SBTranscriberFunction
+### SBTranscriber
 
 :::{important}
-{class}`~.audio.transcription.SBTranscriberFunction` needs additional
+{class}`~.audio.transcription.sb_transcriber.SBTranscriber` needs additional
 dependencies that can be installed with
-`pip install medkit-lib[sb-transcriber-function]`
+`pip install medkit-lib[sb-transcriber]`
 :::
 
 For more details, refer to
-{mod}`medkit.audio.transcription.sb_transcriber_function`.
+{mod}`medkit.audio.transcription.sb_transcriber`.

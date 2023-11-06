@@ -12,7 +12,6 @@ from medkit.core import (
     OutputConverter,
     OperationDescription,
     ProvTracer,
-    Store,
 )
 from medkit.core.audio import AudioDocument, FileAudioBuffer, Segment, Span
 
@@ -53,7 +52,6 @@ class RTTMInputConverter(InputConverter):
         self,
         turn_label: str = "turn",
         speaker_label: str = "speaker",
-        store: Optional[Store] = None,
         converter_id: Optional[str] = None,
     ):
         """
@@ -63,10 +61,6 @@ class RTTMInputConverter(InputConverter):
             Label of segments representing turns in the .rttm file.
         speaker_label:
             Label of speaker attributes to add to each segment.
-        store:
-            Optional shared store to hold the annotations when adding them to
-            audio documents.. If none provided, an internal store will be used
-            for each document.
         converter_id:
             Identifier of the converter.
         """
@@ -77,7 +71,6 @@ class RTTMInputConverter(InputConverter):
         self.uid = converter_id
         self.turn_label = turn_label
         self.speaker_label = speaker_label
-        self.store = store
 
         self._prov_tracer: Optional[ProvTracer] = None
 
@@ -108,7 +101,7 @@ class RTTMInputConverter(InputConverter):
         audio_ext: str = ".wav",
     ) -> List[AudioDocument]:
         """
-        Load all .rttm file in a directory into a list of
+        Load all .rttm files in a directory into a list of
         :class:`~medkit.core.audio.document.AudioDocument` objects.
 
         For each .rttm file, they must be a corresponding audio file with the

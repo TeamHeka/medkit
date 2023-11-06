@@ -1,9 +1,7 @@
 from medkit.audio.transcription.doc_transcriber import (
     DocTranscriber,
-    TranscriberFunction,
-    TranscriberFunctionDescription,
 )
-from medkit.core import Attribute, ProvTracer
+from medkit.core import Operation, Attribute, ProvTracer
 from medkit.core.audio import (
     AudioDocument,
     Segment as AudioSegment,
@@ -23,20 +21,18 @@ _FULL_AUDIO = MemoryAudioBuffer(
 )
 
 
-class _MockTranscriberFunction(TranscriberFunction):
+class _MockTranscriber(Operation):
     def __init__(self) -> None:
+        super().__init__()
         self.count = 0
+        self.output_label = "transcribed_text"
 
-    def transcribe(self, audios):
-        texts = []
-        for _ in audios:
+    def run(self, segments):
+        for segment in segments:
             self.count += 1
             text = f"This is transcribed text number {self.count}."
-            texts.append(text)
-        return texts
-
-    def description(self):
-        return TranscriberFunctionDescription("TranscriberFunc")
+            attr = Attribute(label=self.output_label, value=text)
+            segment.attrs.add(attr)
 
 
 def _get_audio_segment(audio_span):
@@ -67,7 +63,7 @@ def test_basic():
     doc_transcriber = DocTranscriber(
         input_label=_AUDIO_LABEL,
         output_label=_TEXT_LABEL,
-        transcriber_func=_MockTranscriberFunction(),
+        transcription_operation=_MockTranscriber(),
     )
     text_docs = doc_transcriber.run(audio_docs)
     assert len(text_docs) == len(audio_docs)
@@ -131,7 +127,7 @@ def test_prov():
     doc_transcriber = DocTranscriber(
         input_label=_AUDIO_LABEL,
         output_label=_TEXT_LABEL,
-        transcriber_func=_MockTranscriberFunction(),
+        transcription_operation=_MockTranscriber(),
     )
     prov_tracer = ProvTracer()
     doc_transcriber.set_prov_tracer(prov_tracer)
@@ -145,15 +141,17 @@ def test_prov():
     assert prov_1.data_item == text_seg_1
     assert prov_1.op_desc == doc_transcriber.description
 
-    # each text segment has corresponding voice segment as source
+    # each text segment has corresponding transcription attribute of voice segment as source
     audios_segs = audio_doc.anns.get(label=_AUDIO_LABEL)
     audio_seg_1 = audios_segs[0]
-    assert prov_1.source_data_items == [audio_seg_1]
+    transcription_attr_1 = audio_seg_1.attrs.get(label="transcribed_text")[0]
+    assert prov_1.source_data_items == [transcription_attr_1]
 
     text_seg_2 = text_segs[1]
     prov_2 = prov_tracer.get_prov(text_seg_2.uid)
     audio_seg_2 = audios_segs[1]
-    assert prov_2.source_data_items == [audio_seg_2]
+    transcription_attr_2 = audio_seg_2.attrs.get(label="transcribed_text")[0]
+    assert prov_2.source_data_items == [transcription_attr_2]
 
 
 def test_attrs_to_copy():
@@ -173,7 +171,7 @@ def test_attrs_to_copy():
     doc_transcriber = DocTranscriber(
         input_label=_AUDIO_LABEL,
         output_label=_TEXT_LABEL,
-        transcriber_func=_MockTranscriberFunction(),
+        transcription_operation=_MockTranscriber(),
         attrs_to_copy=["speaker"],
     )
     text_doc = doc_transcriber.run([audio_doc])[0]
@@ -218,7 +216,7 @@ def test_custom_full_text():
     doc_transcriber = _CustomDocTranscriber(
         input_label=_AUDIO_LABEL,
         output_label=_TEXT_LABEL,
-        transcriber_func=_MockTranscriberFunction(),
+        transcription_operation=_MockTranscriber(),
     )
     text_doc = doc_transcriber.run([audio_doc])[0]
 
