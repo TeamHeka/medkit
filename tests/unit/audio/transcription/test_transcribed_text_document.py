@@ -1,7 +1,7 @@
 from medkit.core import generate_id
 from medkit.core.audio import Span as AudioSpan
 from medkit.core.text import Span as TextSpan, ModifiedSpan as ModifiedTextSpan
-from medkit.audio.transcription.transcribed_document import TranscribedDocument
+from medkit.audio.transcription.transcribed_text_document import TranscribedTextDocument
 
 
 _AUDIO_SPAN_1 = AudioSpan(1.0, 7.0)
@@ -14,7 +14,7 @@ def _get_transcribed_doc():
         TextSpan(5, 17): _AUDIO_SPAN_1,
         TextSpan(25, 48): _AUDIO_SPAN_2,
     }
-    doc = TranscribedDocument(
+    doc = TranscribedTextDocument(
         text=text,
         audio_doc_id=generate_id(),
         text_spans_to_audio_spans=text_spans_to_audio_spans,

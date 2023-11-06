@@ -6,8 +6,13 @@ pytest.importorskip(modname="speechbrain", reason="speechbrain is not installed"
 
 import numpy as np  # noqa: E402
 
-from medkit.core.audio import FileAudioBuffer, MemoryAudioBuffer  # noqa: E402
-from medkit.audio.transcription import SBTranscriberFunction  # noqa: E402
+from medkit.core.audio import (
+    Segment,
+    Span,
+    FileAudioBuffer,
+    MemoryAudioBuffer,
+)  # noqa: E402
+from medkit.audio.transcription.sb_transcriber import SBTranscriber  # noqa: E402
 
 
 _MODEL = "speechbrain/asr-wav2vec2-commonvoice-en"
@@ -18,20 +23,25 @@ _EXPECTED_TEXT = "Hello this is my voice i m speaking to you."
 def test_basic():
     """Basic behavior"""
 
-    transcriber_func = SBTranscriberFunction(model=_MODEL, needs_decoder=True)
-    texts = transcriber_func.transcribe([_AUDIO])
-    assert texts == [_EXPECTED_TEXT]
+    span = Span(0.0, _AUDIO.duration)
+    seg = Segment(label="turn", audio=_AUDIO, span=span)
+
+    transcriber = SBTranscriber(
+        model=_MODEL, output_label="transcribed_text", needs_decoder=True
+    )
+    transcriber.run([seg])
+
+    attrs = seg.attrs.get(label="transcribed_text")
+    assert len(attrs) == 1
+    attr = attrs[0]
+    assert attr.value == _EXPECTED_TEXT
 
 
 @pytest.mark.parametrize("batch_size", [1, 5, 10, 15])
 def test_batch(batch_size):
     """Various batch sizes (smallest, half, exact number of items, more than)"""
 
-    transcriber_func = SBTranscriberFunction(
-        model=_MODEL,
-        needs_decoder=True,
-        batch_size=batch_size,
-    )
+    transcriber = SBTranscriber(model=_MODEL, needs_decoder=True)
 
     # generate batch of different audios by duplicating signal every other time
     audios = []
@@ -43,9 +53,9 @@ def test_batch(batch_size):
         audios.append(audio)
 
     # transcribe batch of audios
-    texts = transcriber_func.transcribe(audios)
+    texts = transcriber._transcribe_audios(audios)
     assert len(texts) == len(audios)
 
     for audio, text in zip(audios, texts):
-        expected_text = transcriber_func.transcribe([audio])[0]
+        expected_text = transcriber._transcribe_audios([audio])[0]
         assert text == expected_text

@@ -1,42 +1,50 @@
 """
 This module needs extra-dependencies not installed as core dependencies of medkit.
-To install them, use `pip install medkit-lib[sb-transcriber_function]`.
+To install them, use `pip install medkit-lib[sb-transcriber]`.
 """
 
-__all__ = ["SBTranscriberFunction"]
+__all__ = ["SBTranscriber"]
 
 from pathlib import Path
 from typing import List, Optional, Union
 
 import speechbrain as sb
 
-from medkit.core.audio import AudioBuffer
+from medkit.core import Operation, Attribute
+from medkit.core.audio import AudioBuffer, Segment
 import medkit.core.utils
-from medkit.audio.transcription.doc_transcriber import TranscriberFunctionDescription
 
 
-class SBTranscriberFunction:
-    """Transcriber function based on a SpeechBrain model.
+class SBTranscriber(Operation):
+    """Transcriber operation based on a SpeechBrain model.
 
-    To be used within a
-    :class:`~medkit.audio.transcription.doc_transcriber.DocTranscriber`
+    For each segment given as input, a transcription attribute will be created
+    with the transcribed text as value. If needed, a text document can later be
+    created from all the transcriptions of a audio document using
+    :func:`~medkit.audio.transcription.TranscribedTextDocument.from_audio_doc
+    <TranscribedTextDocument.from_audio_doc>`
     """
 
     def __init__(
         self,
         model: Union[str, Path],
         needs_decoder: bool,
+        output_label: str = "transcribed_text",
         add_trailing_dot: bool = True,
         capitalize: bool = True,
         cache_dir: Optional[Union[str, Path]] = None,
         device: int = -1,
         batch_size: int = 1,
+        uid: Optional[str] = None,
     ):
         """
         Parameters
         ----------
         model:
             Name of the model on the Hugging Face models hub, or local path.
+        output_label:
+            Label of the attribute containing the transcribed text that will be
+            attached to the input segments
         needs_decoder:
             Whether the model should be used with the speechbrain
             `EncoderDecoderASR` class or the `EncoderASR` class. If unsure,
@@ -55,11 +63,26 @@ class SBTranscriberFunction:
             (`-1` for cpu and device number for gpu, for instance `0` for "cuda:0")
         batch_size:
             Number of segments in batches processed by the model.
+        uid:
+            Identifier of the transcriber.
         """
         if cache_dir is not None:
             cache_dir = Path(cache_dir)
 
+        super().__init__(
+            model=model,
+            needs_decoder=needs_decoder,
+            output_label=output_label,
+            add_trailing_dot=add_trailing_dot,
+            capitalize=capitalize,
+            cache_dir=cache_dir,
+            device=device,
+            batch_size=batch_size,
+            uid=uid,
+        )
+
         self.model_name = model
+        self.output_label = output_label
         self.add_trailing_dot = add_trailing_dot
         self.capitalize = capitalize
         self.cache_dir = cache_dir
@@ -79,45 +102,48 @@ class SBTranscriberFunction:
 
         self._sample_rate = self._asr.audio_normalizer.sample_rate
 
-    @property
-    def description(self) -> TranscriberFunctionDescription:
-        config = dict(
-            model_name=self.model_name,
-            has_decoder=self.has_decoder,
-            add_trailing_dot=self.add_trailing_dot,
-            capitalize=self.capitalize,
-            cache_dir=self.cache_dir,
-            device=self.device,
-            batch_size=self.batch_size,
-        )
-        return TranscriberFunctionDescription(
-            name=self.__class__.__name__, config=config
-        )
+    def run(self, segments: List[Segment]):
+        """
+        Add a transcription attribute to each segment with a text value
+        containing the transcribed text.
 
-    def transcribe(self, audios: List[AudioBuffer]) -> List[str]:
+        Parameters
+        ----------
+        segments:
+            List of segments to transcribe
+        """
+
+        audios = [s.audio for s in segments]
+        texts = self._transcribe_audios(audios)
+
+        for segment, text in zip(segments, texts):
+            attr = Attribute(label=self.output_label, value=text)
+            segment.attrs.add(attr)
+            if self._prov_tracer is not None:
+                self._prov_tracer.add_prov(attr, self.description, [segment])
+
+    def _transcribe_audios(self, audios: List[AudioBuffer]) -> List[str]:
         if not all(a.sample_rate == self._sample_rate for a in audios):
             raise ValueError(
-                "SBTranscriberFunction received audio buffers with incompatible sample"
+                "SBTranscriber received audio buffers with incompatible sample"
                 f" rates (model expected {self._sample_rate} Hz)"
             )
         if not all(a.nb_channels == 1 for a in audios):
-            raise ValueError("SBTranscriberFunction only supports mono audio buffers")
+            raise ValueError("SBTranscriber only supports mono audio buffers")
 
         texts = []
-        for batched_audios in medkit.core.utils.batch_list(audios, self.batch_size):
-            texts += self._transcribe_audios(batched_audios)
-        return texts
 
-    def _transcribe_audios(self, audios: List[AudioBuffer]) -> List[str]:
         # group audios in batch of same length with padding
-        padded_batch = sb.dataio.batch.PaddedBatch(
-            [{"wav": a.read().reshape((-1,))} for a in audios]
-        )
-        padded_batch.to(self._torch_device)
+        for batched_audios in medkit.core.utils.batch_list(audios, self.batch_size):
+            padded_batch = sb.dataio.batch.PaddedBatch(
+                [{"wav": a.read().reshape((-1,))} for a in batched_audios]
+            )
+            padded_batch.to(self._torch_device)
 
-        texts, _ = self._asr.transcribe_batch(
-            padded_batch.wav.data, padded_batch.wav.lengths
-        )
+            batch_texts, _ = self._asr.transcribe_batch(
+                padded_batch.wav.data, padded_batch.wav.lengths
+            )
+            texts += batch_texts
 
         if self.capitalize:
             texts = [t.capitalize() for t in texts]

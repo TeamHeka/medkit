@@ -7,9 +7,10 @@ pytest.importorskip(modname="speechbrain", reason="speechbrain is not installed"
 import numpy as np  # noqa: E402
 import torch  # noqa: E402
 
-from medkit.core.audio import MemoryAudioBuffer  # noqa: E402
-from medkit.audio.transcription.sb_transcriber_function import (
-    SBTranscriberFunction,
+from medkit.core import ProvTracer  # noqa: E402
+from medkit.core.audio import Segment, Span, MemoryAudioBuffer  # noqa: E402
+from medkit.audio.transcription.sb_transcriber import (
+    SBTranscriber,
 )  # noqa: E402
 
 _MOCK_MODEL_NAME = "mock-model"
@@ -18,7 +19,7 @@ _TEXT_TEMPLATE = "AUDIO HAS {} SAMPLES"
 
 
 # mock of speechbrain.pretrained.EncoderASR and
-# speechbrain.pretrained.EncoderDecoderASR classes used by SBTranscriberFunction
+# speechbrain.pretrained.EncoderDecoderASR classes used by SBTranscriber
 class _MockSpeechbrainASR:
     def __init__(self):
         # original class stores AudioNormalizer instance that we use to check
@@ -59,28 +60,61 @@ def _mocked_asr(module_mocker):
     module_mocker.patch("speechbrain.pretrained.EncoderDecoderASR", _MockSpeechbrainASR)
 
 
-def _gen_audio(nb_samples):
-    return MemoryAudioBuffer(signal=np.zeros((1, nb_samples)), sample_rate=_SAMPLE_RATE)
+def _gen_segment(nb_samples) -> Segment:
+    audio = MemoryAudioBuffer(
+        signal=np.zeros((1, nb_samples)), sample_rate=_SAMPLE_RATE
+    )
+    return Segment(label="turn", audio=audio, span=Span(0, audio.duration))
 
 
 def test_basic():
     """Basic behavior"""
 
-    transcriber_func = SBTranscriberFunction(
-        model=_MOCK_MODEL_NAME, needs_decoder=False
+    transcriber = SBTranscriber(
+        model=_MOCK_MODEL_NAME, output_label="transcribed_text", needs_decoder=False
     )
-    texts = transcriber_func.transcribe([_gen_audio(1000), _gen_audio(2000)])
-    assert texts == ["Audio has 1000 samples.", "Audio has 2000 samples."]
+
+    seg_1 = _gen_segment(1000)
+    seg_2 = _gen_segment(2000)
+    transcriber.run([seg_1, seg_2])
+
+    attrs_1 = seg_1.attrs.get(label="transcribed_text")
+    assert len(attrs_1) == 1
+    assert attrs_1[0].value == "Audio has 1000 samples."
+
+    attrs_2 = seg_2.attrs.get(label="transcribed_text")
+    assert len(attrs_2) == 1
+    assert attrs_2[0].value == "Audio has 2000 samples."
 
 
 def test_no_formatting():
     """No reformatting of transcribed text (raw text as returned by speechbrain ASR)"""
 
-    transcriber_func = SBTranscriberFunction(
+    transcriber = SBTranscriber(
         model=_MOCK_MODEL_NAME,
+        output_label="transcribed_text",
         needs_decoder=False,
         add_trailing_dot=False,
         capitalize=False,
     )
-    texts = transcriber_func.transcribe([_gen_audio(1000)])
-    assert texts == ["AUDIO HAS 1000 SAMPLES"]
+    seg = _gen_segment(1000)
+    transcriber.run([seg])
+    attr = seg.attrs.get(label="transcribed_text")[0]
+    assert attr.value == "AUDIO HAS 1000 SAMPLES"
+
+
+def test_prov():
+    seg = _gen_segment(1000)
+
+    transcriber = SBTranscriber(
+        model=_MOCK_MODEL_NAME, output_label="transcribed_text", needs_decoder=False
+    )
+    prov_tracer = ProvTracer()
+    transcriber.set_prov_tracer(prov_tracer)
+    transcriber.run([seg])
+
+    attr = seg.attrs.get(label="transcribed_text")[0]
+    prov = prov_tracer.get_prov(attr.uid)
+    assert prov.data_item == attr
+    assert prov.op_desc == transcriber.description
+    assert prov.source_data_items == [seg]

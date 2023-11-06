@@ -8,6 +8,8 @@ __all__ = [
     "medkit_json",
     "RTTMInputConverter",
     "RTTMOutputConverter",
+    "SRTInputConverter",
+    "SRTOutputConverter",
 ]
 
 from medkit.core.utils import modules_are_available
@@ -21,6 +23,7 @@ from .doccano import (
 )
 from . import medkit_json
 from .rttm import RTTMInputConverter, RTTMOutputConverter
+from .srt import SRTInputConverter, SRTOutputConverter
 
 if modules_are_available(["spacy"]):
     __all__.append("spacy")
