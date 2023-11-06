@@ -57,30 +57,30 @@ TEST_DATA = [
             "macro_precision": 1.0,
             "macro_recall": 1.0,
             "macro_f1-score": 1.0,
-            "acccuracy": 1.0,
             "support": 2,
+            "accuracy": 1.0,
         },
     ),
     (
         [0, 1, 0, 0, 2, 3, 0, 0],
         [["B-corporation", "O", "I-corporation", "B-language", "O"]],
         {
-            "overall_precision": 0.66,
-            "overall_recall": 1.0,
-            "overall_f1-score": 0.8,
-            "accuracy": 0.8,
+            "macro_precision": 0.75,
+            "macro_recall": 1.0,
+            "macro_f1-score": 0.83,
             "support": 2,
+            "accuracy": 0.8,
         },
     ),
     (
         [0, 0, 0, 4, 4, 0, 1, 0],
         [["O", "I-language", "I-language", "O", "B-corporation"]],
         {
-            "overall_precision": 0.0,
-            "overall_recall": 0.0,
-            "overall_f1-score": 0.0,
-            "accuracy": 0.0,
+            "macro_precision": 0.0,
+            "macro_recall": 0.0,
+            "macro_f1-score": 0.0,
             "support": 2,
+            "accuracy": 0.0,
         },
     ),
 ]
@@ -98,7 +98,7 @@ TEST_DATA = [
 def test_seqeval_metrics_computer_bio(
     input_batch, id_to_label_bio, mock_pred_labels_ids, expected_tags, expected_metrics
 ):
-    # Testing behaviour with BIO TAGS, returning only overall metrics
+    # Testing behaviour with BIO TAGS, returning only average metrics
     # mock model_output data shape (1,nb_tokens,nb_labels)
     nb_tokens = len(input_batch[0]["labels"])
     nb_labels = len(id_to_label_bio)
@@ -120,20 +120,17 @@ def test_seqeval_metrics_computer_bio(
     prepared_data = metrics_computer.prepare_batch(
         input_batch=input_batch, model_output=model_output
     )
-
     assert prepared_data["y_true"] == input_batch["ref_labels_tags"]
     assert prepared_data["y_pred"] == expected_tags
 
     metrics = metrics_computer.compute(prepared_data)
-
-    assert len(metrics.keys()) == len(expected_metrics.keys())
+    assert metrics.keys() == expected_metrics.keys()
     for metric_key, value in expected_metrics.items():
-        assert metric_key in metrics
         assert_almost_equal(metrics[metric_key], value, decimal=2)
 
 
 def test_seqeval_metrics_with_entities(input_batch, id_to_label_bio):
-    # Testing behaviour with BIO TAGS, returning overall and entity metrics
+    # Testing behaviour with BIO TAGS, returning average and entity metrics
     # mock model_output data shape (1,nb_tokens,nb_labels)
     nb_tokens = len(input_batch[0]["labels"])
     nb_labels = len(id_to_label_bio)
@@ -161,9 +158,9 @@ def test_seqeval_metrics_with_entities(input_batch, id_to_label_bio):
     assert prepared_data["y_pred"] == expected_tags
 
     expected_metrics = {
-        "overall_precision": 0.66,
-        "overall_recall": 1.0,
-        "overall_f1-score": 0.8,
+        "macro_precision": 0.75,
+        "macro_recall": 1.0,
+        "macro_f1-score": 0.83,
         "support": 2,
         "accuracy": 0.8,
         "corporation_precision": 0.5,
@@ -177,15 +174,13 @@ def test_seqeval_metrics_with_entities(input_batch, id_to_label_bio):
     }
 
     metrics = metrics_computer.compute(prepared_data)
-
-    assert len(metrics.keys()) == len(expected_metrics.keys())
+    assert metrics.keys() == expected_metrics.keys()
     for metric_key, value in expected_metrics.items():
-        assert metric_key in metrics
         assert_almost_equal(metrics[metric_key], value, decimal=2)
 
 
 def test_seqeval_metrics_bilou():
-    # Testing behaviour with BILOU TAGS, returning overall and entity metrics
+    # Testing behaviour with BILOU TAGS, returning average and entity metrics
     # Mock input values
     # input batch representing "medkit"
     # one entity: medkit
@@ -234,7 +229,7 @@ def test_seqeval_metrics_bilou():
     assert prepared_data["y_pred"] == expected_tags
 
     metrics = metrics_computer.compute(prepared_data)
-    assert_almost_equal(metrics["overall_precision"], 1.0, decimal=2)
+    assert_almost_equal(metrics["macro_precision"], 1.0, decimal=2)
     assert_almost_equal(metrics["corporation_precision"], 1.0, decimal=2)
 
     # testing one missing, bilou is strict match
@@ -253,5 +248,5 @@ def test_seqeval_metrics_bilou():
 
     metrics = metrics_computer.compute(prepared_data)
 
-    assert_almost_equal(metrics["overall_precision"], 0.0, decimal=2)
+    assert_almost_equal(metrics["macro_precision"], 0.0, decimal=2)
     assert_almost_equal(metrics["corporation_precision"], 0.0, decimal=2)

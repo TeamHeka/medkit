@@ -81,7 +81,9 @@ class TextClassificationEvaluator:
             Whether return metrics by attribute value.
             If False, only average metrics are returned
         average:
-            Type of average to be performed in metrics, it can be `macro` or `weighted`.
+            Type of average to be performed in metrics.
+            - `macro`, unweighted mean (default)
+            - `weighted`, weighted average by support (number of true instances by attr value)
 
         Returns
         -------

@@ -93,7 +93,7 @@ def test_classification_report(
         metrics_by_attr_value=False,
     )
 
-    assert len(metrics.keys()) == len(expected_metrics.keys())
+    assert metrics.keys() == expected_metrics.keys()
     for metric_key, value in expected_metrics.items():
         assert_almost_equal(metrics[metric_key], value, decimal=2)
 
@@ -122,7 +122,6 @@ def test_classification_report_by_attr_value(
         "URG_f1-score": 0.67,
         "URG_support": 1,
     }
-    print(metrics.keys())
     assert metrics.keys() == expected_metrics.keys()
     for metric_key, value in expected_metrics.items():
         assert_almost_equal(metrics[metric_key], value, decimal=2)

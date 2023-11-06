@@ -34,7 +34,7 @@ def _compute_seqeval_from_dict(
         zero_division=0,
         mode=mode,
     )
-    # add overall_metrics
+    # add average metrics
     scores = {
         f"{average}_{key}": value for key, value in report[f"{average} avg"].items()
     }
@@ -88,7 +88,10 @@ class SeqEvalEvaluator:
             If `True`, return the metrics by label in the output dictionary.
             If `False`, only return average metrics
         average:
-            Type of average to be performed in metrics, it can be `macro` or `weighted`.
+            Type of average to be performed in metrics.
+            - `macro`, unweighted mean (default)
+            - `weighted`, weighted average by support (number of true instances by label)
+
         tokenizer:
             Optional Fast Tokenizer to convert text into tokens.
             If not provided, the text is tokenized by character.
@@ -113,7 +116,7 @@ class SeqEvalEvaluator:
         Returns
         -------
         Dict[str, float]:
-            A dictionary with overall and per type metrics if required. The metrics included are:
+            A dictionary with average and per type metrics if required. The metrics included are:
             accuracy, precision, recall and F1 score.
         """
         true_tags_all, pred_tags_all = [], []
@@ -197,9 +200,12 @@ class SeqEvalMetricsComputer:
             Scheme used for tagging the tokens, it can be `bilou` or `iob2`
         return_metrics_by_label:
             If `True`, return the metrics by label in the output dictionary.
-            If `False`, only return overall metrics
+            If `False`, only return average metrics
         average:
-            Type of average to be performed in metrics, it can be `macro` or `weighted`.
+            Type of average to be performed in metrics.
+            - `macro`, unweighted mean (default)
+            - `weighted`, weighted average by support (number of true instances by attr value)
+
         """
         self.id_to_label = id_to_label
         self.tagging_scheme = tagging_scheme
@@ -254,14 +260,13 @@ class SeqEvalMetricsComputer:
         Returns
         -------
         Dict[str, float]:
-            A dictionary with overall and per label metrics if required. The metrics
+            A dictionary with average and per label metrics if required. The metrics
             included are : accuracy, precision, recall and F1 score.
 
         """
         # extract and format data from all_data
         y_true_all = all_data.get("y_true", [])
         y_pred_all = all_data.get("y_pred", [])
-
         scores = _compute_seqeval_from_dict(
             y_pred_all=y_pred_all,
             y_true_all=y_true_all,
