@@ -48,6 +48,7 @@ pandas = [
 ]
 
 PyRuSH = {version = "^1.0", optional = true}
+pyannote-audio = {version = "^3.0.1", optional = true}
 quickumls = {version = "^1.4", optional = true}
 resampy = {version = "^0.4", optional = true}
 sacremoses = {version = "*", optional = true}
@@ -89,17 +90,6 @@ sphinx = ">=4.3.3"
 sphinxcontrib-mermaid = ">=0.8"
 sphinx-toolbox = "*"
 
-[tool.poetry.group.pa-speaker-detector]
-optional = true
-
-[tool.poetry.group.pa-speaker-detector.dependencies]
-# for testing compatibility with audio component during development but not included in package
-pyannote-audio = {url = "https://github.com/pyannote/pyannote-audio/archive/refs/tags/JSALT2023.tar.gz"}
-torch = [  # bug https://github.com/pytorch/pytorch/issues/100974
-    {version = "^2.0, !=2.0.1", markers = 'platform_system == "Linux"', source = "torch-linux-cpu"},
-    {version = "^2.0, !=2.0.1", markers = 'platform_system != "Linux"'}
-]
-
 [tool.poetry.extras]
 
 # Dependencies related to optional medkit modules
@@ -120,6 +110,7 @@ hf-translator = [
 ]
 hf-utils = ["transformers"]
 metrics-ner = ["seqeval","transformers","torch"]
+pa-speaker-detector = ["pyannote-audio", "torch"]
 quick-umls = [
     "packaging",  # needed to check quickumls version
     "quickumls",
@@ -151,6 +142,7 @@ optional = [
     "feather-format",
     "packaging",
     "pandas",
+    "pyannote-audio",
     "PyRuSH",
     "quickumls",
     "resampy",

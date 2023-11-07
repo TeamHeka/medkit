@@ -1,7 +1,6 @@
 """
-This module needs extra-dependencies that are not installed with medkit.
-To install them, use :
-`pip install torch https://github.com/pyannote/pyannote-audio/archive/refs/tags/JSALT2023.tar.gz`.
+This module needs extra-dependencies not installed as core dependencies of medkit.
+To install them, use `pip install medkit-lib[pa-speaker-detector]`.
 """
 
 __all__ = ["PASpeakerDetector"]
@@ -51,18 +50,15 @@ class PASpeakerDetector(SegmentationOperation):
         self,
         segmentation_model: Union[str, Path],
         embedding_model: Union[str, Path],
-        clustering: Literal[
-            "AgglomerativeClustering",
-            "FINCHClustering",
-            "HiddenMarkovModelClustering",
-            "OracleClustering",
-        ],
         output_label: str,
         pipeline_params: Optional[Dict] = None,
         min_nb_speakers: Optional[int] = None,
         max_nb_speakers: Optional[int] = None,
+        clustering: Literal["AgglomerativeClustering"] = "AgglomerativeClustering",
+        device: int = -1,
         segmentation_batch_size: int = 1,
         embedding_batch_size: int = 1,
+        hf_auth_token: Optional[str] = None,
         uid: Optional[str] = None,
     ):
         """
@@ -76,8 +72,6 @@ class PASpeakerDetector(SegmentationOperation):
             Name (on the HuggingFace models hub) or path to the embedding model.
             When a path to a speechbrain model, should point to the directory containing
             the model weights and hyperparameters.
-        clustering:
-            Clustering method to use.
         output_label:
             Label of generated turn segments.
         pipeline_params:
@@ -90,23 +84,34 @@ class PASpeakerDetector(SegmentationOperation):
             Minimum number of speakers expected to be found.
         max_nb_speakers:
             Maximum number of speakers expected to be found.
+        clustering:
+            Clustering method to use.
+        device:
+            Device to use for pytorch models. Follows the Hugging Face
+            convention (`-1` for cpu and device number for gpu, for instance `0`
+            for "cuda:0").
         segmentation_batch_size:
             Number of input segments in batches processed by segmentation model.
         embedding_batch_size:
             Number of pre-segmented audios in batches processed by embedding model.
+        hf_auth_token:
+            HuggingFace Authentication token (to access private models on the
+            hub)
         uid:
             Identifier of the detector.
         """
 
-        # Pass all arguments to super (remove self)
+        # Pass all arguments to super (remove self and confidential hf_auth_token)
         init_args = locals()
         init_args.pop("self")
+        init_args.pop("hf_auth_token")
         super().__init__(**init_args)
 
         self.output_label = output_label
         self.min_nb_speakers = min_nb_speakers
         self.max_nb_speakers = max_nb_speakers
 
+        torch_device = torch.device("cpu" if device < 0 else f"cuda:{device}")
         self._pipeline = SpeakerDiarization(
             segmentation=str(segmentation_model),
             embedding=str(embedding_model),
@@ -114,7 +119,8 @@ class PASpeakerDetector(SegmentationOperation):
             embedding_exclude_overlap=True,
             segmentation_batch_size=segmentation_batch_size,
             embedding_batch_size=embedding_batch_size,
-        )
+            use_auth_token=hf_auth_token,
+        ).to(torch_device)
         self._pipeline.instantiate(pipeline_params)
 
     def run(self, segments: List[Segment]) -> List[Segment]:
