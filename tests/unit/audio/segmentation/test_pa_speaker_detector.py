@@ -45,6 +45,9 @@ class _MockedPipeline:
     def __init__(self, *args, **kwargs):
         pass
 
+    def to(self, device):
+        return self
+
     def instantiate(self, params):
         pass
 

@@ -9,21 +9,24 @@ pytest.importorskip(modname="pyannote.audio", reason="pyannote.audio is not inst
 from pathlib import Path  # noqa: E402
 
 from medkit.core.audio import FileAudioBuffer, Segment, Span  # noqa: E402
-from medkit.audio.segmentation import PASpeakerDetector  # noqa: E402
+from medkit.audio.segmentation.pa_speaker_detector import (
+    PASpeakerDetector,
+)  # noqa: E402
 
 # model weights provided by pyannote and speechbrain on huggingface hub
 _TEST_DATA_DIR = Path(__file__).parent.parent / "large_data"
 _SEGMENTATION_MODEL = _TEST_DATA_DIR / "pyannote" / "segmentation" / "pytorch_model.bin"
 _EMBEDDING_MODEL = _TEST_DATA_DIR / "speechbrain" / "spkrec-ecapa-voxceleb"
 # simple params that will work with our test file
-_CLUSTERING = "HiddenMarkovModelClustering"
+_CLUSTERING = "AgglomerativeClustering"
 _PIPELINE_PARAMS = {
     "segmentation": {
-        "min_duration_off": 0.2,
-        "threshold": 0.1,
+        "min_duration_off": 0.0,
     },
     "clustering": {
-        "covariance_type": "diag",
+        "method": "centroid",
+        "min_cluster_size": 12,
+        "threshold": 0.7,
     },
 }
 
@@ -41,6 +44,9 @@ def _get_segment():
     )
 
 
+# test will fail until issue is fixed upstream
+# cf https://github.com/pyannote/pyannote-audio/issues/1525
+@pytest.mark.xfail
 def test_basic():
     speaker_detector = PASpeakerDetector(
         segmentation_model=_SEGMENTATION_MODEL,

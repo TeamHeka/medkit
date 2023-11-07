@@ -58,7 +58,7 @@ setup_cache:
     - *prepare_poetry_env
     - poetry lock --check || FAILED=true
     - if [ $FAILED ]; then poetry lock --no-update; exit 1; fi # update lock file if check fails
-    - poetry install --with=docs,pa-speaker-detector --all-extras --sync
+    - poetry install --with=docs --all-extras --sync
     - source .venv/bin/activate
     - pip list
   artifacts:
