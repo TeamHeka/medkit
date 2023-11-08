@@ -144,7 +144,7 @@ code. On an ubuntu system, `apt install graphviz` should do the trick.
 
 ```{code-cell} ipython3
 ---
-render:
+mystnb:
   image:
     align: center
     scale: 75%
@@ -251,7 +251,7 @@ parameter that allows to limit the depth of the sub-provenance to show:
 
 ```{code-cell} ipython3
 ---
-render:
+mystnb:
   image:
     align: center
     scale: 75%
@@ -263,7 +263,7 @@ display_dot(dot_file)
 
 ```{code-cell} ipython3
 ---
-render:
+mystnb:
   image:
     align: center
     scale: 85%
@@ -295,7 +295,7 @@ from medkit.text.context import NegationDetector, NegationDetectorRule
 
 # segmentation
 sent_tokenizer = SentenceTokenizer(output_label="sentence")
-# negation detection 
+# negation detection
 neg_detector = NegationDetector(output_label="is_negated")
 # entity recognition
 regexp_rules = [
@@ -351,7 +351,7 @@ At the outer-most level, the provenance tells us that the main pipeline created
 
 ```{code-cell} ipython3
 ---
-render:
+mystnb:
   image:
     align: center
     scale: 85%
@@ -370,7 +370,7 @@ Expanding one more level of sub-provenance gives us the following graph:
 
 ```{code-cell} ipython3
 ---
-render:
+mystnb:
   image:
     align: center
 ---
@@ -390,7 +390,7 @@ have to go one step deeper:
 
 ```{code-cell} ipython3
 ---
-render:
+mystnb:
   image:
     align: center
 ---
