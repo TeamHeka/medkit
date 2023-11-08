@@ -1,5 +1,8 @@
+"""
+This module needs extra-dependencies not installed as core dependencies of medkit.
+To install them, use `pip install medkit-lib[metrics-classification]`.
+"""
 __all__ = ["TextClassificationEvaluator"]
-"""Metrics to assess classification of documents"""
 import logging
 from typing import Dict, List, Union
 from typing_extensions import Literal
