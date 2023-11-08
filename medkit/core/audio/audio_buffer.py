@@ -133,8 +133,13 @@ class AudioBuffer(abc.ABC, dict_conv.SubclassMapping):
 
 
 class FileAudioBuffer(AudioBuffer):
-    """Audio buffer giving access to audio files stored on the filesystem
-    (to use when manipulating unmodified raw audio)."""
+    """
+    Audio buffer giving access to audio files stored on the filesystem (to use
+    when manipulating unmodified raw audio).
+
+    Supports all file formats handled by `libsndfile`
+    (http://www.mega-nerd.com/libsndfile/#Features)
+    """
 
     def __init__(
         self,
