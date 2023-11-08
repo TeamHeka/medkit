@@ -1,5 +1,6 @@
 __all__ = ["TextClassificationEvaluator"]
 """Metrics to assess classification of documents"""
+import logging
 from typing import Dict, List, Union
 from typing_extensions import Literal
 
@@ -7,6 +8,8 @@ from sklearn.metrics import classification_report, cohen_kappa_score
 
 from medkit.core.text import TextDocument
 from medkit.text.metrics.irr_utils import krippendorff_alpha
+
+logger = logging.getLogger(__name__)
 
 
 class TextClassificationEvaluator:
@@ -46,6 +49,11 @@ class TextClassificationEvaluator:
                     f"No attribute with label {self.attr_label} was found in the"
                     " document"
                 )
+            if len(attrs) > 1:
+                logger.warning(
+                    f"Found several attributes with label '{self.attr_label}', ignoring"
+                    " all but first"
+                )
 
             attr_value = attrs[0].value
             if not isinstance(attr_value, (str, int, bool)):
@@ -79,7 +87,7 @@ class TextClassificationEvaluator:
             Text documents containing predicted attributes
         metrics_by_attr_value:
             Whether return metrics by attribute value.
-            If False, only average metrics are returned
+            If False, only global metrics are returned
         average:
             Type of average to be performed in metrics.
             - `macro`, unweighted mean (default)

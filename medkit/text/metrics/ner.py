@@ -86,7 +86,7 @@ class SeqEvalEvaluator:
             Scheme for tagging the tokens, it can be `bilou` or `iob2`
         return_metrics_by_label:
             If `True`, return the metrics by label in the output dictionary.
-            If `False`, only return average metrics
+            If `False`, only global metrics are returned
         average:
             Type of average to be performed in metrics.
             - `macro`, unweighted mean (default)
