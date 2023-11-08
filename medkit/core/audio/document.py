@@ -3,7 +3,8 @@ from __future__ import annotations
 __all__ = ["AudioDocument"]
 
 import dataclasses
-from typing import Any, ClassVar, Dict, Optional, Sequence
+from pathlib import Path
+from typing import Any, ClassVar, Dict, List, Optional, Sequence, Union
 from typing_extensions import Self
 
 from medkit.core import dict_conv, Attribute, AttributeContainer
@@ -12,6 +13,7 @@ from medkit.core.audio.annotation_container import AudioAnnotationContainer
 from medkit.core.audio.span import Span
 from medkit.core.audio.audio_buffer import (
     AudioBuffer,
+    FileAudioBuffer,
     MemoryAudioBuffer,
     PlaceholderAudioBuffer,
 )
@@ -139,3 +141,53 @@ class AudioDocument(dict_conv.SubclassMapping):
             attrs=attrs,
             metadata=data["metadata"],
         )
+
+    @classmethod
+    def from_file(cls, file: Union[str, Path]) -> Self:
+        """
+        Create document from an audio file
+
+        Parameters
+        ----------
+        file:
+            Path to the audio file. Supports all file formats handled by
+            `libsndfile` (http://www.mega-nerd.com/libsndfile/#Features)
+
+        Returns
+        -------
+        AudioDocument
+            Audio document with signal of `file` as audio. The file path is
+            included in the document metadata.
+        """
+
+        file = Path(file)
+        audio = FileAudioBuffer(file)
+        return cls(audio=audio, metadata={"path_to_audio": str(file.absolute())})
+
+    @classmethod
+    def from_dir(
+        cls,
+        dir: Union[str, Path],
+        pattern: str = "*.wav",
+    ) -> List[Self]:
+        """
+        Create documents from audio files in a directory
+
+        Parameters
+        ----------
+        dir:
+            Path of the directory containing audio files
+        pattern:
+            Glob pattern to match audio files in `dir`. Supports all file
+            formats handled by `libsndfile`
+            (http://www.mega-nerd.com/libsndfile/#Features)
+
+        Returns
+        -------
+        List[AudioDocument]
+            Audio documents with signal of each file as audio
+        """
+
+        dir = Path(dir)
+        files = sorted(dir.glob(pattern))
+        return [cls.from_file(f) for f in files]

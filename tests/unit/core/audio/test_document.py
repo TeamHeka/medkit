@@ -1,7 +1,9 @@
 import pytest
 
+from pathlib import Path
+
 from medkit.core import generate_id
-from medkit.core.audio import Segment, Span, MemoryAudioBuffer
+from medkit.core.audio import Segment, Span, MemoryAudioBuffer, FileAudioBuffer
 from medkit.core.audio.document import AudioDocument
 from tests.audio_utils import generate_silence
 
@@ -89,3 +91,12 @@ def test_raw_segment():
         RuntimeError, match=r"Cannot add annotation with reserved label .*"
     ):
         doc.anns.add(seg)
+
+
+def test_from_dir():
+    dir = Path("tests/data/audio")
+    docs = AudioDocument.from_dir(dir, pattern="dialog*.ogg")
+    assert len(docs) == 2
+    assert docs[0].metadata["path_to_audio"] == str((dir / "dialog.ogg").absolute())
+    assert docs[0].audio == FileAudioBuffer(path=dir / "dialog.ogg")
+    assert docs[1].audio == FileAudioBuffer(path=dir / "dialog_long.ogg")
