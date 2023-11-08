@@ -27,13 +27,9 @@ Consider the following document:
 # You can download the file available in source code
 # !wget https://raw.githubusercontent.com/TeamHeka/medkit/main/docs/examples/input/text/text_to_clean.txt
 
-from pathlib import Path
 from medkit.core.text import TextDocument
 
-file = Path("./input/text/text_to_clean.txt")
-doc = TextDocument(text=file.read_text(encoding="utf-8"))
-```
-```{code-cell} ipython3
+doc = TextDocument.from_file("./input/text/text_to_clean.txt")
 print(doc.text)
 ```
 As we note, the text has:

@@ -27,11 +27,9 @@ For beginners, let's load a text file using the {class}`~medkit.core.text.TextDo
 # You can download the file available in source code
 # !wget https://raw.githubusercontent.com/TeamHeka/medkit/main/docs/data/text/1.txt
 
-from pathlib import Path
 from medkit.core.text import TextDocument
 
-file = Path("../../data/text/1.txt") # put the file path here
-doc = TextDocument(text=file.read_text(encoding='utf-8'))
+doc = TextDocument.from_file("../../data/text/1.txt")
 ```
 
 The full raw text can be accessed through the `text` attribute:

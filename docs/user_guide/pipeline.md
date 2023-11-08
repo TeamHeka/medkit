@@ -69,14 +69,12 @@ and using a document's raw text segment as the initial input:
 
 
 ```{code-cell} ipython3
-from pathlib import Path
 from medkit.core.text import TextDocument
 
-text_file = Path("../data/text/1.txt")
 # You can download the file available in source code
 # !wget https://raw.githubusercontent.com/TeamHeka/medkit/main/docs/data/text/1.txt
 # or create your file and copy the text
-doc = TextDocument(text=text_file.read_text(encoding="utf-8"))
+doc = TextDocument.from_file("../data/text/1.txt")
 
 # clean_segments contains only 1 segment: the preprocessed full text segment
 clean_segments = normalizer.run([doc.raw_segment])
@@ -310,8 +308,8 @@ like:
 # !wget https://raw.githubusercontent.com/TeamHeka/medkit/main/docs/data/text/2.txt
 
 def load_docs():
-    text_files = [Path("../data/text/1.txt"), Path("../data/text/2.txt")]
-    return [TextDocument(text=f.read_text(encoding="utf-8")) for f in text_files]
+    text_files = ["../data/text/1.txt", "../data/text/2.txt"]
+    return [TextDocument.from_file(f) for f in text_files]
 
 docs = load_docs()
 
