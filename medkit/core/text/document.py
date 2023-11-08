@@ -3,7 +3,8 @@ from __future__ import annotations
 __all__ = ["TextDocument"]
 
 import dataclasses
-from typing import Any, ClassVar, Dict, Optional, Sequence
+from pathlib import Path
+from typing import Any, ClassVar, Dict, List, Optional, Sequence, Union
 from typing_extensions import Self
 
 from medkit.core import dict_conv, Attribute, AttributeContainer
@@ -147,6 +148,60 @@ class TextDocument(dict_conv.SubclassMapping):
             attrs=attrs,
             metadata=doc_dict["metadata"],
         )
+
+    @classmethod
+    def from_file(
+        cls, file: Union[str, Path], encoding: Optional[str] = "utf-8"
+    ) -> Self:
+        """
+        Create a document from a text file
+
+        Parameters
+        ----------
+        file:
+            Path of the text file
+        encoding:
+            Text encoding to use
+
+        Returns
+        -------
+        TextDocument:
+            Text document with contents of `file` as text. The file path is
+            included in the document metadata.
+        """
+
+        file = Path(file)
+        text = file.read_text(encoding=encoding)
+        return cls(text=text, metadata={"path_to_text": str(file.absolute())})
+
+    @classmethod
+    def from_dir(
+        cls,
+        dir: Union[str, Path],
+        pattern: str = "*.txt",
+        encoding: Optional[str] = "utf-8",
+    ) -> List[Self]:
+        """
+        Create documents from text files in a directory
+
+        Parameters
+        ----------
+        dir:
+            Path of the directory containing text files
+        pattern:
+            Glob pattern to match text files in `dir`
+        encoding:
+            Text encoding to use
+
+        Returns
+        -------
+        List[TextDocument]:
+            Text documents with contents of each file as text
+        """
+
+        dir = Path(dir)
+        files = sorted(dir.glob(pattern))
+        return [cls.from_file(f, encoding) for f in files]
 
     def get_snippet(self, segment: Segment, max_extend_length: int) -> str:
         """Return a portion of the original text containing the annotation
