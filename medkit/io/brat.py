@@ -214,12 +214,20 @@ class BratInputConverter(InputConverter):
                 if spans:
                     spans.append(ModifiedSpan(length=1, replaced_spans=[]))
                 spans.append(Span(*brat_span))
-            entity = Entity(
-                label=brat_entity.type,
-                spans=spans,
-                text=brat_entity.text,
-                metadata=dict(brat_id=brat_entity.uid),
-            )
+
+            try:
+                entity = Entity(
+                    label=brat_entity.type,
+                    spans=spans,
+                    text=brat_entity.text,
+                    metadata=dict(brat_id=brat_entity.uid),
+                )
+            except Exception as err:
+                raise ValueError(
+                    "Impossible to create an entity from"
+                    f" '{ann_file.name}':{brat_entity.uid}. Reason: %s" % err
+                )
+
             anns_by_brat_id[brat_entity.uid] = entity
             if self._prov_tracer is not None:
                 self._prov_tracer.add_prov(
