@@ -58,6 +58,13 @@ def test__parse_relation_error():
         _parse_relation(relation_id, relation_content)
 
 
+def test__parse_relation_in_events_error():
+    brat_relation = "R1	treats Arg1:E1 Arg2:T1"
+    relation_id, relation_content = brat_relation.split("\t", maxsplit=1)
+    with pytest.raises(ValueError):
+        _parse_relation(relation_id, relation_content)
+
+
 def test__parse_attribute():
     brat_attribute = "A3	 antecedent T4"
     attribute_id, attribute_content = brat_attribute.split("\t", maxsplit=1)

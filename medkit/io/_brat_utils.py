@@ -465,16 +465,22 @@ def _parse_relation(relation_id: str, relation_content: str) -> BratRelation:
     ValueError
         Raises when the relation can't be parsed
     """
-
     try:
         relation, subj, obj = relation_content.strip().split()
         subj = subj.replace("Arg1:", "")
         obj = obj.replace("Arg2:", "")
-        return BratRelation(
-            relation_id.strip(), relation.strip(), subj.strip(), obj.strip()
-        )
     except Exception as err:
         raise ValueError("Impossible to parse the relation. Reason : %s" % err)
+
+    if subj.startswith("E") or obj.startswith("E"):
+        raise ValueError(
+            "Impossible to parse the relation. Relations between events are not"
+            " supported"
+        )
+
+    return BratRelation(
+        relation_id.strip(), relation.strip(), subj.strip(), obj.strip()
+    )
 
 
 def _parse_attribute(attribute_id: str, attribute_content: str) -> BratAttribute:
