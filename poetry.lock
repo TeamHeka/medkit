@@ -7595,8 +7595,8 @@ hf-entity-matcher = ["torch", "torch", "transformers"]
 hf-transcriber = ["torchaudio", "torchaudio", "transformers"]
 hf-translator = ["sacremoses", "sentencepiece", "torch", "torch", "transformers"]
 hf-utils = ["transformers"]
-metrics-classification = ["scikit-learn"]
 metrics-ner = ["seqeval", "torch", "torch", "transformers"]
+metrics-text-classification = ["scikit-learn"]
 optional = ["PyRuSH", "feather-format", "packaging", "pandas", "pyannote-audio", "quickumls", "resampy", "sacremoses", "sentencepiece", "seqeval", "spacy", "speechbrain", "torch", "torch", "torchaudio", "torchaudio", "transformers", "unqlite", "webrtcvad"]
 pa-speaker-detector = ["pyannote-audio", "torch", "torch"]
 quick-umls = ["packaging", "quickumls", "unqlite"]
@@ -7612,4 +7612,4 @@ webrtc-voice-detector = ["webrtcvad"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <4.0"
-content-hash = "9edea7b383624d4faf7a73bfc15a5ef7626c8099d485588228561ba370d26a93"
+content-hash = "6a9405b5cbf5edb97482cbc682e2ed14d3b467e7e8dd109bf28517e88a17c36c"

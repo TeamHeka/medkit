@@ -110,7 +110,7 @@ hf-translator = [
     "transformers"
 ]
 hf-utils = ["transformers"]
-metrics-classification = ["scikit-learn"]
+metrics-text-classification = ["scikit-learn"]
 metrics-ner = ["seqeval","transformers","torch"]
 pa-speaker-detector = ["pyannote-audio", "torch"]
 quick-umls = [
