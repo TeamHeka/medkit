@@ -142,8 +142,8 @@ def test_trainer_with_seqeval(train_data, eval_data, tmp_path):
     assert len(log_history) == config.nb_training_epochs
 
     # check key metrics
-    assert "overall_precision" in log_history[0]["eval"]
-    assert "overall_acc" in log_history[0]["eval"]
+    assert "macro_precision" in log_history[0]["eval"]
+    assert "accuracy" in log_history[0]["eval"]
     assert "problem_precision" in log_history[0]["eval"]
 
     # [FIX] remove model to prevent writing error (cache-pytest)

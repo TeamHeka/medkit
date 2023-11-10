@@ -561,11 +561,30 @@ For more details about public API, refer to {mod}`~.text.postprocessing`.
 
 # Metrics
 
-This module provides components to evaluate annotations as well as some implementations of {class}`~.training.utils.MetricsComputer` to monitor the training of components in medkit.
+This module provides components to evaluate annotations as well as some implementations of {class}`~.training.utils.MetricsComputer` to monitor the training of components in medkit. 
+
+The components inside metrics are also known as **evaluators**. An evaluator allows you to assess performance by task.
 
 :::{note}
 For more details about public APIs, refer to {mod}`~.text.metrics`
 :::
+
+## Text Classification Evaluation
+
+Medkit provides {class}`~.metrics.classification.TextClassificationEvaluator`, an evaluator for document attributes. You can compute the following metrics depending on your use-case:
+
+### Classification repport
+-  `compute_classification_report`: To compare a list of reference and predicted documents. This method uses [sklearn](https://scikit-learn.org/stable/index.html) as backend to compute precision, recall, and F1-score.
+
+### Inter-rated agreement
+-  `compute_cohen_kappa`: To compare the degree of agreement between lists of documents made by two annotators.
+
+-  `compute_krippendorff_alpha`: To compare the degree of agreement between lists of documents made by multiple annotators.
+
+:::{note}
+For more details about public API, refer to {class}`~.metrics.classification.TextClassificationEvaluator` or {mod}`~.text.metrics.irr_utils`.
+:::
+
 ## NER Evaluation
 
 Medkit uses [seqeval](https://github.com/chakki-works/seqeval) as backend of evaluation.
@@ -594,11 +613,11 @@ pred_ents = [Entity(label="PER",spans=[Span(0,5)],text="Marie"),
 # define a evaluator using `iob2` as tagging scheme
 evaluator = SeqEvalEvaluator(tagging_scheme="iob2")
 metrics = evaluator.compute(documents=[document], predicted_entities=[pred_ents])
-assert metrics["overall_precision"] == 1.0
+assert metrics["macro_precision"] == 1.0
 print(metrics)
 ```
 ```
-{'overall_precision': 1.0, 'overall_recall': 1.0, 'overall_f1-score': 1.0, 'overall_support': 2, 'overall_acc': 1.0, 'GPE_precision': 1.0, 'GPE_recall': 1.0, 'GPE_f1-score': 1.0, 'GPE_support': 1, 'PER_precision': 1.0, 'PER_recall': 1.0, 'PER_f1-score': 1.0, 'PER_support': 1}
+{'macro_precision': 1.0, 'macro_recall': 1.0, 'macro_f1-score': 1.0, 'support': 2, 'accuracy': 1.0, 'GPE_precision': 1.0, 'GPE_recall': 1.0, 'GPE_f1-score': 1.0, 'GPE_support': 1, 'PER_precision': 1.0, 'PER_recall': 1.0, 'PER_f1-score': 1.0, 'PER_support': 1}
 ```
 :::{note}
 For more details about public APIs, refer to {class}`~.text.metrics.ner.SeqEvalEvaluator`

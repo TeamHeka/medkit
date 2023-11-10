@@ -42,33 +42,33 @@ TEST_DATA = [
     (
         _PREDICTED_ENTS_BY_CASE["perfect_prediction"],
         {
-            "overall_precision": 1.0,
-            "overall_recall": 1.0,
-            "overall_f1-score": 1.0,
-            "overall_acc": 1.0,
-            "overall_support": 2,
+            "macro_precision": 1.0,
+            "macro_recall": 1.0,
+            "macro_f1-score": 1.0,
+            "accuracy": 1.0,
+            "support": 2,
         },
     ),
     (
         _PREDICTED_ENTS_BY_CASE["one_missing"],
         {
-            "overall_precision": 0.5,
-            "overall_recall": 0.5,
-            "overall_f1-score": 0.5,
-            "overall_acc": 0.8,
-            "overall_support": 2,
+            "macro_precision": 0.5,
+            "macro_recall": 0.5,
+            "macro_f1-score": 0.5,
+            "accuracy": 0.8,
+            "support": 2,
         },
     ),
     (
         _PREDICTED_ENTS_BY_CASE["incorrect_prediction"],
         {
-            "overall_precision": 0.0,
-            "overall_recall": 0.0,
-            "overall_f1-score": 0.0,
-            "overall_acc": (
+            "macro_precision": 0.0,
+            "macro_recall": 0.0,
+            "macro_f1-score": 0.0,
+            "accuracy": (
                 0.38
             ),  # there is 14 'O' in GT, 4 were tagged with 'misc' so, 10/26
-            "overall_support": 2,
+            "support": 2,
         },
     ),
 ]
@@ -116,11 +116,11 @@ def test_evaluator_with_entities_all_schemes(
         documents=[document], predicted_entities=[predicted_entities]
     )
     expected_metrics = {
-        "overall_precision": 0.5,
-        "overall_recall": 0.5,
-        "overall_f1-score": 0.5,
-        "overall_support": 2,
-        "overall_acc": expected_accuracy,
+        "macro_precision": 0.5,
+        "macro_recall": 0.5,
+        "macro_f1-score": 0.5,
+        "support": 2,
+        "accuracy": expected_accuracy,
         "corporation_precision": 1.0,
         "corporation_recall": 1.0,
         "corporation_f1-score": 1.0,
@@ -153,11 +153,11 @@ def test_evaluator_with_bert_tokenizer(document, tagging_scheme, expected_accura
         documents=[document], predicted_entities=[predicted_entities]
     )
     expected_metrics = {
-        "overall_precision": 0.5,
-        "overall_recall": 0.5,
-        "overall_f1-score": 0.5,
-        "overall_support": 2,
-        "overall_acc": expected_accuracy,
+        "macro_precision": 0.5,
+        "macro_recall": 0.5,
+        "macro_f1-score": 0.5,
+        "support": 2,
+        "accuracy": expected_accuracy,
         "corporation_precision": 1.0,
         "corporation_recall": 1.0,
         "corporation_f1-score": 1.0,
@@ -196,9 +196,9 @@ def test_modified_spans():
         documents=[doc], predicted_entities=[[predicted_entity]]
     )
     assert metrics == {
-        "overall_precision": 0.0,
-        "overall_recall": 0.0,
-        "overall_f1-score": 0.0,
-        "overall_support": 1,
-        "overall_acc": 0.7,
+        "macro_precision": 0.0,
+        "macro_recall": 0.0,
+        "macro_f1-score": 0.0,
+        "support": 1,
+        "accuracy": 0.7,
     }

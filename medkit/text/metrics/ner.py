@@ -1,6 +1,6 @@
 __all__ = ["SeqEvalEvaluator", "SeqEvalMetricsComputer"]
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from typing_extensions import Literal
 
 from seqeval.metrics import accuracy_score, classification_report
@@ -15,8 +15,9 @@ def _compute_seqeval_from_dict(
     y_true_all: List[List[str]],
     y_pred_all: List[List[str]],
     tagging_scheme: Literal["bilou", "iob2"],
-    return_metrics_by_label,
-) -> Dict[str, float]:
+    return_metrics_by_label: bool,
+    average: Literal["macro", "weighted"],
+) -> Dict[str, Union[float, int]]:
     """Compute seqeval metrics using preprocessed data"""
 
     # internal configuration for seqeval
@@ -33,15 +34,19 @@ def _compute_seqeval_from_dict(
         zero_division=0,
         mode=mode,
     )
-    # add overall_metrics
-    scores = {f"overall_{key}": value for key, value in report["micro avg"].items()}
-    scores["overall_acc"] = accuracy_score(y_pred=y_pred_all, y_true=y_true_all)
+    # add average metrics
+    scores = {
+        f"{average}_{key}": value for key, value in report[f"{average} avg"].items()
+    }
+    scores["support"] = scores.pop(f"{average}_support")
+    scores["accuracy"] = accuracy_score(y_true=y_true_all, y_pred=y_pred_all)
 
     if return_metrics_by_label:
-        ent_keys = [key for key in report.keys() if not key.endswith("avg")]
-        for ent_key in ent_keys:
-            for metric_key, metric_value in report[ent_key].items():
-                scores[f"{ent_key}_{metric_key}"] = metric_value
+        for value_key in report:
+            if value_key.endswith("avg"):
+                continue
+            for metric_key, metric_value in report[value_key].items():
+                scores[f"{value_key}_{metric_key}"] = metric_value
 
     return scores
 
@@ -71,6 +76,7 @@ class SeqEvalEvaluator:
         self,
         tagging_scheme: Literal["bilou", "iob2"] = "bilou",
         return_metrics_by_label: bool = True,
+        average: Literal["macro", "weighted"] = "macro",
         tokenizer: Optional[Any] = None,
     ):
         """
@@ -80,7 +86,12 @@ class SeqEvalEvaluator:
             Scheme for tagging the tokens, it can be `bilou` or `iob2`
         return_metrics_by_label:
             If `True`, return the metrics by label in the output dictionary.
-            If `False`, only return overall metrics
+            If `False`, only global metrics are returned
+        average:
+            Type of average to be performed in metrics.
+            - `macro`, unweighted mean (default)
+            - `weighted`, weighted average by support (number of true instances by label)
+
         tokenizer:
             Optional Fast Tokenizer to convert text into tokens.
             If not provided, the text is tokenized by character.
@@ -88,6 +99,7 @@ class SeqEvalEvaluator:
         self.tokenizer = tokenizer
         self.tagging_scheme = tagging_scheme
         self.return_metrics_by_label = return_metrics_by_label
+        self.average = average
 
     def compute(
         self, documents: List[TextDocument], predicted_entities: List[List[Entity]]
@@ -104,7 +116,7 @@ class SeqEvalEvaluator:
         Returns
         -------
         Dict[str, float]:
-            A dictionary with overall and per type metrics if required. The metrics included are:
+            A dictionary with average and per type metrics if required. The metrics included are:
             accuracy, precision, recall and F1 score.
         """
         true_tags_all, pred_tags_all = [], []
@@ -124,6 +136,7 @@ class SeqEvalEvaluator:
             y_pred_all=pred_tags_all,
             tagging_scheme=self.tagging_scheme,
             return_metrics_by_label=self.return_metrics_by_label,
+            average=self.average,
         )
         return scores
 
@@ -178,6 +191,7 @@ class SeqEvalMetricsComputer:
         id_to_label: Dict[int, str],
         tagging_scheme: Literal["bilou", "iob2"] = "bilou",
         return_metrics_by_label: bool = True,
+        average: Literal["macro", "weighted"] = "macro",
     ):
         """
         id_to_label:
@@ -186,11 +200,17 @@ class SeqEvalMetricsComputer:
             Scheme used for tagging the tokens, it can be `bilou` or `iob2`
         return_metrics_by_label:
             If `True`, return the metrics by label in the output dictionary.
-            If `False`, only return overall metrics
+            If `False`, only return average metrics
+        average:
+            Type of average to be performed in metrics.
+            - `macro`, unweighted mean (default)
+            - `weighted`, weighted average by support (number of true instances by attr value)
+
         """
         self.id_to_label = id_to_label
         self.tagging_scheme = tagging_scheme
         self.return_metrics_by_label = return_metrics_by_label
+        self.average = average
 
     def prepare_batch(
         self, model_output: BatchData, input_batch: BatchData
@@ -240,18 +260,18 @@ class SeqEvalMetricsComputer:
         Returns
         -------
         Dict[str, float]:
-            A dictionary with overall and per label metrics if required. The metrics
+            A dictionary with average and per label metrics if required. The metrics
             included are : accuracy, precision, recall and F1 score.
 
         """
         # extract and format data from all_data
         y_true_all = all_data.get("y_true", [])
         y_pred_all = all_data.get("y_pred", [])
-
         scores = _compute_seqeval_from_dict(
             y_pred_all=y_pred_all,
             y_true_all=y_true_all,
             tagging_scheme=self.tagging_scheme,
             return_metrics_by_label=self.return_metrics_by_label,
+            average=self.average,
         )
         return scores
