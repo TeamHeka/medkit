@@ -151,14 +151,14 @@ class TextDocument(dict_conv.SubclassMapping):
 
     @classmethod
     def from_file(
-        cls, file: Union[str, Path], encoding: Optional[str] = "utf-8"
+        cls, path: Union[str, Path], encoding: Optional[str] = "utf-8"
     ) -> Self:
         """
         Create a document from a text file
 
         Parameters
         ----------
-        file:
+        path:
             Path of the text file
         encoding:
             Text encoding to use
@@ -166,18 +166,18 @@ class TextDocument(dict_conv.SubclassMapping):
         Returns
         -------
         TextDocument:
-            Text document with contents of `file` as text. The file path is
+            Text document with contents of `path` as text. The file path is
             included in the document metadata.
         """
 
-        file = Path(file)
-        text = file.read_text(encoding=encoding)
-        return cls(text=text, metadata={"path_to_text": str(file.absolute())})
+        path = Path(path)
+        text = path.read_text(encoding=encoding)
+        return cls(text=text, metadata={"path_to_text": str(path.absolute())})
 
     @classmethod
     def from_dir(
         cls,
-        dir: Union[str, Path],
+        path: Union[str, Path],
         pattern: str = "*.txt",
         encoding: Optional[str] = "utf-8",
     ) -> List[Self]:
@@ -186,10 +186,10 @@ class TextDocument(dict_conv.SubclassMapping):
 
         Parameters
         ----------
-        dir:
+        path:
             Path of the directory containing text files
         pattern:
-            Glob pattern to match text files in `dir`
+            Glob pattern to match text files in `path`
         encoding:
             Text encoding to use
 
@@ -199,8 +199,8 @@ class TextDocument(dict_conv.SubclassMapping):
             Text documents with contents of each file as text
         """
 
-        dir = Path(dir)
-        files = sorted(dir.glob(pattern))
+        path = Path(path)
+        files = sorted(path.glob(pattern))
         return [cls.from_file(f, encoding) for f in files]
 
     def get_snippet(self, segment: Segment, max_extend_length: int) -> str:

@@ -143,31 +143,31 @@ class AudioDocument(dict_conv.SubclassMapping):
         )
 
     @classmethod
-    def from_file(cls, file: Union[str, Path]) -> Self:
+    def from_file(cls, path: Union[str, Path]) -> Self:
         """
         Create document from an audio file
 
         Parameters
         ----------
-        file:
+        path:
             Path to the audio file. Supports all file formats handled by
             `libsndfile` (http://www.mega-nerd.com/libsndfile/#Features)
 
         Returns
         -------
         AudioDocument
-            Audio document with signal of `file` as audio. The file path is
+            Audio document with signal of `path` as audio. The file path is
             included in the document metadata.
         """
 
-        file = Path(file)
-        audio = FileAudioBuffer(file)
-        return cls(audio=audio, metadata={"path_to_audio": str(file.absolute())})
+        path = Path(path)
+        audio = FileAudioBuffer(path)
+        return cls(audio=audio, metadata={"path_to_audio": str(path.absolute())})
 
     @classmethod
     def from_dir(
         cls,
-        dir: Union[str, Path],
+        path: Union[str, Path],
         pattern: str = "*.wav",
     ) -> List[Self]:
         """
@@ -175,10 +175,10 @@ class AudioDocument(dict_conv.SubclassMapping):
 
         Parameters
         ----------
-        dir:
+        path:
             Path of the directory containing audio files
         pattern:
-            Glob pattern to match audio files in `dir`. Supports all file
+            Glob pattern to match audio files in `path`. Supports all file
             formats handled by `libsndfile`
             (http://www.mega-nerd.com/libsndfile/#Features)
 
@@ -188,6 +188,6 @@ class AudioDocument(dict_conv.SubclassMapping):
             Audio documents with signal of each file as audio
         """
 
-        dir = Path(dir)
-        files = sorted(dir.glob(pattern))
+        path = Path(path)
+        files = sorted(path.glob(pattern))
         return [cls.from_file(f) for f in files]
