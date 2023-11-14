@@ -3,8 +3,9 @@ from __future__ import annotations
 __all__ = ["AudioDocument"]
 
 import dataclasses
+import os
 from pathlib import Path
-from typing import Any, ClassVar, Dict, List, Optional, Sequence, Union
+from typing import Any, ClassVar, Dict, List, Optional, Sequence
 from typing_extensions import Self
 
 from medkit.core import dict_conv, Attribute, AttributeContainer
@@ -143,7 +144,7 @@ class AudioDocument(dict_conv.SubclassMapping):
         )
 
     @classmethod
-    def from_file(cls, path: Union[str, Path]) -> Self:
+    def from_file(cls, path: os.PathLike) -> Self:
         """
         Create document from an audio file
 
@@ -167,7 +168,7 @@ class AudioDocument(dict_conv.SubclassMapping):
     @classmethod
     def from_dir(
         cls,
-        path: Union[str, Path],
+        path: os.PathLike,
         pattern: str = "*.wav",
     ) -> List[Self]:
         """

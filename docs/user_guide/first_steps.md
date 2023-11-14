@@ -26,9 +26,10 @@ For starters, let's load a text file using the
 # You can download the file available in source code
 # !wget https://raw.githubusercontent.com/TeamHeka/medkit/main/docs/data/text/1.txt
 
+from pathlib import Path
 from medkit.core.text import TextDocument
 
-doc = TextDocument.from_file("../data/text/1.txt")
+doc = TextDocument.from_file(Path("../data/text/1.txt"))
 ```
 
 The full raw text can be accessed through the `text` attribute:

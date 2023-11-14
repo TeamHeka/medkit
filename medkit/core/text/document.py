@@ -3,8 +3,9 @@ from __future__ import annotations
 __all__ = ["TextDocument"]
 
 import dataclasses
+import os
 from pathlib import Path
-from typing import Any, ClassVar, Dict, List, Optional, Sequence, Union
+from typing import Any, ClassVar, Dict, List, Optional, Sequence
 from typing_extensions import Self
 
 from medkit.core import dict_conv, Attribute, AttributeContainer
@@ -150,9 +151,7 @@ class TextDocument(dict_conv.SubclassMapping):
         )
 
     @classmethod
-    def from_file(
-        cls, path: Union[str, Path], encoding: Optional[str] = "utf-8"
-    ) -> Self:
+    def from_file(cls, path: os.PathLike, encoding: Optional[str] = "utf-8") -> Self:
         """
         Create a document from a text file
 
@@ -177,7 +176,7 @@ class TextDocument(dict_conv.SubclassMapping):
     @classmethod
     def from_dir(
         cls,
-        path: Union[str, Path],
+        path: os.PathLike,
         pattern: str = "*.txt",
         encoding: Optional[str] = "utf-8",
     ) -> List[Self]:
