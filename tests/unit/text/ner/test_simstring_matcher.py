@@ -179,6 +179,7 @@ def test_unicode_sensitive():
     assert entity.text == "dïabete"
 
 
+@pytest.mark.skipif(spacy is None, reason="spacy not available")
 def test_spacy_tokenization():
     """Tokenize with spacy and use POS tag to avoid false positive"""
     sentence = _get_sentence_segment("Les symptomes se sont atténués")
