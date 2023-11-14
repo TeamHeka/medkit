@@ -22,20 +22,11 @@ def get_path_hf_dummy_vocab():
 
 
 def get_text_documents():
-    docs = []
-    for path in _PATH_TO_TEXT_DOCS.glob("*.txt"):
-        with open(path) as f:
-            text = f.read()
-        doc = TextDocument(text=text)
-        docs.append(doc)
-    return docs
+    return TextDocument.from_dir(_PATH_TO_TEXT_DOCS)
 
 
 def get_text_document(name):
-    path = _PATH_TO_TEXT_DOCS / (name + ".txt")
-    with open(path) as f:
-        text = f.read()
-    return TextDocument(text=text)
+    return TextDocument.from_file(_PATH_TO_TEXT_DOCS / (name + ".txt"))
 
 
 def get_text(name):

@@ -29,8 +29,7 @@ For starters, let's load a text file using the
 from pathlib import Path
 from medkit.core.text import TextDocument
 
-file = Path("../data/text/1.txt")
-doc = TextDocument(text=file.read_text(encoding='utf-8'))
+doc = TextDocument.from_file(Path("../data/text/1.txt"))
 ```
 
 The full raw text can be accessed through the `text` attribute:

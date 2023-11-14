@@ -3,7 +3,9 @@ from __future__ import annotations
 __all__ = ["TextDocument"]
 
 import dataclasses
-from typing import Any, ClassVar, Dict, Optional, Sequence
+import os
+from pathlib import Path
+from typing import Any, ClassVar, Dict, List, Optional, Sequence
 from typing_extensions import Self
 
 from medkit.core import dict_conv, Attribute, AttributeContainer
@@ -147,6 +149,58 @@ class TextDocument(dict_conv.SubclassMapping):
             attrs=attrs,
             metadata=doc_dict["metadata"],
         )
+
+    @classmethod
+    def from_file(cls, path: os.PathLike, encoding: Optional[str] = "utf-8") -> Self:
+        """
+        Create a document from a text file
+
+        Parameters
+        ----------
+        path:
+            Path of the text file
+        encoding:
+            Text encoding to use
+
+        Returns
+        -------
+        TextDocument:
+            Text document with contents of `path` as text. The file path is
+            included in the document metadata.
+        """
+
+        path = Path(path)
+        text = path.read_text(encoding=encoding)
+        return cls(text=text, metadata={"path_to_text": str(path.absolute())})
+
+    @classmethod
+    def from_dir(
+        cls,
+        path: os.PathLike,
+        pattern: str = "*.txt",
+        encoding: Optional[str] = "utf-8",
+    ) -> List[Self]:
+        """
+        Create documents from text files in a directory
+
+        Parameters
+        ----------
+        path:
+            Path of the directory containing text files
+        pattern:
+            Glob pattern to match text files in `path`
+        encoding:
+            Text encoding to use
+
+        Returns
+        -------
+        List[TextDocument]:
+            Text documents with contents of each file as text
+        """
+
+        path = Path(path)
+        files = sorted(path.glob(pattern))
+        return [cls.from_file(f, encoding) for f in files]
 
     def get_snippet(self, segment: Segment, max_extend_length: int) -> str:
         """Return a portion of the original text containing the annotation

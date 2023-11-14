@@ -1,5 +1,7 @@
 import pytest
 
+from pathlib import Path
+
 from medkit.core import Attribute, generate_id
 from medkit.core.text.document import TextDocument
 from medkit.core.text.annotation import Entity, Relation, Segment
@@ -113,3 +115,13 @@ def test_snippet():
     snippet = doc.get_snippet(entity, max_extend_length=49)
     expected = "tats de la suspicion de neurofibromatose, je proposerai ou pas un"
     assert snippet == expected
+
+
+def test_from_dir():
+    dir = Path("tests/data/text")
+    docs = TextDocument.from_dir(dir, pattern="doc[1-3].txt")
+    assert len(docs) == 3
+    assert docs[0].metadata["path_to_text"] == str((dir / "doc1.txt").absolute())
+    assert docs[0].text == (dir / "doc1.txt").read_text()
+    assert docs[1].text == (dir / "doc2.txt").read_text()
+    assert docs[2].text == (dir / "doc3.txt").read_text()

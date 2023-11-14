@@ -64,10 +64,7 @@ from medkit.core.text import TextDocument
 collections = []
 for patient_subdir in sorted(main_dir.glob("*")):
     # create one TextDocument per .txt file
-    docs = []
-    for file in patient_subdir.glob("*.txt"):
-        doc = TextDocument(text=file.read_text())
-        docs.append(doc)
+    docs = TextDocument.from_dir(patient_subdir)
     # group them in a Collection
     collection = Collection(text_docs=docs)
     collections.append(collection)
