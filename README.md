@@ -1,3 +1,7 @@
+## ⚠️ This repository is now archived.
+
+Further development has been moved to the [medkit-lib](https://github.com/medkit-lib/medkit) organization. 
+
 # medkit
 
 medkit is a toolkit for a learning health system, developed by the [HeKA research team](https://team.inria.fr/heka).
